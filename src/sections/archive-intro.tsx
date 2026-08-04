@@ -18,13 +18,13 @@ export function ArchiveIntro() {
       <div className="absolute inset-0 z-20">
         {/* 档案夹卡片：设计稿 670x500，垂直中心略低于屏幕中心 11px */}
         <div className="absolute left-1/2 top-[calc(50%+11px)] aspect-[670/500] w-[min(670px,calc(100vw-60px))] -translate-x-1/2 -translate-y-1/2 text-[length:calc(min(670px,100vw-60px)/41.875)]">
-          {/* 投影：按设计稿投影层用纯 CSS 复刻（底部两层 + 左右竖向），位于档案夹图之下 */}
-          <div aria-hidden="true" className="absolute inset-0">
-            <div className="absolute left-[5.4%] top-[95.4%] h-[22%] w-[90.9%] bg-[linear-gradient(to_right,#020202,rgba(2,2,2,0.55),#020202)] opacity-[0.18] blur-[10px]" />
-            <div className="absolute left-[9.1%] top-[95.4%] h-[10.5%] w-[83.1%] bg-grey-400 opacity-[0.18] blur-[13px]" />
-            <div className="absolute left-[96.3%] top-[17.4%] h-[80%] w-[8.7%] bg-[linear-gradient(to_right,rgba(2,2,2,0.35),rgba(2,2,2,0))] opacity-70 blur-[14px]" />
-            <div className="absolute left-[1.5%] top-[7.2%] h-[93%] w-[7.6%] bg-[linear-gradient(to_left,rgba(2,2,2,0.3),rgba(2,2,2,0))] opacity-40 blur-[14px]" />
-          </div>
+          {/* 投影：设计稿手绘投影图形 1:1 还原（SVG 画布含模糊出血，按设计坐标定位） */}
+          <span
+            aria-hidden="true"
+            className="absolute left-[-2.57%] top-[1.76%] block h-[119.8%] w-[111.64%]"
+          >
+            <Image src="/archive/folder-shadow.svg" alt="" fill sizes="70vw" />
+          </span>
           <Image
             src={archiveFolderImg}
             alt="档案 GA_001 档案夹"
