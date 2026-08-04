@@ -35,7 +35,7 @@ export function Hero() {
   const preload = useVideoPreloader(VIDEO_SRC);
   const preloadRef = useRef(preload);
   // 分页器默认锁定，序幕结束后由此放行切屏
-  const { setNavigationLocked } = useSectionPager();
+  const { setNavigationLocked, index } = useSectionPager();
 
   useEffect(() => {
     preloadRef.current = preload;
@@ -43,6 +43,21 @@ export function Hero() {
 
   const doneRef = useRef(false);
   const revealStartedRef = useRef(false);
+  // 序幕重播函数由动画上下文注入；离开过首屏后切回时触发
+  const replayRef = useRef<(() => void) | null>(null);
+  const wasAwayRef = useRef(false);
+
+  useEffect(() => {
+    if (index !== 0) {
+      wasAwayRef.current = true;
+      return;
+    }
+    if (wasAwayRef.current && doneRef.current) {
+      wasAwayRef.current = false;
+      // 此刻幕布仍遮着视口，重置对用户不可见，揭幕后序幕重新播放
+      replayRef.current?.();
+    }
+  }, [index]);
 
   useGSAP(
     (_, contextSafe) => {
@@ -98,6 +113,7 @@ export function Hero() {
           return;
         }
         video.src = state.objectUrl;
+        video.currentTime = 0;
         gsap.set(videoLayer, { autoAlpha: 1 });
         buildLoaderExit(loader);
         video
@@ -136,32 +152,54 @@ export function Hero() {
 
         // 阶段一：计数器由真实下载进度驱动，并保证最短节奏时长
         const counter = createCounter(counterEl);
-        const startedAt = performance.now();
+        let gate = 0;
 
-        const gate = window.setInterval(() => {
-          const state = preloadRef.current;
-          if (state.status === "error") {
-            window.clearInterval(gate);
-            counter.update(100);
-            window.setTimeout(runFallback, 700);
-            return;
-          }
-          const timeCap = Math.min(
-            (performance.now() - startedAt) / MIN_LOADING_MS,
-            1,
-          );
-          const target = Math.min(state.progress, timeCap) * 100;
-          counter.update(target);
-          if (state.status === "ready" && timeCap >= 1) {
-            window.clearInterval(gate);
-            counter.update(100);
-            window.setTimeout(startVideo, 650);
-          }
-        }, 120);
+        const startSequence = () => {
+          window.clearInterval(gate);
+          counter.reset();
+          const startedAt = performance.now();
+
+          gate = window.setInterval(() => {
+            const state = preloadRef.current;
+            if (state.status === "error") {
+              window.clearInterval(gate);
+              counter.update(100);
+              window.setTimeout(runFallback, 700);
+              return;
+            }
+            const timeCap = Math.min(
+              (performance.now() - startedAt) / MIN_LOADING_MS,
+              1,
+            );
+            const target = Math.min(state.progress, timeCap) * 100;
+            counter.update(target);
+            if (state.status === "ready" && timeCap >= 1) {
+              window.clearInterval(gate);
+              counter.update(100);
+              window.setTimeout(startVideo, 650);
+            }
+          }, 120);
+        };
+
+        startSequence();
+
+        // 切回首屏时重播：重置各层到序幕初始状态后重新走一遍流程
+        replayRef.current = contextSafe!(() => {
+          doneRef.current = false;
+          revealStartedRef.current = false;
+          setNavigationLocked(true);
+          video.pause();
+          gsap.set(loader, { autoAlpha: 1 });
+          gsap.set(videoLayer, { autoAlpha: 0 });
+          gsap.set(titleLines, { yPercent: 110, opacity: 0 });
+          gsap.set(ornaments, { opacity: 0 });
+          startSequence();
+        });
 
         return () => {
           window.clearInterval(gate);
           counter.kill();
+          replayRef.current = null;
         };
       });
 

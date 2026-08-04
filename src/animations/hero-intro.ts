@@ -3,6 +3,8 @@ import gsap from "gsap";
 export type CounterController = {
   /** 将显示值平滑推进到目标百分比（0~100） */
   update: (target: number) => void;
+  /** 立即归零（序幕重播时使用） */
+  reset: () => void;
   kill: () => void;
 };
 
@@ -28,6 +30,11 @@ export function createCounter(el: HTMLElement): CounterController {
         ease: "power2.out",
         onUpdate: render,
       });
+    },
+    reset() {
+      tween?.kill();
+      proxy.value = 0;
+      render();
     },
     kill() {
       tween?.kill();
