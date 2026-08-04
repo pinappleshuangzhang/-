@@ -26,6 +26,19 @@ const SCRUB_PER_PX = 0.0009;
 /** 进度追踪的阻尼系数（数值越大跟手越紧） */
 const SCRUB_DAMPING = 9;
 
+/** 逐字变色文本：每个字一个 span，供擦撦时间轴按字点亮 */
+function ScrubText({ text }: { text: string }) {
+  return (
+    <p aria-label={text}>
+      {Array.from(text).map((char, charIndex) => (
+        <span key={charIndex} data-scrub-char aria-hidden="true">
+          {char}
+        </span>
+      ))}
+    </p>
+  );
+}
+
 /**
  * 第二屏：档案 GA_001《什么是引力？》
  * 档案夹是一段"破洞织合"视频：滚轮/触摸控制播放进度（黑底由 WebGL 实时抠除），
@@ -66,15 +79,14 @@ export function ArchiveIntro() {
       const root = container.current;
       if (!root) return;
 
-      // 文字灰变黑时间轴：三行依次点亮，进度由擦撦驱动
-      const lines = gsap.utils.toArray<HTMLElement>("[data-scrub-text]", root);
+      // 逐字变色时间轴：所有字符按顺序由灰点亮为深色，进度由擦撦驱动
+      const chars = gsap.utils.toArray<HTMLElement>("[data-scrub-char]", root);
       const timeline = gsap.timeline({ paused: true });
-      lines.forEach((line) => {
-        timeline.to(line, {
-          color: "var(--color-grey-400)",
-          duration: 1,
-          ease: "none",
-        });
+      timeline.to(chars, {
+        color: "var(--color-grey-400)",
+        duration: 2,
+        ease: "none",
+        stagger: 1,
       });
       textTimelineRef.current = timeline;
 
@@ -155,16 +167,13 @@ export function ArchiveIntro() {
               height={48}
               className="size-[3em]"
             />
-            <p className="font-serif-sc text-[1.75em] uppercase text-grey-400">
-              我们不断看到同一种现象
-            </p>
             <div className="font-serif-sc text-[1.75em] uppercase text-grey-200">
-              <p>
-                <span className="text-grey-400">有些品牌</span>
-                <span data-scrub-text>会被记住</span>
-              </p>
-              <p data-scrub-text>有些产品会被选择</p>
-              <p data-scrub-text>有些设计会被相信</p>
+              <ScrubText text="我们不断看到同一种现象" />
+            </div>
+            <div className="font-serif-sc text-[1.75em] uppercase text-grey-200">
+              <ScrubText text="有些品牌会被记住" />
+              <ScrubText text="有些产品会被选择" />
+              <ScrubText text="有些设计会被相信" />
             </div>
           </div>
         </div>
