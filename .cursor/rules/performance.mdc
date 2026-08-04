@@ -1,0 +1,27 @@
+---
+description: 性能规范（动画性能、图片优化、客户端组件控制）
+alwaysApply: true
+---
+
+# 性能规范
+
+## 动画性能
+
+- 只对 `transform`（x/y/scale/rotate）和 `opacity` 做动画，它们不触发重排且可由 GPU 合成。
+- 禁止对布局属性做动画：`width`、`height`、`top`、`left`、`margin`、`padding`、`font-size` 等。
+  - 需要尺寸变化效果时用 `scale` 或 clip-path 替代。
+- 动画值不放 React state：不要用 `useState` + 重渲染驱动动画（如鼠标坐标、滚动进度）。
+  - 一律用 GSAP 直接操作 DOM（`gsap.quickTo`、`gsap.quickSetter`），或存 `useRef`。
+
+## 图片与媒体
+
+- 图片一律使用 `next/image`，禁止裸 `<img>` 标签。
+- 首屏关键图片加 `priority`；首屏以下的图片和视频懒加载（`next/image` 默认懒加载，视频用 `preload="none"` + 进入视口再播放）。
+- 提供合理的 `sizes` 属性，避免大屏下载超尺寸图片。
+- 素材入库前压缩：照片用 AVIF/WebP，矢量用 SVG。
+
+## 客户端组件
+
+- 默认 Server Component；只有需要动画、事件或浏览器 API 的组件才加 `"use client"`。
+- `"use client"` 尽量下沉到叶子组件，不要放在整页或布局层（`SmoothScrollProvider` 除外）。
+- 纯展示的静态区块（页脚、文字段落）保持服务端渲染。

@@ -1,0 +1,52 @@
+---
+description: 网站设计令牌（颜色、字体、字号、行高、间距、圆角）使用规范
+alwaysApply: true
+---
+
+# 设计令牌规范
+
+令牌源文件：`design/tokens/*.tokens.json`（Figma 变量导出，为唯一事实来源）。
+CSS 变量定义在 `src/app/globals.css` 的 `@theme` 块中，样式一律使用令牌值，不要使用刻度外的任意值。
+
+## 颜色（Color）
+
+- Green（品牌绿）：`green-50` ~ `green-900`
+  - 50 `#F3FCF4` / 100 `#DFF6E4` / 200 `#BBECC4` / 300 `#93E1A1` / 400 `#6FD881` / 500 `#3FCA58` / 600 `#32A246` / 700 `#267935` / 800 `#195123` / 900 `#0D2812`
+- Grey（中性灰）：`grey-50` ~ `grey-400` + `white`
+  - 50 `#F4F4F4` / 100 `#DEDEDE` / 200 `#999999` / 300 `#666666` / 400 `#131313` / White `#FFFFFF`
+- Tailwind 用法：`text-green-500`、`bg-grey-400`、`border-grey-100` 等。
+- 只使用以上色板，不使用 Tailwind 默认调色板或任意 hex 值。
+
+## 字体（Typography）
+
+- 字体族：`Noto Serif SC`（中文衬线，主字体）、`Libre Bodoni`（西文衬线，标题/装饰）。
+  - Tailwind：`font-serif-sc`、`font-bodoni`。
+- 字号刻度（px）：10 / 12 / 14 / 16 / 18 / 20 / 24 / 28 / 32 / 36 / 40 / 44 / 48 / 52 / 56 / 60。
+  - Tailwind：`text-10` ~ `text-60`。
+- 行高刻度（px）：14 / 18 / 20 / 24 / 26 / 28 / 32 / 36 / 40 / 44 / 48 / 52 / 56 / 60 / 64 / 68，用 `leading-[Npx]` 或与字号配对。
+- 字重：
+  - Noto Serif SC：仅 Light 300、Regular 400、Medium 500 三档，禁止其他字重。
+  - Libre Bodoni：Regular 400、Medium 500、SemiBold 600 三档。
+- 字体样式（FontStyle）：Regular、Italic、Medium、SemiBold。
+  - Italic、SemiBold 仅用于 Libre Bodoni（如 `font-bodoni italic`、`font-bodoni font-semibold`）。
+  - Noto Serif SC 无斜体变体，不对中文使用 `italic`；中文 SemiBold 亦不可用（超出三档字重）。
+
+## 间距（Spacing）
+
+三档刻度，单位 px，用于 gap、padding、margin、段落间距：
+
+- SS（小）：0 / 2 / 4 / 6 / 8 / 10 / 12 / 16
+- SM（中）：20 / 24 / 28 / 32 / 36 / 40 / 44 / 48
+- SL（大）：52 / 56 / 60 / 64 / 68 / 72 / 76 / 80
+
+Tailwind 默认 4px 基数刻度可直接映射（如 `gap-5` = 20px、`p-10` = 40px）；6px 用 `p-1.5`、10px 用 `p-2.5`。不使用刻度以外的间距值。
+
+## 圆角（Radius）
+
+- RS（小）：2 / 4 / 8 → `rounded-rs-2` / `rounded-rs-4` / `rounded-rs-8`
+- RM（中）：12 / 16 / 20 → `rounded-rm-12` / `rounded-rm-16` / `rounded-rm-20`
+- RL（大）：24 / 28 / 32 → `rounded-rl-24` / `rounded-rl-28` / `rounded-rl-32`
+
+## 更新流程
+
+设计令牌变更时：先替换 `design/tokens/` 下对应 JSON，再同步 `globals.css` 的 `@theme` 变量与本规则，保持三处一致。

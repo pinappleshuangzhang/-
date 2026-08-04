@@ -1,0 +1,97 @@
+@import "tailwindcss";
+@import "lenis/dist/lenis.css";
+
+/* 设计令牌来源：design/tokens/*.tokens.json（Figma 变量导出） */
+@theme inline {
+  /* 字体族由 next/font 在 layout.tsx 中加载并注入变量 */
+  --font-serif-sc: var(--font-noto-serif-sc), "Noto Serif SC", serif;
+  --font-bodoni: var(--font-libre-bodoni), "Libre Bodoni", serif;
+}
+
+@theme {
+  /* Color / Green */
+  --color-green-50: #f3fcf4;
+  --color-green-100: #dff6e4;
+  --color-green-200: #bbecc4;
+  --color-green-300: #93e1a1;
+  --color-green-400: #6fd881;
+  --color-green-500: #3fca58;
+  --color-green-600: #32a246;
+  --color-green-700: #267935;
+  --color-green-800: #195123;
+  --color-green-900: #0d2812;
+
+  /* Color / Grey */
+  --color-grey-50: #f4f4f4;
+  --color-grey-100: #dedede;
+  --color-grey-200: #999999;
+  --color-grey-300: #666666;
+  --color-grey-400: #131313;
+  --color-white: #ffffff;
+
+  /* Typography */
+  --text-10: 10px;
+  --text-12: 12px;
+  --text-14: 14px;
+  --text-16: 16px;
+  --text-18: 18px;
+  --text-20: 20px;
+  --text-24: 24px;
+  --text-28: 28px;
+  --text-32: 32px;
+  --text-36: 36px;
+  --text-40: 40px;
+  --text-44: 44px;
+  --text-48: 48px;
+  --text-52: 52px;
+  --text-56: 56px;
+  --text-60: 60px;
+
+  /* Radius：RS 小 / RM 中 / RL 大 */
+  --radius-rs-2: 2px;
+  --radius-rs-4: 4px;
+  --radius-rs-8: 8px;
+  --radius-rm-12: 12px;
+  --radius-rm-16: 16px;
+  --radius-rm-20: 20px;
+  --radius-rl-24: 24px;
+  --radius-rl-28: 28px;
+  --radius-rl-32: 32px;
+}
+
+:root {
+  /* 布局基线 */
+  --page-margin: 40px;
+  --content-max: 1360px;
+
+  --background: var(--color-grey-100);
+  --foreground: var(--color-grey-400);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-noto-serif-sc), "Noto Serif SC", serif;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--color-green-500);
+  color: var(--color-white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+}

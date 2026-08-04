@@ -1,0 +1,31 @@
+---
+description: 项目架构与代码组织规范（目录职责、拆分规则）
+alwaysApply: true
+---
+
+# 项目架构规范
+
+框架：Next.js App Router，源码统一放在 `src/` 下。
+
+## 目录职责
+
+```
+src/
+  app/          # 路由与页面：page.tsx / layout.tsx，只做组合
+  sections/     # 页面区块：首屏、档案列表等成块的页面内容
+  components/   # 可复用组件
+    ui/         # 通用 UI 组件（按钮、卡片、标签等）
+    providers/  # 全局 Provider（如 SmoothScrollProvider）
+  animations/   # 动画逻辑：GSAP 时间轴、ScrollTrigger 配置、动画工具
+  hooks/        # 自定义 React hooks
+  lib/          # 工具函数、常量、类型
+```
+
+## 组织规则
+
+- `page.tsx` 只负责组合 sections，不写具体布局和动画逻辑，严禁巨型 page 文件。
+- 页面区块放 `sections/`，一个区块一个文件。
+- 动画逻辑（时间轴编排、ScrollTrigger 配置）抽离到 `animations/`，组件内只做绑定。
+- 可复用 UI 放 `components/ui/`，不在 sections 里重复实现。
+- 单个组件超过 250 行必须拆分。
+- 导入一律使用 `@/` 别名（如 `@/sections/hero`），不用相对路径跨目录。

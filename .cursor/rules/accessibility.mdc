@@ -1,0 +1,13 @@
+---
+description: 无障碍规范（减少动态效果、键盘导航、语义化、焦点状态）
+alwaysApply: true
+---
+
+# 无障碍规范
+
+- **减少动态效果**：所有动画必须响应 `prefers-reduced-motion`（GSAP 用 `gsap.matchMedia()` 区分，reduce 时直接呈现最终状态；平滑滚动由 `SmoothScrollProvider` 自动降级）。
+- **键盘导航**：所有交互元素（链接、按钮、卡片）必须可 Tab 到达、可 Enter/Space 触发；自定义交互组件补 `tabIndex` 和键盘事件；禁止 `outline: none` 而不提供替代焦点样式。
+- **焦点状态**：交互元素必须有可见焦点样式，用 `focus-visible:` 实现（如 `focus-visible:ring-2`），风格与设计系统一致。
+- **图片 alt**：内容图片必须写有意义的 `alt`；纯装饰图片用 `alt=""`。
+- **语义化标签**：可点击行为用 `<button>`，页面跳转用 `<a>`（Next.js 用 `<Link>`）；禁止给 `<div>` 加 onClick 充当按钮。
+- **鼠标跟随/悬停类效果**只作为增强，核心信息和操作不得只能通过 hover 获取。

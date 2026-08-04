@@ -1,0 +1,39 @@
+---
+description: GSAP + Lenis 动画集成约定（Next.js App Router）
+globs: **/*.tsx
+alwaysApply: false
+---
+
+# GSAP + Lenis 集成约定
+
+技术栈：Next.js App Router + `gsap` + `@gsap/react` + `lenis`（`lenis/react`）。
+
+## 平滑滚动（Lenis）
+
+- 全局唯一 Lenis 实例：由 `src/components/providers/smooth-scroll-provider.tsx` 中的 `SmoothScrollProvider` 提供，在 `layout.tsx` 包裹全站。不要在页面或组件中再创建 Lenis 实例。
+- 使用 `lenis/react` 的 `ReactLenis`（root 模式）与 `useLenis`；不要安装已归档的 `react-lenis` 包。
+- 全局样式必须引入 `lenis/dist/lenis.css`（已在 `globals.css` 中）。
+- Lenis 配置 `autoRaf: false`，由 `gsap.ticker` 驱动 `lenis.raf(time * 1000)`，并调用 `gsap.ticker.lagSmoothing(0)`。
+- Lenis 的 `scroll` 事件必须同步 `ScrollTrigger.update`，否则滚动触发动画会抖动或错位。
+- 滚动缓动保持克制：`lerp: 0.1`，`syncTouch: false`。
+
+## 动画组件（GSAP）
+
+- 所有使用 GSAP/Lenis 的组件必须标注 `"use client"`。
+- 一律使用 `@gsap/react` 的 `useGSAP({ scope: container })` 编写动画，不要手写 `useEffect` + 手动清理。
+- 插件在模块顶层注册：`gsap.registerPlugin(useGSAP, ScrollTrigger)`。
+- 动画目标用 `data-*` 属性选择（如 `data-reveal-card`），并限定在 `scope` 容器内，不用全局类名选择器。
+- 入场元素的初始隐藏状态用 CSS 类预设（如 `opacity-0`），避免 SSR 后闪现（FOUC），再由 GSAP `fromTo` 接管。
+
+## 无障碍（必须）
+
+- 所有动画通过 `gsap.matchMedia()` 区分 `prefers-reduced-motion`：
+  - `no-preference`：正常播放动画；
+  - `reduce`：用 `gsap.set` 直接呈现最终状态。
+- `SmoothScrollProvider` 在 reduce 模式下已自动关闭平滑滚动（`lerp: 1`、`smoothWheel: false`），不要绕过。
+
+## 响应式动画
+
+- 避免固定像素位移，优先 `yPercent`、`%`、`vw/vh`、`clamp()`。
+- 大屏差异化动画用 `gsap.matchMedia()` 分段处理。
+- ScrollTrigger 的 pin/scrub 需在不同视口高度下检查 `start`、`end` 表现。

@@ -1,0 +1,16 @@
+---
+description: 代码质量规范（TypeScript 严格模式、命名、去重）
+alwaysApply: true
+---
+
+# 代码质量规范
+
+- TypeScript 严格模式（`tsconfig.json` 已开启 `strict: true`，不得关闭）。
+- 禁止 `any`（含隐式 any）；类型未知时用 `unknown` 收窄。
+- 禁止 `console.log`；调试代码提交前必须删除（`console.warn` / `console.error` 允许用于真实错误处理）。
+- 禁止未使用的导入和变量。
+- 提交前 `npm run lint` 必须零错误通过。
+- 组件命名必须有意义、见名知义（如 `ArchiveCard`、`HeroIntro`），禁止 `Comp1`、`Test`、`Temp` 之类名称。
+- 新建组件前先检查 `components/` 与 `sections/` 是否已有同功能实现，避免重复组件；相似度高的组件应抽象合并。
+
+以上前四条已由 ESLint 强制（见 `eslint.config.mjs`），报错必须修复，不允许用 `eslint-disable` 绕过。
