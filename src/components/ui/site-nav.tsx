@@ -5,7 +5,7 @@ type SiteNavProps = {
 
 export function SiteNav({ center }: SiteNavProps) {
   return (
-    <header className="absolute inset-x-0 top-[30px] z-50">
+    <header className="fixed inset-x-0 top-[30px] z-50">
       <div className="mx-auto flex w-[calc(100%-60px)] items-center justify-between">
         <button
           type="button"

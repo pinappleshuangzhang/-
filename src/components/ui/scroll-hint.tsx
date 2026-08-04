@@ -13,11 +13,11 @@ export function ScrollHint() {
 
 type ScrollHintCornerProps = React.HTMLAttributes<HTMLDivElement>;
 
-/** 右下角滚动提示：贴 30px 边距定位，各分屏共用 */
+/** 右下角滚动提示：固定在视口右下角，贴 30px 边距，全站共用 */
 export function ScrollHintCorner({ className, ...rest }: ScrollHintCornerProps) {
   return (
     <div
-      className={`absolute inset-x-0 bottom-[30px] ${className ?? ""}`}
+      className={`fixed inset-x-0 bottom-[30px] z-50 ${className ?? ""}`}
       {...rest}
     >
       <div className="mx-auto flex w-[calc(100%-60px)] justify-end">

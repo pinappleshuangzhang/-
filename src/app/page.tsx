@@ -1,3 +1,4 @@
+import { PageChrome } from "@/components/ui/page-chrome";
 import { ArchiveIntro } from "@/sections/archive-intro";
 import { Hero } from "@/sections/hero";
 
@@ -6,6 +7,7 @@ export default function Home() {
     <main>
       <Hero />
       <ArchiveIntro />
+      <PageChrome />
     </main>
   );
 }

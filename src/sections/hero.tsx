@@ -11,9 +11,7 @@ import {
   buildLoaderExit,
   createCounter,
 } from "@/animations/hero-intro";
-import { ScrollHintCorner } from "@/components/ui/scroll-hint";
 import { SectionBackground } from "@/components/ui/section-background";
-import { SiteNav } from "@/components/ui/site-nav";
 import { useVideoPreloader } from "@/hooks/use-video-preloader";
 import archiveBoxImg from "../../public/hero/archive-box.png";
 import galleryBgImg from "../../public/hero/hero-display-bg.png";
@@ -191,6 +189,7 @@ export function Hero() {
   return (
     <section
       ref={container}
+      data-nav-variant="studio"
       className="relative h-screen min-h-[700px] overflow-hidden bg-grey-100"
     >
       {/* 最终首屏背景（与视频最后一帧一致，全屏铺满） */}
@@ -240,10 +239,6 @@ export function Hero() {
             </p>
           </div>
         </div>
-        <ScrollHintCorner
-          data-hero-ornament
-          className="opacity-0 motion-reduce:opacity-100"
-        />
       </div>
 
       {/* 加载序幕层 */}
@@ -311,8 +306,6 @@ export function Hero() {
           </div>
         </div>
       </div>
-
-      <SiteNav />
     </section>
   );
 }
