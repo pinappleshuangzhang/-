@@ -13,7 +13,7 @@ export function ArchiveIntro() {
       data-nav-variant="archive-ga-001"
       className="relative h-screen min-h-[700px] overflow-hidden bg-white"
     >
-      <SectionBackground src={archiveBgImg} className="z-10" />
+      <SectionBackground src={archiveBgImg} interactive className="z-10" />
 
       <div className="absolute inset-0 z-20">
         {/* 档案夹卡片：设计稿 670x500，垂直中心略低于屏幕中心 11px */}

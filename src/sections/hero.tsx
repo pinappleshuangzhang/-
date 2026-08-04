@@ -203,7 +203,7 @@ export function Hero() {
       className="relative h-screen min-h-[700px] overflow-hidden bg-grey-100"
     >
       {/* 最终首屏背景（与视频最后一帧一致，全屏铺满） */}
-      <SectionBackground src={galleryBgImg} priority className="z-10" />
+      <SectionBackground src={galleryBgImg} priority interactive className="z-10" />
 
       {/* 全屏视频层 */}
       <div
