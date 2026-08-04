@@ -48,6 +48,16 @@ export function Hero() {
   const revealStartedRef = useRef(false);
   const reduceRef = useRef(false);
 
+  // 进入时回到页面顶部：关闭浏览器滚动位置恢复，保证序幕从首屏开始
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    if (!doneRef.current) {
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
   // 序幕期间锁定滚动
   useEffect(() => {
     if (!lenis || doneRef.current || reduceRef.current) return;
