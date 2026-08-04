@@ -67,16 +67,28 @@ function createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
     if (!shader) return null;
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.warn("[keyed-scrub-video] 着色器编译失败:", gl.getShaderInfoLog(shader));
+      return null;
+    }
     return shader;
   };
   const vertex = compile(gl.VERTEX_SHADER, VERTEX_SHADER);
   const fragment = compile(gl.FRAGMENT_SHADER, FRAGMENT_SHADER);
   const program = gl.createProgram();
-  if (!vertex || !fragment || !program) return null;
+  if (!vertex || !fragment || !program) {
+    if (gl.isContextLost()) {
+      console.warn("[keyed-scrub-video] WebGL 上下文已丢失");
+    }
+    return null;
+  }
   gl.attachShader(program, vertex);
   gl.attachShader(program, fragment);
   gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return null;
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.warn("[keyed-scrub-video] 程序链接失败:", gl.getProgramInfoLog(program));
+    return null;
+  }
   return program;
 }
 
@@ -110,6 +122,7 @@ export const KeyedScrubVideo = forwardRef<
       preserveDrawingBuffer: false,
     });
     if (!gl) {
+      console.warn("[keyed-scrub-video] WebGL 上下文创建失败");
       onError?.();
       return;
     }
@@ -174,7 +187,10 @@ export const KeyedScrubVideo = forwardRef<
 
     const onSeeked = () => draw();
     const onLoadedData = () => draw();
-    const onVideoError = () => onError?.();
+    const onVideoError = () => {
+      console.warn("[keyed-scrub-video] 视频加载失败:", video.error?.message);
+      onError?.();
+    };
     video.addEventListener("seeked", onSeeked);
     video.addEventListener("loadeddata", onLoadedData);
     video.addEventListener("error", onVideoError);
@@ -188,7 +204,11 @@ export const KeyedScrubVideo = forwardRef<
       video.load();
       videoRef.current = null;
       drawRef.current = null;
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      // 只释放资源、不销毁上下文：StrictMode 重挂载会复用同一 canvas 的上下文，
+      // loseContext 会让第二次挂载拿到已丢失的上下文而静默失败
+      gl.deleteProgram(program);
+      gl.deleteBuffer(buffer);
+      gl.deleteTexture(texture);
     };
     // 效果只随视频源重建；回调通过闭包引用最新值即可
     // eslint-disable-next-line react-hooks/exhaustive-deps
