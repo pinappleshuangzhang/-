@@ -42,6 +42,8 @@ type SectionPagerValue = {
   goToPrevScreen: () => void;
   /** 首屏序幕等场景下暂时禁止切屏 */
   setNavigationLocked: (locked: boolean) => void;
+  /** 注册“已在第一屏仍继续向上滑”的处理器（如重播首屏序幕），返回注销函数 */
+  registerTopOverscroll: (handler: () => void) => () => void;
 };
 
 const SectionPagerContext = createContext<SectionPagerValue | null>(null);
@@ -88,11 +90,27 @@ export function SectionPagerProvider({
     lockedRef.current = locked;
   }, []);
 
+  const topOverscrollRef = useRef<(() => void) | null>(null);
+  const registerTopOverscroll = useCallback((handler: () => void) => {
+    topOverscrollRef.current = handler;
+    return () => {
+      if (topOverscrollRef.current === handler) {
+        topOverscrollRef.current = null;
+      }
+    };
+  }, []);
+
   // 相位与索引同步写入 ref：事件回调据此判定，不必等 React 提交
   const goToScreen = useCallback((next: number) => {
     if (lockedRef.current) return;
     if (phaseRef.current !== "idle") return;
     if (performance.now() < cooldownUntilRef.current) return;
+
+    // 已在第一屏仍向上滑：交给注册的处理器（重播首屏序幕）
+    if (next < 0 && indexRef.current === 0) {
+      topOverscrollRef.current?.();
+      return;
+    }
 
     const target = Math.min(Math.max(next, 0), countRef.current - 1);
     if (target === indexRef.current) return;
@@ -220,6 +238,7 @@ export function SectionPagerProvider({
       goToNextScreen,
       goToPrevScreen,
       setNavigationLocked,
+      registerTopOverscroll,
     }),
     [
       index,
@@ -230,6 +249,7 @@ export function SectionPagerProvider({
       goToNextScreen,
       goToPrevScreen,
       setNavigationLocked,
+      registerTopOverscroll,
     ],
   );
 

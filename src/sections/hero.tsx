@@ -35,7 +35,7 @@ export function Hero() {
   const preload = useVideoPreloader(VIDEO_SRC);
   const preloadRef = useRef(preload);
   // 分页器默认锁定，序幕结束后由此放行切屏
-  const { setNavigationLocked, index } = useSectionPager();
+  const { setNavigationLocked, registerTopOverscroll } = useSectionPager();
 
   useEffect(() => {
     preloadRef.current = preload;
@@ -43,21 +43,13 @@ export function Hero() {
 
   const doneRef = useRef(false);
   const revealStartedRef = useRef(false);
-  // 序幕重播函数由动画上下文注入；离开过首屏后切回时触发
+  // 序幕重播函数由动画上下文注入；在首屏继续向上滑时触发
   const replayRef = useRef<(() => void) | null>(null);
-  const wasAwayRef = useRef(false);
 
-  useEffect(() => {
-    if (index !== 0) {
-      wasAwayRef.current = true;
-      return;
-    }
-    if (wasAwayRef.current && doneRef.current) {
-      wasAwayRef.current = false;
-      // 此刻幕布仍遮着视口，重置对用户不可见，揭幕后序幕重新播放
-      replayRef.current?.();
-    }
-  }, [index]);
+  useEffect(
+    () => registerTopOverscroll(() => replayRef.current?.()),
+    [registerTopOverscroll],
+  );
 
   useGSAP(
     (_, contextSafe) => {
@@ -183,17 +175,23 @@ export function Hero() {
 
         startSequence();
 
-        // 切回首屏时重播：重置各层到序幕初始状态后重新走一遍流程
+        // 首屏继续向上滑时重播：加载层先淡入盖住画面，再重置下层并重新走流程
         replayRef.current = contextSafe!(() => {
+          if (!doneRef.current) return;
           doneRef.current = false;
           revealStartedRef.current = false;
           setNavigationLocked(true);
-          video.pause();
-          gsap.set(loader, { autoAlpha: 1 });
-          gsap.set(videoLayer, { autoAlpha: 0 });
-          gsap.set(titleLines, { yPercent: 110, opacity: 0 });
-          gsap.set(ornaments, { opacity: 0 });
-          startSequence();
+          counter.reset();
+          gsap
+            .timeline()
+            .to(loader, { autoAlpha: 1, duration: 0.6, ease: "power2.inOut" })
+            .call(() => {
+              video.pause();
+              gsap.set(videoLayer, { autoAlpha: 0 });
+              gsap.set(titleLines, { yPercent: 110, opacity: 0 });
+              gsap.set(ornaments, { opacity: 0 });
+              startSequence();
+            });
         });
 
         return () => {
