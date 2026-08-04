@@ -69,7 +69,7 @@
 
   /* 屏间切换幕布配色 */
   --ascii-curtain-bg: #faf9fa;
-  --ascii-curtain-color: var(--color-grey-400);
+  --ascii-curtain-color: var(--color-grey-200);
 }
 
 * {

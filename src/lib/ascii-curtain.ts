@@ -20,8 +20,8 @@ const CELL_FADE_WINDOW = 0.12;
 const MAX_CELL_DELAY = 1 - CELL_FADE_WINDOW;
 
 /** 字符网格的目标格宽与格高（px），决定幕布疏密 */
-const CELL_TARGET_W = 12;
-const CELL_TARGET_H = 17;
+const CELL_TARGET_W = 8;
+const CELL_TARGET_H = 12;
 
 /** 字形相对格高的比例 */
 const GLYPH_SCALE = 0.86;
