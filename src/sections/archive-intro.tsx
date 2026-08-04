@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { RepelFilter } from "@/components/effects/repel-filter";
 import { SectionBackground } from "@/components/ui/section-background";
 import archiveBgImg from "../../public/archive/archive-bg.png";
 import archiveFolderImg from "../../public/archive/archive-folder.png";
@@ -13,7 +14,9 @@ export function ArchiveIntro() {
       data-nav-variant="archive-ga-001"
       className="relative h-screen min-h-[700px] overflow-hidden bg-white"
     >
-      <SectionBackground src={archiveBgImg} interactive className="z-10" />
+      {/* 鼠标排斥滤镜：分屏内图片、文字全部参与变形 */}
+      <RepelFilter className="absolute inset-0">
+      <SectionBackground src={archiveBgImg} className="z-10" />
 
       <div className="absolute inset-0 z-20">
         {/* 档案夹卡片：设计稿 670x500，垂直中心略低于屏幕中心 11px */}
@@ -55,6 +58,7 @@ export function ArchiveIntro() {
           </div>
         </div>
       </div>
+      </RepelFilter>
     </section>
   );
 }

@@ -11,6 +11,7 @@ import {
   buildLoaderExit,
   createCounter,
 } from "@/animations/hero-intro";
+import { RepelFilter } from "@/components/effects/repel-filter";
 import { SectionBackground } from "@/components/ui/section-background";
 import { useVideoPreloader } from "@/hooks/use-video-preloader";
 import archiveBoxImg from "../../public/hero/archive-box.png";
@@ -202,8 +203,10 @@ export function Hero() {
       data-nav-variant="studio"
       className="relative h-screen min-h-[700px] overflow-hidden bg-grey-100"
     >
+      {/* 鼠标排斥滤镜：分屏内视频、图片、文字全部参与变形 */}
+      <RepelFilter className="absolute inset-0">
       {/* 最终首屏背景（与视频最后一帧一致，全屏铺满） */}
-      <SectionBackground src={galleryBgImg} priority interactive className="z-10" />
+      <SectionBackground src={galleryBgImg} priority className="z-10" />
 
       {/* 全屏视频层 */}
       <div
@@ -316,6 +319,7 @@ export function Hero() {
           </div>
         </div>
       </div>
+      </RepelFilter>
     </section>
   );
 }
