@@ -44,7 +44,21 @@ type SectionPagerValue = {
   setNavigationLocked: (locked: boolean) => void;
   /** 注册“已在第一屏仍继续向上滑”的处理器（如重播首屏序幕），返回注销函数 */
   registerTopOverscroll: (handler: () => void) => () => void;
+  /**
+   * 注册屏内滚动拦截器（如滚动擦撦视频）：返回 true 表示本次滚动已被消费，
+   * 不触发切屏；返回 false 则按正常逻辑切屏。返回注销函数。
+   */
+  registerScrollInterceptor: (
+    handler: (deltaY: number) => boolean,
+  ) => () => void;
 };
+
+/** 当前分屏是否处于激活状态（供屏组件感知自己是否可见） */
+const ScreenActiveContext = createContext(false);
+
+export function useScreenActive() {
+  return useContext(ScreenActiveContext);
+}
 
 const SectionPagerContext = createContext<SectionPagerValue | null>(null);
 
@@ -100,6 +114,21 @@ export function SectionPagerProvider({
     };
   }, []);
 
+  const scrollInterceptorRef = useRef<((deltaY: number) => boolean) | null>(
+    null,
+  );
+  const registerScrollInterceptor = useCallback(
+    (handler: (deltaY: number) => boolean) => {
+      scrollInterceptorRef.current = handler;
+      return () => {
+        if (scrollInterceptorRef.current === handler) {
+          scrollInterceptorRef.current = null;
+        }
+      };
+    },
+    [],
+  );
+
   // 相位与索引同步写入 ref：事件回调据此判定，不必等 React 提交
   const goToScreen = useCallback((next: number) => {
     if (lockedRef.current) return;
@@ -119,6 +148,22 @@ export function SectionPagerProvider({
     phaseRef.current = "cover";
     setPhase("cover");
   }, []);
+
+  /** 切屏前先询问屏内拦截器，被消费则不切屏 */
+  const navigate = useCallback(
+    (deltaY: number) => {
+      if (
+        !lockedRef.current &&
+        phaseRef.current === "idle" &&
+        performance.now() >= cooldownUntilRef.current &&
+        scrollInterceptorRef.current?.(deltaY)
+      ) {
+        return;
+      }
+      goToScreen(indexRef.current + (deltaY > 0 ? 1 : -1));
+    },
+    [goToScreen],
+  );
 
   const goToNextScreen = useCallback(() => {
     goToScreen(indexRef.current + 1);
@@ -164,7 +209,7 @@ export function SectionPagerProvider({
       // 始终吃掉滚轮，避免锁定期间浏览器仍做原生滚动
       event.preventDefault();
       if (Math.abs(event.deltaY) < WHEEL_THRESHOLD) return;
-      goToScreen(indexRef.current + (event.deltaY > 0 ? 1 : -1));
+      navigate(event.deltaY);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -211,7 +256,7 @@ export function SectionPagerProvider({
       const endY = event.changedTouches[0]?.clientY ?? touchStartY;
       const travelled = touchStartY - endY;
       if (Math.abs(travelled) < TOUCH_THRESHOLD) return;
-      goToScreen(indexRef.current + (travelled > 0 ? 1 : -1));
+      navigate(travelled);
     };
 
     window.addEventListener("wheel", onWheel, { passive: false });
@@ -225,7 +270,7 @@ export function SectionPagerProvider({
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchEnd);
     };
-  }, [goToScreen]);
+  }, [goToScreen, navigate]);
 
   const activeScreen = screens[index];
   const value = useMemo<SectionPagerValue>(
@@ -239,6 +284,7 @@ export function SectionPagerProvider({
       goToPrevScreen,
       setNavigationLocked,
       registerTopOverscroll,
+      registerScrollInterceptor,
     }),
     [
       index,
@@ -250,6 +296,7 @@ export function SectionPagerProvider({
       goToPrevScreen,
       setNavigationLocked,
       registerTopOverscroll,
+      registerScrollInterceptor,
     ],
   );
 
@@ -264,7 +311,9 @@ export function SectionPagerProvider({
               className={`absolute inset-0 ${isActive ? "" : "invisible"}`}
               inert={!isActive}
             >
-              {screen.node}
+              <ScreenActiveContext.Provider value={isActive}>
+                {screen.node}
+              </ScreenActiveContext.Provider>
             </div>
           );
         })}
