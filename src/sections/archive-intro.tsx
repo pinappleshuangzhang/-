@@ -10,10 +10,7 @@ import archiveFolderImg from "../../public/archive/archive-folder.png";
  */
 export function ArchiveIntro() {
   return (
-    <section
-      data-nav-variant="archive-ga-001"
-      className="relative h-screen min-h-[700px] overflow-hidden bg-white"
-    >
+    <section className="relative h-full min-h-[700px] overflow-hidden bg-white">
       {/* 鼠标排斥滤镜：分屏内图片、文字全部参与变形 */}
       <RepelFilter className="absolute inset-0">
       <SectionBackground src={archiveBgImg} className="z-10" />

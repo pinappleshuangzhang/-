@@ -66,6 +66,10 @@
 
   --background: var(--color-grey-100);
   --foreground: var(--color-grey-400);
+
+  /* 屏间切换幕布配色 */
+  --ascii-curtain-bg: #faf9fa;
+  --ascii-curtain-color: var(--color-grey-400);
 }
 
 * {
@@ -83,6 +87,28 @@ body {
   color: var(--foreground);
   font-family: var(--font-noto-serif-sc), "Noto Serif SC", serif;
   overflow-x: hidden;
+}
+
+/* 整屏分页模式：页面本身不滚动，翻屏由 SectionPagerProvider 接管 */
+html[data-section-pager],
+html[data-section-pager] body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* 屏间切换幕布：盖在全部固定 UI 之上，不拦截指针 */
+canvas[data-ascii-curtain] {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+canvas[data-ascii-curtain="idle"] {
+  visibility: hidden;
 }
 
 ::selection {

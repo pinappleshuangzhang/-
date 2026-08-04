@@ -1,27 +1,36 @@
 export function ScrollHint() {
   return (
-    <div className="flex flex-col items-center gap-1" aria-hidden="true">
-      <p className="font-bodoni text-12 uppercase italic text-grey-400">
+    <span className="flex flex-col items-center gap-1" aria-hidden="true">
+      <span className="font-bodoni text-12 uppercase italic text-grey-400">
         Scroll
-      </p>
+      </span>
       <span className="relative h-[18px] w-[14px] rounded-rm-12 border border-grey-400">
         <span className="absolute left-1/2 top-[6px] h-[5px] w-px -translate-x-1/2 rounded-full bg-grey-400" />
       </span>
-    </div>
+    </span>
   );
 }
 
-type ScrollHintCornerProps = React.HTMLAttributes<HTMLDivElement>;
+type NextScreenHintProps = {
+  onActivate: () => void;
+};
 
-/** 右下角滚动提示：固定在视口右下角，贴 30px 边距，全站共用 */
-export function ScrollHintCorner({ className, ...rest }: ScrollHintCornerProps) {
+/**
+ * 右下角切屏提示：固定在视口右下角贴 30px 边距。
+ * 同时是可聚焦按钮，键盘与指针用户都能据此进入下一屏。
+ */
+export function NextScreenHint({ onActivate }: NextScreenHintProps) {
   return (
-    <div
-      className={`fixed inset-x-0 bottom-[30px] z-50 ${className ?? ""}`}
-      {...rest}
-    >
+    <div className="pointer-events-none fixed inset-x-0 bottom-[30px] z-50">
       <div className="mx-auto flex w-[calc(100%-60px)] justify-end">
-        <ScrollHint />
+        <button
+          type="button"
+          onClick={onActivate}
+          aria-label="进入下一屏"
+          className="pointer-events-auto rounded-rs-8 p-1 transition-transform duration-300 hover:scale-105 focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:scale-100"
+        >
+          <ScrollHint />
+        </button>
       </div>
     </div>
   );

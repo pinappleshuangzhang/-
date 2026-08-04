@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ScrollHintCorner } from "@/components/ui/scroll-hint";
+import { useSectionPager } from "@/components/providers/section-pager-provider";
+import { NextScreenHint } from "@/components/ui/scroll-hint";
 import { SiteNav } from "@/components/ui/site-nav";
-
-export type NavVariant = "studio" | "archive-ga-001";
+import type { NavVariant } from "@/lib/nav-variants";
 
 const NAV_CENTER: Record<NavVariant, React.ReactNode> = {
   studio: (
@@ -21,40 +20,17 @@ const NAV_CENTER: Record<NavVariant, React.ReactNode> = {
 };
 
 /**
- * 全局固定 UI：导航 + 右下角滚动提示，不随页面滚动。
- * 各分屏在 section 上声明 data-nav-variant，
- * 滚动到对应分屏时导航中间标题自动切换。
+ * 全局固定 UI：导航 + 右下角切屏提示。
+ * 导航中间标题跟随当前分屏，切屏提示在末屏隐藏。
  */
 export function PageChrome() {
-  const [variant, setVariant] = useState<NavVariant>("studio");
-
-  useEffect(() => {
-    const sections = document.querySelectorAll<HTMLElement>(
-      "[data-nav-variant]",
-    );
-    if (sections.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const next = (entry.target as HTMLElement).dataset.navVariant;
-          if (next && next in NAV_CENTER) {
-            setVariant(next as NavVariant);
-          }
-        }
-      },
-      { threshold: 0.5 },
-    );
-
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
-  }, []);
+  const { navVariant, index, count, goToNextScreen } = useSectionPager();
+  const hasNextScreen = index < count - 1;
 
   return (
     <>
-      <SiteNav center={NAV_CENTER[variant]} />
-      <ScrollHintCorner />
+      <SiteNav center={NAV_CENTER[navVariant]} />
+      {hasNextScreen && <NextScreenHint onActivate={goToNextScreen} />}
     </>
   );
 }

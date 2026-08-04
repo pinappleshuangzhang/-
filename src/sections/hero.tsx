@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { useLenis } from "lenis/react";
 import {
   buildFallbackReveal,
   buildHeroReveal,
@@ -12,6 +11,7 @@ import {
   createCounter,
 } from "@/animations/hero-intro";
 import { RepelFilter } from "@/components/effects/repel-filter";
+import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { SectionBackground } from "@/components/ui/section-background";
 import { useVideoPreloader } from "@/hooks/use-video-preloader";
 import archiveBoxImg from "../../public/hero/archive-box.png";
@@ -34,37 +34,15 @@ export function Hero() {
 
   const preload = useVideoPreloader(VIDEO_SRC);
   const preloadRef = useRef(preload);
-  const lenis = useLenis();
-  const lenisRef = useRef(lenis);
+  // 分页器默认锁定，序幕结束后由此放行切屏
+  const { setNavigationLocked } = useSectionPager();
 
   useEffect(() => {
     preloadRef.current = preload;
   }, [preload]);
 
-  useEffect(() => {
-    lenisRef.current = lenis;
-  }, [lenis]);
-
   const doneRef = useRef(false);
   const revealStartedRef = useRef(false);
-  const reduceRef = useRef(false);
-
-  // 进入时回到页面顶部：关闭浏览器滚动位置恢复，保证序幕从首屏开始
-  useEffect(() => {
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
-    }
-    if (!doneRef.current) {
-      window.scrollTo(0, 0);
-    }
-  }, []);
-
-  // 序幕期间锁定滚动
-  useEffect(() => {
-    if (!lenis || doneRef.current || reduceRef.current) return;
-    lenis.stop();
-    return () => lenis.start();
-  }, [lenis]);
 
   useGSAP(
     (_, contextSafe) => {
@@ -86,7 +64,7 @@ export function Hero() {
 
       const finish = () => {
         doneRef.current = true;
-        lenisRef.current?.start();
+        setNavigationLocked(false);
       };
 
       // 降级路径：跳过（或中断）视频，直接交叉淡化到静态首屏
@@ -142,7 +120,6 @@ export function Hero() {
       const media = gsap.matchMedia();
 
       media.add("(prefers-reduced-motion: reduce)", () => {
-        reduceRef.current = true;
         revealStartedRef.current = true;
         gsap.set(loader, { autoAlpha: 0 });
         gsap.set(videoLayer, { autoAlpha: 0 });
@@ -200,8 +177,7 @@ export function Hero() {
   return (
     <section
       ref={container}
-      data-nav-variant="studio"
-      className="relative h-screen min-h-[700px] overflow-hidden bg-grey-100"
+      className="relative h-full min-h-[700px] overflow-hidden bg-grey-100"
     >
       {/* 鼠标排斥滤镜：分屏内视频、图片、文字全部参与变形 */}
       <RepelFilter className="absolute inset-0">
