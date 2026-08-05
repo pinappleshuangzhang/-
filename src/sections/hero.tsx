@@ -281,9 +281,12 @@ export function Hero() {
           sizes="100vw"
           className="object-cover"
         />
-        {/* 档案盒：尺寸随视口收缩，内部文字以 em 随盒等比缩放（基准 533px = 16px 字号） */}
+        {/* 档案盒：尺寸/位置跟随视频 cover 缩放后的玻璃底座投影，保证序幕与视频首帧无缝衔接。
+            实测：视频首帧底座宽 39.26% 画面宽、中心低于画面中心 1.53%；
+            archive-box.png 内底座占图宽 92.9% → 容器 = 39.26%/92.9% ≈ 42.26% cover 宽度，
+            cover 宽度 = max(100vw, 100vh*16/9)。内部文字以 em 随盒等比缩放（基准 533px = 16px 字号） */}
         <div
-          className="absolute left-1/2 top-1/2 h-[min(533px,64vh)] w-[min(533px,64vh)] -translate-x-1/2 -translate-y-1/2 text-[length:calc(min(533px,64vh)/33.3125)]"
+          className="absolute left-1/2 top-[calc(50%+max(100vw,177.7778vh)*0.0086)] size-[calc(max(100vw,177.7778vh)*0.4226)] -translate-x-1/2 -translate-y-1/2 text-[length:calc(max(100vw,177.7778vh)*0.4226/33.3125)]"
         >
           <span className="absolute -left-[5.8%] top-[0.4%] block h-[123.6%] w-[115.4%]">
             <Image src="/hero/archive-shadow.svg" alt="" fill sizes="50vw" />
