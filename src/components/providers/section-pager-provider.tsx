@@ -37,11 +37,18 @@ type SectionPagerValue = {
   count: number;
   phase: CurtainPhase;
   navVariant: NavVariant;
+  /** 首屏序幕等场景是否锁定切屏（锁定时隐藏切屏提示） */
+  navigationLocked: boolean;
   goToScreen: (index: number) => void;
   goToNextScreen: () => void;
   goToPrevScreen: () => void;
   /** 首屏序幕等场景下暂时禁止切屏 */
   setNavigationLocked: (locked: boolean) => void;
+  /**
+   * 不切换屏幕，但走一次完整的幕布过场：
+   * 幕布铺满视口时执行 onCovered（如重置首屏序幕），随后幕布消散。
+   */
+  runWithCurtain: (onCovered: () => void) => void;
   /** 注册“已在第一屏仍继续向上滑”的处理器（如重播首屏序幕），返回注销函数 */
   registerTopOverscroll: (handler: () => void) => () => void;
   /**
@@ -87,11 +94,14 @@ export function SectionPagerProvider({
   const reducedMotion = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<CurtainPhase>("idle");
+  const [navigationLocked, setNavigationLockedState] = useState(true);
 
   const indexRef = useRef(index);
   const phaseRef = useRef(phase);
   const countRef = useRef(screens.length);
   const pendingIndexRef = useRef<number | null>(null);
+  // 幕布铺满时要执行的屏内动作（不换屏，如重播首屏序幕）
+  const pendingActionRef = useRef<(() => void) | null>(null);
   // 首屏序幕先占住锁，序幕结束时再放行
   const lockedRef = useRef(true);
   const cooldownUntilRef = useRef(0);
@@ -102,6 +112,7 @@ export function SectionPagerProvider({
 
   const setNavigationLocked = useCallback((locked: boolean) => {
     lockedRef.current = locked;
+    setNavigationLockedState(locked);
   }, []);
 
   const topOverscrollRef = useRef<(() => void) | null>(null);
@@ -149,6 +160,15 @@ export function SectionPagerProvider({
     setPhase("cover");
   }, []);
 
+  const runWithCurtain = useCallback((onCovered: () => void) => {
+    if (phaseRef.current !== "idle") return;
+    if (performance.now() < cooldownUntilRef.current) return;
+
+    pendingActionRef.current = onCovered;
+    phaseRef.current = "cover";
+    setPhase("cover");
+  }, []);
+
   /** 切屏前先询问屏内拦截器，被消费则不切屏 */
   const navigate = useCallback(
     (deltaY: number) => {
@@ -180,6 +200,11 @@ export function SectionPagerProvider({
       indexRef.current = target;
       setIndex(target);
     }
+    const action = pendingActionRef.current;
+    if (action) {
+      pendingActionRef.current = null;
+      action();
+    }
     phaseRef.current = "reveal";
     setPhase("reveal");
   }, []);
@@ -194,6 +219,7 @@ export function SectionPagerProvider({
   useEffect(() => {
     const timer = window.setTimeout(() => {
       lockedRef.current = false;
+      setNavigationLockedState(false);
     }, LOCK_SAFETY_TIMEOUT_MS);
     return () => window.clearTimeout(timer);
   }, []);
@@ -279,10 +305,12 @@ export function SectionPagerProvider({
       count: screens.length,
       phase,
       navVariant: activeScreen?.navVariant ?? "studio",
+      navigationLocked,
       goToScreen,
       goToNextScreen,
       goToPrevScreen,
       setNavigationLocked,
+      runWithCurtain,
       registerTopOverscroll,
       registerScrollInterceptor,
     }),
@@ -291,10 +319,12 @@ export function SectionPagerProvider({
       screens.length,
       phase,
       activeScreen?.navVariant,
+      navigationLocked,
       goToScreen,
       goToNextScreen,
       goToPrevScreen,
       setNavigationLocked,
+      runWithCurtain,
       registerTopOverscroll,
       registerScrollInterceptor,
     ],

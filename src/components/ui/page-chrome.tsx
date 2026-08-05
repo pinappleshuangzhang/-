@@ -21,16 +21,20 @@ const NAV_CENTER: Record<NavVariant, React.ReactNode> = {
 
 /**
  * 全局固定 UI：导航 + 右下角切屏提示。
- * 导航中间标题跟随当前分屏，切屏提示在末屏隐藏。
+ * 导航中间标题跟随当前分屏，切屏提示在末屏隐藏，
+ * 首屏加载/序幕期间（切屏锁定时）也不显示。
  */
 export function PageChrome() {
-  const { navVariant, index, count, goToNextScreen } = useSectionPager();
+  const { navVariant, index, count, navigationLocked, goToNextScreen } =
+    useSectionPager();
   const hasNextScreen = index < count - 1;
 
   return (
     <>
       <SiteNav center={NAV_CENTER[navVariant]} />
-      {hasNextScreen && <NextScreenHint onActivate={goToNextScreen} />}
+      {!navigationLocked && hasNextScreen && (
+        <NextScreenHint onActivate={goToNextScreen} />
+      )}
     </>
   );
 }
