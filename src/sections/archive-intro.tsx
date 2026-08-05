@@ -22,10 +22,10 @@ gsap.registerPlugin(useGSAP);
 
 const FOLDER_VIDEO_WEBM = "/archive/archive-folder-anim.webm";
 const FOLDER_VIDEO_HEVC = "/archive/archive-folder-anim-hevc.mp4";
-/** 每像素滚动推进的进度量：两段文字 + 切换全程约需 1800px 滚动 */
-const SCRUB_PER_PX = 0.00055;
-/** 进度追踪的阻尼系数（数值越大跟手越紧） */
-const SCRUB_DAMPING = 9;
+/** 每像素滚动推进的进度量：两段文字 + 切换全程约需 3000px 滚动 */
+const SCRUB_PER_PX = 0.00033;
+/** 进度追踪的阻尼系数（数值越大跟手越紧，越小拖拽感越强） */
+const SCRUB_DAMPING = 6;
 
 /** 逐字变色文本：每个字一个 span，供擦撦时间轴按字点亮 */
 function ScrubText({ text }: { text: string }) {
