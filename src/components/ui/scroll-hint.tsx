@@ -1,3 +1,16 @@
+"use client";
+
+import { useRef } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import {
+  ENTRANCE_HIDDEN,
+  ENTRANCE_TWEEN,
+} from "@/animations/entrance";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
+
+gsap.registerPlugin(useGSAP);
+
 export function ScrollHint() {
   return (
     <span className="flex flex-col items-center gap-1" aria-hidden="true">
@@ -18,10 +31,25 @@ type NextScreenHintProps = {
 /**
  * 右下角切屏提示：固定在视口右下角贴 30px 边距。
  * 同时是可聚焦按钮，键盘与指针用户都能据此进入下一屏。
+ * 挂载时以全站统一的角度浮现动效入场（与首屏标题、第二屏文字一致）。
  */
 export function NextScreenHint({ onActivate }: NextScreenHintProps) {
+  const container = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
+
+  useGSAP(
+    () => {
+      if (!container.current || reducedMotion) return;
+      gsap.from(container.current, { ...ENTRANCE_HIDDEN, ...ENTRANCE_TWEEN });
+    },
+    { dependencies: [reducedMotion], scope: container },
+  );
+
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[30px] z-50">
+    <div
+      ref={container}
+      className="pointer-events-none fixed inset-x-0 bottom-[30px] z-50"
+    >
       <div className="mx-auto flex w-[calc(100%-60px)] justify-end">
         <button
           type="button"

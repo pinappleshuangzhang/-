@@ -140,8 +140,6 @@ export function Hero() {
       });
 
       media.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.set(titleLines, { yPercent: 110 });
-
         // 阶段一：计数器由真实下载进度驱动，并保证最短节奏时长
         const counter = createCounter(counterEl);
         let gate = 0;
@@ -187,8 +185,7 @@ export function Hero() {
               video.pause();
               gsap.set(loader, { autoAlpha: 1 });
               gsap.set(videoLayer, { autoAlpha: 0 });
-              gsap.set(titleLines, { yPercent: 110, opacity: 0 });
-              gsap.set(ornaments, { opacity: 0 });
+              gsap.set([...titleLines, ...ornaments], { autoAlpha: 0 });
               startSequence();
             }),
           );
@@ -240,14 +237,12 @@ export function Hero() {
         {/* 标题组：导航（top 30 + 高 40）下方 44px */}
         <div className="absolute inset-x-0 top-[114px] flex flex-col items-center gap-2 px-10">
           <div className="relative">
-            <div className="overflow-hidden">
-              <h1
-                data-hero-title-line
-                className="font-serif-sc text-52 font-medium uppercase text-grey-400 opacity-0 motion-reduce:opacity-100"
-              >
-                万有引力设计档案室
-              </h1>
-            </div>
+            <h1
+              data-hero-title-line
+              className="font-serif-sc text-52 font-medium uppercase text-grey-400 opacity-0 motion-reduce:opacity-100"
+            >
+              万有引力设计档案室
+            </h1>
             <span
               data-hero-ornament
               className="absolute -right-10 top-0 size-[33px] opacity-0 motion-reduce:opacity-100"
@@ -255,14 +250,12 @@ export function Hero() {
               <Image src="/hero/hero-mark.svg" alt="" width={33} height={33} />
             </span>
           </div>
-          <div className="overflow-hidden">
-            <p
-              data-hero-title-line
-              className="font-serif-sc text-18 font-light uppercase text-grey-400 opacity-0 motion-reduce:opacity-100"
-            >
-              请跟随设计调查记录，完成本次关于&ldquo;引力&rdquo;的探索
-            </p>
-          </div>
+          <p
+            data-hero-title-line
+            className="font-serif-sc text-18 font-light uppercase text-grey-400 opacity-0 motion-reduce:opacity-100"
+          >
+            请跟随设计调查记录，完成本次关于&ldquo;引力&rdquo;的探索
+          </p>
         </div>
       </div>
 

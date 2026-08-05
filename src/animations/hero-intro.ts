@@ -1,4 +1,19 @@
 import gsap from "gsap";
+import {
+  ENTRANCE_HIDDEN,
+  ENTRANCE_STAGGER,
+  ENTRANCE_TWEEN,
+  ENTRANCE_VISIBLE,
+} from "@/animations/entrance";
+
+/** 首屏入场元素按「主标题 → 角标 → 副标题」排序，与视觉阅读顺序一致 */
+function orderRevealItems(
+  titleLines: HTMLElement[],
+  ornaments: HTMLElement[],
+): HTMLElement[] {
+  const [title, ...restLines] = titleLines;
+  return [title, ...ornaments, ...restLines].filter(Boolean);
+}
 
 export type CounterController = {
   /** 将显示值平滑推进到目标百分比（0~100） */
@@ -54,7 +69,7 @@ export function buildLoaderExit(loader: HTMLElement): gsap.core.Timeline {
 }
 
 /**
- * 阶段三：视频停在最后一帧，大小标题同步入场。
+ * 阶段三：视频停在最后一帧，标题、角标与副标题以全站统一动效依次入场。
  * 视频层保持可见（定格末帧即最终背景），下方静态背景只作降级兜底。
  */
 export function buildHeroReveal({
@@ -64,32 +79,15 @@ export function buildHeroReveal({
   titleLines: HTMLElement[];
   ornaments: HTMLElement[];
 }): gsap.core.Timeline {
-  const timeline = gsap.timeline({
-    defaults: { ease: "power3.out" },
-  });
-
-  timeline
-    .to(
-      titleLines,
-      {
-        yPercent: 0,
-        opacity: 1,
-        duration: 1,
-        stagger: 0.14,
-      },
-      0,
-    )
-    .to(
-      ornaments,
-      {
-        opacity: 1,
-        duration: 0.7,
-        ease: "power2.out",
-      },
-      0.6,
-    );
-
-  return timeline;
+  const items = orderRevealItems(titleLines, ornaments);
+  return gsap
+    .timeline()
+    .set(items, ENTRANCE_HIDDEN)
+    .to(items, {
+      ...ENTRANCE_VISIBLE,
+      ...ENTRANCE_TWEEN,
+      stagger: ENTRANCE_STAGGER,
+    });
 }
 
 /**
@@ -104,13 +102,14 @@ export function buildFallbackReveal({
   titleLines: HTMLElement[];
   ornaments: HTMLElement[];
 }): gsap.core.Timeline {
+  const items = orderRevealItems(titleLines, ornaments);
   return gsap
-    .timeline({ defaults: { ease: "power3.out" } })
-    .to(loader, { autoAlpha: 0, duration: 0.8, ease: "power2.inOut" })
+    .timeline()
+    .set(items, ENTRANCE_HIDDEN, 0)
+    .to(loader, { autoAlpha: 0, duration: 0.8, ease: "power2.inOut" }, 0)
     .to(
-      titleLines,
-      { yPercent: 0, opacity: 1, duration: 1, stagger: 0.14 },
+      items,
+      { ...ENTRANCE_VISIBLE, ...ENTRANCE_TWEEN, stagger: ENTRANCE_STAGGER },
       "-=0.3",
-    )
-    .to(ornaments, { opacity: 1, duration: 0.7 }, "-=0.5");
+    );
 }

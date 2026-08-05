@@ -5,6 +5,11 @@ import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import {
+  ENTRANCE_HIDDEN,
+  ENTRANCE_STAGGER,
+  ENTRANCE_TWEEN,
+} from "@/animations/entrance";
+import {
   AlphaScrubVideo,
   type AlphaScrubVideoHandle,
 } from "@/components/effects/alpha-scrub-video";
@@ -78,14 +83,10 @@ export function ArchiveIntro() {
       );
       if (!lines.length) return;
       gsap.from(lines, {
-        autoAlpha: 0,
-        y: 20,
-        rotate: 5,
-        transformOrigin: "50% 50%",
-        duration: 1,
-        ease: "expo.out",
+        ...ENTRANCE_HIDDEN,
+        ...ENTRANCE_TWEEN,
         delay: 0.4,
-        stagger: 0.07,
+        stagger: ENTRANCE_STAGGER,
       });
     },
     { dependencies: [isActive, reducedMotion], scope: container },
