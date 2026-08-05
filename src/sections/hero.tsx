@@ -278,7 +278,7 @@ export function Hero() {
             archive-box.png 内底座占图宽 92.9% → 容器 = 39.26%/92.9% ≈ 42.26% cover 宽度，
             cover 宽度 = max(100vw, 100vh*16/9)。内部文字以 em 随盒等比缩放（基准 533px = 16px 字号） */}
         <div
-          className="absolute left-1/2 top-[calc(50%+max(100vw,177.7778vh)*0.0086)] size-[calc(max(100vw,177.7778vh)*0.4226)] -translate-x-1/2 -translate-y-1/2 text-[length:calc(max(100vw,177.7778vh)*0.4226/33.3125)]"
+          className="absolute left-[calc(50%-max(100vw,177.7778vh)*0.0033)] top-[calc(50%+max(100vw,177.7778vh)*0.0087)] size-[calc(max(100vw,177.7778vh)*0.4224)] -translate-x-1/2 -translate-y-1/2 text-[length:calc(max(100vw,177.7778vh)*0.4224/33.3125)]"
         >
           <span className="absolute -left-[5.8%] top-[0.4%] block h-[123.6%] w-[115.4%]">
             <Image src="/hero/archive-shadow.svg" alt="" fill sizes="50vw" />
@@ -292,7 +292,7 @@ export function Hero() {
             sizes="(min-width: 1024px) 533px, 64vh"
             className="object-contain"
           />
-          <div className="absolute left-[31.3%] top-[43.2%] flex w-[39%] flex-col gap-[1em]">
+          <div className="absolute left-[32.6%] top-[41.1%] flex w-[39%] flex-col gap-[1em]">
             <div className="flex flex-col gap-[0.5em]">
               <Image
                 src="/hero/loader-mark.svg"
@@ -307,17 +307,17 @@ export function Hero() {
             </div>
             {/* 0.5px 细密点线（1px 段 + 1px 空），复刻设计稿 Vector 20 */}
             <div className="h-[0.5px] w-full bg-[repeating-linear-gradient(to_right,var(--color-grey-300)_0,var(--color-grey-300)_1px,transparent_1px,transparent_2px)]" />
-            <div className="flex flex-col gap-[0.5em]">
+            <div className="flex flex-col gap-[0.1em]">
               <p className="font-serif-sc text-[0.875em] uppercase text-grey-400">
                 临时身份 - 041
               </p>
-              <div className="flex flex-col gap-[0.75em]">
+              <div className="flex flex-col gap-[0.95em]">
                 <p className="font-serif-sc text-[0.875em] uppercase text-grey-400">
                   正在建立权限
                 </p>
                 <p
                   ref={counterRef}
-                  className="font-bodoni text-[3.25em] leading-none text-grey-400"
+                  className="font-bodoni text-[3.2em] leading-none text-grey-400"
                   aria-live="polite"
                 >
                   0%
