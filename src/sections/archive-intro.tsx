@@ -67,6 +67,30 @@ export function ArchiveIntro() {
     setVideoAllowed(true);
   }
 
+  // 进屏入场：logo 与文字逐行带角度浮现（参考 museosansevero.it 的文字入场）
+  useGSAP(
+    () => {
+      const root = container.current;
+      if (!root || !isActive || reducedMotion) return;
+      const lines = gsap.utils.toArray<HTMLElement>(
+        "[data-intro-line], [data-swap-a] p",
+        root,
+      );
+      if (!lines.length) return;
+      gsap.from(lines, {
+        autoAlpha: 0,
+        y: 20,
+        rotate: 5,
+        transformOrigin: "50% 50%",
+        duration: 1,
+        ease: "expo.out",
+        delay: 0.4,
+        stagger: 0.07,
+      });
+    },
+    { dependencies: [isActive, reducedMotion], scope: container },
+  );
+
   // 屏内滚动拦截：先推进屏内进度（文字 + 切换 + 视频），两端到头才放行切屏
   useEffect(() => {
     if (!isActive || reducedMotion || videoFailed) return;
@@ -102,7 +126,7 @@ export function ArchiveIntro() {
       );
       const blocksA = gsap.utils.toArray<HTMLElement>("[data-swap-a] > *", root);
       const blocksB = gsap.utils.toArray<HTMLElement>("[data-swap-b] > *", root);
-      gsap.set(blocksB, { autoAlpha: 0, y: "1.2em" });
+      gsap.set(blocksB, { autoAlpha: 0, y: "1.2em", rotate: 5 });
 
       const timeline = gsap.timeline({ paused: true });
       timeline
@@ -132,6 +156,7 @@ export function ArchiveIntro() {
           {
             autoAlpha: 1,
             y: 0,
+            rotate: 0,
             duration: 12,
             ease: "power3.out",
             stagger: 4,
@@ -229,6 +254,7 @@ export function ArchiveIntro() {
               alt=""
               width={48}
               height={48}
+              data-intro-line
               className="size-[3em]"
             />
             <div className="relative">
