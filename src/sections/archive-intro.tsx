@@ -52,6 +52,7 @@ export function ArchiveIntro() {
 
   const targetRef = useRef(0);
   const displayRef = useRef(0);
+  const swapTimelineRef = useRef<gsap.core.Timeline | null>(null);
 
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
@@ -60,18 +61,36 @@ export function ArchiveIntro() {
   const isActive = useScreenActive();
   const { registerScrollInterceptor } = useSectionPager();
 
-  // 屏内滚动拦截：先推进视频进度，两端到头才放行切屏
+  // 屏内滚动拦截：先推进视频进度，到头后切换终段文案，两端都到头才放行切屏
   useEffect(() => {
     if (!isActive || reducedMotion || videoFailed) return;
     return registerScrollInterceptor((deltaY) => {
       const target = targetRef.current;
-      if (deltaY > 0 && target >= 1) return false;
-      if (deltaY < 0 && target <= 0) return false;
-      targetRef.current = Math.min(
-        1,
-        Math.max(0, target + deltaY * SCRUB_PER_PX),
-      );
-      return true;
+      const swap = swapTimelineRef.current;
+
+      if (deltaY > 0) {
+        if (target < 1) {
+          targetRef.current = Math.min(1, target + deltaY * SCRUB_PER_PX);
+          return true;
+        }
+        // 擦拭到头：先播放文案切换，切换完才放行切屏
+        if (swap && swap.progress() < 1) {
+          swap.play();
+          return true;
+        }
+        return false;
+      }
+
+      // 向上：先把文案切换倒回去，再倒放视频，最后才放行切屏
+      if (swap && swap.progress() > 0) {
+        swap.reverse();
+        return true;
+      }
+      if (target > 0) {
+        targetRef.current = Math.max(0, target + deltaY * SCRUB_PER_PX);
+        return true;
+      }
+      return false;
     });
   }, [isActive, reducedMotion, videoFailed, registerScrollInterceptor]);
 
@@ -91,6 +110,39 @@ export function ArchiveIntro() {
       });
       textTimelineRef.current = timeline;
 
+      // 终段文案切换时间轴：旧文案上滑淡出，新文案（引力）上滑淡入；
+      // 播放/倒放由滚动方向驱动，中途反向也能丝滑衔接
+      const oldBlocks = gsap.utils.toArray<HTMLElement>(
+        "[data-swap-a] > *",
+        root,
+      );
+      const newBlocks = gsap.utils.toArray<HTMLElement>(
+        "[data-swap-b] > *",
+        root,
+      );
+      gsap.set(newBlocks, { autoAlpha: 0, y: "1.2em" });
+      const swapTimeline = gsap.timeline({ paused: true });
+      swapTimeline
+        .to(oldBlocks, {
+          autoAlpha: 0,
+          y: "-0.9em",
+          duration: 0.45,
+          ease: "power2.in",
+          stagger: 0.08,
+        })
+        .to(
+          newBlocks,
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.65,
+            ease: "power3.out",
+            stagger: 0.12,
+          },
+          "-=0.08",
+        );
+      swapTimelineRef.current = swapTimeline;
+
       // 阻尼追踪：滚动只改目标值，逐帧平滑逼近后再驱动视频与文字
       const tick = (_time: number, deltaTime: number) => {
         const target = targetRef.current;
@@ -108,6 +160,7 @@ export function ArchiveIntro() {
       return () => {
         gsap.ticker.remove(tick);
         textTimelineRef.current = null;
+        swapTimelineRef.current = null;
       };
     },
     { scope: container },
@@ -161,7 +214,7 @@ export function ArchiveIntro() {
             />
           )}
 
-          {/* 卡片内文字 */}
+          {/* 卡片内文字：擦拭阶段文案与终段文案（引力）叠放，滚动到头后丝滑切换 */}
           <div className="absolute left-[9.4%] top-[28.2%] flex w-[46%] flex-col gap-[1em]">
             <Image
               src="/archive/archive-logo.svg"
@@ -170,13 +223,28 @@ export function ArchiveIntro() {
               height={48}
               className="size-[3em]"
             />
-            <div className="font-serif-sc text-[1.75em] uppercase text-grey-200">
-              <ScrubText text="我们不断看到同一种现象" />
-            </div>
-            <div className="font-serif-sc text-[1.75em] uppercase text-grey-200">
-              <ScrubText text="有些品牌会被记住" />
-              <ScrubText text="有些产品会被选择" />
-              <ScrubText text="有些设计会被相信" />
+            <div className="relative">
+              <div data-swap-a className="flex flex-col gap-[1em]">
+                <div className="font-serif-sc text-[1.75em] uppercase text-grey-200">
+                  <ScrubText text="我们不断看到同一种现象" />
+                </div>
+                <div className="font-serif-sc text-[1.75em] uppercase text-grey-200">
+                  <ScrubText text="有些品牌会被记住" />
+                  <ScrubText text="有些产品会被选择" />
+                  <ScrubText text="有些设计会被相信" />
+                </div>
+              </div>
+              <div
+                data-swap-b
+                className="absolute inset-x-0 top-0 flex flex-col gap-[0.5em]"
+              >
+                <p className="font-serif-sc text-[1.75em] text-grey-400 opacity-0">
+                  人与品牌、产品与体验之间，始终存在一种看不见的连接，我们称它为——
+                </p>
+                <p className="font-serif-sc text-[3.5em] text-grey-400 opacity-0">
+                  引力
+                </p>
+              </div>
             </div>
           </div>
         </div>
