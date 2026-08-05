@@ -22,8 +22,8 @@ gsap.registerPlugin(useGSAP);
 
 const FOLDER_VIDEO_WEBM = "/archive/archive-folder-anim.webm";
 const FOLDER_VIDEO_HEVC = "/archive/archive-folder-anim-hevc.mp4";
-/** 每像素滚动推进的进度量：全程约需 1100px 滚动 */
-const SCRUB_PER_PX = 0.0009;
+/** 每像素滚动推进的进度量：两段文字 + 切换全程约需 1800px 滚动 */
+const SCRUB_PER_PX = 0.00055;
 /** 进度追踪的阻尼系数（数值越大跟手越紧） */
 const SCRUB_DAMPING = 9;
 
@@ -52,7 +52,6 @@ export function ArchiveIntro() {
 
   const targetRef = useRef(0);
   const displayRef = useRef(0);
-  const swapTimelineRef = useRef<gsap.core.Timeline | null>(null);
 
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
@@ -61,36 +60,18 @@ export function ArchiveIntro() {
   const isActive = useScreenActive();
   const { registerScrollInterceptor } = useSectionPager();
 
-  // 屏内滚动拦截：先推进视频进度，到头后切换终段文案，两端都到头才放行切屏
+  // 屏内滚动拦截：先推进屏内进度（文字 + 切换 + 视频），两端到头才放行切屏
   useEffect(() => {
     if (!isActive || reducedMotion || videoFailed) return;
     return registerScrollInterceptor((deltaY) => {
       const target = targetRef.current;
-      const swap = swapTimelineRef.current;
-
-      if (deltaY > 0) {
-        if (target < 1) {
-          targetRef.current = Math.min(1, target + deltaY * SCRUB_PER_PX);
-          return true;
-        }
-        // 擦拭到头：先播放文案切换，切换完才放行切屏
-        if (swap && swap.progress() < 1) {
-          swap.play();
-          return true;
-        }
-        return false;
-      }
-
-      // 向上：先把文案切换倒回去，再倒放视频，最后才放行切屏
-      if (swap && swap.progress() > 0) {
-        swap.reverse();
-        return true;
-      }
-      if (target > 0) {
-        targetRef.current = Math.max(0, target + deltaY * SCRUB_PER_PX);
-        return true;
-      }
-      return false;
+      if (deltaY > 0 && target >= 1) return false;
+      if (deltaY < 0 && target <= 0) return false;
+      targetRef.current = Math.min(
+        1,
+        Math.max(0, target + deltaY * SCRUB_PER_PX),
+      );
+      return true;
     });
   }, [isActive, reducedMotion, videoFailed, registerScrollInterceptor]);
 
@@ -99,49 +80,70 @@ export function ArchiveIntro() {
       const root = container.current;
       if (!root) return;
 
-      // 逐字变色时间轴：所有字符按顺序由灰点亮为深色，进度由擦撦驱动
-      const chars = gsap.utils.toArray<HTMLElement>("[data-scrub-char]", root);
-      const timeline = gsap.timeline({ paused: true });
-      timeline.to(chars, {
-        color: "var(--color-grey-400)",
-        duration: 2,
-        ease: "none",
-        stagger: 1,
-      });
-      textTimelineRef.current = timeline;
+      // 主时间轴（进度由滚动擦拭驱动，单位为“进度百分点”）：
+      //  0 ~ 38  第一段文字逐字由灰变黑
+      // 38 ~ 56  文案切换：第一段上滑淡出、第二段（引力）上滑淡入
+      // 56 ~ 90  第二段文字逐字由灰变黑
+      // 90 ~ 100 收尾留白：视频最后才织合完毕（两段文字完成之后）
+      const charsA = gsap.utils.toArray<HTMLElement>(
+        "[data-swap-a] [data-scrub-char]",
+        root,
+      );
+      const charsB = gsap.utils.toArray<HTMLElement>(
+        "[data-swap-b] [data-scrub-char]",
+        root,
+      );
+      const blocksA = gsap.utils.toArray<HTMLElement>("[data-swap-a] > *", root);
+      const blocksB = gsap.utils.toArray<HTMLElement>("[data-swap-b] > *", root);
+      gsap.set(blocksB, { autoAlpha: 0, y: "1.2em" });
 
-      // 终段文案切换时间轴：旧文案上滑淡出，新文案（引力）上滑淡入；
-      // 播放/倒放由滚动方向驱动，中途反向也能丝滑衔接
-      const oldBlocks = gsap.utils.toArray<HTMLElement>(
-        "[data-swap-a] > *",
-        root,
-      );
-      const newBlocks = gsap.utils.toArray<HTMLElement>(
-        "[data-swap-b] > *",
-        root,
-      );
-      gsap.set(newBlocks, { autoAlpha: 0, y: "1.2em" });
-      const swapTimeline = gsap.timeline({ paused: true });
-      swapTimeline
-        .to(oldBlocks, {
-          autoAlpha: 0,
-          y: "-0.9em",
-          duration: 0.45,
-          ease: "power2.in",
-          stagger: 0.08,
-        })
+      const timeline = gsap.timeline({ paused: true });
+      timeline
         .to(
-          newBlocks,
+          charsA,
+          {
+            color: "var(--color-grey-400)",
+            duration: 8,
+            ease: "none",
+            stagger: { amount: 30 },
+          },
+          0,
+        )
+        .to(
+          blocksA,
+          {
+            autoAlpha: 0,
+            y: "-0.9em",
+            duration: 10,
+            ease: "power2.in",
+            stagger: 3,
+          },
+          38,
+        )
+        .to(
+          blocksB,
           {
             autoAlpha: 1,
             y: 0,
-            duration: 0.65,
+            duration: 12,
             ease: "power3.out",
-            stagger: 0.12,
+            stagger: 4,
           },
-          "-=0.08",
-        );
-      swapTimelineRef.current = swapTimeline;
+          44,
+        )
+        .to(
+          charsB,
+          {
+            color: "var(--color-grey-400)",
+            duration: 8,
+            ease: "none",
+            stagger: { amount: 26 },
+          },
+          56,
+        )
+        // 空拍占位，把时间轴总长撑到 100：文字在 90% 处完成，视频擦拭到 100% 才结束
+        .to(root, { duration: 10 }, 90);
+      textTimelineRef.current = timeline;
 
       // 阻尼追踪：滚动只改目标值，逐帧平滑逼近后再驱动视频与文字
       const tick = (_time: number, deltaTime: number) => {
@@ -160,7 +162,6 @@ export function ArchiveIntro() {
       return () => {
         gsap.ticker.remove(tick);
         textTimelineRef.current = null;
-        swapTimelineRef.current = null;
       };
     },
     { scope: container },
@@ -238,12 +239,12 @@ export function ArchiveIntro() {
                 data-swap-b
                 className="absolute inset-x-0 top-0 flex flex-col gap-[0.5em]"
               >
-                <p className="font-serif-sc text-[1.75em] text-grey-400 opacity-0">
-                  人与品牌、产品与体验之间，始终存在一种看不见的连接，我们称它为——
-                </p>
-                <p className="font-serif-sc text-[3.5em] text-grey-400 opacity-0">
-                  引力
-                </p>
+                <div className="font-serif-sc text-[1.75em] text-grey-200 opacity-0">
+                  <ScrubText text="人与品牌、产品与体验之间，始终存在一种看不见的连接，我们称它为——" />
+                </div>
+                <div className="font-serif-sc text-[3.5em] text-grey-200 opacity-0">
+                  <ScrubText text="引力" />
+                </div>
               </div>
             </div>
           </div>
