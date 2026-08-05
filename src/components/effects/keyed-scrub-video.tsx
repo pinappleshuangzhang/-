@@ -42,12 +42,13 @@ const FRAGMENT_SHADER = `
   varying vec2 vUv;
   uniform sampler2D uTex;
 
-  // 黑底判定的亮度阈值（带平滑过渡）
-  const float LUMA_EDGE_0 = 0.05;
-  const float LUMA_EDGE_1 = 0.12;
-  // 洞口保护区（视频 uv，y 向下）：区内黑色不抠除
-  const vec2 PROTECT_MIN = vec2(0.07, 0.13);
-  const vec2 PROTECT_MAX = vec2(0.965, 0.94);
+  // 黑底判定的亮度阈值（带平滑过渡）：
+  // 背景不是纯黑，边缘带深灰过渡和投影，阈值调高才能抠干净
+  const float LUMA_EDGE_0 = 0.12;
+  const float LUMA_EDGE_1 = 0.32;
+  // 洞口/砖墙保护区（视频 uv，y 向下）：区内黑色不抠除
+  const vec2 PROTECT_MIN = vec2(0.55, 0.15);
+  const vec2 PROTECT_MAX = vec2(0.975, 0.93);
 
   void main() {
     vec4 color = texture2D(uTex, vUv);

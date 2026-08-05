@@ -35,7 +35,8 @@ export function Hero() {
   const preload = useVideoPreloader(VIDEO_SRC);
   const preloadRef = useRef(preload);
   // 分页器默认锁定，序幕结束后由此放行切屏
-  const { setNavigationLocked, registerTopOverscroll } = useSectionPager();
+  const { setNavigationLocked, registerTopOverscroll, runWithCurtain } =
+    useSectionPager();
 
   useEffect(() => {
     preloadRef.current = preload;
@@ -175,23 +176,23 @@ export function Hero() {
 
         startSequence();
 
-        // 首屏继续向上滑时重播：加载层先淡入盖住画面，再重置下层并重新走流程
+        // 首屏继续向上滑时重播：走一次幕布过场，铺满时重置下层并重新走流程
         replayRef.current = contextSafe!(() => {
           if (!doneRef.current) return;
-          doneRef.current = false;
-          revealStartedRef.current = false;
-          setNavigationLocked(true);
-          counter.reset();
-          gsap
-            .timeline()
-            .to(loader, { autoAlpha: 1, duration: 0.6, ease: "power2.inOut" })
-            .call(() => {
+          runWithCurtain(
+            contextSafe!(() => {
+              doneRef.current = false;
+              revealStartedRef.current = false;
+              setNavigationLocked(true);
+              counter.reset();
               video.pause();
+              gsap.set(loader, { autoAlpha: 1 });
               gsap.set(videoLayer, { autoAlpha: 0 });
               gsap.set(titleLines, { yPercent: 110, opacity: 0 });
               gsap.set(ornaments, { opacity: 0 });
               startSequence();
-            });
+            }),
+          );
         });
 
         return () => {
