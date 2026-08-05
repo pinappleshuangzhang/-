@@ -252,7 +252,7 @@ export function ArchiveIntro() {
           )}
 
           {/* 卡片内文字：擦拭阶段文案与终段文案（引力）叠放，滚动到头后丝滑切换 */}
-          <div className="absolute left-[9.4%] top-[28.2%] flex w-[46%] flex-col gap-[1em]">
+          <div className="absolute left-[9.4%] top-[calc(28.2%-20px)] flex w-[46%] flex-col gap-[1em]">
             <Image
               src="/archive/archive-logo.svg"
               alt=""
