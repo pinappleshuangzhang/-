@@ -11,6 +11,9 @@ type RepelFilterProps = {
   children: React.ReactNode;
 };
 
+/** 排斥效果总开关：暂停使用时置 false，组件退化为普通容器（代码保留） */
+const REPEL_ENABLED = false;
+
 const MAP_SIZE = 256;
 
 /**
@@ -68,6 +71,7 @@ export function RepelFilter({
   const [dataUrl, setDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!REPEL_ENABLED) return;
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const update = () => setDataUrl(media.matches ? null : buildDisplacementMap());
     update();

@@ -5,9 +5,9 @@ import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import {
-  KeyedScrubVideo,
-  type KeyedScrubVideoHandle,
-} from "@/components/effects/keyed-scrub-video";
+  AlphaScrubVideo,
+  type AlphaScrubVideoHandle,
+} from "@/components/effects/alpha-scrub-video";
 import { RepelFilter } from "@/components/effects/repel-filter";
 import {
   useScreenActive,
@@ -20,7 +20,8 @@ import archiveFolderImg from "../../public/archive/archive-folder.png";
 
 gsap.registerPlugin(useGSAP);
 
-const FOLDER_VIDEO_SRC = "/archive/archive-folder-anim.mp4";
+const FOLDER_VIDEO_WEBM = "/archive/archive-folder-anim.webm";
+const FOLDER_VIDEO_HEVC = "/archive/archive-folder-anim-hevc.mp4";
 /** 每像素滚动推进的进度量：全程约需 1100px 滚动 */
 const SCRUB_PER_PX = 0.0009;
 /** 进度追踪的阻尼系数（数值越大跟手越紧） */
@@ -41,12 +42,12 @@ function ScrubText({ text }: { text: string }) {
 
 /**
  * 第二屏：档案 GA_001《什么是引力？》
- * 档案夹是一段"破洞织合"视频：滚轮/触摸控制播放进度（黑底由 WebGL 实时抠除），
+ * 档案夹是一段"破洞织合"透明视频（自带 alpha 通道）：滚轮/触摸控制播放进度，
  * 旁边三行文字随进度由灰变黑；进度到头后继续滚动才切屏。
  */
 export function ArchiveIntro() {
   const container = useRef<HTMLElement>(null);
-  const videoHandleRef = useRef<KeyedScrubVideoHandle>(null);
+  const videoHandleRef = useRef<AlphaScrubVideoHandle>(null);
   const textTimelineRef = useRef<gsap.core.Timeline | null>(null);
 
   const targetRef = useRef(0);
@@ -147,14 +148,16 @@ export function ArchiveIntro() {
             />
           )}
 
-          {/* 擦撦视频：画布比卡片外扩，使视频中的档案夹与卡片对齐 */}
+          {/* 擦拭视频（自带 alpha 通道）：画布比卡片外扩，使视频中的档案夹与卡片对齐
+              （偏移按视频 1112x834 中透明内容包围盒 x22..1094 / y8..834 计算） */}
           {showVideo && (
-            <KeyedScrubVideo
+            <AlphaScrubVideo
               ref={videoHandleRef}
-              src={FOLDER_VIDEO_SRC}
+              srcWebm={FOLDER_VIDEO_WEBM}
+              srcHevc={FOLDER_VIDEO_HEVC}
               onFirstFrame={() => setVideoReady(true)}
               onError={() => setVideoFailed(true)}
-              className="absolute left-[-2.52%] top-[-1.48%] h-[102.46%] w-[104.92%]"
+              className="absolute left-[-2.05%] top-[-0.97%] h-[100.97%] w-[103.73%]"
             />
           )}
 
