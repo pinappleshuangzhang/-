@@ -54,16 +54,13 @@ export function buildLoaderExit(loader: HTMLElement): gsap.core.Timeline {
 }
 
 /**
- * 阶段三：视频最后一帧定格时，大小标题与视频淡出同步进行。
- * 标题层位于视频之上，视频下方是与最后一帧一致的静态背景，
- * 因此视频淡出在视觉上是无缝的。
+ * 阶段三：视频停在最后一帧，大小标题同步入场。
+ * 视频层保持可见（定格末帧即最终背景），下方静态背景只作降级兜底。
  */
 export function buildHeroReveal({
-  video,
   titleLines,
   ornaments,
 }: {
-  video: HTMLElement;
   titleLines: HTMLElement[];
   ornaments: HTMLElement[];
 }): gsap.core.Timeline {
@@ -81,15 +78,6 @@ export function buildHeroReveal({
         stagger: 0.14,
       },
       0,
-    )
-    .to(
-      video,
-      {
-        autoAlpha: 0,
-        duration: 1.1,
-        ease: "power2.inOut",
-      },
-      0.15,
     )
     .to(
       ornaments,

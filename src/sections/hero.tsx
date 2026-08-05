@@ -91,11 +91,10 @@ export function Hero() {
       const runReveal = contextSafe!(() => {
         if (revealStartedRef.current) return;
         revealStartedRef.current = true;
-        buildHeroReveal({
-          video: videoLayer,
-          titleLines,
-          ornaments,
-        }).eventCallback("onComplete", finish);
+        buildHeroReveal({ titleLines, ornaments }).eventCallback(
+          "onComplete",
+          finish,
+        );
       });
 
       // 阶段二：播放全屏视频
@@ -218,7 +217,7 @@ export function Hero() {
     >
       {/* 鼠标排斥滤镜：分屏内视频、图片、文字全部参与变形 */}
       <RepelFilter className="absolute inset-0">
-      {/* 最终首屏背景（与视频最后一帧一致，全屏铺满） */}
+      {/* 静态背景：仅作视频不可用 / 减少动态时的降级兜底（正常流程视频定格末帧） */}
       <SectionBackground src={galleryBgImg} priority className="z-10" />
 
       {/* 全屏视频层 */}
