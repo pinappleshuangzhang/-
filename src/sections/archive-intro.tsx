@@ -55,10 +55,17 @@ export function ArchiveIntro() {
 
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
+  // 首屏序幕结束（导航解锁）后才开始加载视频，避免和首屏视频抢带宽
+  const [videoAllowed, setVideoAllowed] = useState(false);
 
   const reducedMotion = useReducedMotion();
   const isActive = useScreenActive();
-  const { registerScrollInterceptor } = useSectionPager();
+  const { registerScrollInterceptor, navigationLocked } = useSectionPager();
+
+  // 渲染期间锁存：一旦解锁过就保持允许（序幕重播时不重新卸载视频）
+  if (!navigationLocked && !videoAllowed) {
+    setVideoAllowed(true);
+  }
 
   // 屏内滚动拦截：先推进屏内进度（文字 + 切换 + 视频），两端到头才放行切屏
   useEffect(() => {
@@ -167,7 +174,7 @@ export function ArchiveIntro() {
     { scope: container },
   );
 
-  const showVideo = !reducedMotion && !videoFailed;
+  const showVideo = videoAllowed && !reducedMotion && !videoFailed;
   const showPoster = !showVideo || !videoReady;
 
   return (
