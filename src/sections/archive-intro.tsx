@@ -147,8 +147,8 @@ export function ArchiveIntro() {
           {
             autoAlpha: 0,
             y: "-0.9em",
-            rotate: 5,
-            transformOrigin: "50% 50%",
+            rotate: -5,
+            transformOrigin: "0% 50%",
             duration: 8,
             ease: "power2.in",
             stagger: 2,
