@@ -113,7 +113,7 @@ export function ArchiveIntro() {
 
       // 主时间轴（进度由滚动擦拭驱动，单位为“进度百分点”）：
       //   0 ~ 38   第一段文字逐字由灰变黑
-      //  38 ~ 48   第一段上滑淡出（完全退场）
+      //  38 ~ 48   第一段带角度上滑淡出（与入场动效同款，完全退场）
       //  48 ~ 60   空档：两段之间的停顿，继续滚动才带出第二段（阻尼间隔）
       //  60 ~ 76   第二段（引力）带角度上滑淡入
       //  78 ~ 112  第二段文字逐字由灰变黑
@@ -147,6 +147,8 @@ export function ArchiveIntro() {
           {
             autoAlpha: 0,
             y: "-0.9em",
+            rotate: 5,
+            transformOrigin: "50% 50%",
             duration: 8,
             ease: "power2.in",
             stagger: 2,
