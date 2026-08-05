@@ -22,8 +22,8 @@ gsap.registerPlugin(useGSAP);
 
 const FOLDER_VIDEO_WEBM = "/archive/archive-folder-anim.webm";
 const FOLDER_VIDEO_HEVC = "/archive/archive-folder-anim-hevc.mp4";
-/** 每像素滚动推进的进度量：两段文字 + 间隔 + 切换全程约需 3600px 滚动 */
-const SCRUB_PER_PX = 0.00028;
+/** 每像素滚动推进的进度量：两段文字 + 间隔 + 切换全程约需 3960px 滚动 */
+const SCRUB_PER_PX = 0.00025;
 /** 进度追踪的阻尼系数（数值越大跟手越紧，越小拖拽感越强） */
 const SCRUB_DAMPING = 6;
 
@@ -114,10 +114,10 @@ export function ArchiveIntro() {
       // 主时间轴（进度由滚动擦拭驱动，单位为“进度百分点”）：
       //   0 ~ 38   第一段文字逐字由灰变黑
       //  38 ~ 48   第一段带角度上滑淡出（与入场动效同款，完全退场）
-      //  48 ~ 60   空档：两段之间的停顿，继续滚动才带出第二段（阻尼间隔）
-      //  60 ~ 76   第二段（引力）带角度上滑淡入
-      //  78 ~ 112  第二段文字逐字由灰变黑
-      // 112 ~ 120  收尾留白：视频最后才织合完毕（两段文字完成之后）
+      //  48 ~ 72   空档：两段之间的停顿，继续滚动才带出第二段（阻尼间隔）
+      //  72 ~ 88   第二段（引力）带角度上滑淡入
+      //  90 ~ 124  第二段文字逐字由灰变黑
+      // 124 ~ 132  收尾留白：视频最后才织合完毕（两段文字完成之后）
       const charsA = gsap.utils.toArray<HTMLElement>(
         "[data-swap-a] [data-scrub-char]",
         root,
@@ -165,7 +165,7 @@ export function ArchiveIntro() {
             ease: "power3.out",
             stagger: 4,
           },
-          60,
+          72,
         )
         .to(
           charsB,
@@ -175,10 +175,10 @@ export function ArchiveIntro() {
             ease: "none",
             stagger: { amount: 26 },
           },
-          78,
+          90,
         )
-        // 空拍占位，把时间轴总长撑到 120：文字在 112 处完成，视频擦拭到最末才结束
-        .to(root, { duration: 8 }, 112);
+        // 空拍占位，把时间轴总长撑到 132：文字在 124 处完成，视频擦拭到最末才结束
+        .to(root, { duration: 8 }, 124);
       textTimelineRef.current = timeline;
 
       // 阻尼追踪：滚动只改目标值，逐帧平滑逼近后再驱动视频与文字
