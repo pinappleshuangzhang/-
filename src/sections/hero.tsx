@@ -14,9 +14,8 @@ import { RepelFilter } from "@/components/effects/repel-filter";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { SectionBackground } from "@/components/ui/section-background";
 import { useVideoPreloader } from "@/hooks/use-video-preloader";
-import archiveBoxImg from "../../public/hero/archive-box.png";
 import galleryBgImg from "../../public/hero/hero-display-bg.png";
-import loaderBgImg from "../../public/hero/loader-bg.png";
+import loaderFirstImg from "../../public/hero/hero-loader-first.webp";
 
 gsap.registerPlugin(useGSAP);
 
@@ -259,13 +258,13 @@ export function Hero() {
         </div>
       </div>
 
-      {/* 加载序幕层 */}
+      {/* 加载序幕层：底图为视频首帧的高清渲染版，开始播放时与视频画面无缝衔接 */}
       <div
         ref={loaderRef}
         className="absolute inset-0 z-40 motion-reduce:hidden"
       >
         <Image
-          src={loaderBgImg}
+          src={loaderFirstImg}
           alt=""
           fill
           priority
@@ -273,26 +272,15 @@ export function Hero() {
           sizes="100vw"
           className="object-cover"
         />
-        {/* 档案盒：尺寸/位置跟随视频 cover 缩放后的玻璃底座投影，保证序幕与视频首帧无缝衔接。
-            实测：视频首帧底座宽 39.26% 画面宽、中心低于画面中心 1.53%；
-            archive-box.png 内底座占图宽 92.9% → 容器 = 39.26%/92.9% ≈ 42.26% cover 宽度，
-            cover 宽度 = max(100vw, 100vh*16/9)。内部文字以 em 随盒等比缩放（基准 533px = 16px 字号） */}
+        {/* 文字容器：对齐视频首帧中档案册封面。
+            实测（4K 帧 3840x2160）：封面包围盒 x 1520~2135 / y 635~1505
+            → 容器宽 = 615/3840 ≈ 16.02% cover 宽度，
+            中心相对画面中心偏移 x -2.41% / y -0.26%（均以 cover 宽度为基准），
+            cover 宽度 = max(100vw, 100vh*16/9)。内部文字以 em 随封面等比缩放 */}
         <div
-          className="absolute left-[calc(50%-max(100vw,177.7778vh)*0.0033)] top-[calc(50%+max(100vw,177.7778vh)*0.0087)] size-[calc(max(100vw,177.7778vh)*0.4224)] -translate-x-1/2 -translate-y-1/2 text-[length:calc(max(100vw,177.7778vh)*0.4224/33.3125)]"
+          className="absolute left-[calc(50%-max(100vw,177.7778vh)*0.0241)] top-[calc(50%-max(100vw,177.7778vh)*0.0026)] aspect-[615/870] w-[calc(max(100vw,177.7778vh)*0.1602)] -translate-x-1/2 -translate-y-1/2 text-[length:calc(max(100vw,177.7778vh)*0.1602/18)]"
         >
-          <span className="absolute -left-[5.8%] top-[0.4%] block h-[123.6%] w-[115.4%]">
-            <Image src="/hero/archive-shadow.svg" alt="" fill sizes="50vw" />
-          </span>
-          <Image
-            src={archiveBoxImg}
-            alt="万有引力档案盒"
-            fill
-            priority
-            placeholder="blur"
-            sizes="(min-width: 1024px) 533px, 64vh"
-            className="object-contain"
-          />
-          <div className="absolute left-[32.6%] top-[41.1%] flex w-[39%] flex-col gap-[1em]">
+          <div className="absolute left-[15%] top-[26%] flex w-[74%] flex-col gap-[1em]">
             <div className="flex flex-col gap-[0.5em]">
               <Image
                 src="/hero/loader-mark.svg"
