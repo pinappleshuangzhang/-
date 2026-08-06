@@ -1,11 +1,11 @@
 <svg width="748" height="599" viewBox="0 0 748 599" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="8">
 <g id="&#230;&#138;&#149;&#229;&#189;&#177;">
-<foreignObject x="32.6002" y="447.6" width="650.2" height="151.2"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(36.25px);clip-path:url(#bgblur_0_6_2_clip_path);height:100%;width:100%"></div></foreignObject><g id="Rectangle 52" opacity="0.18" filter="url(#filter0_f_6_2)" data-figma-bg-blur-radius="72.5">
+<foreignObject x="32.6002" y="447.6" width="650.2" height="151.2"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(36.25px);clip-path:url(#bgblur_0_6_2_clip_path);height:100%;width:100%"></div></foreignObject><g id="Rectangle 52" opacity="0.08" filter="url(#filter0_f_6_2)" data-figma-bg-blur-radius="72.5">
 <path d="M53.2002 468.2H662.2L619.044 578.2H97.5019L53.2002 468.2Z" fill="url(#paint0_linear_6_2)"/>
 </g>
-<g id="Rectangle 51" opacity="0.18" filter="url(#filter1_f_6_2)">
-<rect x="78.333" y="468.2" width="556.8" height="52.3793" fill="#131313"/>
+<g id="Rectangle 51" opacity="0.06" filter="url(#filter1_f_6_2)">
+<rect x="78.333" y="480" width="556.8" height="40" fill="#131313"/>
 </g>
 <g id="Rectangle 87" opacity="0.7" filter="url(#filter2_f_6_2)">
 <path d="M662.2 78.2L720.2 108.2V478.2H662.2V78.2Z" fill="url(#paint1_linear_6_2)"/>
