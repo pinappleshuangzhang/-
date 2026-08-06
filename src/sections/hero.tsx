@@ -96,20 +96,24 @@ export function Hero() {
         );
       });
 
-      // 阶段二：播放全屏视频
+      // 阶段二：等视频首帧解码就绪后先亮出定格画面（与加载层底图同画面，避免闪烁），
+      // 加载层文字退场完毕后才真正开播，避免静止底图叠在动态画面上产生重影
       const startVideo = contextSafe!(() => {
         const state = preloadRef.current;
         if (state.status !== "ready" || !state.objectUrl) {
           runFallback();
           return;
         }
+        const beginPlayback = contextSafe!(() => {
+          gsap.set(videoLayer, { autoAlpha: 1 });
+          buildLoaderExit(loader).eventCallback("onComplete", () => {
+            video.play().catch(() => runFallback());
+          });
+        });
+        video.addEventListener("loadeddata", beginPlayback, { once: true });
+        video.addEventListener("error", () => runFallback(), { once: true });
         video.src = state.objectUrl;
-        video.currentTime = 0;
-        gsap.set(videoLayer, { autoAlpha: 1 });
-        buildLoaderExit(loader);
-        video
-          .play()
-          .catch(() => runFallback());
+        video.load();
       });
 
       const onTimeUpdate = () => {

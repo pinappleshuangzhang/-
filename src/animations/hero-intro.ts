@@ -58,13 +58,14 @@ export function createCounter(el: HTMLElement): CounterController {
 }
 
 /**
- * 阶段一 → 阶段二：加载层淡出，交出视频画面。
+ * 阶段一 → 阶段二：加载层快速淡出，交出视频画面。
+ * 底层视频此时定格在与加载层底图相同的首帧上，淡出期间画面静止、无重影。
  */
 export function buildLoaderExit(loader: HTMLElement): gsap.core.Timeline {
   return gsap.timeline().to(loader, {
     autoAlpha: 0,
-    duration: 0.7,
-    ease: "power2.inOut",
+    duration: 0.35,
+    ease: "power2.out",
   });
 }
 
