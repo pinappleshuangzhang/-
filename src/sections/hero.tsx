@@ -280,7 +280,7 @@ export function Hero() {
         <div
           className="absolute left-[calc(50%-max(100vw,177.7778vh)*0.0241)] top-[calc(50%-max(100vw,177.7778vh)*0.0026)] aspect-[615/870] w-[calc(max(100vw,177.7778vh)*0.1602)] -translate-x-1/2 -translate-y-1/2 text-[length:calc(max(100vw,177.7778vh)*0.1602/18)]"
         >
-          <div className="absolute left-[calc(5%+5px)] top-[45%] flex w-[74%] flex-col gap-[1em]">
+          <div className="absolute left-[calc(5%+9px)] top-[45%] flex w-[74%] flex-col gap-[1em]">
             <div className="flex flex-col gap-[0.5em]">
               <Image
                 src="/hero/loader-mark.svg"
