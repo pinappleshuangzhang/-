@@ -15,7 +15,7 @@ import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { SectionBackground } from "@/components/ui/section-background";
 import { useVideoPreloader } from "@/hooks/use-video-preloader";
 import galleryBgImg from "../../public/hero/hero-display-bg.png";
-import loaderFirstImg from "../../public/hero/hero-loader-first.webp";
+import loaderBgImg from "../../public/hero/hero-loader-bg.webp";
 
 gsap.registerPlugin(useGSAP);
 
@@ -262,13 +262,13 @@ export function Hero() {
         </div>
       </div>
 
-      {/* 加载序幕层：底图为视频首帧的高清渲染版，开始播放时与视频画面无缝衔接 */}
+      {/* 加载序幕层：Figma 01首屏-1 透视视角档案盒，册子封面文字已烘焙在图中 */}
       <div
         ref={loaderRef}
         className="absolute inset-0 z-40 motion-reduce:hidden"
       >
         <Image
-          src={loaderFirstImg}
+          src={loaderBgImg}
           alt=""
           fill
           priority
@@ -276,48 +276,10 @@ export function Hero() {
           sizes="100vw"
           className="object-cover"
         />
-        {/* 文字容器：对齐视频首帧中档案册封面。
-            实测（4K 帧 3840x2160）：封面包围盒 x 1520~2135 / y 635~1505
-            → 容器宽 = 615/3840 ≈ 16.02% cover 宽度，
-            中心相对画面中心偏移 x -2.41% / y -0.26%（均以 cover 宽度为基准），
-            cover 宽度 = max(100vw, 100vh*16/9)。内部文字以 em 随封面等比缩放 */}
-        <div
-          className="absolute left-[calc(50%-max(100vw,177.7778vh)*0.0241)] top-[calc(50%-max(100vw,177.7778vh)*0.0026)] aspect-[615/870] w-[calc(max(100vw,177.7778vh)*0.1602)] -translate-x-1/2 -translate-y-1/2 text-[length:calc(max(100vw,177.7778vh)*0.1602/18)]"
-        >
-          <div className="absolute left-[calc(5%+15px)] top-[45%] flex w-[74%] flex-col gap-[1em]">
-            <div className="flex flex-col gap-[0.5em]">
-              <Image
-                src="/hero/loader-mark.svg"
-                alt=""
-                width={20}
-                height={18}
-                className="h-[1.125em] w-[1.25em]"
-              />
-              <p className="font-serif-sc text-[1.25em] font-medium uppercase text-grey-400">
-                万有引力设计档案室
-              </p>
-            </div>
-            {/* 0.5px 细密点线（1px 段 + 1px 空），复刻设计稿 Vector 20 */}
-            <div className="h-[0.5px] w-full bg-[repeating-linear-gradient(to_right,var(--color-grey-300)_0,var(--color-grey-300)_1px,transparent_1px,transparent_2px)]" />
-            <div className="flex flex-col gap-[0.1em]">
-              <p className="font-serif-sc text-[0.875em] uppercase text-grey-400">
-                临时身份 - 041
-              </p>
-              <div className="flex flex-col gap-[0.95em]">
-                <p className="font-serif-sc text-[0.875em] uppercase text-grey-400">
-                  正在建立权限
-                </p>
-                <p
-                  ref={counterRef}
-                  className="font-bodoni text-[3.2em] leading-none text-grey-400"
-                  aria-live="polite"
-                >
-                  0%
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* 加载进度仅向屏幕阅读器播报，视觉呈现按设计稿以静态图为准 */}
+        <p ref={counterRef} className="sr-only" aria-live="polite">
+          0%
+        </p>
       </div>
       </RepelFilter>
     </section>
