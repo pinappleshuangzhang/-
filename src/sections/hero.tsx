@@ -14,7 +14,7 @@ import { RepelFilter } from "@/components/effects/repel-filter";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { SectionBackground } from "@/components/ui/section-background";
 import { useVideoPreloader } from "@/hooks/use-video-preloader";
-import galleryBgImg from "../../public/hero/hero-display-bg.png";
+import galleryBgImg from "../../public/hero/hero-display-bg.webp";
 import loaderBgImg from "../../public/hero/hero-loader-bg.webp";
 
 gsap.registerPlugin(useGSAP);
@@ -86,10 +86,12 @@ export function Hero() {
         );
       });
 
-      // 阶段三：最后一帧同步入场
+      // 阶段三：最后一帧同步入场；同时交叉淡出视频层，
+      // 露出下方 4K 静态图（Figma 01首屏-2 指定画面，比视频末帧更干净）
       const runReveal = contextSafe!(() => {
         if (revealStartedRef.current) return;
         revealStartedRef.current = true;
+        gsap.to(videoLayer, { autoAlpha: 0, duration: 1, ease: "power2.out" });
         buildHeroReveal({ titleLines, ornaments }).eventCallback(
           "onComplete",
           finish,
@@ -237,8 +239,8 @@ export function Hero() {
 
       {/* 最终首屏内容：大小标题 + 滚动提示 */}
       <div className="absolute inset-0 z-30">
-        {/* 标题组：导航（top 30 + 高 40）下方 44px */}
-        <div className="absolute inset-x-0 top-[114px] flex flex-col items-center gap-2 px-10">
+        {/* 标题组：Figma 01首屏-2（483:48）距顶 136px */}
+        <div className="absolute inset-x-0 top-[136px] flex flex-col items-center gap-2 px-10">
           <div className="relative">
             <h1
               data-hero-title-line
@@ -255,7 +257,7 @@ export function Hero() {
           </div>
           <p
             data-hero-title-line
-            className="font-serif-sc text-18 font-light uppercase text-grey-400 opacity-0 motion-reduce:opacity-100"
+            className="font-serif-sc text-18 uppercase text-grey-400 opacity-0 motion-reduce:opacity-100"
           >
             请跟随设计调查记录，完成本次关于&ldquo;引力&rdquo;的探索
           </p>
