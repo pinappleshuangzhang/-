@@ -13,9 +13,9 @@ const NAV_CENTER: Record<NavVariant, React.ReactNode> = {
     </p>
   ),
   "archive-ga-001": (
-    <p className="whitespace-nowrap text-24 uppercase text-grey-400">
-      <span className="font-bodoni">Archive_GA_001</span>
-      <span className="font-serif-sc font-medium">《什么是引力？》</span>
+    <p className="whitespace-nowrap text-20 uppercase text-grey-400">
+      <span className="font-bodoni font-normal">ARCHIVE_GA_001</span>
+      <span className="font-serif-sc font-normal">《什么是引力？》</span>
     </p>
   ),
   "archive-ga-002": (

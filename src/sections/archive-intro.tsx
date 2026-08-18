@@ -5,11 +5,6 @@ import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import {
-  ENTRANCE_HIDDEN,
-  ENTRANCE_STAGGER,
-  ENTRANCE_TWEEN,
-} from "@/animations/entrance";
-import {
   AlphaScrubVideo,
   type AlphaScrubVideoHandle,
 } from "@/components/effects/alpha-scrub-video";
@@ -27,10 +22,10 @@ gsap.registerPlugin(useGSAP);
 
 const FOLDER_VIDEO_WEBM = "/archive/archive-folder-anim.webm";
 const FOLDER_VIDEO_HEVC = "/archive/archive-folder-anim-hevc.mp4";
-/** 每像素滚动推进的进度量：两段文字 + 间隔 + 切换全程约需 3960px 滚动 */
-const SCRUB_PER_PX = 0.00025;
+/** 每像素滚动推进的进度量：两段文字 + 间隔 + 切换全程约需 6700px 滚动 */
+const SCRUB_PER_PX = 0.00015;
 /** 进度追踪的阻尼系数（数值越大跟手越紧，越小拖拽感越强） */
-const SCRUB_DAMPING = 6;
+const SCRUB_DAMPING = 3;
 
 /** 逐字变色文本：每个字一个 span，供擦撦时间轴按字点亮 */
 function ScrubText({ text }: { text: string }) {
@@ -71,26 +66,6 @@ export function ArchiveIntro() {
   if (!navigationLocked && !videoAllowed) {
     setVideoAllowed(true);
   }
-
-  // 进屏入场：logo 与文字逐行带角度浮现（参考 museosansevero.it 的文字入场）
-  useGSAP(
-    () => {
-      const root = container.current;
-      if (!root || !isActive || reducedMotion) return;
-      const lines = gsap.utils.toArray<HTMLElement>(
-        "[data-intro-line], [data-swap-a] p",
-        root,
-      );
-      if (!lines.length) return;
-      gsap.from(lines, {
-        ...ENTRANCE_HIDDEN,
-        ...ENTRANCE_TWEEN,
-        delay: 0.4,
-        stagger: ENTRANCE_STAGGER,
-      });
-    },
-    { dependencies: [isActive, reducedMotion], scope: container },
-  );
 
   // 屏内滚动拦截：先推进屏内进度（文字 + 切换 + 视频），两端到头才放行切屏
   useEffect(() => {
@@ -217,14 +192,14 @@ export function ArchiveIntro() {
       <SectionBackground src={archiveBgImg} className="z-10" />
 
       <div className="absolute inset-0 z-20">
-        {/* 档案夹卡片：设计稿 670x500，垂直中心略低于屏幕中心 11px */}
-        <div className="absolute left-1/2 top-[calc(50%+11px)] aspect-[670/500] w-[min(670px,calc(100vw-60px))] -translate-x-1/2 -translate-y-1/2 text-[length:calc(min(670px,100vw-60px)/41.875)]">
+        {/* 档案夹卡片：Figma 486:210 = 563×420，垂直中心略低于屏幕中心 18px；内部字号基准 16px */}
+        <div className="absolute left-1/2 top-[calc(50%+18px)] aspect-[563/420] w-[min(563px,calc(100vw-60px))] -translate-x-1/2 -translate-y-1/2 text-[length:calc(min(563px,100vw-60px)/35.1875)]">
           {/* 投影：设计稿手绘投影图形 1:1 还原（SVG 画布含模糊出血，按设计坐标定位） */}
           <span
             aria-hidden="true"
             className="absolute left-[-2.57%] top-[1.76%] block h-[119.8%] w-[111.64%]"
           >
-            <Image src="/archive/folder-shadow.svg" alt="" fill sizes="70vw" />
+            <Image src="/archive/folder-shadow.svg" alt="" fill sizes="60vw" />
           </span>
 
           {/* 静态占位（视频首帧就绪前 / 降级时显示） */}
@@ -234,7 +209,7 @@ export function ArchiveIntro() {
               alt="档案 GA_001 档案夹"
               fill
               placeholder="blur"
-              sizes="(min-width: 1024px) 670px, 100vw"
+              sizes="(min-width: 1024px) 563px, 100vw"
               className="object-contain"
             />
           )}
@@ -252,22 +227,21 @@ export function ArchiveIntro() {
             />
           )}
 
-          {/* 卡片内文字：擦拭阶段文案与终段文案（引力）叠放，滚动到头后丝滑切换 */}
-          <div className="absolute left-[9.4%] top-[calc(28.2%-20px)] flex w-[46%] flex-col gap-[1em]">
-            <Image
-              src="/archive/archive-logo.svg"
-              alt=""
-              width={48}
-              height={48}
-              data-intro-line
-              className="size-[3em]"
-            />
+          {/* 卡片内文字：Figma 486:211 — Regular 24px / logo 36px / gap 16px */}
+          <div className="absolute left-[9.2%] top-[25.7%] w-[55%]">
             <div className="relative">
               <div data-swap-a className="flex flex-col gap-[1em]">
-                <div className="font-serif-sc text-[1.75em] uppercase text-grey-200">
+                <Image
+                  src="/archive/archive-logo.svg"
+                  alt=""
+                  width={36}
+                  height={36}
+                  className="size-[2.25em]"
+                />
+                <div className="font-serif-sc text-[1.5em] font-normal uppercase text-grey-200">
                   <ScrubText text="我们不断看到同一种现象" />
                 </div>
-                <div className="font-serif-sc text-[1.75em] uppercase text-grey-200">
+                <div className="font-serif-sc text-[1.5em] font-normal uppercase text-grey-200">
                   <ScrubText text="有些品牌会被记住" />
                   <ScrubText text="有些产品会被选择" />
                   <ScrubText text="有些设计会被相信" />
@@ -275,12 +249,19 @@ export function ArchiveIntro() {
               </div>
               <div
                 data-swap-b
-                className="absolute inset-x-0 top-0 flex flex-col gap-[0.5em]"
+                className="absolute inset-x-0 top-0 flex flex-col gap-[1em]"
               >
-                <div className="font-serif-sc text-[1.75em] text-grey-200 opacity-0">
+                <Image
+                  src="/archive/archive-logo.svg"
+                  alt=""
+                  width={36}
+                  height={36}
+                  className="size-[2.25em] opacity-0"
+                />
+                <div className="font-serif-sc text-[1.5em] font-normal text-grey-200 opacity-0">
                   <ScrubText text="人与品牌、产品与体验之间，始终存在一种看不见的连接，我们称它为——" />
                 </div>
-                <div className="font-serif-sc text-[3.5em] text-grey-200 opacity-0">
+                <div className="font-serif-sc text-[3em] font-normal text-grey-200 opacity-0">
                   <ScrubText text="引力" />
                 </div>
               </div>
