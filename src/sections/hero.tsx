@@ -12,14 +12,15 @@ import {
 } from "@/animations/hero-intro";
 import { RepelFilter } from "@/components/effects/repel-filter";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
-import { SectionBackground } from "@/components/ui/section-background";
+import { ScreenShell } from "@/components/ui/screen-shell";
 import { useVideoPreloader } from "@/hooks/use-video-preloader";
-import galleryBgImg from "../../public/hero/hero-display-bg.webp";
 import loaderBgImg from "../../public/hero/hero-loader-bg.webp";
 
 gsap.registerPlugin(useGSAP);
 
 const VIDEO_SRC = "/hero/hero-intro.mp4";
+/** 是否播放开场视频；false 时加载计数结束后直接淡出到静态首屏 */
+const SHOW_INTRO_VIDEO = false;
 const MIN_LOADING_MS = 2000;
 /** 距视频结尾多少秒触发标题入场，保证与最后一帧同步 */
 const REVEAL_BEFORE_END_S = 0.15;
@@ -31,7 +32,7 @@ export function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const counterRef = useRef<HTMLParagraphElement>(null);
 
-  const preload = useVideoPreloader(VIDEO_SRC);
+  const preload = useVideoPreloader(VIDEO_SRC, { enabled: SHOW_INTRO_VIDEO });
   const preloadRef = useRef(preload);
   // 分页器默认锁定，序幕结束后由此放行切屏
   const { setNavigationLocked, registerTopOverscroll, runWithCurtain } =
@@ -213,16 +214,10 @@ export function Hero() {
   );
 
   return (
-    <section
-      ref={container}
-      className="relative h-full min-h-[700px] overflow-hidden bg-grey-100"
-    >
+    <ScreenShell ref={container}>
       {/* 鼠标排斥滤镜：分屏内视频、图片、文字全部参与变形 */}
       <RepelFilter className="absolute inset-0">
-      {/* 静态背景：仅作视频不可用 / 减少动态时的降级兜底（正常流程视频定格末帧） */}
-      <SectionBackground src={galleryBgImg} priority className="z-10" />
-
-      {/* 全屏视频层 */}
+      {/* 全屏视频层（静态场景底图由 SharedSectionBackgrounds 提供） */}
       <div
         ref={videoLayerRef}
         className="invisible absolute inset-0 z-20 opacity-0"
@@ -284,6 +279,6 @@ export function Hero() {
         </p>
       </div>
       </RepelFilter>
-    </section>
+    </ScreenShell>
   );
 }

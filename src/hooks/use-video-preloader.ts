@@ -19,16 +19,21 @@ export type VideoPreloadState = {
  */
 export function useVideoPreloader(
   src: string,
-  { timeoutMs = 12000 }: { timeoutMs?: number } = {},
+  {
+    timeoutMs = 12000,
+    enabled = true,
+  }: { timeoutMs?: number; enabled?: boolean } = {},
 ): VideoPreloadState {
-  const [state, setState] = useState<VideoPreloadState>({
-    progress: 0,
-    status: "loading",
-    objectUrl: null,
-  });
+  const [state, setState] = useState<VideoPreloadState>(() =>
+    enabled
+      ? { progress: 0, status: "loading", objectUrl: null }
+      : // 禁用时视为“已就绪但无视频”，调用方据此走静态降级路径
+        { progress: 1, status: "ready", objectUrl: null },
+  );
   const objectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
     let cancelled = false;
@@ -84,7 +89,7 @@ export function useVideoPreloader(
         objectUrlRef.current = null;
       }
     };
-  }, [src, timeoutMs]);
+  }, [src, timeoutMs, enabled]);
 
   return state;
 }
