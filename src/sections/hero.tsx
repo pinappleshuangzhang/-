@@ -21,7 +21,6 @@ gsap.registerPlugin(useGSAP);
 const VIDEO_SRC = "/hero/hero-intro.mp4";
 /** 是否播放开场视频；false 时加载计数结束后直接淡出到静态首屏 */
 const SHOW_INTRO_VIDEO = false;
-const MIN_LOADING_MS = 2000;
 /** 距视频结尾多少秒触发标题入场，保证与最后一帧同步 */
 const REVEAL_BEFORE_END_S = 0.15;
 
@@ -146,14 +145,13 @@ export function Hero() {
       });
 
       media.add("(prefers-reduced-motion: no-preference)", () => {
-        // 阶段一：计数器由真实下载进度驱动，并保证最短节奏时长
+        // 阶段一：计数器只反映真实加载进度，就绪即放行，无人为最短时长
         const counter = createCounter(counterEl);
         let gate = 0;
 
         const startSequence = () => {
           window.clearInterval(gate);
           counter.reset();
-          const startedAt = performance.now();
 
           gate = window.setInterval(() => {
             const state = preloadRef.current;
@@ -163,13 +161,8 @@ export function Hero() {
               window.setTimeout(runFallback, 700);
               return;
             }
-            const timeCap = Math.min(
-              (performance.now() - startedAt) / MIN_LOADING_MS,
-              1,
-            );
-            const target = Math.min(state.progress, timeCap) * 100;
-            counter.update(target);
-            if (state.status === "ready" && timeCap >= 1) {
+            counter.update(state.progress * 100);
+            if (state.status === "ready") {
               window.clearInterval(gate);
               counter.update(100);
               window.setTimeout(startVideo, 650);
