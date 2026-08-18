@@ -1,0 +1,35 @@
+{
+  "Regular": {
+    "$type": "number",
+    "$value": 400,
+    "$extensions": {
+      "com.figma.variableId": "VariableID:664:1268",
+      "com.figma.scopes": [
+        "FONT_WEIGHT"
+      ]
+    }
+  },
+  "Medium": {
+    "$type": "number",
+    "$value": 500,
+    "$extensions": {
+      "com.figma.variableId": "VariableID:664:1267",
+      "com.figma.scopes": [
+        "FONT_WEIGHT"
+      ]
+    }
+  },
+  "SemiBold": {
+    "$type": "number",
+    "$value": 600,
+    "$extensions": {
+      "com.figma.variableId": "VariableID:674:2",
+      "com.figma.scopes": [
+        "FONT_WEIGHT"
+      ]
+    }
+  },
+  "$extensions": {
+    "com.figma.modeName": "Mode 1"
+  }
+}

@@ -9,14 +9,14 @@ import {
   type AlphaScrubVideoHandle,
 } from "@/components/effects/alpha-scrub-video";
 import { RepelFilter } from "@/components/effects/repel-filter";
+import { useLocale } from "@/components/providers/locale-provider";
 import {
   useScreenActive,
   useSectionPager,
 } from "@/components/providers/section-pager-provider";
-import { SectionBackground } from "@/components/ui/section-background";
+import { ScreenShell } from "@/components/ui/screen-shell";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import archiveBgImg from "../../public/archive/archive-bg.png";
-import archiveFolderImg from "../../public/archive/archive-folder.png";
+import archiveFolderImg from "../../public/archive/archive-folder.webp";
 
 gsap.registerPlugin(useGSAP);
 
@@ -61,6 +61,7 @@ export function ArchiveIntro() {
   const reducedMotion = useReducedMotion();
   const isActive = useScreenActive();
   const { registerScrollInterceptor, navigationLocked } = useSectionPager();
+  const { t, locale } = useLocale();
 
   // 渲染期间锁存：一旦解锁过就保持允许（序幕重播时不重新卸载视频）
   if (!navigationLocked && !videoAllowed) {
@@ -176,21 +177,16 @@ export function ArchiveIntro() {
         textTimelineRef.current = null;
       };
     },
-    { scope: container },
+    { dependencies: [locale], scope: container },
   );
 
   const showVideo = videoAllowed && !reducedMotion && !videoFailed;
   const showPoster = !showVideo || !videoReady;
 
   return (
-    <section
-      ref={container}
-      className="relative h-full min-h-[700px] overflow-hidden bg-white"
-    >
+    <ScreenShell ref={container}>
       {/* 鼠标排斥滤镜：分屏内图片、文字全部参与变形 */}
       <RepelFilter className="absolute inset-0">
-      <SectionBackground src={archiveBgImg} className="z-10" />
-
       <div className="absolute inset-0 z-20">
         {/* 档案夹卡片：Figma 486:210 = 563×420，垂直中心略低于屏幕中心 18px；内部字号基准 16px */}
         <div className="absolute left-1/2 top-[calc(50%+18px)] aspect-[563/420] w-[min(563px,calc(100vw-60px))] -translate-x-1/2 -translate-y-1/2 text-[length:calc(min(563px,100vw-60px)/35.1875)]">
@@ -206,7 +202,7 @@ export function ArchiveIntro() {
           {showPoster && (
             <Image
               src={archiveFolderImg}
-              alt="档案 GA_001 档案夹"
+              alt={t("intro.folderAlt")}
               fill
               placeholder="blur"
               sizes="(min-width: 1024px) 563px, 100vw"
@@ -239,12 +235,12 @@ export function ArchiveIntro() {
                   className="size-[2.25em]"
                 />
                 <div className="font-serif-sc text-[1.5em] font-normal uppercase text-grey-200">
-                  <ScrubText text="我们不断看到同一种现象" />
+                  <ScrubText text={t("intro.line1")} />
                 </div>
                 <div className="font-serif-sc text-[1.5em] font-normal uppercase text-grey-200">
-                  <ScrubText text="有些品牌会被记住" />
-                  <ScrubText text="有些产品会被选择" />
-                  <ScrubText text="有些设计会被相信" />
+                  <ScrubText text={t("intro.line2a")} />
+                  <ScrubText text={t("intro.line2b")} />
+                  <ScrubText text={t("intro.line2c")} />
                 </div>
               </div>
               <div
@@ -259,10 +255,10 @@ export function ArchiveIntro() {
                   className="size-[2.25em] opacity-0"
                 />
                 <div className="font-serif-sc text-[1.5em] font-normal text-grey-200 opacity-0">
-                  <ScrubText text="人与品牌、产品与体验之间，始终存在一种看不见的连接，我们称它为——" />
+                  <ScrubText text={t("intro.bridge")} />
                 </div>
                 <div className="font-serif-sc text-[3em] font-normal text-grey-200 opacity-0">
-                  <ScrubText text="引力" />
+                  <ScrubText text={t("intro.gravity")} />
                 </div>
               </div>
             </div>
@@ -270,6 +266,6 @@ export function ArchiveIntro() {
         </div>
       </div>
       </RepelFilter>
-    </section>
+    </ScreenShell>
   );
 }

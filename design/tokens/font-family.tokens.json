@@ -1,0 +1,27 @@
+{
+  "Noto Serif SC": {
+    "$type": "string",
+    "$value": "Noto Serif SC",
+    "$extensions": {
+      "com.figma.variableId": "VariableID:664:1095",
+      "com.figma.scopes": [
+        "FONT_FAMILY"
+      ],
+      "com.figma.type": "string"
+    }
+  },
+  "Libre Bodoni": {
+    "$type": "string",
+    "$value": "Libre Bodoni",
+    "$extensions": {
+      "com.figma.variableId": "VariableID:664:1094",
+      "com.figma.scopes": [
+        "FONT_FAMILY"
+      ],
+      "com.figma.type": "string"
+    }
+  },
+  "$extensions": {
+    "com.figma.modeName": "Mode 1"
+  }
+}

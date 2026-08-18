@@ -11,6 +11,7 @@ import {
   createCounter,
 } from "@/animations/hero-intro";
 import { RepelFilter } from "@/components/effects/repel-filter";
+import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { useVideoPreloader } from "@/hooks/use-video-preloader";
@@ -33,6 +34,7 @@ export function Hero() {
 
   const preload = useVideoPreloader(VIDEO_SRC, { enabled: SHOW_INTRO_VIDEO });
   const preloadRef = useRef(preload);
+  const { t } = useLocale();
   // 分页器默认锁定，序幕结束后由此放行切屏
   const { setNavigationLocked, registerTopOverscroll, runWithCurtain } =
     useSectionPager();
@@ -234,7 +236,7 @@ export function Hero() {
               data-hero-title-line
               className="font-serif-sc text-52 font-medium uppercase text-grey-400 opacity-0 motion-reduce:opacity-100"
             >
-              万有引力设计档案室
+              {t("hero.title")}
             </h1>
             <span
               data-hero-ornament
@@ -247,7 +249,7 @@ export function Hero() {
             data-hero-title-line
             className="font-serif-sc text-18 uppercase text-grey-400 opacity-0 motion-reduce:opacity-100"
           >
-            请跟随设计调查记录，完成本次关于&ldquo;引力&rdquo;的探索
+            {t("hero.subtitle")}
           </p>
         </div>
       </div>

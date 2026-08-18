@@ -14,14 +14,14 @@ const CONTROL_ROWS = 5;
 /** 控制点插值后叠加的随机抖动幅度，打散过于规整的渐变带 */
 const DELAY_JITTER = 0.08;
 
-/** 单格从出现到完全显现所占的进度比例 */
-const CELL_FADE_WINDOW = 0.12;
+/** 单格从出现到完全显现所占的进度比例（溶解遮罩复用同一节奏） */
+export const CELL_FADE_WINDOW = 0.12;
 /** 延迟场上限：留出一个淡入窗口，保证进度到 1 时最后一格刚好完成 */
 const MAX_CELL_DELAY = 1 - CELL_FADE_WINDOW;
 
 /** 字符网格的目标格宽与格高（px），决定幕布疏密 */
-const CELL_TARGET_W = 8;
-const CELL_TARGET_H = 12;
+const CELL_TARGET_W = 5;
+const CELL_TARGET_H = 8;
 
 /** 字形相对格高的比例 */
 const GLYPH_SCALE = 0.86;
@@ -88,8 +88,9 @@ function lerp(a: number, b: number, t: number) {
  * 生成每个字符格的起始延迟（0 ~ MAX_CELL_DELAY）。
  * 做法是对一张 7×5 的随机控制点网格做双线性 + smoothstep 插值，
  * 得到大块起伏的低频噪声，再叠加细微抖动并归一化。
+ * 同时供成员记录浮层的溶解遮罩复用，保证斑块生长的形状语言一致。
  */
-function createDelayField(cols: number, rows: number) {
+export function createDelayField(cols: number, rows: number) {
   const controls = new Float32Array(CONTROL_COLS * CONTROL_ROWS);
   for (let i = 0; i < controls.length; i += 1) {
     controls[i] = Math.random();
@@ -192,7 +193,7 @@ export function createCurtainGrid(
 
   const styles = getComputedStyle(canvas);
   const background =
-    styles.getPropertyValue("--ascii-curtain-bg").trim() || "#ffffff";
+    styles.getPropertyValue("--ascii-curtain-bg").trim() || "#eeeef3";
   const glyphColor =
     styles.getPropertyValue("--ascii-curtain-color").trim() || "#131313";
 

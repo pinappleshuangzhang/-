@@ -5,6 +5,7 @@ type SectionBackgroundProps = {
   alt?: string;
   /** 首屏背景传 true，其余分屏懒加载 */
   priority?: boolean;
+  imageClassName?: string;
   className?: string;
 };
 
@@ -13,6 +14,7 @@ export function SectionBackground({
   src,
   alt = "",
   priority = false,
+  imageClassName = "object-cover",
   className,
 }: SectionBackgroundProps) {
   return (
@@ -24,7 +26,7 @@ export function SectionBackground({
         priority={priority}
         placeholder="blur"
         sizes="100vw"
-        className="object-cover"
+        className={imageClassName}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Libre_Bodoni, Noto_Serif_SC } from "next/font/google";
+import { LocaleProvider } from "@/components/providers/locale-provider";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
 import "./globals.css";
 
@@ -30,7 +31,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={`${notoSerifSC.variable} ${libreBodoni.variable}`}>
-        <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        <SmoothScrollProvider>
+          <LocaleProvider>{children}</LocaleProvider>
+        </SmoothScrollProvider>
       </body>
     </html>
   );

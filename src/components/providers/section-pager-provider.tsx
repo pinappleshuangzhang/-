@@ -11,9 +11,13 @@ import {
   type ReactNode,
 } from "react";
 import { AsciiCurtain } from "@/components/effects/ascii-curtain";
+import { useLocale } from "@/components/providers/locale-provider";
+import { SharedSectionBackgrounds } from "@/components/ui/shared-section-backgrounds";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import type { CurtainPhase } from "@/lib/ascii-curtain";
+import type { MessageKey } from "@/lib/i18n/messages";
 import type { NavVariant } from "@/lib/nav-variants";
+import type { SectionBackgroundKey } from "@/lib/section-backgrounds";
 
 /** 滚轮增量低于该值视为误触，不触发切屏 */
 const WHEEL_THRESHOLD = 8;
@@ -27,8 +31,10 @@ const LOCK_SAFETY_TIMEOUT_MS = 15000;
 export type PagerScreen = {
   key: string;
   navVariant: NavVariant;
-  /** 切屏后播报给读屏软件的屏名 */
-  title: string;
+  /** 切屏后播报给读屏软件的屏名文案键 */
+  titleKey: MessageKey;
+  /** 共享背景键：同键多屏共用一份背景，不在屏内重复挂图 */
+  background: SectionBackgroundKey;
   node: ReactNode;
 };
 
@@ -92,6 +98,7 @@ export function SectionPagerProvider({
   children,
 }: SectionPagerProviderProps) {
   const reducedMotion = useReducedMotion();
+  const { t } = useLocale();
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<CurtainPhase>("idle");
   const [navigationLocked, setNavigationLockedState] = useState(true);
@@ -333,6 +340,9 @@ export function SectionPagerProvider({
   return (
     <SectionPagerContext.Provider value={value}>
       <div className="fixed inset-0 overflow-hidden">
+        <SharedSectionBackgrounds
+          active={activeScreen?.background ?? null}
+        />
         {screens.map((screen, screenIndex) => {
           const isActive = screenIndex === index;
           return (
@@ -350,7 +360,7 @@ export function SectionPagerProvider({
       </div>
       {children}
       <p aria-live="polite" className="sr-only">
-        {activeScreen?.title ?? ""}
+        {activeScreen ? t(activeScreen.titleKey) : ""}
       </p>
       <AsciiCurtain
         phase={phase}
