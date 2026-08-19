@@ -36,6 +36,16 @@ export function useDissolveHoverFill() {
   const proxyRef = useRef({ frame: 0 });
   const reducedMotion = useReducedMotion();
 
+  const reset = useCallback(() => {
+    const fill = fillRef.current;
+    const proxy = proxyRef.current;
+    gsap.killTweensOf(proxy);
+    proxy.frame = 0;
+    if (!fill) return;
+    fill.style.opacity = "0";
+    setElementMask(fill, null);
+  }, []);
+
   const animate = useCallback(
     (entering: boolean) => {
       const fill = fillRef.current;
@@ -72,6 +82,7 @@ export function useDissolveHoverFill() {
 
   return {
     fillRef,
+    reset,
     onMouseEnter: () => animate(true),
     onMouseLeave: () => animate(false),
   };

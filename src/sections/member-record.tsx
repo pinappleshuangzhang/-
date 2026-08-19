@@ -144,7 +144,7 @@ export function MemberRecord() {
       <div className="pointer-events-none absolute left-1/2 top-0 z-10 aspect-[4096/2401] w-[max(100vw,170.596vh)] -translate-x-1/2">
         <div
           data-member-grid
-          className="pointer-events-none absolute left-[3.611%] top-[16.48%] aspect-[1335/933] w-[92.708%] *:opacity-0"
+          className="pointer-events-none absolute left-[3.611%] top-[15.59%] aspect-[1335/933] w-[92.708%] *:opacity-0"
         >
           <div
             data-member-overlay

@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useRef, type MutableRefObject } from "react";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import Image from "next/image";
+import { SurveyCategoryNav } from "@/components/ui/survey-category-nav";
+import { useLocale } from "@/components/providers/locale-provider";
 import {
-  SURVEY_CATEGORIES,
+  SURVEY_CATEGORY_BY_CODE,
   SURVEY_G_001,
+  SURVEY_WORK_BY_CATEGORY,
+  type SurveyCategoryCode,
   type SurveyWork,
 } from "@/lib/survey-details";
-import { useLocale } from "@/components/providers/locale-provider";
 
 const KEY_SCROLL_DELTA = 120;
 const PAGE_SCROLL_DELTA = 240;
@@ -21,7 +24,7 @@ type SurveyDetailsProps = {
 
 /**
  * 档案 GA_004 作品详情（Figma 566:607）。
- * 页内滚动由分屏拦截器驱动；滚到顶部再上滑、或按 Escape 返回长廊。
+ * 页内滚动由分屏拦截器驱动；浏览器返回键或 Escape 返回长廊。
  */
 export function SurveyDetails({
   work = SURVEY_G_001,
@@ -30,6 +33,11 @@ export function SurveyDetails({
 }: SurveyDetailsProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { t } = useLocale();
+  const [activeCode, setActiveCode] = useState<SurveyCategoryCode>(
+    work.activeCategory,
+  );
+  const activeCategory = SURVEY_CATEGORY_BY_CODE[activeCode];
+  const activeWork = SURVEY_WORK_BY_CATEGORY[activeCode];
 
   useEffect(() => {
     const scroller = scrollerRef.current;
@@ -91,8 +99,7 @@ export function SurveyDetails({
 
       event.preventDefault();
       event.stopPropagation();
-      const consumed = consumeScroll(delta);
-      if (consumed === false && delta < 0) onBack();
+      consumeScroll(delta);
     };
 
     window.addEventListener("keydown", onKeyDown, true);
@@ -112,88 +119,47 @@ export function SurveyDetails({
       <div className="mt-[30px] h-[34px] shrink-0" aria-hidden="true" />
       <div className="mt-18 flex flex-col gap-14 pb-18">
         <header className="flex items-center justify-between">
-          <h1 className="whitespace-nowrap font-bodoni text-60 font-normal uppercase leading-none text-grey-400">
-            {work.title}
+          <h1 className="min-h-[60px] whitespace-nowrap font-bodoni text-60 font-normal uppercase leading-none text-grey-400">
+            {`Survey Details_G_${activeCode}`}
           </h1>
           <div className="flex flex-col items-end justify-center gap-2">
             <div className="flex w-[180px] items-center justify-end gap-1">
               <div className="h-px min-w-px flex-1 bg-grey-400" aria-hidden="true" />
               <p className="whitespace-nowrap font-bodoni text-20 capitalize leading-normal text-grey-400">
-                {work.typeLabel}
+                {activeCategory.typeLabel}
               </p>
             </div>
-            <p className="whitespace-nowrap font-bodoni text-20 uppercase leading-normal text-grey-400">
-              {work.archivedLabel}
-            </p>
+            {activeWork ? (
+              <p className="whitespace-nowrap font-bodoni text-20 uppercase leading-normal text-grey-400">
+                {activeWork.archivedLabel}
+              </p>
+            ) : null}
           </div>
         </header>
 
         <div className="h-px w-full bg-grey-100" aria-hidden="true" />
 
         <div className="flex items-start justify-between">
-          <CategoryList activeCode={work.activeCategory} />
-          <WorkContent work={work} />
+          <SurveyCategoryNav
+            activeCode={activeCode}
+            aria-label={t("survey.categoryNav")}
+            onSelect={(code) => {
+              if (code === activeCode) return;
+              setActiveCode(code);
+              const el = scrollerRef.current;
+              if (el) el.scrollTop = 0;
+            }}
+          />
+          {activeWork ? (
+            <WorkContent work={activeWork} />
+          ) : (
+            <div className="w-[757px]" aria-live="polite">
+              <p className="sr-only">{t("survey.emptyWork")}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
-  );
-}
-
-function CategoryList({
-  activeCode,
-}: {
-  activeCode: SurveyWork["activeCategory"];
-}) {
-  const { t } = useLocale();
-
-  return (
-    <nav aria-label={t("survey.categoryNav")}>
-      <ul className="flex w-[330px] flex-col gap-6">
-        {SURVEY_CATEGORIES.map((item) => {
-          const active = item.code === activeCode;
-          return (
-            <li key={item.code}>
-              <div
-                aria-current={active ? "true" : undefined}
-                className={
-                  active
-                    ? "flex w-fit items-center gap-7 rounded-rs-4 bg-grey-400 py-1"
-                    : "flex w-full items-center gap-7 font-bodoni text-20 capitalize leading-normal text-grey-300"
-                }
-              >
-                <span
-                  className={
-                    active
-                      ? "whitespace-nowrap font-bodoni text-20 capitalize leading-normal text-white"
-                      : "whitespace-nowrap"
-                  }
-                >
-                  {item.letter}
-                </span>
-                {active ? (
-                  <span className="flex items-center gap-3">
-                    <span className="whitespace-nowrap font-bodoni text-20 font-medium capitalize leading-normal text-white">
-                      {item.label}
-                    </span>
-                    <span className="relative flex size-7 shrink-0 items-center justify-center">
-                      <Image
-                        src="/archive-ga-004/icon-arrow.svg"
-                        alt=""
-                        width={19}
-                        height={18}
-                        className="h-[18px] w-[19px] rotate-180"
-                      />
-                    </span>
-                  </span>
-                ) : (
-                  <span className="w-[250px]">{item.label}</span>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
   );
 }
 

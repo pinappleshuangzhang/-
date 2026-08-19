@@ -89,6 +89,15 @@ body {
   overflow-x: hidden;
 }
 
+/* 英文模式：全站改用英文字体（Libre Bodoni），含 font-serif-sc 工具类 */
+html[data-locale="en"] {
+  --font-serif-sc: var(--font-libre-bodoni), "Libre Bodoni", serif;
+}
+
+html[data-locale="en"] body {
+  font-family: var(--font-libre-bodoni), "Libre Bodoni", serif;
+}
+
 /* 整屏分页模式：页面本身不滚动，翻屏由 SectionPagerProvider 接管 */
 html[data-section-pager],
 html[data-section-pager] body {

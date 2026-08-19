@@ -66,6 +66,7 @@ export type MessageKey =
   | "survey.description"
   | "survey.heroAlt"
   | "survey.billboardAlt"
+  | "survey.emptyWork"
   | "ga005.aria"
   | "ga005.imageAlt"
   | "contact.aria"
@@ -143,6 +144,7 @@ const zh: Messages = {
   "survey.heroAlt":
     "Design AI Ops 网站首屏，标题 The Apple Moment，下方为作品缩略图",
   "survey.billboardAlt": "展厅中的大理石数字屏幕，展示 AI Ops 创世纪主题视觉",
+  "survey.emptyWork": "该类型暂无作品",
   "ga005.aria": "档案 GA_005 视觉探索记录",
   "ga005.imageAlt": "三张铺在浅色桌面上的空白视觉探索卡片",
   "contact.aria": "联系我们，共同开启一份新调查",
@@ -223,6 +225,7 @@ const en: Messages = {
     "Design AI Ops website hero with the title The Apple Moment and work thumbnails below",
   "survey.billboardAlt":
     "A marble digital screen in a gallery showing the AI Ops Genesis visual",
+  "survey.emptyWork": "No work in this category yet",
   "ga005.aria": "Archive GA_005 Visual Exploration Record",
   "ga005.imageAlt": "Three blank visual exploration cards on a light desk",
   "contact.aria": "Contact us to start a new survey together",

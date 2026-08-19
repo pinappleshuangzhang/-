@@ -163,14 +163,14 @@ function ContactButton({ onClick }: { onClick?: () => void }) {
   const { t } = useLocale();
   return (
     <div
-      className={`flex h-[34px] items-stretch rounded-rs-4 p-0.5 ${glassShell} ${cardShadow}`}
+      className={`flex h-[34px] items-stretch rounded-rs-4 px-0.5 py-[2px] ${glassShell} ${cardShadow}`}
     >
       <button
         type="button"
         onClick={onClick}
         onMouseEnter={dissolve.onMouseEnter}
         onMouseLeave={dissolve.onMouseLeave}
-        className={`relative flex items-center overflow-hidden rounded-rs-2 bg-transparent px-1.5 font-serif-sc text-16 uppercase leading-none text-grey-400 ${focusRing}`}
+        className={`relative flex h-full items-center overflow-hidden rounded-rs-2 bg-transparent px-1.5 font-serif-sc text-16 uppercase leading-none text-grey-400 ${focusRing}`}
       >
         <DissolveFill fillRef={dissolve.fillRef} />
         <span className="relative z-10">{t("nav.contact")}</span>
@@ -203,7 +203,9 @@ function LanguageOption({
       }
     >
       {!active && <DissolveFill fillRef={dissolve.fillRef} />}
-      <span className="relative z-10 translate-y-px">{code.toUpperCase()}</span>
+      <span className="relative z-10 translate-y-px">
+        {code === "zh" ? "CN" : "EN"}
+      </span>
     </button>
   );
 }

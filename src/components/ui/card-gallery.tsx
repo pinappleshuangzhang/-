@@ -13,11 +13,15 @@ const CARD_WIDTH = 280;
 const CARD_HEIGHT = 220;
 /** 作品图按原图比例缩放后的显示尺寸 */
 const FRAME_WIDTH = 280;
-/** 单张卡片的上下边弧线深度 */
-const CARD_EDGE_CURVE = 34;
-const CARD_CURVE_CLIP_PATH =
-  `path("M 0 0 Q ${CARD_WIDTH / 2} ${CARD_EDGE_CURVE} ${CARD_WIDTH} 0 ` +
-  `L ${CARD_WIDTH} ${CARD_HEIGHT} Q ${CARD_WIDTH / 2} ${CARD_HEIGHT - CARD_EDGE_CURVE} 0 ${CARD_HEIGHT} Z")`;
+/**
+ * 整排图片的弧带轮廓由 3D 变形呈现，不裁切图片内容：
+ * 两侧卡片经 rotateY + 透视产生上下边向中心斜收的梯形畸变，
+ * 中心卡片因后退（CENTER_RECESS）显得更矮，整排连成连续弧线。
+ */
+/** 中心卡片额外的纵向压缩，加深弧带中部的凹陷；整体压缩 8px（220→212） */
+const CENTER_SCALE_Y = 0.824;
+const SCALE_Y_STEP = 0.05;
+const MAX_SCALE_Y = 0.964;
 /**
  * 长廊主控参数：
  * 1) CARD_GAP：卡片几何间距
@@ -45,13 +49,10 @@ const CENTER_RECESS = 200;
 const SIDE_PROTRUSION_STEP = 68;
 /** 两侧卡片朝向更顺着弧线展开 */
 const ROTATE_Y_PER_SLOT = 22;
-/** 整体大小和高度随槽位逐渐展开 */
+/** 整体宽度随槽位逐渐展开（高度变化由全局弧带裁切承担） */
 const CENTER_SCALE_X = 0.74;
 const SCALE_X_STEP = 0.05;
 const MAX_SCALE_X = 0.98;
-const CENTER_SCALE_Y = 0.74;
-const SCALE_Y_STEP = 0.05;
-const MAX_SCALE_Y = 0.98;
 /** 拖拽灵敏度（度 / px） */
 const DRAG_SENSITIVITY = 0.18;
 /** 滚轮灵敏度（度 / deltaY） */
@@ -62,11 +63,11 @@ const INERTIA_DURATION = 1.1;
 const CLICK_THRESHOLD = 8;
 
 /**
- * hover 彩图沿用第四屏的斑块溶解遮罩：格子约 5×8px（对应 280×220 的卡面），
- * 帧数与幕布节奏保持一致，首次 hover 时生成并全卡共享缓存。
+ * hover 彩图沿用第四屏的斑块溶解遮罩：格子约 2.5×4px（对应 280×220 的卡面），
+ * 更密的网格让斑块颗粒更细腻；首次 hover 时生成并全卡共享缓存。
  */
-const HOVER_MASK_COLS = 56;
-const HOVER_MASK_ROWS = 28;
+const HOVER_MASK_COLS = 112;
+const HOVER_MASK_ROWS = 56;
 const HOVER_MASK_FRAME_COUNT = 24;
 
 let hoverDissolveFrames: string[] | null = null;
@@ -297,6 +298,40 @@ export function CardGallery({
     };
   }, [reducedMotion, buttonsOnly, cards, onSelect]);
 
+  // 按钮模式：点击卡片直接进入详情，Enter 打开居中卡片
+  useEffect(() => {
+    if (reducedMotion || !buttonsOnly || !onSelect) return;
+    const scene = sceneRef.current;
+    if (!scene) return;
+
+    const onClick = (event: MouseEvent) => {
+      const cardEl = (event.target as Element | null)?.closest?.(
+        "[data-gallery-card]",
+      );
+      const indexAttr = cardEl?.getAttribute("data-gallery-index");
+      if (indexAttr === null || indexAttr === undefined) return;
+      const card = cards[Number(indexAttr)];
+      if (card) onSelect(card);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Enter") return;
+      if (document.activeElement !== scene) return;
+      event.preventDefault();
+      const centerIndex =
+        ((Math.round(rotationRef.current / theta) % count) + count) % count;
+      const card = cards[centerIndex];
+      if (card) onSelect(card);
+    };
+
+    scene.addEventListener("click", onClick);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      scene.removeEventListener("click", onClick);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [reducedMotion, buttonsOnly, cards, onSelect, theta, count]);
+
   // 键盘左右旋转（上下切屏仍由分页器处理）
   useEffect(() => {
     if (reducedMotion || buttonsOnly) return;
@@ -486,7 +521,6 @@ function CardFaceImage({
         style={{
           width: FRAME_WIDTH,
           height: CARD_HEIGHT,
-          clipPath: CARD_CURVE_CLIP_PATH,
         }}
       >
         <Image

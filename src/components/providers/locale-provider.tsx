@@ -70,6 +70,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
+    document.documentElement.dataset.locale = locale;
   }, [locale]);
 
   const setLocale = useCallback((next: Locale) => {

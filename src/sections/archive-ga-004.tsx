@@ -15,6 +15,7 @@ import {
   type CardGalleryControls,
 } from "@/components/ui/card-gallery";
 import { ScreenShell } from "@/components/ui/screen-shell";
+import { useDissolveHoverFill } from "@/hooks/use-dissolve-hover-fill";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { ARCHIVE_GA_004_CARDS } from "@/lib/archive-ga-003-cards";
 import { SurveyDetails } from "@/sections/survey-details";
@@ -59,13 +60,15 @@ export function ArchiveGa004() {
     },
   );
 
+  // 离开此屏时复位详情，返回时回到长廊而非上次的详情页
   useEffect(() => {
-    if (!isActive || !detailsOpen) return;
+    if (isActive) return;
     const frame = window.requestAnimationFrame(() => setDetailsOpen(false));
     return () => window.cancelAnimationFrame(frame);
-  }, [isActive, detailsOpen]);
+  }, [isActive]);
 
   const openDetails = useCallback(() => {
+    window.history.pushState({ surveyDetails: true }, "");
     if (reducedMotion) {
       setDetailsOpen(true);
       return;
@@ -73,34 +76,37 @@ export function ArchiveGa004() {
     runWithCurtain(() => setDetailsOpen(true));
   }, [reducedMotion, runWithCurtain]);
 
+  // 组件内主动返回（如 Escape）：回退历史，由 popstate 统一关闭详情
   const closeDetails = useCallback(() => {
-    if (reducedMotion) {
-      setDetailsOpen(false);
-      return;
-    }
-    runWithCurtain(() => setDetailsOpen(false));
-  }, [reducedMotion, runWithCurtain]);
+    window.history.back();
+  }, []);
+
+  // 浏览器返回键：从详情退回长廊
+  useEffect(() => {
+    if (!detailsOpen) return;
+    const onPopState = () => {
+      if (reducedMotion) {
+        setDetailsOpen(false);
+        return;
+      }
+      runWithCurtain(() => setDetailsOpen(false));
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [detailsOpen, reducedMotion, runWithCurtain]);
 
   useEffect(() => {
     if (!isActive) return;
 
     return registerScrollInterceptor((deltaY) => {
       if (detailsOpen) {
-        const consumed = detailsScrollRef.current?.(deltaY);
-        if (consumed === false && deltaY < 0) {
-          closeDetails();
-          return true;
-        }
-        return consumed ?? true;
+        // 详情页内只滚动内容，滚到顶/底也不切屏、不返回长廊
+        detailsScrollRef.current?.(deltaY);
+        return true;
       }
       return false;
     });
-  }, [
-    isActive,
-    detailsOpen,
-    registerScrollInterceptor,
-    closeDetails,
-  ]);
+  }, [isActive, detailsOpen, registerScrollInterceptor]);
 
   return (
     <ScreenShell
@@ -122,7 +128,7 @@ export function ArchiveGa004() {
           >
             <div
               data-title-design
-              className="absolute left-[30px] top-[74px] origin-top-left font-bodoni text-60 uppercase [transform:scale(1.67)]"
+              className="absolute left-[30px] top-[64px] origin-top-left font-bodoni text-60 uppercase [transform:scale(1.67)]"
             >
               DESGIN
             </div>
@@ -133,7 +139,7 @@ export function ArchiveGa004() {
               WORKS
             </div>
           </div>
-          <div ref={galleryWrapRef} className="relative z-10 h-full">
+          <div ref={galleryWrapRef} className="relative top-[20px] z-10 h-full">
             <CardGallery
               cards={ARCHIVE_GA_004_CARDS}
               reducedMotion={reducedMotion}
@@ -171,20 +177,32 @@ function GalleryNavButton({
 }: GalleryNavButtonProps) {
   const { t } = useLocale();
   const isPrev = direction === "prev";
+  const {
+    fillRef,
+    onMouseEnter: onDissolveEnter,
+    onMouseLeave: onDissolveLeave,
+  } = useDissolveHoverFill();
 
   return (
     <button
       type="button"
       aria-label={isPrev ? t("gallery.prev") : t("gallery.next")}
       onClick={onClick}
-      className={`absolute z-20 flex size-[44px] items-center justify-center rounded-rs-4 border border-white/55 bg-white/18 shadow-[0_8px_24px_rgba(255,255,255,0.18)] backdrop-blur-[10px] transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${className}`}
+      onMouseEnter={onDissolveEnter}
+      onMouseLeave={onDissolveLeave}
+      className={`absolute z-20 flex size-[44px] items-center justify-center rounded-rs-4 border border-white/70 bg-white/40 backdrop-blur-[1.5px] shadow-[0px_2px_1.5px_rgba(92,92,92,0.10),0px_6px_3px_rgba(92,92,92,0.09),1px_14px_4px_rgba(92,92,92,0.05),1px_25px_5px_rgba(92,92,92,0.01)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${className}`}
     >
+      <div
+        ref={fillRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-[2px] rounded-rs-2 bg-white opacity-0"
+      />
       <Image
         src="/archive-ga-004/icon-arrow.svg"
         alt=""
         width={18}
         height={18}
-        className={`opacity-85 brightness-0 ${isPrev ? "rotate-180" : ""}`}
+        className={`relative z-10 opacity-85 brightness-0 ${isPrev ? "rotate-180" : ""}`}
       />
     </button>
   );
