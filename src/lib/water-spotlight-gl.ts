@@ -61,9 +61,14 @@ void main() {
   vec2 duv = vec2(disp.x, -disp.y) / uRes;
   vec4 col = texture2D(uTex, vUv + duv);
 
-  // 聚光蒙版：轮廓用更大的推挤量与更窄的羽化，让水波形清晰可见
-  float dm = distance(px + flow * 30.0, uMouse);
-  float alpha = 1.0 - smoothstep(uRadius * 0.82, uRadius, dm);
+  // 聚光蒙版：轮廓持续水波起伏（多频正弦沿圆周流动），再叠加移动涟漪的推挤
+  vec2 rel = px + flow * 26.0 - uMouse;
+  float ang = atan(rel.y, rel.x);
+  float wob = sin(ang * 3.0 + uTime * 1.2) * 0.5
+            + sin(ang * 5.0 - uTime * 1.9) * 0.32
+            + sin(ang * 8.0 + uTime * 2.7) * 0.18;
+  float dm = length(rel) + wob * uRadius * 0.11;
+  float alpha = 1.0 - smoothstep(uRadius * 0.84, uRadius, dm);
 
   // 波峰高光：微弱提亮，强化水面质感
   col.rgb += crest * 0.025;
