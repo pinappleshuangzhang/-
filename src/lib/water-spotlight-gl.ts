@@ -74,7 +74,7 @@ in vec2 vUv;
 out vec4 outColor;
 void main() {
   vec4 field = texture(uField, vUv);
-  vec2 refr = field.rg * 0.02;
+  vec2 refr = field.rg * 0.1;
   vec4 col = texture(uTex, vUv + refr);
   // 密度越高越清晰显影，低密度处呈柔和液体边缘
   float alpha = smoothstep(0.04, 0.35, field.b) * uIntensity;
