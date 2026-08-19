@@ -40,7 +40,7 @@ void main() {
   vec2 px = vec2(vUv.x, 1.0 - vUv.y) * uRes;
 
   // 叠加所有存活涟漪：高斯环带沿径向扩散，随时间与距离衰减
-  vec2 disp = vec2(0.0);
+  vec2 flow = vec2(0.0);
   float crest = 0.0;
   for (int i = 0; i < ${MAX_RIPPLES}; i++) {
     vec4 r = uRipples[i];
@@ -52,17 +52,18 @@ void main() {
     float ring = exp(-band * band / (2.0 * 30.0 * 30.0));
     float atten = exp(-age * 2.4) * exp(-dist * 0.002);
     float h = ring * atten * r.w;
-    disp += (d / dist) * h * 7.0;
+    flow += (d / dist) * h;
     crest += h;
   }
 
-  // 采样贴图：位移换算回 uv（纹理 y 已翻转，位移 y 取反）
+  // 采样贴图：字母只做轻微折射（位移换算回 uv，纹理 y 已翻转取反）
+  vec2 disp = flow * 4.0;
   vec2 duv = vec2(disp.x, -disp.y) / uRes;
   vec4 col = texture2D(uTex, vUv + duv);
 
-  // 聚光蒙版：边缘被涟漪推挤，轮廓呈水波形
-  float dm = distance(px + disp * 1.4, uMouse);
-  float alpha = 1.0 - smoothstep(uRadius * 0.7, uRadius, dm);
+  // 聚光蒙版：轮廓用更大的推挤量与更窄的羽化，让水波形清晰可见
+  float dm = distance(px + flow * 30.0, uMouse);
+  float alpha = 1.0 - smoothstep(uRadius * 0.82, uRadius, dm);
 
   // 波峰高光：微弱提亮，强化水面质感
   col.rgb += crest * 0.025;
