@@ -10,7 +10,7 @@ const MAX_RIPPLES = 24;
 /** 沿鼠标轨迹每隔多少 px 散出一个涟漪 */
 const EMIT_SPACING_PX = 26;
 /** 指针/光圈的阻尼系数（每秒） */
-const POINTER_DAMPING = 10;
+const POINTER_DAMPING = 8;
 const RADIUS_DAMPING = 7;
 /** 设备像素比上限，控制 GPU 负载 */
 const MAX_DPR = 1.5;
@@ -48,11 +48,11 @@ void main() {
     if (age < 0.0 || age > 2.4 || r.w <= 0.0) continue;
     vec2 d = px - r.xy;
     float dist = length(d) + 1e-4;
-    float band = dist - age * 240.0;
-    float ring = exp(-band * band / (2.0 * 34.0 * 34.0));
-    float atten = exp(-age * 2.1) * exp(-dist * 0.0016);
+    float band = dist - age * 180.0;
+    float ring = exp(-band * band / (2.0 * 30.0 * 30.0));
+    float atten = exp(-age * 2.4) * exp(-dist * 0.002);
     float h = ring * atten * r.w;
-    disp += (d / dist) * h * 18.0;
+    disp += (d / dist) * h * 7.0;
     crest += h;
   }
 
@@ -61,11 +61,11 @@ void main() {
   vec4 col = texture2D(uTex, vUv + duv);
 
   // 聚光蒙版：边缘同样被涟漪推挤，轮廓呈水波形
-  float dm = distance(px + disp * 2.2, uMouse);
+  float dm = distance(px + disp * 1.4, uMouse);
   float alpha = 1.0 - smoothstep(uRadius * 0.7, uRadius, dm);
 
   // 波峰高光：微弱提亮，强化水面质感
-  col.rgb += crest * 0.05;
+  col.rgb += crest * 0.025;
 
   gl_FragColor = vec4(col.rgb, col.a * alpha);
 }
@@ -229,7 +229,7 @@ export function createWaterSpotlight(
       if (dx * dx + dy * dy < EMIT_SPACING_PX * EMIT_SPACING_PX) return;
       lastEmitX = x;
       lastEmitY = y;
-      const strength = Math.min(0.35 + speed * 0.55, 1.5);
+      const strength = Math.min(0.25 + speed * 0.3, 0.8);
       const base = rippleIndex * 4;
       ripples[base] = x;
       ripples[base + 1] = y;
