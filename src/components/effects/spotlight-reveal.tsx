@@ -32,7 +32,7 @@ const FALLBACK_GRADIENT =
  */
 export function SpotlightReveal({
   src,
-  radius = 220,
+  radius = 160,
   className,
 }: SpotlightRevealProps) {
   const ref = useRef<HTMLDivElement>(null);

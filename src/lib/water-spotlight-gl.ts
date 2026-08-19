@@ -60,7 +60,7 @@ void main() {
   vec2 duv = vec2(disp.x, -disp.y) / uRes;
   vec4 col = texture2D(uTex, vUv + duv);
 
-  // 聚光蒙版：边缘同样被涟漪推挤，轮廓呈水波形
+  // 聚光蒙版：边缘被涟漪推挤，轮廓呈水波形
   float dm = distance(px + disp * 1.4, uMouse);
   float alpha = 1.0 - smoothstep(uRadius * 0.7, uRadius, dm);
 
