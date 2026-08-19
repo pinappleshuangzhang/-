@@ -15,6 +15,7 @@ import {
   resetScatter,
 } from "@/animations/org-record-scatter";
 import { RepelFilter } from "@/components/effects/repel-filter";
+import { SpotlightReveal } from "@/components/effects/spotlight-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
   useScreenActive,
@@ -25,6 +26,7 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { PLAQUE_STROKES } from "@/lib/plaque-stroke-data";
 import plaqueImg from "../../public/org-record/plaque.webp";
 import plaqueTextureImg from "../../public/org-record/plaque-texture.webp";
+import studioIntroBgImg from "../../public/org-record/studio-intro-bg.webp";
 
 gsap.registerPlugin(useGSAP);
 
@@ -144,6 +146,13 @@ export function OrgRecord() {
       <RepelFilter className="absolute inset-0">
         {/* 主内容：设计稿 1440×800，内容列 y 156~685，中心约在 52.56% 高度 */}
         <div className="absolute left-1/2 top-[52.56%] z-20 flex w-[330px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-4">
+          {/* 工作室简介浮雕字揭示层：鼠标聚光显现，无鼠标场景常显。
+              锚定在铭牌金属板中心（列内 y=154：顶部文字 58 + 间距 48 + 板高 97/2），
+              位移量取图中字母中心 (51.79%, 40.48%)，使字母与铭牌标题完全居中对齐 */}
+          <SpotlightReveal
+            src={studioIntroBgImg}
+            className="absolute left-1/2 top-[154px] -z-10 aspect-[9/5] w-screen -translate-x-[51.79%] -translate-y-[40.48%]"
+          />
           <div className="flex w-full flex-col items-center gap-12">
             <div
               data-org-line
