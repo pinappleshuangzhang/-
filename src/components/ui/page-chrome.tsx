@@ -10,11 +10,10 @@ const SCREEN_INDEX_BY_KEY: Record<string, number> = {
   studio: 0,
   "archive-ga-001": 1,
   "archive-ga-002": 2,
-  "archive-ga-002-founding": 3,
-  "archive-ga-003": 4,
-  "archive-ga-004": 5,
-  "archive-ga-005": 6,
-  contact: 7,
+  "archive-ga-003": 3,
+  "archive-ga-004": 4,
+  "archive-ga-005": 5,
+  contact: 6,
 };
 
 /**
