@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { createPointerParallax } from "@/animations/pointer-parallax";
 import {
   playSondavenReveal,
   setSondavenHidden,
@@ -25,6 +26,10 @@ const BLACK_BAR_EXTEND = 133;
 // 绿条比高亮词组左移 1px 起笔，右端越过词组末尾再延伸 30px
 const GREEN_BAR_SHIFT = 1;
 const GREEN_BAR_EXTEND = 30;
+
+// 鼠标视差深度：雕塑图为近景（同向、幅度大），铭牌图为远景（反向、幅度小）
+const STATUES_PARALLAX = { amp: 12, scale: 1.08 };
+const PLATE_PARALLAX = { amp: -6, scale: 1.05 };
 
 /** 按词切分：中文用 Intl.Segmenter 分词，英文按空格；不支持时整段作一个词 */
 function segmentWords(text: string): string[] {
@@ -74,6 +79,8 @@ export function OrgFounding() {
   const foundedHighlightRef = useRef<HTMLSpanElement>(null);
   const greenBarRef = useRef<HTMLDivElement>(null);
   const greenCopyRef = useRef<HTMLDivElement>(null);
+  const statuesParallaxRef = useRef<HTMLDivElement>(null);
+  const plateParallaxRef = useRef<HTMLDivElement>(null);
 
   // 高亮条位置与长度按实测文字宽度计算，中英文环境均自动适配；
   // 字体加载完成后宽度会变，需再校准一次
@@ -101,6 +108,21 @@ export function OrgFounding() {
     apply();
     document.fonts?.ready.then(apply);
   }, [locale]);
+
+  // 鼠标视差：仅悬停型精准指针启用，触屏与减少动效场景不启用
+  useEffect(() => {
+    const area = container.current;
+    const statues = statuesParallaxRef.current;
+    const plate = plateParallaxRef.current;
+    if (!area || !statues || !plate || !isActive || reducedMotion) return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      return;
+    }
+    return createPointerParallax(area, [
+      { el: statues, ...STATUES_PARALLAX },
+      { el: plate, ...PLATE_PARALLAX },
+    ]);
+  }, [isActive, reducedMotion]);
 
   // locale 变化会重建词 span（初始隐藏），需重跑动画否则文字停在隐藏态
   useGSAP(
@@ -194,13 +216,16 @@ export function OrgFounding() {
           data-sd-media-inner
           className="absolute inset-0 translate-y-[105%]"
         >
-          <Image
-            src={foundingStatuesImg}
-            alt={t("orgFounding.statuesAlt")}
-            fill
-            sizes="325px"
-            className="object-cover"
-          />
+          {/* 视差层与入场层分离，transform 互不干扰 */}
+          <div ref={statuesParallaxRef} className="absolute inset-0">
+            <Image
+              src={foundingStatuesImg}
+              alt={t("orgFounding.statuesAlt")}
+              fill
+              sizes="325px"
+              className="object-cover"
+            />
+          </div>
         </div>
       </div>
 
@@ -280,13 +305,15 @@ export function OrgFounding() {
           data-sd-media-inner
           className="absolute inset-0 translate-y-[105%]"
         >
-          <Image
-            src={foundingPlateImg}
-            alt={t("orgFounding.plateAlt")}
-            fill
-            sizes="507px"
-            className="object-cover"
-          />
+          <div ref={plateParallaxRef} className="absolute inset-0">
+            <Image
+              src={foundingPlateImg}
+              alt={t("orgFounding.plateAlt")}
+              fill
+              sizes="507px"
+              className="object-cover"
+            />
+          </div>
         </div>
       </div>
     </ScreenShell>
