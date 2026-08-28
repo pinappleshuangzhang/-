@@ -1,40 +1,20 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import { useLocale } from "@/components/providers/locale-provider";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { ArchiveIndex } from "@/components/ui/archive-index";
 import { SiteNav } from "@/components/ui/site-nav";
-import type { MessageKey } from "@/lib/i18n/messages";
-import type { NavVariant } from "@/lib/nav-variants";
-
-const NAV_TITLE_KEY: Partial<Record<NavVariant, MessageKey>> = {
-  "archive-ga-001": "nav.title.ga001",
-  "archive-ga-002": "nav.title.ga002",
-  "archive-ga-003": "nav.title.ga003",
-  "archive-ga-004": "nav.title.ga004",
-  "archive-ga-005": "nav.title.ga005",
-  contact: "nav.title.contact",
-};
-
-const NAV_CODE: Partial<Record<NavVariant, string>> = {
-  "archive-ga-001": "ARCHIVE_GA_001",
-  "archive-ga-002": "ARCHIVE_GA_002",
-  "archive-ga-003": "ARCHIVE_GA_003",
-  "archive-ga-004": "GA_ARCHIVE_004",
-  "archive-ga-005": "GA_ARCHIVE_005",
-  contact: "GA_ARCHIVE_006",
-};
 
 /** 与 page.tsx 分屏顺序一致，供目录跳转 */
 const SCREEN_INDEX_BY_KEY: Record<string, number> = {
   studio: 0,
   "archive-ga-001": 1,
   "archive-ga-002": 2,
-  "archive-ga-003": 3,
-  "archive-ga-004": 4,
-  "archive-ga-005": 5,
-  contact: 6,
+  "archive-ga-002-founding": 3,
+  "archive-ga-003": 4,
+  "archive-ga-004": 5,
+  "archive-ga-005": 6,
+  contact: 7,
 };
 
 /**
@@ -42,10 +22,16 @@ const SCREEN_INDEX_BY_KEY: Record<string, number> = {
  * 导航覆盖所有分屏；目录打开时切换为 index 变体。
  */
 export function PageChrome() {
-  const { navVariant, index, goToScreen } = useSectionPager();
-  const { t } = useLocale();
+  const { navVariant, index, goToScreen, registerScrollInterceptor } =
+    useSectionPager();
   const [indexOpen, setIndexOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
+
+  // 目录是覆盖层而非一张分屏；打开时吃掉滚轮和触摸滑动，避免触发幕布切屏。
+  useEffect(() => {
+    if (!indexOpen) return;
+    return registerScrollInterceptor(() => true);
+  }, [indexOpen, registerScrollInterceptor]);
 
   const handleSelect = useCallback(
     (screenKey: string) => {
@@ -57,25 +43,10 @@ export function PageChrome() {
     [goToScreen, index],
   );
 
-  const titleKey = NAV_TITLE_KEY[navVariant];
-  const code = NAV_CODE[navVariant];
-  const center =
-    navVariant === "studio" || !titleKey || !code ? (
-      <p className="whitespace-nowrap font-bodoni text-20 uppercase text-grey-400">
-        Grava Design Studio
-      </p>
-    ) : (
-      <p className="whitespace-nowrap text-20 uppercase text-grey-400">
-        <span className="font-bodoni font-normal">{code}</span>
-        <span className="font-serif-sc font-normal">{t(titleKey)}</span>
-      </p>
-    );
-
   return (
     <>
       <SiteNav
         variant={indexOpen ? "index" : "default"}
-        center={center}
         onOpenIndex={() => setIndexOpen(true)}
         onCloseIndex={() => setIndexOpen(false)}
         onContact={() => {

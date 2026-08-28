@@ -7,6 +7,9 @@ export type MessageKey =
   | "nav.openIndex"
   | "nav.closeIndex"
   | "nav.language"
+  | "nav.index"
+  | "nav.close"
+  | "nav.langShort"
   | "nav.title.ga001"
   | "nav.title.ga002"
   | "nav.title.ga003"
@@ -44,6 +47,14 @@ export type MessageKey =
   | "org.enter2"
   | "org.archive1"
   | "org.archive2"
+  | "orgFounding.aria"
+  | "orgFounding.designers"
+  | "orgFounding.statuesAlt"
+  | "orgFounding.plateAlt"
+  | "orgFounding.foundedPrefix"
+  | "orgFounding.foundedHighlight"
+  | "orgFounding.detail1"
+  | "orgFounding.detail2"
   | "member.aria"
   | "member.imageAlt"
   | "member.investigator"
@@ -53,6 +64,7 @@ export type MessageKey =
   | "member.contactMe"
   | "gallery.list"
   | "gallery.detail"
+  | "gallery.cursorDetail"
   | "gallery.hintButtons"
   | "gallery.hintFree"
   | "gallery.prev"
@@ -80,6 +92,9 @@ const zh: Messages = {
   "nav.openIndex": "打开目录",
   "nav.closeIndex": "关闭目录",
   "nav.language": "语言切换",
+  "nav.index": "目录",
+  "nav.close": "关闭",
+  "nav.langShort": "英",
   "nav.title.ga001": "《什么是引力？》",
   "nav.title.ga002": "《组织记录》",
   "nav.title.ga003": "《成员记录》",
@@ -118,6 +133,14 @@ const zh: Messages = {
   "org.enter2": "品牌、产品、空间与数字体验",
   "org.archive1": "每一次设计",
   "org.archive2": "都会形成一份“调查档案”",
+  "orgFounding.aria": "档案 GA_002 组织记录 工作室成立",
+  "orgFounding.designers": "四位设计师",
+  "orgFounding.statuesAlt": "四位设计师围坐圆桌讨论的白色雕塑",
+  "orgFounding.plateAlt": "嵌有工作室标识的金属铭牌装置",
+  "orgFounding.foundedPrefix": "我们成立了",
+  "orgFounding.foundedHighlight": "万有引力设计工作室",
+  "orgFounding.detail1": "我们进入不同的品牌、产品、空间与数字体验",
+  "orgFounding.detail2": "每一次设计都会形成一份“调查档案”",
   "member.aria": "档案 GA_003 成员记录",
   "member.imageAlt": "摆放白色书籍与雕塑半身像的成员档案展柜",
   "member.investigator": "调查员",
@@ -127,6 +150,7 @@ const zh: Messages = {
   "member.contactMe": "联系我",
   "gallery.list": "档案卡片列表",
   "gallery.detail": "查看作品详情",
+  "gallery.cursorDetail": "点击查看详情",
   "gallery.hintButtons":
     "点击左右按钮切换档案卡片，点击或按 Enter 查看作品详情，下滑切换到下一屏",
   "gallery.hintFree":
@@ -157,6 +181,9 @@ const en: Messages = {
   "nav.openIndex": "Open archive index",
   "nav.closeIndex": "Close archive index",
   "nav.language": "Language",
+  "nav.index": "Index",
+  "nav.close": "Close",
+  "nav.langShort": "中",
   "nav.title.ga001": "What Is Gravity?",
   "nav.title.ga002": "Organization Record",
   "nav.title.ga003": "Member Record",
@@ -196,6 +223,16 @@ const en: Messages = {
   "org.enter2": "brands, products, spaces, and digital experiences",
   "org.archive1": "Every design",
   "org.archive2": "becomes a survey archive",
+  "orgFounding.aria": "Archive GA_002 Organization Record — Studio Founding",
+  "orgFounding.designers": "Four designers",
+  "orgFounding.statuesAlt":
+    "White sculpture of four designers in discussion around a table",
+  "orgFounding.plateAlt": "Metal plate installation with the studio logo",
+  "orgFounding.foundedPrefix": "We founded ",
+  "orgFounding.foundedHighlight": "Universal Gravity Design Studio",
+  "orgFounding.detail1":
+    "We enter different brands, products, spaces, and digital experiences",
+  "orgFounding.detail2": "Every design becomes a survey archive",
   "member.aria": "Archive GA_003 Member Record",
   "member.imageAlt":
     "Member archive display with white books and a sculpted bust",
@@ -206,6 +243,7 @@ const en: Messages = {
   "member.contactMe": "Contact",
   "gallery.list": "Archive card gallery",
   "gallery.detail": "View work details",
+  "gallery.cursorDetail": "Click for details",
   "gallery.hintButtons":
     "Use the side buttons to switch cards, click or press Enter for details, scroll down for the next screen",
   "gallery.hintFree":
