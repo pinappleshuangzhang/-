@@ -59,8 +59,9 @@ export function OrgFounding() {
   const container = useRef<HTMLElement>(null);
   const reducedMotion = useReducedMotion();
   const isActive = useScreenActive();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
+  // locale 变化会重建词 span（初始隐藏），需重跑动画否则文字停在隐藏态
   useGSAP(
     () => {
       const root = container.current;
@@ -75,7 +76,7 @@ export function OrgFounding() {
       }
       playSondavenReveal(root);
     },
-    { dependencies: [isActive, reducedMotion], scope: container },
+    { dependencies: [isActive, reducedMotion, locale], scope: container },
   );
 
   const titleLabel = `${t("org.line1a")} ${t("org.line1b")}`;
