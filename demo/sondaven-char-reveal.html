@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Son Daven 字符入场效果 Demo</title>
+<style>
+  /* 站点原始配色：--base-1000 深咖啡底、--base-0 沙金字 */
+  :root {
+    --bg: #2c2824;
+    --ink: #a89474;
+    /* 站点源码常量：durS=0.4 durM=0.8 durL=1.2 stagger=0.1 delayReveal=0.2 */
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Courier New", ui-monospace, monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 64px;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+  /* 参考站的横向细网格线 */
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    left: 0; right: 0;
+    height: 1px;
+    background: color-mix(in srgb, var(--ink) 22%, transparent);
+    pointer-events: none;
+  }
+  body::before { top: 25%; }
+  body::after { bottom: 25%; }
+
+  .tag { font-size: 13px; opacity: 0.85; }
+  .title { font-size: clamp(40px, 9vw, 128px); font-weight: 700; letter-spacing: 0.06em; }
+  .lines { font-size: 15px; line-height: 1.9; text-align: center; }
+
+  /* —— 字符出现效果核心 ——
+     每个字符包一层 overflow 可见的 span，初始态由 CSS 预设，
+     避免 JS 加载前闪现（对应站点 data-prevent-flicker） */
+  .split-char, .split-line {
+    display: inline-block;
+    will-change: transform, opacity;
+  }
+  /* 初始只隐藏透明度；transform 全部交给 GSAP，避免 CSS 百分比被解析成固定像素 */
+  .js .split-char { opacity: 0; }
+  .js .split-line { opacity: 0; }
+  .line-mask { display: block; overflow: hidden; }
+
+  /* —— 导航 hover 翻滚：两份文本叠放 —— */
+  nav { display: flex; gap: 56px; font-size: 14px; }
+  .nav-item {
+    position: relative;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    padding: 4px 2px;
+  }
+  .nav-item:focus-visible { outline: 1px solid var(--ink); outline-offset: 4px; }
+  .nav-item .copy-2 { position: absolute; inset: 4px 2px; }
+  .js .copy-2 .split-char { opacity: 0; }
+
+  .replay {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    background: none;
+    border: 1px solid color-mix(in srgb, var(--ink) 45%, transparent);
+    color: var(--ink);
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    font-size: 12px;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+  .replay:hover { border-color: var(--ink); }
+  .replay:focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }
+</style>
+</head>
+<body>
+
+<nav aria-label="示例导航">
+  <button class="nav-item" data-nav aria-label="Menu"><span class="copy-1" data-split="chars" aria-hidden="true">Menu</span><span class="copy-2" data-split="chars" aria-hidden="true">Menu</span></button>
+  <button class="nav-item" data-nav aria-label="Aerotour"><span class="copy-1" data-split="chars" aria-hidden="true">Aerotour</span><span class="copy-2" data-split="chars" aria-hidden="true">Aerotour</span></button>
+</nav>
+
+<p class="tag" data-reveal="chars" data-delay="0.2">Investment Project</p>
+
+<h1 class="title" data-reveal="chars" data-delay="0.4">Son Daven</h1>
+
+<div class="lines" data-reveal="lines" data-delay="0.9">
+  <span class="line-mask"><span class="split-line">I am a valley of peace</span></span>
+  <span class="line-mask"><span class="split-line">See you in the dreams</span></span>
+</div>
+
+<button class="replay" type="button">Replay</button>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script>
+/**
+ * 复刻 sondaven.com 首屏字符入场（参数取自其源码）：
+ *   durM=0.8  durL=1.2  stagger=0.1  delayReveal=0.2
+ *   字符级：opacity/yPercent 75→0/scale 0→1，stagger {each:0.025, from:"random"}
+ *   行级：  yPercent 250→0，stagger 0.05
+ *   缓动：  CustomEase "Out" = cubic-bezier(0.25,1,0.5,1)，用 gsap 内置近似 power2.out 不够贴，
+ *           这里直接注册同名 ease 曲线。
+ */
+document.documentElement.classList.add("js");
+
+const DUR_M = 0.8;
+const DUR_L = 1.2;
+const STAGGER = 0.1;
+const DELAY_REVEAL = 0.2;
+/* 站点用 CustomEase "Out" = cubic-bezier(0.25,1,0.5,1)，
+   内置 power2.out 曲线形状最接近，免加载 CustomEase 插件 */
+const outEase = "power2.out";
+
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** 逐字符拆分：外层元素保留可读文本语义（aria-label / 原文本），字符 span 均 aria-hidden */
+function splitChars(el) {
+  const text = el.textContent;
+  if (!el.closest("[aria-label]")) el.setAttribute("aria-label", text);
+  el.textContent = "";
+  const chars = [];
+  for (const ch of text) {
+    if (ch === " ") {
+      el.appendChild(document.createTextNode(" "));
+      continue;
+    }
+    const span = document.createElement("span");
+    span.className = "split-char";
+    span.setAttribute("aria-hidden", "true");
+    span.textContent = ch;
+    el.appendChild(span);
+    chars.push(span);
+  }
+  return chars;
+}
+
+// —— 入场 reveal ——
+const revealTargets = [...document.querySelectorAll("[data-reveal]")].map((el) => {
+  const kind = el.dataset.reveal;
+  const delay = parseFloat(el.dataset.delay || "0");
+  if (kind === "chars") {
+    if (!el.hasAttribute("aria-label")) el.setAttribute("aria-label", el.textContent);
+    return { kind, delay, chars: splitChars(el) };
+  }
+  return { kind, delay, lines: [...el.querySelectorAll(".split-line")] };
+});
+
+function playIntro() {
+  for (const t of revealTargets) {
+    if (t.kind === "chars") {
+      gsap.fromTo(
+        t.chars,
+        { opacity: 0, yPercent: 75, scale: 0 },
+        {
+          opacity: 1, yPercent: 0, scale: 1,
+          duration: DUR_M,
+          delay: t.delay,
+          ease: outEase,
+          stagger: { each: STAGGER * 0.25, from: "random" },
+          overwrite: true,
+        },
+      );
+    } else {
+      gsap.fromTo(
+        t.lines,
+        { opacity: 0, yPercent: 250 },
+        {
+          opacity: 1, yPercent: 0,
+          duration: DUR_L,
+          delay: t.delay,
+          ease: outEase,
+          stagger: STAGGER * 0.5,
+          overwrite: true,
+        },
+      );
+    }
+  }
+}
+
+function showFinal() {
+  for (const t of revealTargets) {
+    gsap.set(t.kind === "chars" ? t.chars : t.lines, { opacity: 1, yPercent: 0, scale: 1 });
+  }
+}
+
+// —— 导航 hover 翻滚（两份文本随机序对翻） ——
+for (const item of document.querySelectorAll("[data-nav]")) {
+  const [c1, c2] = item.querySelectorAll("[data-split]");
+  const chars1 = splitChars(c1);
+  const chars2 = splitChars(c2);
+  gsap.set(chars1, { opacity: 1, yPercent: 0, scale: 1 });
+
+  const enter = () => {
+    if (reduced) return;
+    gsap.fromTo(chars1, { opacity: 1, yPercent: 0, scale: 1 },
+      { opacity: 0, yPercent: -75, scale: 0, duration: DUR_M, ease: outEase,
+        stagger: { each: STAGGER * 0.25, from: "random" }, overwrite: true });
+    gsap.fromTo(chars2, { opacity: 0, yPercent: 75, scale: 0 },
+      { opacity: 1, yPercent: 0, scale: 1, duration: DUR_M, delay: DELAY_REVEAL, ease: outEase,
+        stagger: { each: STAGGER * 0.25, from: "random" }, overwrite: true });
+  };
+  const leave = () => {
+    if (reduced) return;
+    gsap.to(chars2, { opacity: 0, yPercent: 75, scale: 0, duration: DUR_M, ease: outEase,
+      stagger: { each: STAGGER * 0.25, from: "random" }, overwrite: true });
+    gsap.to(chars1, { opacity: 1, yPercent: 0, scale: 1, duration: DUR_M, delay: DELAY_REVEAL, ease: outEase,
+      stagger: { each: STAGGER * 0.25, from: "random" }, overwrite: true });
+  };
+  item.addEventListener("mouseenter", enter);
+  item.addEventListener("mouseleave", leave);
+  item.addEventListener("focus", enter);
+  item.addEventListener("blur", leave);
+}
+
+document.querySelector(".replay").addEventListener("click", () => {
+  reduced ? showFinal() : playIntro();
+});
+
+reduced ? showFinal() : playIntro();
+</script>
+</body>
+</html>
