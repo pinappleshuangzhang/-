@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -17,6 +17,14 @@ import foundingPlateImg from "../../public/org-record/founding-plate.webp";
 import foundingStatuesImg from "../../public/org-record/founding-statues.webp";
 
 gsap.registerPlugin(useGSAP);
+
+// 高亮条几何（取自 Figma 780:96，设计稿 1440×800）：
+// 黑条从标题第二行左起 76px 处切入，右端越过文字末尾再延伸 133px
+const BLACK_BAR_INSET = 76;
+const BLACK_BAR_EXTEND = 133;
+// 绿条比高亮词组左移 1px 起笔，右端越过词组末尾再延伸 30px
+const GREEN_BAR_SHIFT = 1;
+const GREEN_BAR_EXTEND = 30;
 
 /** 按词切分：中文用 Intl.Segmenter 分词，英文按空格；不支持时整段作一个词 */
 function segmentWords(text: string): string[] {
@@ -61,6 +69,39 @@ export function OrgFounding() {
   const isActive = useScreenActive();
   const { t, locale } = useLocale();
 
+  const titleLine2Ref = useRef<HTMLSpanElement>(null);
+  const blackBarRef = useRef<HTMLDivElement>(null);
+  const foundedHighlightRef = useRef<HTMLSpanElement>(null);
+  const greenBarRef = useRef<HTMLDivElement>(null);
+  const greenCopyRef = useRef<HTMLDivElement>(null);
+
+  // 高亮条位置与长度按实测文字宽度计算，中英文环境均自动适配；
+  // 字体加载完成后宽度会变，需再校准一次
+  useEffect(() => {
+    const apply = () => {
+      const line2 = titleLine2Ref.current;
+      const blackBar = blackBarRef.current;
+      if (line2 && blackBar) {
+        const width =
+          Math.max(line2.offsetWidth - BLACK_BAR_INSET, 0) + BLACK_BAR_EXTEND;
+        blackBar.style.width = `${width}px`;
+      }
+      const highlight = foundedHighlightRef.current;
+      const greenBar = greenBarRef.current;
+      const greenCopy = greenCopyRef.current;
+      if (highlight && greenBar && greenCopy) {
+        const left = highlight.offsetLeft - GREEN_BAR_SHIFT;
+        greenBar.style.left = `${left}px`;
+        greenBar.style.width = `${
+          highlight.offsetWidth + GREEN_BAR_SHIFT + GREEN_BAR_EXTEND
+        }px`;
+        greenCopy.style.left = `${-left}px`;
+      }
+    };
+    apply();
+    document.fonts?.ready.then(apply);
+  }, [locale]);
+
   // locale 变化会重建词 span（初始隐藏），需重跑动画否则文字停在隐藏态
   useGSAP(
     () => {
@@ -80,9 +121,12 @@ export function OrgFounding() {
   );
 
   const titleLabel = `${t("org.line1a")} ${t("org.line1b")}`;
-  const foundedText = `${t("orgFounding.foundedPrefix")}${t(
-    "orgFounding.foundedHighlight",
-  )}`;
+  // 英文前缀带尾随空格，须落在两个 span 之间的文本节点上，否则被 inline-block 吞掉
+  const foundedPrefixRaw = t("orgFounding.foundedPrefix");
+  const foundedPrefix = foundedPrefixRaw.trimEnd();
+  const foundedGap = foundedPrefixRaw.length > foundedPrefix.length ? " " : "";
+  const foundedHighlight = t("orgFounding.foundedHighlight");
+  const foundedText = `${foundedPrefixRaw}${foundedHighlight}`;
 
   return (
     <ScreenShell ref={container} aria-label={t("orgFounding.aria")}>
@@ -107,13 +151,16 @@ export function OrgFounding() {
               <SplitWords text={t("org.line1a")} />
             </p>
             <p aria-hidden="true">
-              <SplitWords text={t("org.line1b")} />
+              <span ref={titleLine2Ref} className="inline-block">
+                <SplitWords text={t("org.line1b")} />
+              </span>
             </p>
           </div>
-          {/* 高亮条压在原文上：条内是同排版的反白副本，形成切字反色效果 */}
+          {/* 高亮条压在原文上：条内是同排版的反白副本，形成切字反色效果；宽度随文字实测适配 */}
           <div
+            ref={blackBarRef}
             aria-hidden="true"
-            className="absolute left-[76px] top-[49px] h-[43px] w-[249px] overflow-hidden"
+            className="absolute left-[76px] top-[46px] h-[43px] w-[249px] overflow-hidden"
           >
             <span
               data-sd-bar
@@ -124,7 +171,7 @@ export function OrgFounding() {
               data-sd-words
               data-sd-sync="founding-title"
               data-sd-delay="0.35"
-              className="absolute left-[-76px] top-[-49px] whitespace-nowrap text-white"
+              className="absolute left-[-76px] top-[-46px] whitespace-nowrap text-white"
             >
               <p>
                 <SplitWords text={t("org.line1a")} />
@@ -166,11 +213,19 @@ export function OrgFounding() {
             data-sd-delay="0.5"
             aria-label={foundedText}
           >
-            <SplitWords text={foundedText} />
+            <span className="inline-block">
+              <SplitWords text={foundedPrefix} />
+            </span>
+            {foundedGap}
+            <span ref={foundedHighlightRef} className="inline-block">
+              <SplitWords text={foundedHighlight} />
+            </span>
           </p>
+          {/* 绿条位置与长度按前缀 / 高亮词组实测宽度定位，中英文均适配 */}
           <div
+            ref={greenBarRef}
             aria-hidden="true"
-            className="absolute left-[119px] top-0 h-[38px] w-[237px] overflow-hidden"
+            className="absolute left-[119px] top-[-3px] h-[33px] w-[246px] overflow-hidden"
           >
             <span
               data-sd-bar
@@ -178,13 +233,20 @@ export function OrgFounding() {
               className="absolute inset-0 origin-left scale-x-0 bg-green-900"
             />
             <div
+              ref={greenCopyRef}
               data-sd-words
               data-sd-sync="founding-founded"
               data-sd-delay="0.5"
-              className="absolute left-[-119px] top-0 whitespace-nowrap text-white"
+              className="absolute left-[-119px] top-[3px] whitespace-nowrap text-white"
             >
               <p>
-                <SplitWords text={foundedText} />
+                <span className="inline-block">
+                  <SplitWords text={foundedPrefix} />
+                </span>
+                {foundedGap}
+                <span className="inline-block">
+                  <SplitWords text={foundedHighlight} />
+                </span>
               </p>
             </div>
           </div>
