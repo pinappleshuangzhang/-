@@ -10,7 +10,6 @@ import { Contact } from "@/sections/contact";
 import { Hero } from "@/sections/hero";
 import { MemberRecord } from "@/sections/member-record";
 import { OrgFounding } from "@/sections/org-founding";
-import { OrgRecord } from "@/sections/org-record";
 
 const SCREENS: PagerScreen[] = [
   {
@@ -27,15 +26,9 @@ const SCREENS: PagerScreen[] = [
     titleKey: "screen.ga001",
     node: <ArchiveIntro />,
   },
+  // 原《组织记录》铭牌屏（OrgRecord）暂时下线，成立屏顶替为第三屏
   {
     key: "archive-ga-002",
-    navVariant: "archive-ga-002",
-    background: "archive",
-    titleKey: "screen.ga002",
-    node: <OrgRecord />,
-  },
-  {
-    key: "archive-ga-002-founding",
     navVariant: "archive-ga-002",
     background: "archive",
     titleKey: "screen.ga002",

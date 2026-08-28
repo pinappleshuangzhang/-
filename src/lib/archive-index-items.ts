@@ -9,35 +9,37 @@ export type ArchiveIndexItem = {
   screenKey: string | null;
 };
 
+// 目录跳转暂时全部隐藏（screenKey 置 null 即渲染为不可点击态）；
+// 恢复时按 page.tsx 分屏 key 回填即可。
 export const ARCHIVE_INDEX_ITEMS: ArchiveIndexItem[] = [
   {
     code: "GA_001",
     titleKey: "index.ga001",
-    screenKey: "archive-ga-001",
+    screenKey: null,
   },
   {
     code: "GA_002",
     titleKey: "index.ga002",
-    screenKey: "archive-ga-002",
+    screenKey: null,
   },
   {
     code: "GA_003",
     titleKey: "index.ga003",
-    screenKey: "archive-ga-003",
+    screenKey: null,
   },
   {
     code: "GA_004",
     titleKey: "index.ga004",
-    screenKey: "archive-ga-004",
+    screenKey: null,
   },
   {
     code: "GA_005",
     titleKey: "index.ga005",
-    screenKey: "archive-ga-005",
+    screenKey: null,
   },
   {
     code: "GA_006",
     titleKey: "index.ga006",
-    screenKey: "contact",
+    screenKey: null,
   },
 ];
