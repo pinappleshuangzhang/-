@@ -18,20 +18,29 @@ import foundingStatuesImg from "../../public/org-record/founding-statues.webp";
 
 gsap.registerPlugin(useGSAP);
 
-/** 逐字符拆分：空格保留为文本节点，字符 span 由父级 aria-label 兜底语义 */
-function SplitChars({ text }: { text: string }) {
+/** 按词切分：中文用 Intl.Segmenter 分词，英文按空格；不支持时整段作一个词 */
+function segmentWords(text: string): string[] {
+  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+    const segmenter = new Intl.Segmenter("zh-Hans", { granularity: "word" });
+    return Array.from(segmenter.segment(text), (seg) => seg.segment);
+  }
+  return text.split(/(\s+)/).filter(Boolean);
+}
+
+/** 逐词拆分：空白保留为文本节点，词 span 由父级 aria-label 兜底语义 */
+function SplitWords({ text }: { text: string }) {
   return (
     <>
-      {Array.from(text).map((char, index) =>
-        char === " " ? (
-          " "
+      {segmentWords(text).map((word, index) =>
+        word.trim() === "" ? (
+          word
         ) : (
           <span
-            key={`${char}-${index}`}
+            key={`${word}-${index}`}
             aria-hidden="true"
-            className="sd-char inline-block opacity-0"
+            className="sd-word inline-block opacity-0"
           >
-            {char}
+            {word}
           </span>
         ),
       )}
@@ -78,26 +87,26 @@ export function OrgFounding() {
     <ScreenShell ref={container} aria-label={t("orgFounding.aria")}>
       {/* 左上：小字标注 + 大标题（黑色高亮条反白） */}
       <p
-        data-sd-chars
+        data-sd-words
         data-sd-delay="0.2"
         aria-label={t("orgFounding.designers")}
         className="absolute left-5 top-[30.5%] font-serif-sc text-12 uppercase text-grey-300"
       >
-        <SplitChars text={t("orgFounding.designers")} />
+        <SplitWords text={t("orgFounding.designers")} />
       </p>
       <div className="absolute left-5 top-[33.6%] whitespace-nowrap font-serif-sc text-32 uppercase text-grey-400">
         <div className="relative">
           <div
-            data-sd-chars
+            data-sd-words
             data-sd-sync="founding-title"
             data-sd-delay="0.35"
             aria-label={titleLabel}
           >
             <p aria-hidden="true">
-              <SplitChars text={t("org.line1a")} />
+              <SplitWords text={t("org.line1a")} />
             </p>
             <p aria-hidden="true">
-              <SplitChars text={t("org.line1b")} />
+              <SplitWords text={t("org.line1b")} />
             </p>
           </div>
           {/* 高亮条压在原文上：条内是同排版的反白副本，形成切字反色效果 */}
@@ -111,16 +120,16 @@ export function OrgFounding() {
               className="absolute inset-0 origin-left scale-x-0 bg-grey-400"
             />
             <div
-              data-sd-chars
+              data-sd-words
               data-sd-sync="founding-title"
               data-sd-delay="0.35"
               className="absolute left-[-76px] top-[-49px] whitespace-nowrap text-white"
             >
               <p>
-                <SplitChars text={t("org.line1a")} />
+                <SplitWords text={t("org.line1a")} />
               </p>
               <p>
-                <SplitChars text={t("org.line1b")} />
+                <SplitWords text={t("org.line1b")} />
               </p>
             </div>
           </div>
@@ -151,12 +160,12 @@ export function OrgFounding() {
       <div className="absolute bottom-5 left-[calc(25%+5px)]">
         <div className="relative h-[38px] whitespace-nowrap font-serif-sc text-24 uppercase text-grey-400">
           <p
-            data-sd-chars
+            data-sd-words
             data-sd-sync="founding-founded"
             data-sd-delay="0.5"
             aria-label={foundedText}
           >
-            <SplitChars text={foundedText} />
+            <SplitWords text={foundedText} />
           </p>
           <div
             aria-hidden="true"
@@ -168,13 +177,13 @@ export function OrgFounding() {
               className="absolute inset-0 origin-left scale-x-0 bg-green-900"
             />
             <div
-              data-sd-chars
+              data-sd-words
               data-sd-sync="founding-founded"
               data-sd-delay="0.5"
               className="absolute left-[-119px] top-0 whitespace-nowrap text-white"
             >
               <p>
-                <SplitChars text={foundedText} />
+                <SplitWords text={foundedText} />
               </p>
             </div>
           </div>
