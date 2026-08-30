@@ -59,10 +59,10 @@ export function defaultParams() {
     entryPlaneSize: 108, // 圆环阶段卡片等比缩小 10%，给背景轨道留出间距
     planeSize: 90, // 圆环展开后的原版卡片基准，不改变最终构图尺度
     count: PROJECTS.length, // one plane per project, so the deal comes out even
-    entryRingRadius: 244, // 同步收紧圆环，保持卡片内缘位置并释放外缘空间
+    entryRingRadius: 264, // 背景展示阶段图片圆环半径
     ringRadius: 206, // 最终圆环中心轨迹半径：206 × 4.21 ≈ 867px
-    ringOffsetX: -3, // 圆环相对背景向左微调 3px
-    ringOffsetY: 15, // 在原有 5px 基础上继续向下 10px
+    ringOffsetX: -4, // 在原有 3px 基础上继续向左 1px
+    ringOffsetY: 18, // 在原有 15px 基础上继续向下 3px
     seed: 0, // where plane 0 sits, degrees (0 = 3 o'clock)
     radial: true, // long edge points outward; off = long edge along the ring
     radius: 0, // Figma 卡片保持直角，不添加 shader 圆角

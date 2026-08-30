@@ -64,6 +64,7 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
   useEffect(() => {
     const container = containerRef.current;
     const listEl = listRef.current;
+    const categoryItems = itemsRef.current.filter(Boolean);
     const loaderEl = loaderRef.current;
     const stageBackground = stageBackgroundRef.current;
     const finalShadow = finalShadowRef.current;
@@ -1079,6 +1080,12 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
       if (listEl) {
         gsap.set(listEl, { opacity: 0 });
         listEl.style.pointerEvents = "none";
+        gsap.set(categoryItems, {
+          opacity: 0,
+          yPercent: 75,
+          scale: 0,
+          transformOrigin: "center center",
+        });
       }
       if (stageBackground) gsap.set(stageBackground, { opacity: 0 });
       if (finalShadow) gsap.set(finalShadow, { opacity: 0 });
@@ -1286,14 +1293,24 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
         params.moveDelay,
       );
       if (listEl) {
-        finalTl.to(
-          listEl,
+        const listRevealAt = Math.max(
+          params.moveDelay,
+          params.moveTime * 0.55,
+        );
+        const listItems = gsap.utils.shuffle([...categoryItems]);
+        finalTl.set(listEl, { opacity: 1 }, listRevealAt);
+        finalTl.fromTo(
+          listItems,
+          { opacity: 0, yPercent: 75, scale: 0 },
           {
             opacity: 1,
-            duration: params.textTime,
-            ease: params.textEase,
+            yPercent: 0,
+            scale: 1,
+            duration: 0.8,
+            ease: "power2.out",
+            stagger: 0.05,
           },
-          Math.max(params.moveDelay, params.moveTime * 0.55),
+          listRevealAt,
         );
       }
       if (finalShadow) {
@@ -1469,6 +1486,7 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
       gsap.killTweensOf(splitText.chars);
       gsap.killTweensOf(splitText.fades);
       gsap.killTweensOf(listEl);
+      gsap.killTweensOf(categoryItems);
       gsap.killTweensOf(hoverClose);
       meta.dispose();
       splitText.dispose();
