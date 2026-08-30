@@ -252,7 +252,7 @@ export function Hero() {
       {/* 最终首屏内容：Figma 884:2070，标题组右侧对齐 */}
       <div className="absolute inset-0 z-30">
         <div
-          className={`absolute right-[71px] top-[126px] flex w-[432px] flex-col gap-2 ${
+          className={`absolute right-[71px] top-[126px] flex w-[432px] -translate-x-[2.6px] flex-col gap-2 ${
             locale === "zh" ? "items-start text-left" : "items-end text-right"
           }`}
         >
