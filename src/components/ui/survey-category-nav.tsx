@@ -33,9 +33,9 @@ export function SurveyCategoryNav({
 
   return (
     <nav aria-label={ariaLabel}>
-      <ul className="flex w-[330px] flex-col gap-6">
+      <ul className="inline-flex w-max flex-col gap-6">
         {SURVEY_CATEGORIES.map((item) => (
-          <li key={item.code}>
+          <li key={item.code} className="w-full">
             <CategoryItem
               item={item}
               active={item.code === activeCode}
@@ -85,7 +85,7 @@ function CategoryItem({
       onMouseLeave={() => {
         if (!active) onDissolveLeave();
       }}
-      className={`group relative flex w-fit items-center gap-7 overflow-hidden rounded-rs-4 py-1 font-bodoni text-20 capitalize leading-normal ${focusRing} ${
+      className={`group relative flex w-full items-center justify-between gap-7 overflow-hidden rounded-rs-4 py-1 text-left font-bodoni text-20 capitalize leading-normal ${focusRing} ${
         active ? "bg-grey-400 text-white" : "text-grey-300"
       }`}
     >
@@ -94,29 +94,29 @@ function CategoryItem({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 rounded-[inherit] bg-grey-400 opacity-0"
       />
-      <span className={`relative z-10 whitespace-nowrap ${active ? "" : hoverColor}`}>
-        {item.letter}
-      </span>
-      <span className="relative z-10 flex items-center gap-3">
+      <span className="relative z-10 flex min-w-0 items-center gap-7">
+        <span className={`whitespace-nowrap ${active ? "" : hoverColor}`}>
+          {item.letter}
+        </span>
         <span
           className={`whitespace-nowrap ${active ? "font-medium" : hoverColor}`}
         >
           {item.label}
         </span>
-        <span
-          aria-hidden="true"
-          className={`relative flex size-7 shrink-0 items-center justify-center transition-opacity duration-[600ms] motion-reduce:transition-none ${
-            active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-          }`}
-        >
-          <Image
-            src="/archive-index/arrow.png"
-            alt=""
-            width={48}
-            height={48}
-            className="size-full object-contain"
-          />
-        </span>
+      </span>
+      <span
+        aria-hidden="true"
+        className={`relative z-10 flex size-7 shrink-0 items-center justify-center transition-opacity duration-[600ms] motion-reduce:transition-none ${
+          active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+      >
+        <Image
+          src="/archive-index/arrow.png"
+          alt=""
+          width={48}
+          height={48}
+          className="size-full object-contain"
+        />
       </span>
     </button>
   );

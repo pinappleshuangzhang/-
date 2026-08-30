@@ -3,7 +3,7 @@ import {
   type PagerScreen,
 } from "@/components/providers/section-pager-provider";
 import { PageChrome } from "@/components/ui/page-chrome";
-import { ArchiveGa004 } from "@/sections/archive-ga-004";
+import { ArchiveGa004Viscose } from "@/sections/archive-ga-004-viscose";
 import { ArchiveGa005 } from "@/sections/archive-ga-005";
 import { ArchiveIntro } from "@/sections/archive-intro";
 import { Contact } from "@/sections/contact";
@@ -46,7 +46,7 @@ const SCREENS: PagerScreen[] = [
     navVariant: "archive-ga-004",
     background: "archive",
     titleKey: "screen.ga004",
-    node: <ArchiveGa004 />,
+    node: <ArchiveGa004Viscose />,
   },
   {
     key: "archive-ga-005",

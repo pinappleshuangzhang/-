@@ -187,6 +187,7 @@ export function SectionPagerProvider({
       ) {
         return;
       }
+      if (Math.abs(deltaY) < WHEEL_THRESHOLD) return;
       goToScreen(indexRef.current + (deltaY > 0 ? 1 : -1));
     },
     [goToScreen],

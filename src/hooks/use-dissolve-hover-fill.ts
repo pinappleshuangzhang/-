@@ -10,47 +10,73 @@ import {
 } from "@/lib/dissolve-mask";
 
 /**
- * 导航控件尺寸较小：格子约 5×8px，对应约 34×34~120×34 的按钮。
- * 全站导航共用一套帧，首次 hover 时生成。
+ * 溶解 hover 的目标颗粒边长（px）。按元素实测尺寸换算行列，
+ * 宽按钮与小方钮共用同一套颗粒语言。
  */
-const NAV_MASK_COLS = 24;
-const NAV_MASK_ROWS = 8;
+const TARGET_CELL_PX = 6;
 const NAV_MASK_FRAME_COUNT = 24;
+const MIN_MASK_COLS = 12;
+const MIN_MASK_ROWS = 6;
+const MAX_MASK_COLS = 160;
+const MAX_MASK_ROWS = 48;
 
-let navDissolveFrames: string[] | null = null;
-function getNavDissolveFrames(): string[] {
-  navDissolveFrames ??= createDissolveMaskFrames(
-    NAV_MASK_COLS,
-    NAV_MASK_ROWS,
-    NAV_MASK_FRAME_COUNT,
+const navDissolveFrameCache = new Map<string, string[]>();
+
+function getNavDissolveFrames(width: number, height: number): string[] {
+  const cols = Math.min(
+    MAX_MASK_COLS,
+    Math.max(MIN_MASK_COLS, Math.round(width / TARGET_CELL_PX)),
   );
-  return navDissolveFrames;
+  const rows = Math.min(
+    MAX_MASK_ROWS,
+    Math.max(MIN_MASK_ROWS, Math.round(height / TARGET_CELL_PX)),
+  );
+  const key = `${cols}x${rows}`;
+  const cached = navDissolveFrameCache.get(key);
+  if (cached) return cached;
+  const frames = createDissolveMaskFrames(cols, rows, NAV_MASK_FRAME_COUNT);
+  navDissolveFrameCache.set(key, frames);
+  return frames;
 }
 
 /**
  * 导航按钮的溶解 hover：白底藏在斑块遮罩后逐帧显现，离开倒放。
  * 与成员卡 / 作品卡共用同一套 dissolve-mask 语言。
  */
-export function useDissolveHoverFill() {
+type DissolveHoverFillOptions = {
+  /** 默认填充是否可见；invert 用于“进入时消失、离开时恢复”的深色按钮。 */
+  initiallyVisible?: boolean;
+  invert?: boolean;
+};
+
+export function useDissolveHoverFill({
+  initiallyVisible = false,
+  invert = false,
+}: DissolveHoverFillOptions = {}) {
   const fillRef = useRef<HTMLDivElement>(null);
-  const proxyRef = useRef({ frame: 0 });
+  const proxyRef = useRef({
+    frame: initiallyVisible ? NAV_MASK_FRAME_COUNT - 1 : 0,
+  });
   const reducedMotion = useReducedMotion();
 
   const reset = useCallback(() => {
     const fill = fillRef.current;
     const proxy = proxyRef.current;
     gsap.killTweensOf(proxy);
-    proxy.frame = 0;
+    proxy.frame = initiallyVisible ? NAV_MASK_FRAME_COUNT - 1 : 0;
     if (!fill) return;
-    fill.style.opacity = "0";
+    fill.style.opacity = initiallyVisible ? "1" : "0";
     setElementMask(fill, null);
-  }, []);
+  }, [initiallyVisible]);
 
   const animate = useCallback(
     (entering: boolean) => {
       const fill = fillRef.current;
       if (!fill) return;
-      const frames = getNavDissolveFrames();
+      const frames = getNavDissolveFrames(
+        fill.offsetWidth,
+        fill.offsetHeight,
+      );
       if (reducedMotion || frames.length === 0) {
         fill.style.opacity = entering ? "1" : "0";
         setElementMask(fill, null);
@@ -83,7 +109,7 @@ export function useDissolveHoverFill() {
   return {
     fillRef,
     reset,
-    onMouseEnter: () => animate(true),
-    onMouseLeave: () => animate(false),
+    onMouseEnter: () => animate(!invert),
+    onMouseLeave: () => animate(invert),
   };
 }

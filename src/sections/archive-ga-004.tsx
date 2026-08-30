@@ -4,7 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { createArchiveGa004TitleSweep } from "@/animations/archive-ga-004-title-sweep";
+import {
+  createArchiveGa004TitleSweep,
+  slideInArchiveGa004Titles,
+} from "@/animations/archive-ga-004-title-sweep";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
   useScreenActive,
@@ -35,6 +38,8 @@ export function ArchiveGa004() {
   const titlesRef = useRef<HTMLDivElement>(null);
   const galleryWrapRef = useRef<HTMLDivElement>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  /** hover 卡片对应的类目单词，替换 DESGIN / WORKS 角标大字 */
+  const [titleWords, setTitleWords] = useState<[string, string] | null>(null);
   const { t } = useLocale();
 
   // 标题入场：先横穿滑出，再滑入定位；离屏后 revert，返回时重播。
@@ -60,10 +65,31 @@ export function ArchiveGa004() {
     },
   );
 
-  // 离开此屏时复位详情，返回时回到长廊而非上次的详情页
+  // hover 换字：新文字从两侧屏外滑入（跳过首帧，入场动画自行处理）
+  const titleSwapReadyRef = useRef(false);
+  useGSAP(
+    () => {
+      if (!titleSwapReadyRef.current) {
+        titleSwapReadyRef.current = true;
+        return;
+      }
+      const root = titlesRef.current;
+      if (!root || reducedMotion || !isActive) return;
+      const design = root.querySelector<HTMLElement>("[data-title-design]");
+      const works = root.querySelector<HTMLElement>("[data-title-works]");
+      if (!design || !works) return;
+      slideInArchiveGa004Titles(design, works);
+    },
+    { dependencies: [titleWords] },
+  );
+
+  // 离开此屏时复位详情与角标大字，返回时回到长廊初始状态（DESGIN / WORKS）
   useEffect(() => {
     if (isActive) return;
-    const frame = window.requestAnimationFrame(() => setDetailsOpen(false));
+    const frame = window.requestAnimationFrame(() => {
+      setDetailsOpen(false);
+      setTitleWords(null);
+    });
     return () => window.cancelAnimationFrame(frame);
   }, [isActive]);
 
@@ -128,15 +154,15 @@ export function ArchiveGa004() {
           >
             <div
               data-title-design
-              className="absolute left-[30px] top-[64px] origin-top-left font-bodoni text-60 uppercase [transform:scale(1.67)]"
+              className="absolute left-[20px] top-[64px] origin-top-left whitespace-nowrap font-bodoni text-60 uppercase [transform:scale(1.433)]"
             >
-              DESGIN
+              {titleWords?.[0] ?? "DESGIN"}
             </div>
             <div
               data-title-works
-              className="absolute bottom-[0px] right-[30px] origin-bottom-right font-bodoni text-60 uppercase [transform:scale(1.67)]"
+              className="absolute bottom-[0px] right-[20px] origin-bottom-right whitespace-nowrap font-bodoni text-60 uppercase [transform:scale(1.433)]"
             >
-              WORKS
+              {titleWords?.[1] ?? "WORKS"}
             </div>
           </div>
           <div ref={galleryWrapRef} className="relative top-[20px] z-10 h-full">
@@ -146,15 +172,16 @@ export function ArchiveGa004() {
               interactionMode="buttons"
               controlsRef={galleryControlsRef}
               onSelect={openDetails}
+              onHoverCard={(card) => setTitleWords(card?.titleWords ?? null)}
             />
             <GalleryNavButton
               direction="prev"
-              className="left-[30px] top-1/2 -translate-y-1/2"
+              className="left-[20px] top-1/2 -translate-y-1/2"
               onClick={() => galleryControlsRef.current?.prev()}
             />
             <GalleryNavButton
               direction="next"
-              className="right-[30px] top-1/2 -translate-y-1/2"
+              className="right-[20px] top-1/2 -translate-y-1/2"
               onClick={() => galleryControlsRef.current?.next()}
             />
           </div>
@@ -202,7 +229,7 @@ function GalleryNavButton({
         alt=""
         width={18}
         height={18}
-        className={`relative z-10 opacity-85 brightness-0 ${isPrev ? "rotate-180" : ""}`}
+        className={`relative z-10 size-[18px] opacity-85 brightness-0 ${isPrev ? "rotate-180" : ""}`}
       />
     </button>
   );

@@ -29,6 +29,7 @@ type ArchiveIndexProps = {
 /**
  * 全屏档案目录（Figma 00目录）：半透明活页夹视觉 + 档案列表。
  * 顶栏由公共 SiteNav（index 变体）提供，本组件只负责目录内容层。
+ * 打开时鼠标跟随显示 CLOSE；点击空白处关闭，点目录项仍跳转。
  */
 export function ArchiveIndex({
   open,
@@ -39,8 +40,9 @@ export function ArchiveIndex({
 }: ArchiveIndexProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
+  const closeLabelRef = useRef<HTMLParagraphElement>(null);
   const reducedMotion = useReducedMotion();
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
 
   useEffect(() => {
     if (!open) return;
@@ -59,6 +61,63 @@ export function ArchiveIndex({
       document.body.style.overflow = previousOverflow;
     };
   }, [open, onClose, closeButtonRef]);
+
+  // CLOSE 鼠标跟随：GSAP 写 transform，不经 React state
+  useEffect(() => {
+    if (!open) return;
+    const panel = panelRef.current;
+    const label = closeLabelRef.current;
+    if (!panel || !label) return;
+
+    gsap.set(label, { x: -9999, y: -9999, autoAlpha: reducedMotion ? 1 : 0 });
+
+    const xTo = reducedMotion
+      ? (value: number) => {
+          gsap.set(label, { x: value });
+        }
+      : gsap.quickTo(label, "x", { duration: 0.18, ease: "power2.out" });
+    const yTo = reducedMotion
+      ? (value: number) => {
+          gsap.set(label, { y: value });
+        }
+      : gsap.quickTo(label, "y", { duration: 0.18, ease: "power2.out" });
+
+    let visible = reducedMotion;
+    const setVisible = (next: boolean) => {
+      if (visible === next) return;
+      visible = next;
+      if (reducedMotion) {
+        gsap.set(label, { autoAlpha: next ? 1 : 0 });
+        return;
+      }
+      gsap.to(label, {
+        autoAlpha: next ? 1 : 0,
+        duration: 0.2,
+        overwrite: "auto",
+      });
+    };
+
+    const onMouseMove = (event: MouseEvent) => {
+      const rect = panel.getBoundingClientRect();
+      xTo(event.clientX - rect.left + 12);
+      yTo(event.clientY - rect.top + 12);
+      const overInteractive = Boolean(
+        (event.target as Element | null)?.closest?.(
+          "[data-index-interactive]",
+        ),
+      );
+      setVisible(!overInteractive);
+    };
+    const onMouseLeave = () => setVisible(false);
+
+    panel.addEventListener("mousemove", onMouseMove);
+    panel.addEventListener("mouseleave", onMouseLeave);
+    return () => {
+      panel.removeEventListener("mousemove", onMouseMove);
+      panel.removeEventListener("mouseleave", onMouseLeave);
+      gsap.killTweensOf(label);
+    };
+  }, [open, reducedMotion]);
 
   useGSAP(
     () => {
@@ -86,6 +145,7 @@ export function ArchiveIndex({
       aria-modal="true"
       aria-labelledby={titleId}
       className="fixed inset-0 z-[60] opacity-0"
+      onClick={onClose}
     >
       <Image
         src={bgImg}
@@ -149,7 +209,9 @@ export function ArchiveIndex({
 
           <nav
             aria-label={t("index.nav")}
+            data-index-interactive
             className="pointer-events-auto absolute left-[23.38%] top-[34.32%] -rotate-[1.32deg]"
+            onClick={(event) => event.stopPropagation()}
           >
             <ul className="flex w-[calc(var(--su)*267)] flex-col gap-[calc(var(--su)*20)]">
               {ARCHIVE_INDEX_ITEMS.map((item) => (
@@ -165,6 +227,18 @@ export function ArchiveIndex({
           </nav>
         </div>
       </div>
+
+      <p
+        ref={closeLabelRef}
+        aria-hidden="true"
+        className={`pointer-events-none absolute left-0 top-0 z-[61] text-20 leading-normal text-grey-400 opacity-0 ${
+          locale === "zh"
+            ? "font-serif-sc font-medium"
+            : "font-bodoni font-normal uppercase"
+        }`}
+      >
+        {t("nav.close")}
+      </p>
     </div>
   );
 }
@@ -197,7 +271,7 @@ function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
         <span className="shrink-0 font-bodoni font-normal capitalize">
           ( {item.code} )
         </span>
-        <span className="font-serif-sc font-normal uppercase">{title}</span>
+        <span className="font-serif-sc font-light uppercase">{title}</span>
       </div>
     );
   }
@@ -236,12 +310,14 @@ function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
         <span className="shrink-0 font-bodoni font-normal capitalize">
           ( {item.code} )
         </span>
-        <span className="font-serif-sc font-normal uppercase">{title}</span>
+        <span className="font-serif-sc font-light uppercase">{title}</span>
       </span>
       <span
         aria-hidden="true"
         className={`relative z-10 inline-flex size-[calc(var(--su)*24)] shrink-0 items-center justify-center transition-opacity duration-[600ms] motion-reduce:transition-none ${
-          active ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+          active
+            ? "opacity-100"
+            : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
         }`}
       >
         <Image

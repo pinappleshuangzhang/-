@@ -46,6 +46,7 @@
   --text-52: 52px;
   --text-56: 56px;
   --text-60: 60px;
+  --text-100: 100px;
 
   /* Radius：RS 小 / RM 中 / RL 大 */
   --radius-rs-2: 2px;
@@ -61,7 +62,7 @@
 
 :root {
   /* 布局基线 */
-  --page-margin: 40px;
+  --page-margin: 20px;
   --content-max: 1360px;
 
   --background: var(--color-grey-100);
@@ -87,6 +88,21 @@ body {
   color: var(--foreground);
   font-family: var(--font-noto-serif-sc), "Noto Serif SC", serif;
   overflow-x: hidden;
+}
+
+:where(
+  a[href],
+  button:not(:disabled),
+  [role="button"],
+  [role="link"],
+  summary,
+  label[for],
+  select,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"]
+) {
+  cursor: pointer;
 }
 
 /* 英文模式：全站改用英文字体（Libre Bodoni），含 font-serif-sc 工具类 */
@@ -118,6 +134,26 @@ canvas[data-ascii-curtain] {
 
 canvas[data-ascii-curtain="idle"] {
   visibility: hidden;
+}
+
+.profile-action-arrow {
+  transition-property: transform, filter;
+  transition-duration: 500ms, 600ms;
+  transition-timing-function: ease-out;
+}
+
+.profile-action-arrow-next {
+  transform: translate(-100%, 100%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .profile-action:hover .profile-action-arrow-current {
+    transform: translate(100%, -100%);
+  }
+
+  .profile-action:hover .profile-action-arrow-next {
+    transform: translate(0, 0);
+  }
 }
 
 ::selection {

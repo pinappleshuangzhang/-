@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { createCornerTitleSweep } from "@/animations/archive-ga-004-title-sweep";
+import {
+  playSondavenReveal,
+  setSondavenHidden,
+  setSondavenVisible,
+} from "@/animations/sondaven-reveal";
 import {
   AlphaScrubVideo,
   type AlphaScrubVideoHandle,
@@ -26,16 +32,61 @@ const FOLDER_VIDEO_HEVC = "/archive/archive-folder-anim-hevc.mp4";
 const SCRUB_PER_PX = 0.00015;
 /** 进度追踪的阻尼系数（数值越大跟手越紧，越小拖拽感越强） */
 const SCRUB_DAMPING = 3;
+/** 第一段开始退场的主时间轴节点（总时长 132） */
+const FIRST_COPY_EXIT_PROGRESS = 38 / 132;
 
-/** 逐字变色文本：每个字一个 span，供擦撦时间轴按字点亮 */
-function ScrubText({ text }: { text: string }) {
+/** 按词切分：与第三屏 Son Daven 式逐词入场的规则保持一致。 */
+function segmentWords(text: string): string[] {
+  const attachClosingPunctuation = (segments: string[]) =>
+    segments.reduce<string[]>((words, segment) => {
+      // 标点作为独立 inline-block 时可能被换到下一行行首；将其并回前词。
+      if (
+        /^[，。！？；：、】【）》〉〕］｝”’]+$/u.test(segment) &&
+        words.length > 0
+      ) {
+        words[words.length - 1] += segment;
+      } else {
+        words.push(segment);
+      }
+      return words;
+    }, []);
+
+  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+    const segmenter = new Intl.Segmenter("zh-Hans", { granularity: "word" });
+    return attachClosingPunctuation(
+      Array.from(segmenter.segment(text), (segment) => segment.segment),
+    );
+  }
+  return attachClosingPunctuation(text.split(/(\s+)/).filter(Boolean));
+}
+
+/** 逐词入场、逐字变色文本：外层词 span 供入场动画，内层字 span 供滚动点亮。 */
+function ScrubText({
+  text,
+  revealDelay,
+}: {
+  text: string;
+  revealDelay?: number;
+}) {
   return (
-    <p aria-label={text}>
-      {Array.from(text).map((char, charIndex) => (
-        <span key={charIndex} data-scrub-char aria-hidden="true">
-          {char}
-        </span>
-      ))}
+    <p aria-label={text} data-sd-words data-sd-delay={revealDelay}>
+      {segmentWords(text).map((word, wordIndex) =>
+        word.trim() === "" ? (
+          word
+        ) : (
+          <span
+            key={`${word}-${wordIndex}`}
+            aria-hidden="true"
+            className="sd-word inline-block opacity-0"
+          >
+            {Array.from(word).map((char, charIndex) => (
+              <span key={charIndex} data-scrub-char>
+                {char}
+              </span>
+            ))}
+          </span>
+        ),
+      )}
     </p>
   );
 }
@@ -47,11 +98,13 @@ function ScrubText({ text }: { text: string }) {
  */
 export function ArchiveIntro() {
   const container = useRef<HTMLElement>(null);
+  const cornerTitlesRef = useRef<HTMLDivElement>(null);
   const videoHandleRef = useRef<AlphaScrubVideoHandle>(null);
   const textTimelineRef = useRef<gsap.core.Timeline | null>(null);
 
   const targetRef = useRef(0);
   const displayRef = useRef(0);
+  const hasPlayedFirstCopyEntranceRef = useRef(false);
 
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
@@ -67,6 +120,61 @@ export function ArchiveIntro() {
   if (!navigationLocked && !videoAllowed) {
     setVideoAllowed(true);
   }
+
+  // 中间文案复用第三屏的 Son Daven 式随机逐词上浮入场。
+  useGSAP(
+    () => {
+      const root = container.current;
+      const primaryCopy = root?.querySelector<HTMLElement>("[data-swap-a]");
+      if (!primaryCopy) return;
+
+      if (reducedMotion) {
+        setSondavenVisible(primaryCopy);
+        return;
+      }
+      if (!isActive) {
+        // 首次进入前才预设隐藏；离开后保留当前段落状态，返回时不重播第一段。
+        if (!hasPlayedFirstCopyEntranceRef.current) {
+          setSondavenHidden(primaryCopy);
+        }
+        return;
+      }
+      if (hasPlayedFirstCopyEntranceRef.current) {
+        // locale 切换会重建词节点；第一段尚未退场时，直接恢复其最终可见状态。
+        if (displayRef.current < FIRST_COPY_EXIT_PROGRESS) {
+          setSondavenVisible(primaryCopy);
+        }
+        return;
+      }
+
+      hasPlayedFirstCopyEntranceRef.current = true;
+      playSondavenReveal(primaryCopy);
+    },
+    { dependencies: [isActive, reducedMotion, locale], scope: container },
+  );
+
+  // 页面角标大字与第六屏 DESIGN / WORKS 共用横穿后回位的出场节奏。
+  useGSAP(
+    () => {
+      const root = cornerTitlesRef.current;
+      if (!root) return;
+      const whatIs = root.querySelector<HTMLElement>("[data-title-what-is]");
+      const gravity = root.querySelector<HTMLElement>("[data-title-gravity]");
+      if (!whatIs || !gravity) return;
+
+      if (reducedMotion) {
+        gsap.set([whatIs, gravity], { x: 0 });
+        return;
+      }
+      if (!isActive) return;
+      createCornerTitleSweep(whatIs, gravity);
+    },
+    {
+      dependencies: [isActive, reducedMotion],
+      revertOnUpdate: true,
+      scope: container,
+    },
+  );
 
   // 屏内滚动拦截：先推进屏内进度（文字 + 切换 + 视频），两端到头才放行切屏
   useEffect(() => {
@@ -90,22 +198,31 @@ export function ArchiveIntro() {
 
       // 主时间轴（进度由滚动擦拭驱动，单位为“进度百分点”）：
       //   0 ~ 38   第一段文字逐字由灰变黑
-      //  38 ~ 57   第一段带角度上滑淡出（与入场动效同款，完全退场）
-      //  57 ~ 72   空档：两段之间的停顿，继续滚动才带出第二段（阻尼间隔）
-      //  72 ~ 88   第二段（引力）带角度上滑淡入
-      //  90 ~ 124  第二段文字逐字由灰变黑
+      //  38 ~ 50   第一段逐词缩小、下沉、淡出（第三屏入场动画的反向）
+      //  50 ~ 60   两段之间的短暂停顿
+      //  60 ~ 75   第二段逐词上浮入场
+      //  80 ~ 114  第二段文字逐字由灰变黑
       // 124 ~ 132  收尾留白：视频最后才织合完毕（两段文字完成之后）
       const charsA = gsap.utils.toArray<HTMLElement>(
         "[data-swap-a] [data-scrub-char]",
+        root,
+      );
+      const wordsA = gsap.utils.toArray<HTMLElement>(
+        "[data-swap-a] .sd-word",
         root,
       );
       const charsB = gsap.utils.toArray<HTMLElement>(
         "[data-swap-b] [data-scrub-char]",
         root,
       );
-      const blocksA = gsap.utils.toArray<HTMLElement>("[data-swap-a] > *", root);
-      const blocksB = gsap.utils.toArray<HTMLElement>("[data-swap-b] > *", root);
-      gsap.set(blocksB, { autoAlpha: 0, y: "1.2em", rotate: 5 });
+      const wordsB = gsap.utils.toArray<HTMLElement>(
+        "[data-swap-b] .sd-word",
+        root,
+      );
+      const shuffledWordsA = gsap.utils.shuffle([...wordsA]);
+      const shuffledWordsB = gsap.utils.shuffle([...wordsB]);
+      // 第二段在切换前保持第三屏同款的逐词隐藏姿态。
+      gsap.set(wordsB, { opacity: 0, yPercent: 75, scale: 0 });
 
       const timeline = gsap.timeline({ paused: true });
       timeline
@@ -120,29 +237,28 @@ export function ArchiveIntro() {
           0,
         )
         .to(
-          blocksA,
+          shuffledWordsA,
           {
-            autoAlpha: 0,
-            y: "-0.9em",
-            rotate: -5,
-            transformOrigin: "0% 50%",
-            duration: 16,
+            opacity: 0,
+            yPercent: 75,
+            scale: 0,
+            duration: 8,
             ease: "power2.in",
-            stagger: 3,
+            stagger: { amount: 4 },
           },
           38,
         )
         .to(
-          blocksB,
+          shuffledWordsB,
           {
-            autoAlpha: 1,
-            y: 0,
-            rotate: 0,
-            duration: 12,
-            ease: "power3.out",
-            stagger: 4,
+            opacity: 1,
+            yPercent: 0,
+            scale: 1,
+            duration: 8,
+            ease: "power2.out",
+            stagger: 0.4,
           },
-          72,
+          60,
         )
         .to(
           charsB,
@@ -152,11 +268,13 @@ export function ArchiveIntro() {
             ease: "none",
             stagger: { amount: 26 },
           },
-          90,
+          80,
         )
         // 空拍占位，把时间轴总长撑到 132：文字在 124 处完成，视频擦拭到最末才结束
         .to(root, { duration: 8 }, 124);
       textTimelineRef.current = timeline;
+      // locale 切换会重建文案节点；立即同步当前擦拭进度，避免新节点停在初始隐藏态。
+      timeline.progress(displayRef.current);
 
       // 阻尼追踪：滚动只改目标值，逐帧平滑逼近后再驱动视频与文字
       const tick = (_time: number, deltaTime: number) => {
@@ -188,8 +306,28 @@ export function ArchiveIntro() {
       {/* 鼠标排斥滤镜：分屏内图片、文字全部参与变形 */}
       <RepelFilter className="absolute inset-0">
       <div className="absolute inset-0 z-20">
+        {/* Figma 790:324 / 790:325：页面上下两处装饰性大标题 */}
+        <div
+          ref={cornerTitlesRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+        >
+          <p
+            data-title-what-is
+            className="absolute left-[7.2917%] top-[19.5%] font-bodoni text-100 font-normal leading-[125px] text-grey-400"
+          >
+            WHAT IS
+          </p>
+          <p
+            data-title-gravity
+            className="absolute left-[63.4028%] top-[72%] font-bodoni text-100 font-normal leading-[125px] text-grey-400"
+          >
+            GRAVITY
+          </p>
+        </div>
+
         {/* 档案夹卡片：Figma 486:210 = 563×420，垂直中心略低于屏幕中心 18px；内部字号基准 16px */}
-        <div className="absolute left-1/2 top-[calc(50%+18px)] aspect-[563/420] w-[min(563px,calc(100vw-60px))] -translate-x-1/2 -translate-y-1/2 text-[length:calc(min(563px,100vw-60px)/35.1875)]">
+        <div className="absolute left-1/2 top-[calc(50%+18px)] aspect-[563/420] w-[min(563px,calc(100vw-40px))] -translate-x-1/2 -translate-y-1/2 text-[length:calc(min(563px,100vw-40px)/35.1875)]">
           {/* 投影：设计稿手绘投影图形 1:1 还原（SVG 画布含模糊出血，按设计坐标定位） */}
           <span
             aria-hidden="true"
@@ -223,41 +361,27 @@ export function ArchiveIntro() {
             />
           )}
 
-          {/* 卡片内文字：Figma 486:211 — Regular 24px / logo 36px / gap 16px */}
-          <div className="absolute left-[9.2%] top-[25.7%] w-[55%]">
+          {/* 卡片内文字：Figma 790:332 — Regular 24px / 自设计稿位置下移 */}
+          <div className="absolute left-[9.2%] top-[calc(35.7%-10px)] w-[55%]">
             <div className="relative">
               <div data-swap-a className="flex flex-col gap-[1em]">
-                <Image
-                  src="/archive/archive-logo.svg"
-                  alt=""
-                  width={36}
-                  height={36}
-                  className="size-[2.25em]"
-                />
-                <div className="font-serif-sc text-[1.5em] font-normal uppercase text-grey-200">
-                  <ScrubText text={t("intro.line1")} />
+                <div className="font-serif-sc text-[1.5em] font-normal text-grey-200">
+                  <ScrubText text={t("intro.line1")} revealDelay={0.4} />
                 </div>
-                <div className="font-serif-sc text-[1.5em] font-normal uppercase text-grey-200">
-                  <ScrubText text={t("intro.line2a")} />
-                  <ScrubText text={t("intro.line2b")} />
-                  <ScrubText text={t("intro.line2c")} />
+                <div className="font-serif-sc text-[1.5em] font-normal text-grey-200">
+                  <ScrubText text={t("intro.line2a")} revealDelay={0.5} />
+                  <ScrubText text={t("intro.line2b")} revealDelay={0.55} />
+                  <ScrubText text={t("intro.line2c")} revealDelay={0.6} />
                 </div>
               </div>
               <div
                 data-swap-b
                 className="absolute inset-x-0 top-0 flex flex-col gap-[1em]"
               >
-                <Image
-                  src="/archive/archive-logo.svg"
-                  alt=""
-                  width={36}
-                  height={36}
-                  className="size-[2.25em] opacity-0"
-                />
-                <div className="font-serif-sc text-[1.5em] font-normal text-grey-200 opacity-0">
+                <div className="font-serif-sc text-[1.5em] font-normal text-grey-200">
                   <ScrubText text={t("intro.bridge")} />
                 </div>
-                <div className="font-serif-sc text-[3em] font-normal text-grey-200 opacity-0">
+                <div className="font-serif-sc text-[3em] font-normal text-grey-200">
                   <ScrubText text={t("intro.gravity")} />
                 </div>
               </div>

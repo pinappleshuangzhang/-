@@ -63,8 +63,7 @@ const INERTIA_DURATION = 1.1;
 const CLICK_THRESHOLD = 8;
 
 /**
- * hover 彩图沿用第四屏的斑块溶解遮罩：格子约 2.5×4px（对应 280×220 的卡面），
- * 更密的网格让斑块颗粒更细腻；首次 hover 时生成并全卡共享缓存。
+ * hover 彩图沿用第四屏的斑块溶解遮罩：格子约 2.5×4px（对应 280×220 的卡面）。
  */
 const HOVER_MASK_COLS = 112;
 const HOVER_MASK_ROWS = 56;
@@ -104,6 +103,8 @@ type CardGalleryProps = {
   controlsRef?: MutableRefObject<CardGalleryControls | null>;
   /** 点击卡片（或聚焦时长廊按 Enter）进入作品详情 */
   onSelect?: (card: GalleryCard) => void;
+  /** hover 进入/离开卡片（离开时传 null），用于联动角标大字 */
+  onHoverCard?: (card: GalleryCard | null) => void;
 };
 
 /**
@@ -118,6 +119,7 @@ export function CardGallery({
   wheelHandlerRef,
   controlsRef,
   onSelect,
+  onHoverCard,
 }: CardGalleryProps) {
   const { t } = useLocale();
   const sceneRef = useRef<HTMLDivElement>(null);
@@ -131,6 +133,7 @@ export function CardGallery({
   const inertiaTweenRef = useRef<gsap.core.Tween | null>(null);
   const proxyRef = useRef({ rotation: 0 });
   const horizontalStepRef = useRef(HORIZONTAL_STEP);
+  const cursorLabelRef = useRef<HTMLDivElement>(null);
 
   const count = cards.length;
   const theta = count > 0 ? 360 / count : 0;
@@ -370,10 +373,51 @@ export function CardGallery({
     };
   }, [reducedMotion, buttonsOnly, wheelHandlerRef]);
 
+  // hover 卡片时的「点击查看详情」光标标签：GSAP 直接写 transform，不经 React 状态
+  useEffect(() => {
+    if (reducedMotion || !onSelect) return;
+    const scene = sceneRef.current;
+    const label = cursorLabelRef.current;
+    if (!scene || !label) return;
+
+    const xTo = gsap.quickTo(label, "x", { duration: 0.18, ease: "power2.out" });
+    const yTo = gsap.quickTo(label, "y", { duration: 0.18, ease: "power2.out" });
+    let visible = false;
+
+    const setVisible = (next: boolean) => {
+      if (visible === next) return;
+      visible = next;
+      gsap.to(label, {
+        autoAlpha: next ? 1 : 0,
+        duration: 0.2,
+        overwrite: "auto",
+      });
+    };
+
+    const onMouseMove = (event: MouseEvent) => {
+      const rect = scene.getBoundingClientRect();
+      xTo(event.clientX - rect.left + 16);
+      yTo(event.clientY - rect.top + 18);
+      const overCard = (event.target as Element | null)?.closest?.(
+        "[data-gallery-card]",
+      );
+      setVisible(Boolean(overCard));
+    };
+    const onMouseLeave = () => setVisible(false);
+
+    scene.addEventListener("mousemove", onMouseMove);
+    scene.addEventListener("mouseleave", onMouseLeave);
+    return () => {
+      scene.removeEventListener("mousemove", onMouseMove);
+      scene.removeEventListener("mouseleave", onMouseLeave);
+      gsap.killTweensOf(label);
+    };
+  }, [reducedMotion, onSelect]);
+
   if (reducedMotion) {
     return (
       <div
-        className="flex h-full items-center overflow-x-auto px-[30px]"
+        className="flex h-full items-center overflow-x-auto px-[20px]"
         role="list"
         aria-label={t("gallery.list")}
       >
@@ -444,9 +488,69 @@ export function CardGallery({
             <CardFaceImage
               card={card}
               alt={`${t("gallery.cardAlt")} ${String(index + 1).padStart(2, "0")}`}
+              onHoverCard={onHoverCard}
             />
           </figure>
         ))}
+      </div>
+      {onSelect ? <CursorDetailLabel ref={cursorLabelRef} /> : null}
+    </div>
+  );
+}
+
+/**
+ * 跟随光标的「点击查看详情」标签（Figma 744:74）：
+ * 白底圆角 + 四角刻度角标 + 外链箭头，hover 卡片时淡入跟随。
+ */
+function CursorDetailLabel({ ref }: { ref: React.Ref<HTMLDivElement> }) {
+  const { t } = useLocale();
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      className="pointer-events-none absolute left-0 top-0 z-50 opacity-0"
+    >
+      <div className="relative flex items-center rounded-rs-2 bg-white pb-1.5 pl-3 pr-2 pt-1 shadow-[0px_6px_4.55px_rgba(0,0,0,0.14)]">
+        <span className="w-[72px] font-serif-sc text-12 leading-normal text-grey-400">
+          {t("gallery.cursorDetail")}
+        </span>
+        <span className="relative size-4">
+          <Image
+            src="/archive-ga-004/cursor-arrow.svg"
+            alt=""
+            width={8}
+            height={8}
+            className="absolute left-1 top-[5px] h-2 w-[7.5px]"
+          />
+        </span>
+        <Image
+          src="/archive-ga-004/cursor-tick-left.svg"
+          alt=""
+          width={5}
+          height={5}
+          className="absolute left-[3px] top-[3px] h-[4.5px] w-[5px]"
+        />
+        <Image
+          src="/archive-ga-004/cursor-tick-left.svg"
+          alt=""
+          width={5}
+          height={5}
+          className="absolute bottom-[3px] left-[3px] h-[4.5px] w-[5px] scale-y-[-1]"
+        />
+        <Image
+          src="/archive-ga-004/cursor-tick-right.svg"
+          alt=""
+          width={5}
+          height={5}
+          className="absolute right-[3px] top-[3px] h-[4.5px] w-[5px] scale-x-[-1]"
+        />
+        <Image
+          src="/archive-ga-004/cursor-tick-right.svg"
+          alt=""
+          width={5}
+          height={5}
+          className="absolute bottom-[3px] right-[3px] h-[4.5px] w-[5px] rotate-180"
+        />
       </div>
     </div>
   );
@@ -456,10 +560,12 @@ function CardFaceImage({
   card,
   reducedMotion = false,
   alt,
+  onHoverCard,
 }: {
   card: GalleryCard;
   reducedMotion?: boolean;
   alt?: string;
+  onHoverCard?: (card: GalleryCard | null) => void;
 }) {
   const hoverLayerRef = useRef<HTMLDivElement>(null);
   const proxyRef = useRef({ frame: 0 });
@@ -504,15 +610,21 @@ function CardFaceImage({
         width: FRAME_WIDTH,
         transform: "translate(-50%, -50%)",
       }}
-      onMouseEnter={card.hoverSrc ? () => animateHover(true) : undefined}
-      onMouseLeave={card.hoverSrc ? () => animateHover(false) : undefined}
+      onMouseEnter={() => {
+        if (card.hoverSrc) animateHover(true);
+        onHoverCard?.(card);
+      }}
+      onMouseLeave={() => {
+        if (card.hoverSrc) animateHover(false);
+        onHoverCard?.(null);
+      }}
     >
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[244px] w-[400px] -translate-y-1/2 translate-x-[calc(-50%+15px)] opacity-0 transition-opacity duration-[600ms] group-hover:opacity-100">
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[268px] w-[420px] -translate-y-1/2 translate-x-[calc(-50%+15px)] opacity-0 transition-opacity duration-[600ms] group-hover:opacity-100">
         <Image
           src="/archive-ga-004/hover-shadow.svg"
           alt=""
           fill
-          sizes="400px"
+          sizes="420px"
           className="object-contain"
         />
       </div>

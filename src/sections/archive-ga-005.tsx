@@ -63,7 +63,7 @@ export function ArchiveGa005() {
 
   return (
     <ScreenShell ref={container} aria-label={t("ga005.aria")}>
-      <div className="absolute left-1/2 top-1/2 aspect-[1440/800] w-[max(100%,calc(100vh*1440/800))] -translate-x-1/2 -translate-y-1/2 [--su:calc(100%/1440)]">
+      <div className="absolute left-1/2 top-1/2 aspect-[1440/800] w-[max(100%,calc(100vh*1440/800))] -translate-x-1/2 -translate-y-1/2 [--su:calc(max(100vw,100vh*1440/800)/1440)]">
         <Image
           src={cardsImg}
           alt={t("ga005.imageAlt")}

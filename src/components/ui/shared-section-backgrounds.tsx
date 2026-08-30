@@ -31,6 +31,7 @@ export function SharedSectionBackgrounds({
               <SectionBackground
                 src={config.src}
                 priority={config.priority}
+                unoptimized={config.unoptimized}
                 imageClassName={config.imageClassName}
               />
             </div>

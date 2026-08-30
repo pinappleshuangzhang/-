@@ -46,6 +46,7 @@ export function PageChrome() {
     <>
       <SiteNav
         variant={indexOpen ? "index" : "default"}
+        navVariant={navVariant}
         onOpenIndex={() => setIndexOpen(true)}
         onCloseIndex={() => setIndexOpen(false)}
         onContact={() => {

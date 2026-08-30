@@ -63,6 +63,7 @@ export type MessageKey =
   | "member.portfolio"
   | "member.contactMe"
   | "gallery.list"
+  | "gallery.view"
   | "gallery.detail"
   | "gallery.cursorDetail"
   | "gallery.hintButtons"
@@ -83,6 +84,12 @@ export type MessageKey =
   | "ga005.imageAlt"
   | "contact.aria"
   | "contact.cta"
+  | "contact.addressLabel"
+  | "contact.address"
+  | "contact.foundedLabel"
+  | "contact.founded"
+  | "contact.servicesLabel"
+  | "contact.services"
   | "contact.button";
 
 type Messages = Record<MessageKey, string>;
@@ -149,6 +156,7 @@ const zh: Messages = {
   "member.portfolio": "个人作品站",
   "member.contactMe": "联系我",
   "gallery.list": "档案卡片列表",
+  "gallery.view": "查看",
   "gallery.detail": "查看作品详情",
   "gallery.cursorDetail": "点击查看详情",
   "gallery.hintButtons":
@@ -171,8 +179,14 @@ const zh: Messages = {
   "survey.emptyWork": "该类型暂无作品",
   "ga005.aria": "档案 GA_005 视觉探索记录",
   "ga005.imageAlt": "三张铺在浅色桌面上的空白视觉探索卡片",
-  "contact.aria": "联系我们，共同开启一份新调查",
-  "contact.cta": "联系我们，共同开启一份新调查",
+  "contact.aria": "与我们共同开启一份新调查",
+  "contact.cta": "与我们共同开启一份新调查",
+  "contact.addressLabel": "地址",
+  "contact.address": "中国 · 北京 · 朝阳区",
+  "contact.foundedLabel": "成立于",
+  "contact.founded": "2021年",
+  "contact.servicesLabel": "服务范围",
+  "contact.services": "品牌 / 视觉 / 产品 / 网站 / 动态",
   "contact.button": "联系我们",
 };
 
@@ -242,6 +256,7 @@ const en: Messages = {
   "member.portfolio": "Portfolio",
   "member.contactMe": "Contact",
   "gallery.list": "Archive card gallery",
+  "gallery.view": "View",
   "gallery.detail": "View work details",
   "gallery.cursorDetail": "Click for details",
   "gallery.hintButtons":
@@ -266,8 +281,14 @@ const en: Messages = {
   "survey.emptyWork": "No work in this category yet",
   "ga005.aria": "Archive GA_005 Visual Exploration Record",
   "ga005.imageAlt": "Three blank visual exploration cards on a light desk",
-  "contact.aria": "Contact us to start a new survey together",
-  "contact.cta": "Contact us to start a new survey together",
+  "contact.aria": "Start a new survey with us",
+  "contact.cta": "Start a New Survey With Us",
+  "contact.addressLabel": "Location",
+  "contact.address": "Chaoyang District · Beijing · China",
+  "contact.foundedLabel": "Founded",
+  "contact.founded": "2021",
+  "contact.servicesLabel": "Services",
+  "contact.services": "Brand / Identity / Product / Web / Motion",
   "contact.button": "Contact Us",
 };
 

@@ -15,6 +15,7 @@ type SectionBackgroundConfig = {
   fallbackClassName: string;
   imageClassName?: string;
   priority?: boolean;
+  unoptimized?: boolean;
 };
 
 export const SECTION_BACKGROUNDS: Record<
@@ -34,5 +35,6 @@ export const SECTION_BACKGROUNDS: Record<
     src: contactBgImg,
     fallbackClassName: "bg-grey-100",
     imageClassName: "object-fill",
+    unoptimized: true,
   },
 };

@@ -340,15 +340,24 @@ function MemberProfile({
 
 function ProfileAction({ label }: { label: string }) {
   return (
-    <span className="flex items-center gap-0.5 font-serif-sc text-16 font-normal">
+    <span className="profile-action pointer-events-auto flex items-center gap-0.5 font-serif-sc text-16 font-normal">
       {label}
-      <Image
-        src="/archive/member-record-external-arrow.png"
-        alt=""
-        width={16}
-        height={16}
-        className="transition duration-[600ms] group-hover:invert"
-      />
+      <span aria-hidden="true" className="relative block size-4 overflow-hidden">
+        <Image
+          src="/archive/member-record-external-arrow.png"
+          alt=""
+          fill
+          sizes="16px"
+          className="profile-action-arrow profile-action-arrow-current object-contain group-hover:invert"
+        />
+        <Image
+          src="/archive/member-record-external-arrow.png"
+          alt=""
+          fill
+          sizes="16px"
+          className="profile-action-arrow profile-action-arrow-next object-contain group-hover:invert motion-reduce:hidden"
+        />
+      </span>
     </span>
   );
 }

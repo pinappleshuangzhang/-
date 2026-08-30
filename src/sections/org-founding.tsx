@@ -14,8 +14,10 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import foundingPlateImg from "../../public/org-record/founding-plate.webp";
-import foundingStatuesImg from "../../public/org-record/founding-statues.webp";
+import plateBgImg from "../../public/org-record/founding-plate-bg.webp";
+import plateFgImg from "../../public/org-record/founding-plate-fg.webp";
+import statuesBgImg from "../../public/org-record/founding-statues-bg.webp";
+import statuesFgImg from "../../public/org-record/founding-statues-fg.webp";
 
 gsap.registerPlugin(useGSAP);
 
@@ -27,9 +29,9 @@ const BLACK_BAR_EXTEND = 133;
 const GREEN_BAR_SHIFT = 1;
 const GREEN_BAR_EXTEND = 30;
 
-// 鼠标视差深度：雕塑图为近景（同向、幅度大），铭牌图为远景（反向、幅度小）
-const STATUES_PARALLAX = { amp: 12, scale: 1.08 };
-const PLATE_PARALLAX = { amp: -6, scale: 1.05 };
+// 鼠标视差：左下雕塑与右上铭牌均拆前后景，幅度相同
+const LAYER_FG_PARALLAX = { amp: 4, scale: 1.03 };
+const LAYER_BG_PARALLAX = { amp: -4, scale: 1.03 };
 
 /** 按词切分：中文用 Intl.Segmenter 分词，英文按空格；不支持时整段作一个词 */
 function segmentWords(text: string): string[] {
@@ -79,8 +81,10 @@ export function OrgFounding() {
   const foundedHighlightRef = useRef<HTMLSpanElement>(null);
   const greenBarRef = useRef<HTMLDivElement>(null);
   const greenCopyRef = useRef<HTMLDivElement>(null);
-  const statuesParallaxRef = useRef<HTMLDivElement>(null);
-  const plateParallaxRef = useRef<HTMLDivElement>(null);
+  const statuesFgParallaxRef = useRef<HTMLDivElement>(null);
+  const statuesBgParallaxRef = useRef<HTMLDivElement>(null);
+  const plateFgParallaxRef = useRef<HTMLDivElement>(null);
+  const plateBgParallaxRef = useRef<HTMLDivElement>(null);
 
   // 高亮条位置与长度按实测文字宽度计算，中英文环境均自动适配；
   // 字体加载完成后宽度会变，需再校准一次
@@ -112,15 +116,29 @@ export function OrgFounding() {
   // 鼠标视差：仅悬停型精准指针启用，触屏与减少动效场景不启用
   useEffect(() => {
     const area = container.current;
-    const statues = statuesParallaxRef.current;
-    const plate = plateParallaxRef.current;
-    if (!area || !statues || !plate || !isActive || reducedMotion) return;
+    const statuesFg = statuesFgParallaxRef.current;
+    const statuesBg = statuesBgParallaxRef.current;
+    const plateFg = plateFgParallaxRef.current;
+    const plateBg = plateBgParallaxRef.current;
+    if (
+      !area ||
+      !statuesFg ||
+      !statuesBg ||
+      !plateFg ||
+      !plateBg ||
+      !isActive ||
+      reducedMotion
+    ) {
+      return;
+    }
     if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
       return;
     }
     return createPointerParallax(area, [
-      { el: statues, ...STATUES_PARALLAX },
-      { el: plate, ...PLATE_PARALLAX },
+      { el: statuesFg, ...LAYER_FG_PARALLAX },
+      { el: statuesBg, ...LAYER_BG_PARALLAX },
+      { el: plateFg, ...LAYER_FG_PARALLAX },
+      { el: plateBg, ...LAYER_BG_PARALLAX },
     ]);
   }, [isActive, reducedMotion]);
 
@@ -216,10 +234,19 @@ export function OrgFounding() {
           data-sd-media-inner
           className="absolute inset-0 translate-y-[105%]"
         >
-          {/* 视差层与入场层分离，transform 互不干扰 */}
-          <div ref={statuesParallaxRef} className="absolute inset-0">
+          {/* 视差层与入场层分离，transform 互不干扰；前后景反向移动强化立体感 */}
+          <div ref={statuesBgParallaxRef} className="absolute inset-0">
             <Image
-              src={foundingStatuesImg}
+              src={statuesBgImg}
+              alt=""
+              fill
+              sizes="325px"
+              className="object-cover"
+            />
+          </div>
+          <div ref={statuesFgParallaxRef} className="absolute inset-0">
+            <Image
+              src={statuesFgImg}
               alt={t("orgFounding.statuesAlt")}
               fill
               sizes="325px"
@@ -295,7 +322,7 @@ export function OrgFounding() {
         </div>
       </div>
 
-      {/* 右侧：金属铭牌装置，贴 20px 右边距 */}
+      {/* 右侧：金属铭牌装置，贴 20px 右边距；前后景分层视差与左下角相同 */}
       <div
         data-sd-media
         data-sd-delay="0.35"
@@ -305,9 +332,18 @@ export function OrgFounding() {
           data-sd-media-inner
           className="absolute inset-0 translate-y-[105%]"
         >
-          <div ref={plateParallaxRef} className="absolute inset-0">
+          <div ref={plateBgParallaxRef} className="absolute inset-0">
             <Image
-              src={foundingPlateImg}
+              src={plateBgImg}
+              alt=""
+              fill
+              sizes="507px"
+              className="object-cover"
+            />
+          </div>
+          <div ref={plateFgParallaxRef} className="absolute inset-0">
+            <Image
+              src={plateFgImg}
               alt={t("orgFounding.plateAlt")}
               fill
               sizes="507px"

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import Image from "next/image";
 import { SurveyCategoryNav } from "@/components/ui/survey-category-nav";
 import { useLocale } from "@/components/providers/locale-provider";
+import { ContactEmbed } from "@/sections/contact";
 import {
   SURVEY_CATEGORY_BY_CODE,
   SURVEY_G_001,
@@ -113,52 +114,53 @@ export function SurveyDetails({
     <div
       ref={scrollerRef}
       tabIndex={-1}
-      className="h-full overflow-y-auto overscroll-contain px-[30px] focus-visible:outline-none"
+      className="h-full overflow-y-auto overscroll-contain focus-visible:outline-none"
       aria-label={t("survey.detailAria")}
     >
-      <div className="mt-[30px] h-[34px] shrink-0" aria-hidden="true" />
-      <div className="mt-18 flex flex-col gap-14 pb-18">
-        <header className="flex items-center justify-between">
-          <h1 className="min-h-[60px] whitespace-nowrap font-bodoni text-60 font-normal uppercase leading-none text-grey-400">
-            {`Survey Details_G_${activeCode}`}
-          </h1>
-          <div className="flex flex-col items-end justify-center gap-2">
-            <div className="flex w-[180px] items-center justify-end gap-1">
-              <div className="h-px min-w-px flex-1 bg-grey-400" aria-hidden="true" />
-              <p className="whitespace-nowrap font-bodoni text-20 capitalize leading-normal text-grey-400">
-                {activeCategory.typeLabel}
-              </p>
-            </div>
-            {activeWork ? (
+      <div className="px-[20px]">
+        <div className="mt-[20px] h-[34px] shrink-0" aria-hidden="true" />
+        <div className="mt-18 flex flex-col gap-14 pb-18">
+          <header className="flex items-center justify-between">
+            <h1 className="min-h-[60px] whitespace-nowrap font-bodoni text-60 font-normal uppercase leading-none text-grey-400">
+              {`Survey Details_G_${activeCode}`}
+            </h1>
+            <div className="flex flex-col items-end justify-center gap-2">
+              <div className="flex w-[180px] items-center justify-end gap-1">
+                <div className="h-px min-w-px flex-1 bg-grey-400" aria-hidden="true" />
+                <p className="whitespace-nowrap font-bodoni text-20 capitalize leading-normal text-grey-400">
+                  {activeCategory.typeLabel}
+                </p>
+              </div>
               <p className="whitespace-nowrap font-bodoni text-20 uppercase leading-normal text-grey-400">
-                {activeWork.archivedLabel}
+                {SURVEY_G_001.archivedLabel}
               </p>
-            ) : null}
-          </div>
-        </header>
-
-        <div className="h-px w-full bg-grey-100" aria-hidden="true" />
-
-        <div className="flex items-start justify-between">
-          <SurveyCategoryNav
-            activeCode={activeCode}
-            aria-label={t("survey.categoryNav")}
-            onSelect={(code) => {
-              if (code === activeCode) return;
-              setActiveCode(code);
-              const el = scrollerRef.current;
-              if (el) el.scrollTop = 0;
-            }}
-          />
-          {activeWork ? (
-            <WorkContent work={activeWork} />
-          ) : (
-            <div className="w-[757px]" aria-live="polite">
-              <p className="sr-only">{t("survey.emptyWork")}</p>
             </div>
-          )}
+          </header>
+
+          <div className="h-px w-full bg-grey-100" aria-hidden="true" />
+
+          <div className="flex items-start justify-between">
+            <SurveyCategoryNav
+              activeCode={activeCode}
+              aria-label={t("survey.categoryNav")}
+              onSelect={(code) => {
+                if (code === activeCode) return;
+                setActiveCode(code);
+                const el = scrollerRef.current;
+                if (el) el.scrollTop = 0;
+              }}
+            />
+            {activeWork ? (
+              <WorkContent work={activeWork} />
+            ) : (
+              <div className="w-[757px]" aria-live="polite">
+                <p className="sr-only">{t("survey.emptyWork")}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+      <ContactEmbed />
     </div>
   );
 }

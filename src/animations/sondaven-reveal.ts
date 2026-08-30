@@ -38,8 +38,11 @@ function readDelay(el: HTMLElement): number {
 }
 
 /** 播放整屏入场时间轴 */
-export function playSondavenReveal(root: HTMLElement): gsap.core.Timeline {
+export function playSondavenReveal(
+  root: HTMLElement | null | undefined,
+): gsap.core.Timeline {
   const tl = gsap.timeline({ defaults: { ease: EASE } });
+  if (!root) return tl;
 
   // 词组：同 data-sd-sync 的多份文本共享同一随机顺序，保证反白副本与原文同步
   const syncOrders = new Map<string, number[]>();
@@ -98,18 +101,31 @@ export function playSondavenReveal(root: HTMLElement): gsap.core.Timeline {
   return tl;
 }
 
+/** 空列表跳过，避免 GSAP 对空 NodeList 抛 “target not found” 警告 */
+function setIfPresent(
+  root: HTMLElement,
+  selector: string,
+  vars: gsap.TweenVars,
+) {
+  const nodes = root.querySelectorAll(selector);
+  if (nodes.length === 0) return;
+  gsap.set(nodes, vars);
+}
+
 /** 复位到入场前的隐藏态（离屏时用） */
-export function setSondavenHidden(root: HTMLElement) {
-  gsap.set(root.querySelectorAll(".sd-word"), WORD_HIDDEN);
-  gsap.set(root.querySelectorAll(".sd-line"), LINE_HIDDEN);
-  gsap.set(root.querySelectorAll("[data-sd-bar]"), BAR_HIDDEN);
-  gsap.set(root.querySelectorAll("[data-sd-media-inner]"), MEDIA_HIDDEN);
+export function setSondavenHidden(root: HTMLElement | null | undefined) {
+  if (!root) return;
+  setIfPresent(root, ".sd-word", WORD_HIDDEN);
+  setIfPresent(root, ".sd-line", LINE_HIDDEN);
+  setIfPresent(root, "[data-sd-bar]", BAR_HIDDEN);
+  setIfPresent(root, "[data-sd-media-inner]", MEDIA_HIDDEN);
 }
 
 /** 直接呈现最终态（减少动效场景用） */
-export function setSondavenVisible(root: HTMLElement) {
-  gsap.set(root.querySelectorAll(".sd-word"), WORD_VISIBLE);
-  gsap.set(root.querySelectorAll(".sd-line"), LINE_VISIBLE);
-  gsap.set(root.querySelectorAll("[data-sd-bar]"), BAR_VISIBLE);
-  gsap.set(root.querySelectorAll("[data-sd-media-inner]"), MEDIA_VISIBLE);
+export function setSondavenVisible(root: HTMLElement | null | undefined) {
+  if (!root) return;
+  setIfPresent(root, ".sd-word", WORD_VISIBLE);
+  setIfPresent(root, ".sd-line", LINE_VISIBLE);
+  setIfPresent(root, "[data-sd-bar]", BAR_VISIBLE);
+  setIfPresent(root, "[data-sd-media-inner]", MEDIA_VISIBLE);
 }

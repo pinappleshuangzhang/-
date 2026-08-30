@@ -159,6 +159,15 @@
       ]
     }
   },
+  "100": {
+    "$type": "number",
+    "$value": 100,
+    "$extensions": {
+      "com.figma.scopes": [
+        "FONT_SIZE"
+      ]
+    }
+  },
   "$extensions": {
     "com.figma.modeName": "Value"
   }
