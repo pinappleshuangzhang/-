@@ -117,7 +117,7 @@ const zh: Messages = {
   "index.ga005": "《视觉探索记录》",
   "index.ga006": "《开启一份新调查》",
   "hero.title": "万有引力设计档案室",
-  "hero.subtitle": "请跟随设计调查记录，完成本次关于“引力”的探索",
+  "hero.subtitle": '跟随设计调查记录，我们一起完成本次关于"引力"的探索',
   "intro.line1": "我们不断看到同一种现象",
   "intro.line2a": "有些品牌会被记住",
   "intro.line2b": "有些产品会被选择",

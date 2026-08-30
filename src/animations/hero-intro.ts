@@ -1,19 +1,8 @@
 import gsap from "gsap";
 import {
-  ENTRANCE_HIDDEN,
-  ENTRANCE_STAGGER,
-  ENTRANCE_TWEEN,
-  ENTRANCE_VISIBLE,
-} from "@/animations/entrance";
-
-/** 首屏入场元素按「主标题 → 角标 → 副标题」排序，与视觉阅读顺序一致 */
-function orderRevealItems(
-  titleLines: HTMLElement[],
-  ornaments: HTMLElement[],
-): HTMLElement[] {
-  const [title, ...restLines] = titleLines;
-  return [title, ...ornaments, ...restLines].filter(Boolean);
-}
+  playSondavenReveal,
+  setSondavenHidden,
+} from "@/animations/sondaven-reveal";
 
 export type CounterController = {
   /** 将显示值平滑推进到目标百分比（0~100） */
@@ -70,25 +59,11 @@ export function buildLoaderExit(loader: HTMLElement): gsap.core.Timeline {
 }
 
 /**
- * 阶段三：视频停在最后一帧，标题、角标与副标题以全站统一动效依次入场。
- * 视频层保持可见（定格末帧即最终背景），下方静态背景只作降级兜底。
+ * 阶段三：首屏文字复用第三屏的 Son Daven 随机逐词入场。
  */
-export function buildHeroReveal({
-  titleLines,
-  ornaments,
-}: {
-  titleLines: HTMLElement[];
-  ornaments: HTMLElement[];
-}): gsap.core.Timeline {
-  const items = orderRevealItems(titleLines, ornaments);
-  return gsap
-    .timeline()
-    .set(items, ENTRANCE_HIDDEN)
-    .to(items, {
-      ...ENTRANCE_VISIBLE,
-      ...ENTRANCE_TWEEN,
-      stagger: ENTRANCE_STAGGER,
-    });
+export function buildHeroReveal(root: HTMLElement): gsap.core.Timeline {
+  setSondavenHidden(root);
+  return playSondavenReveal(root);
 }
 
 /**
@@ -96,21 +71,16 @@ export function buildHeroReveal({
  */
 export function buildFallbackReveal({
   loader,
-  titleLines,
-  ornaments,
+  root,
 }: {
   loader: HTMLElement;
-  titleLines: HTMLElement[];
-  ornaments: HTMLElement[];
+  root: HTMLElement;
 }): gsap.core.Timeline {
-  const items = orderRevealItems(titleLines, ornaments);
+  setSondavenHidden(root);
+  const reveal = playSondavenReveal(root);
+
   return gsap
     .timeline()
-    .set(items, ENTRANCE_HIDDEN, 0)
     .to(loader, { autoAlpha: 0, duration: 0.8, ease: "power2.inOut" }, 0)
-    .to(
-      items,
-      { ...ENTRANCE_VISIBLE, ...ENTRANCE_TWEEN, stagger: ENTRANCE_STAGGER },
-      "-=0.3",
-    );
+    .add(reveal, 0.2);
 }

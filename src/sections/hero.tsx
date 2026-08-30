@@ -10,6 +10,10 @@ import {
   buildLoaderExit,
   createCounter,
 } from "@/animations/hero-intro";
+import {
+  setSondavenHidden,
+  setSondavenVisible,
+} from "@/animations/sondaven-reveal";
 import { RepelFilter } from "@/components/effects/repel-filter";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
@@ -25,6 +29,35 @@ const SHOW_INTRO_VIDEO = false;
 /** 距视频结尾多少秒触发标题入场，保证与最后一帧同步 */
 const REVEAL_BEFORE_END_S = 0.15;
 
+/** 按第三屏相同规则拆词，供 Son Daven 随机逐词入场。 */
+function segmentWords(text: string): string[] {
+  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+    const segmenter = new Intl.Segmenter("zh-Hans", { granularity: "word" });
+    return Array.from(segmenter.segment(text), (segment) => segment.segment);
+  }
+  return text.split(/(\s+)/).filter(Boolean);
+}
+
+function SplitWords({ text }: { text: string }) {
+  return (
+    <>
+      {segmentWords(text).map((word, index) =>
+        word.trim() === "" ? (
+          word
+        ) : (
+          <span
+            key={`${word}-${index}`}
+            aria-hidden="true"
+            className="sd-word inline-block"
+          >
+            {word}
+          </span>
+        ),
+      )}
+    </>
+  );
+}
+
 export function Hero() {
   const container = useRef<HTMLElement>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
@@ -34,7 +67,7 @@ export function Hero() {
 
   const preload = useVideoPreloader(VIDEO_SRC, { enabled: SHOW_INTRO_VIDEO });
   const preloadRef = useRef(preload);
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   // 分页器默认锁定，序幕结束后由此放行切屏
   const { setNavigationLocked, registerTopOverscroll, runWithCurtain } =
     useSectionPager();
@@ -62,15 +95,6 @@ export function Hero() {
       const counterEl = counterRef.current;
       if (!root || !loader || !videoLayer || !video || !counterEl) return;
 
-      const titleLines = gsap.utils.toArray<HTMLElement>(
-        "[data-hero-title-line]",
-        root,
-      );
-      const ornaments = gsap.utils.toArray<HTMLElement>(
-        "[data-hero-ornament]",
-        root,
-      );
-
       const finish = () => {
         doneRef.current = true;
         setNavigationLocked(false);
@@ -82,10 +106,7 @@ export function Hero() {
         revealStartedRef.current = true;
         video.pause();
         gsap.set(videoLayer, { autoAlpha: 0 });
-        buildFallbackReveal({ loader, titleLines, ornaments }).eventCallback(
-          "onComplete",
-          finish,
-        );
+        buildFallbackReveal({ loader, root }).eventCallback("onComplete", finish);
       });
 
       // 阶段三：最后一帧同步入场；同时交叉淡出视频层，
@@ -94,10 +115,7 @@ export function Hero() {
         if (revealStartedRef.current) return;
         revealStartedRef.current = true;
         gsap.to(videoLayer, { autoAlpha: 0, duration: 1, ease: "power2.out" });
-        buildHeroReveal({ titleLines, ornaments }).eventCallback(
-          "onComplete",
-          finish,
-        );
+        buildHeroReveal(root).eventCallback("onComplete", finish);
       });
 
       // 阶段二：等视频首帧解码就绪后先亮出定格画面（与加载层底图同画面，避免闪烁），
@@ -138,11 +156,7 @@ export function Hero() {
         revealStartedRef.current = true;
         gsap.set(loader, { autoAlpha: 0 });
         gsap.set(videoLayer, { autoAlpha: 0 });
-        gsap.set([...titleLines, ...ornaments], {
-          opacity: 1,
-          yPercent: 0,
-          clearProps: "transform",
-        });
+        setSondavenVisible(root);
         finish();
       });
 
@@ -186,7 +200,7 @@ export function Hero() {
               video.pause();
               gsap.set(loader, { autoAlpha: 1 });
               gsap.set(videoLayer, { autoAlpha: 0 });
-              gsap.set([...titleLines, ...ornaments], { autoAlpha: 0 });
+              setSondavenHidden(root);
               startSequence();
             }),
           );
@@ -208,6 +222,14 @@ export function Hero() {
     { scope: container },
   );
 
+  const subtitle = t("hero.subtitle");
+  const highlight =
+    locale === "zh" ? '"引力"的探索' : "exploration of gravity";
+  const highlightIndex = subtitle.lastIndexOf(highlight);
+  const subtitlePrefix =
+    highlightIndex >= 0 ? subtitle.slice(0, highlightIndex) : subtitle;
+  const subtitleHighlight = highlightIndex >= 0 ? highlight : "";
+
   return (
     <ScreenShell ref={container}>
       {/* 鼠标排斥滤镜：分屏内视频、图片、文字全部参与变形 */}
@@ -227,29 +249,47 @@ export function Hero() {
         />
       </div>
 
-      {/* 最终首屏内容：大小标题 + 滚动提示 */}
+      {/* 最终首屏内容：Figma 884:2070，标题组右侧对齐 */}
       <div className="absolute inset-0 z-30">
-        {/* 标题组：Figma 01首屏-2（483:48）距顶 136px */}
-        <div className="absolute inset-x-0 top-[136px] flex flex-col items-center gap-2 px-10">
-          <div className="relative">
-            <h1
-              data-hero-title-line
-              className="font-serif-sc text-52 font-medium uppercase text-grey-400 opacity-0 motion-reduce:opacity-100"
-            >
-              {t("hero.title")}
-            </h1>
-            <span
-              data-hero-ornament
-              className="absolute -right-10 top-0 size-[33px] opacity-0 motion-reduce:opacity-100"
-            >
-              <Image src="/hero/hero-mark.svg" alt="" width={33} height={33} />
-            </span>
-          </div>
-          <p
-            data-hero-title-line
-            className="font-serif-sc text-18 uppercase text-grey-400 opacity-0 motion-reduce:opacity-100"
+        <div
+          className={`absolute right-[71px] top-[126px] flex w-[432px] flex-col gap-2 ${
+            locale === "zh" ? "items-start text-left" : "items-end text-right"
+          }`}
+        >
+          <h1
+            data-sd-words
+            data-sd-delay="0.15"
+            aria-label={t("hero.title")}
+            className="whitespace-nowrap font-serif-sc text-48 font-medium uppercase text-grey-400"
           >
-            {t("hero.subtitle")}
+            <SplitWords text={t("hero.title")} />
+          </h1>
+          <p
+            data-sd-words
+            data-sd-delay="0.3"
+            aria-label={subtitle}
+            className={`whitespace-nowrap font-serif-sc text-16 uppercase text-grey-400 ${
+              locale === "zh" ? "w-full text-left" : "text-right"
+            }`}
+          >
+            <SplitWords text={subtitlePrefix} />
+            {subtitleHighlight ? (
+              <span
+                className={`relative inline-block text-white ${
+                  locale === "zh" ? "pr-9" : ""
+                }`}
+              >
+                <span
+                  data-sd-bar
+                  data-sd-delay="0.3"
+                  aria-hidden="true"
+                  className="absolute inset-0 origin-left scale-x-0 bg-grey-400"
+                />
+                <span className="relative">
+                  <SplitWords text={subtitleHighlight} />
+                </span>
+              </span>
+            ) : null}
           </p>
         </div>
       </div>
