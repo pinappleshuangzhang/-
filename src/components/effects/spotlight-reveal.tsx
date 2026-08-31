@@ -16,6 +16,8 @@ type SpotlightRevealProps = {
   src: StaticImageData;
   /** 聚光半径（px） */
   radius?: number;
+  /** 无鼠标输入时，让聚光点沿内容区域自动巡游 */
+  autoMove?: boolean;
   className?: string;
 };
 
@@ -33,6 +35,7 @@ const FALLBACK_GRADIENT =
 export function SpotlightReveal({
   src,
   radius = 160,
+  autoMove = false,
   className,
 }: SpotlightRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -75,33 +78,92 @@ export function SpotlightReveal({
         };
       }
 
-      // 鼠标设备首进即隐藏，移动鼠标才点亮聚光；
-      // 若先出现 Tab 键盘导航，则判定为键盘用户，整图常显
-      let mode: "pending" | "spotlight" | "full" = "pending";
+      // 可选自动巡游；鼠标输入会立即接管，闲置后再恢复自动模式。
+      // 若先出现 Tab 键盘导航，则判定为键盘用户，整图常显。
+      let mode: "pending" | "auto" | "pointer" | "full" = autoMove
+        ? "auto"
+        : "pending";
       let lastX = 0;
       let lastY = 0;
       let lastTime = 0;
+      let autoFrame = 0;
+      let idleTimer = 0;
 
-      const onMove = (event: PointerEvent) => {
-        if (event.pointerType !== "mouse") return;
-        const rect = el.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        const elapsed = event.timeStamp - lastTime;
+      const setRadius = (value: number) => {
+        if (renderer) {
+          renderer.setRadiusTarget(value);
+        } else {
+          gsap.to(el, {
+            "--spot-r": value,
+            duration: 0.6,
+            ease: "power3.out",
+          });
+        }
+      };
+
+      const moveSpotlight = (x: number, y: number, time: number) => {
+        const elapsed = time - lastTime;
         const speed =
           lastTime > 0 && elapsed > 0
             ? Math.hypot(x - lastX, y - lastY) / elapsed
             : 0;
         lastX = x;
         lastY = y;
-        lastTime = event.timeStamp;
+        lastTime = time;
 
-        if (mode !== "spotlight") {
-          mode = "spotlight";
+        if (renderer) {
+          renderer.movePointer(x, y, speed);
+        } else if (mode === "auto") {
+          gsap.set(el, { "--spot-x": x, "--spot-y": y });
+        } else {
+          fallbackTweens.xTo?.(x);
+          fallbackTweens.yTo?.(y);
+        }
+      };
+
+      const activateAuto = () => {
+        if (!autoMove || mode === "full") return;
+        mode = "auto";
+        lastTime = 0;
+        setRadius(radius);
+      };
+
+      const scheduleAuto = () => {
+        if (!autoMove) return;
+        window.clearTimeout(idleTimer);
+        idleTimer = window.setTimeout(activateAuto, 1600);
+      };
+
+      const animateAuto = (time: number) => {
+        if (mode === "auto") {
+          const sectionRect = section.getBoundingClientRect();
+          const rect = el.getBoundingClientRect();
+          const x =
+            sectionRect.left +
+            sectionRect.width * (0.5 + 0.4 * Math.sin(time * 0.00022)) -
+            rect.left;
+          const y =
+            sectionRect.top +
+            sectionRect.height *
+              (0.72 + 0.12 * Math.sin(time * 0.00031 + 1.3)) -
+            rect.top;
+          moveSpotlight(x, y, time);
+        }
+        autoFrame = window.requestAnimationFrame(animateAuto);
+      };
+
+      const onMove = (event: PointerEvent) => {
+        if (event.pointerType !== "mouse" || mode === "full") return;
+        const rect = el.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        if (mode !== "pointer") {
+          mode = "pointer";
+          lastTime = 0;
           if (renderer) {
             gsap.set(imageEl, { autoAlpha: 0 });
             renderer.movePointer(x, y, 0);
-            renderer.setRadiusTarget(radius);
           } else {
             gsap.set(el, { "--spot-x": x, "--spot-y": y, "--spot-r": 0 });
             gsap.set(imageEl, {
@@ -109,49 +171,57 @@ export function SpotlightReveal({
               webkitMaskImage: FALLBACK_GRADIENT,
               autoAlpha: 1,
             });
-            gsap.to(el, {
-              "--spot-r": radius,
-              duration: 0.6,
-              ease: "power3.out",
-            });
           }
-          return;
+          setRadius(radius);
         }
-        if (renderer) {
-          renderer.movePointer(x, y, speed);
-        } else {
-          fallbackTweens.xTo?.(x);
-          fallbackTweens.yTo?.(y);
-        }
+        moveSpotlight(x, y, event.timeStamp);
+        scheduleAuto();
       };
       const onLeave = () => {
-        if (mode !== "spotlight") return;
-        if (renderer) {
+        if (mode !== "pointer") return;
+        if (autoMove) {
+          activateAuto();
+        } else if (renderer) {
           renderer.setRadiusTarget(0);
         } else {
-          gsap.to(el, { "--spot-r": 0, duration: 0.5, ease: "power2.in" });
-        }
-      };
-      const onEnter = (event: PointerEvent) => {
-        if (event.pointerType !== "mouse" || mode !== "spotlight") return;
-        if (renderer) {
-          renderer.setRadiusTarget(radius);
-        } else {
           gsap.to(el, {
-            "--spot-r": radius,
-            duration: 0.6,
-            ease: "power3.out",
+            "--spot-r": 0,
+            duration: 0.5,
+            ease: "power2.in",
           });
         }
       };
+      const onEnter = (event: PointerEvent) => {
+        if (event.pointerType !== "mouse" || mode !== "pointer") return;
+        setRadius(radius);
+      };
       const onKeyDown = (event: KeyboardEvent) => {
-        if (event.key !== "Tab" || mode !== "pending") return;
+        if (
+          event.key !== "Tab" ||
+          (mode !== "pending" && mode !== "auto")
+        ) {
+          return;
+        }
         mode = "full";
+        window.clearTimeout(idleTimer);
+        setRadius(0);
         gsap.set(imageEl, {
           autoAlpha: 1,
           clearProps: "maskImage,webkitMaskImage",
         });
       };
+
+      if (autoMove) {
+        const sectionRect = section.getBoundingClientRect();
+        const rect = el.getBoundingClientRect();
+        moveSpotlight(
+          sectionRect.left + sectionRect.width * 0.5 - rect.left,
+          sectionRect.top + sectionRect.height * 0.72 - rect.top,
+          performance.now(),
+        );
+        setRadius(radius);
+        autoFrame = window.requestAnimationFrame(animateAuto);
+      }
 
       section.addEventListener("pointermove", onMove);
       section.addEventListener("pointerleave", onLeave);
@@ -159,13 +229,15 @@ export function SpotlightReveal({
       window.addEventListener("keydown", onKeyDown);
       return () => {
         renderer?.dispose();
+        window.cancelAnimationFrame(autoFrame);
+        window.clearTimeout(idleTimer);
         section.removeEventListener("pointermove", onMove);
         section.removeEventListener("pointerleave", onLeave);
         section.removeEventListener("pointerenter", onEnter);
         window.removeEventListener("keydown", onKeyDown);
       };
     },
-    { dependencies: [reducedMotion, radius, src.src], scope: ref },
+    { dependencies: [autoMove, reducedMotion, radius, src.src], scope: ref },
   );
 
   return (

@@ -282,13 +282,78 @@ export function SectionPagerProvider({
       }
     };
 
-    let touchStartY = 0;
-    const onTouchStart = (event: TouchEvent) => {
-      touchStartY = event.touches[0]?.clientY ?? 0;
+    let touchStartY: number | null = null;
+    let touchCurrentY: number | null = null;
+    let touchScrollContainer: HTMLElement | null = null;
+    let touchHandledByNativeScroll = false;
+
+    const findScrollableAncestor = (target: EventTarget | null) => {
+      let element = target instanceof HTMLElement ? target : null;
+      while (element && element !== document.body) {
+        const overflowY = window.getComputedStyle(element).overflowY;
+        if (
+          (overflowY === "auto" || overflowY === "scroll") &&
+          element.scrollHeight > element.clientHeight
+        ) {
+          return element;
+        }
+        element = element.parentElement;
+      }
+      return null;
     };
-    const onTouchEnd = (event: TouchEvent) => {
-      const endY = event.changedTouches[0]?.clientY ?? touchStartY;
+
+    const onTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1) {
+        touchStartY = null;
+        touchCurrentY = null;
+        touchScrollContainer = null;
+        touchHandledByNativeScroll = false;
+        return;
+      }
+      touchStartY = event.touches[0]?.clientY ?? null;
+      touchCurrentY = touchStartY;
+      touchScrollContainer = findScrollableAncestor(event.target);
+      touchHandledByNativeScroll = false;
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      if (touchStartY === null) return;
+      touchCurrentY = event.touches[0]?.clientY ?? touchCurrentY;
+      const travelled =
+        touchCurrentY === null ? 0 : touchStartY - touchCurrentY;
+      const canScrollNatively =
+        touchScrollContainer &&
+        (travelled > 0
+          ? touchScrollContainer.scrollTop +
+              touchScrollContainer.clientHeight <
+            touchScrollContainer.scrollHeight - 1
+          : touchScrollContainer.scrollTop > 1);
+      if (canScrollNatively) {
+        touchHandledByNativeScroll = true;
+        return;
+      }
+      if (
+        touchCurrentY !== null &&
+        Math.abs(travelled) >= WHEEL_THRESHOLD &&
+        event.cancelable
+      ) {
+        // 阻止 Safari / Chrome 将纵向手势接管为页面回弹或工具栏手势。
+        event.preventDefault();
+      }
+    };
+
+    const finishTouch = (event: TouchEvent) => {
+      if (touchStartY === null) return;
+      const endY =
+        event.changedTouches[0]?.clientY ?? touchCurrentY ?? touchStartY;
       const travelled = touchStartY - endY;
+      touchStartY = null;
+      touchCurrentY = null;
+      touchScrollContainer = null;
+      if (touchHandledByNativeScroll) {
+        touchHandledByNativeScroll = false;
+        return;
+      }
       if (Math.abs(travelled) < TOUCH_THRESHOLD) return;
       navigate(travelled);
     };
@@ -296,13 +361,17 @@ export function SectionPagerProvider({
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", finishTouch, { passive: true });
+    window.addEventListener("touchcancel", finishTouch, { passive: true });
 
     return () => {
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", finishTouch);
+      window.removeEventListener("touchcancel", finishTouch);
     };
   }, [goToScreen, navigate]);
 

@@ -14,6 +14,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { OrgFoundingMobile } from "@/sections/org-founding-mobile";
 import plateBgImg from "../../public/org-record/founding-plate-bg.webp";
 import plateFgImg from "../../public/org-record/founding-plate-fg.webp";
 import statuesBgImg from "../../public/org-record/founding-statues-bg.webp";
@@ -115,7 +116,9 @@ export function OrgFounding() {
 
   // 鼠标视差：仅悬停型精准指针启用，触屏与减少动效场景不启用
   useEffect(() => {
-    const area = container.current;
+    const area = container.current?.querySelector<HTMLElement>(
+      "[data-founding-desktop]",
+    );
     const statuesFg = statuesFgParallaxRef.current;
     const statuesBg = statuesBgParallaxRef.current;
     const plateFg = plateFgParallaxRef.current;
@@ -134,12 +137,16 @@ export function OrgFounding() {
     if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
       return;
     }
-    return createPointerParallax(area, [
-      { el: statuesFg, ...LAYER_FG_PARALLAX },
-      { el: statuesBg, ...LAYER_BG_PARALLAX },
-      { el: plateFg, ...LAYER_FG_PARALLAX },
-      { el: plateBg, ...LAYER_BG_PARALLAX },
-    ]);
+    return createPointerParallax(
+      area,
+      [
+        { el: statuesFg, ...LAYER_FG_PARALLAX },
+        { el: statuesBg, ...LAYER_BG_PARALLAX },
+        { el: plateFg, ...LAYER_FG_PARALLAX },
+        { el: plateBg, ...LAYER_BG_PARALLAX },
+      ],
+      { mouseOnly: true },
+    );
   }, [isActive, reducedMotion]);
 
   // locale 变化会重建词 span（初始隐藏），需重跑动画否则文字停在隐藏态
@@ -147,15 +154,20 @@ export function OrgFounding() {
     () => {
       const root = container.current;
       if (!root) return;
+      // 桌面入场只驱动桌面层，避免隐藏的移动端节点一起播
+      const desktop = root.querySelector<HTMLElement>("[data-founding-desktop]");
+      if (!desktop) return;
       if (reducedMotion) {
-        setSondavenVisible(root);
+        setSondavenVisible(desktop);
         return;
       }
       if (!isActive) {
-        setSondavenHidden(root);
+        setSondavenHidden(desktop);
         return;
       }
-      playSondavenReveal(root);
+      // 窄屏不播桌面入场
+      if (window.matchMedia("(max-width: 767px)").matches) return;
+      playSondavenReveal(desktop);
     },
     { dependencies: [isActive, reducedMotion, locale], scope: container },
   );
@@ -170,6 +182,7 @@ export function OrgFounding() {
 
   return (
     <ScreenShell ref={container} aria-label={t("orgFounding.aria")}>
+      <div data-founding-desktop className="absolute inset-0 hidden md:block">
       {/* 左上：小字标注 + 大标题（黑色高亮条反白） */}
       <p
         data-sd-words
@@ -224,11 +237,12 @@ export function OrgFounding() {
         </div>
       </div>
 
-      {/* 左下：四位设计师雕塑合影 */}
+      {/* 左下：雕塑图与成立宣言同一底栏——页边距 20、图文间距 20、底对齐 */}
+      <div className="absolute bottom-5 left-5 flex items-end gap-5">
       <div
         data-sd-media
         data-sd-delay="0.55"
-        className="absolute left-5 top-[56.9%] size-[325px] overflow-hidden"
+        className="relative size-[325px] shrink-0 overflow-hidden"
       >
         <div
           data-sd-media-inner
@@ -256,8 +270,7 @@ export function OrgFounding() {
         </div>
       </div>
 
-      {/* 底部：成立宣言（绿色高亮条反白）与补充说明，整组贴 20px 底边距 */}
-      <div className="absolute bottom-5 left-[calc(25%+5px)]">
+      <div className="min-w-0 pb-0">
         <div className="relative h-[38px] whitespace-nowrap font-serif-sc text-24 uppercase text-grey-400">
           <p
             data-sd-words
@@ -282,7 +295,7 @@ export function OrgFounding() {
             <span
               data-sd-bar
               data-sd-delay="0.5"
-              className="absolute inset-0 origin-left scale-x-0 bg-green-900"
+              className="absolute inset-0 origin-left scale-x-0 bg-grey-400"
             />
             <div
               ref={greenCopyRef}
@@ -321,6 +334,7 @@ export function OrgFounding() {
           </span>
         </div>
       </div>
+      </div>
 
       {/* 右侧：金属铭牌装置，贴 20px 右边距；前后景分层视差与左下角相同 */}
       <div
@@ -352,6 +366,9 @@ export function OrgFounding() {
           </div>
         </div>
       </div>
+      </div>
+
+      <OrgFoundingMobile />
     </ScreenShell>
   );
 }

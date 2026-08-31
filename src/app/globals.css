@@ -67,6 +67,8 @@
 
   --background: var(--color-grey-100);
   --foreground: var(--color-grey-400);
+  --mobile-browser-top: #f2f2f4;
+  --mobile-browser-bottom: #e5e6e8;
 
   /* 屏间切换幕布配色 */
   --ascii-curtain-bg: #eeeef3;
@@ -88,6 +90,18 @@ body {
   color: var(--foreground);
   font-family: var(--font-noto-serif-sc), "Noto Serif SC", serif;
   overflow-x: hidden;
+}
+
+@media (max-width: 767px) {
+  html {
+    min-height: 100dvh;
+    background: var(--mobile-browser-bottom);
+  }
+
+  body {
+    min-height: 100dvh;
+    background: transparent;
+  }
 }
 
 :where(

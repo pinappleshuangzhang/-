@@ -59,7 +59,7 @@ export function defaultParams() {
     entryPlaneSize: 108, // 圆环阶段卡片等比缩小 10%，给背景轨道留出间距
     planeSize: 90, // 圆环展开后的原版卡片基准，不改变最终构图尺度
     count: PROJECTS.length, // one plane per project, so the deal comes out even
-    entryRingRadius: 264, // 背景展示阶段图片圆环半径
+    entryRingRadius: 254, // 背景展示阶段图片圆环半径
     ringRadius: 206, // 最终圆环中心轨迹半径：206 × 4.21 ≈ 867px
     ringOffsetX: -4, // 在原有 3px 基础上继续向左 1px
     ringOffsetY: 18, // 在原有 15px 基础上继续向下 3px
@@ -85,8 +85,10 @@ export function defaultParams() {
     spreadEase: "power2.out",
     spreadTime: 3.6,
     backgroundInDelay: 0.6, // 工作室名称淡出完成后立即开始显现
-    backgroundInTime: 3,
+    backgroundInTime: 5,
     backgroundOutTime: 1.1,
+    holdSpinSpeed: 0.08, // 第二阶段顺时针慢转，约 79 秒一圈
+    layer2SpinDelay: 0.5, // 第二层比圆环与其他背景层晚 0.5 秒启动
     // Where the ring goes once formed. stageAt is a fraction of the spread, so
     // 0.5 starts the move midway through the ring drawing.
     stageAt: 0.7,

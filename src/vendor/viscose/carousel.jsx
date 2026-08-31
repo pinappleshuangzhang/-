@@ -41,6 +41,9 @@ const blankTexture = () => {
 export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
   const containerRef = useRef(null);
   const stageBackgroundRef = useRef(null);
+  const stageLayer2Ref = useRef(null);
+  const stageLayer3Ref = useRef(null);
+  const stageLayer4Ref = useRef(null);
   const finalShadowRef = useRef(null);
   const hoverCloseRef = useRef(null);
   const listRef = useRef(null);
@@ -65,8 +68,20 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
     const container = containerRef.current;
     const listEl = listRef.current;
     const categoryItems = itemsRef.current.filter(Boolean);
+    const categoryWords = categoryItems.flatMap((item) =>
+      Array.from(item.querySelectorAll("[data-category-entry-word]")),
+    );
     const loaderEl = loaderRef.current;
     const stageBackground = stageBackgroundRef.current;
+    const stageLayer2 = stageLayer2Ref.current;
+    const immediateBackgroundLayers = [
+      stageLayer3Ref.current,
+      stageLayer4Ref.current,
+    ].filter(Boolean);
+    const rotatingBackgroundLayers = [
+      stageLayer2,
+      ...immediateBackgroundLayers,
+    ].filter(Boolean);
     const finalShadow = finalShadowRef.current;
     const hoverClose = hoverCloseRef.current;
     const brandStage = brandStageRef.current;
@@ -85,6 +100,10 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
     // shift:    the ring moves off centre and resizes
     const state = { progress: 0, launch: 0, spread: 0, spin: 0, shift: 0 };
     let stagePhase = "entry";
+    let ringAutoRotating = false;
+    let backgroundSpin = 0;
+    let layer2Spin = 0;
+    let ringAutoRotateElapsed = 0;
     // Read-only panel readouts, so an invalid ring is visible rather than
     // silent and the reference window can be matched to the live one.
     const info = { restingGap: 0, window: "", scale: 1, band: "wide" };
@@ -1064,9 +1083,13 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
 
     const build = () => {
       stagePhase = "entry";
+      ringAutoRotating = false;
       interactive = false;
       announced = -1;
       spinVel = 0;
+      backgroundSpin = 0;
+      layer2Spin = 0;
+      ringAutoRotateElapsed = 0;
       dragging = false;
       settling = false;
       // The timeline tweens state.spin, so a pick in flight has to be off the
@@ -1080,7 +1103,7 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
       if (listEl) {
         gsap.set(listEl, { opacity: 0 });
         listEl.style.pointerEvents = "none";
-        gsap.set(categoryItems, {
+        gsap.set(categoryWords, {
           opacity: 0,
           yPercent: 75,
           scale: 0,
@@ -1088,6 +1111,10 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
         });
       }
       if (stageBackground) gsap.set(stageBackground, { opacity: 0 });
+      gsap.set(rotatingBackgroundLayers, {
+        rotation: 0,
+        transformOrigin: "50% 50%",
+      });
       if (finalShadow) gsap.set(finalShadow, { opacity: 0 });
       if (brandStage && brandBackground && brandText && brandInverseText) {
         gsap.set(brandStage, { opacity: 1 });
@@ -1102,7 +1129,7 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
       tl.fromTo(
         state,
         { progress: 0, launch: 0, spread: 0, spin: 0, shift: 0 },
-        { progress: 1, duration: 1.2, ease: "power2.out" },
+        { progress: 1, duration: 0.8, ease: "power2.out" },
       );
 
       // Formed and sitting at centre. It stays there until the counter lands,
@@ -1237,6 +1264,9 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
         );
       }
       tl.call(() => {
+        if (!disposed && gen === entryGen) ringAutoRotating = true;
+      }, undefined, ringLanded);
+      tl.call(() => {
         if (!disposed && gen === entryGen) stagePhase = "hold";
       }, undefined, holdStart);
 
@@ -1252,7 +1282,9 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
       if (stagePhase !== "hold") return;
 
       stagePhase = "transitioning";
+      ringAutoRotating = false;
       finalTl?.kill();
+      const finalSpin = state.spin - params.spinTurns * TAU;
       finalTl = gsap.timeline({
         onComplete: () => {
           if (disposed) return;
@@ -1277,7 +1309,7 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
       finalTl.to(
         state,
         {
-          spin: params.spinTurns * TAU,
+          spin: finalSpin,
           duration: params.spinTime,
           ease: params.spinEase,
         },
@@ -1297,10 +1329,10 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
           params.moveDelay,
           params.moveTime * 0.55,
         );
-        const listItems = gsap.utils.shuffle([...categoryItems]);
+        const listWords = gsap.utils.shuffle([...categoryWords]);
         finalTl.set(listEl, { opacity: 1 }, listRevealAt);
         finalTl.fromTo(
-          listItems,
+          listWords,
           { opacity: 0, yPercent: 75, scale: 0 },
           {
             opacity: 1,
@@ -1375,6 +1407,22 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
       const dt = Math.min(0.05, (now - prevT) / 1000);
       prevT = now;
       uniforms.uTime.value = (now - start) * 0.001;
+
+      if (ringAutoRotating) {
+        state.spin -= params.holdSpinSpeed * dt;
+        ringAutoRotateElapsed += dt;
+        backgroundSpin += params.holdSpinSpeed * dt;
+        for (const layer of immediateBackgroundLayers) {
+          layer.style.transform = `rotate(${backgroundSpin}rad)`;
+        }
+        if (
+          stageLayer2 &&
+          ringAutoRotateElapsed >= params.layer2SpinDelay
+        ) {
+          layer2Spin += params.holdSpinSpeed * dt;
+          stageLayer2.style.transform = `rotate(${layer2Spin}rad)`;
+        }
+      }
 
       if (interactive && !dragging && !picking) {
         state.spin += spinVel * dt;
@@ -1486,7 +1534,7 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
       gsap.killTweensOf(splitText.chars);
       gsap.killTweensOf(splitText.fades);
       gsap.killTweensOf(listEl);
-      gsap.killTweensOf(categoryItems);
+      gsap.killTweensOf(categoryWords);
       gsap.killTweensOf(hoverClose);
       meta.dispose();
       splitText.dispose();
@@ -1521,6 +1569,7 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
           }}
         >
           <div
+            ref={stageLayer4Ref}
             className="absolute"
             style={{
               left: "40.441962%",
@@ -1539,6 +1588,7 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
             />
           </div>
           <div
+            ref={stageLayer3Ref}
             className="absolute"
             style={{
               left: "27.16078%",
@@ -1557,6 +1607,7 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
             />
           </div>
           <div
+            ref={stageLayer2Ref}
             className="absolute"
             style={{
               left: "32.007173%",
@@ -1663,12 +1714,14 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
           }}
         />
         <div
-          className="absolute font-bodoni text-18 uppercase leading-6"
+          className="absolute font-bodoni uppercase"
           style={{
             left: "calc(50% - var(--viscose-su) * 104)",
             top: "calc(50% - var(--viscose-su) * 11)",
             width: "calc(var(--viscose-su) * 208)",
             height: "calc(var(--viscose-su) * 23)",
+            fontSize: "calc(var(--viscose-su) * 18)",
+            lineHeight: "calc(var(--viscose-su) * 24)",
           }}
         >
           <span
@@ -1694,11 +1747,11 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
         ref={listRef}
         aria-label="Projects"
         style={{
-          left: "calc(50% + var(--viscose-su) * 193)",
-          top: "calc(50% - var(--viscose-su) * 98)",
-          width: "calc(var(--viscose-su) * 507)",
+          right: "20px",
+          top: "calc(50% - 114px)",
+          width: "507px",
         }}
-        className="absolute z-10 flex flex-col items-start gap-6 font-bodoni leading-5 text-grey-300 opacity-0 [--viscose-su:calc(100vw/1440)] max-sm:hidden"
+        className="absolute z-10 flex flex-col items-start gap-8 font-bodoni leading-5 text-grey-300 opacity-0 [--viscose-su:calc(100vw/1440)] max-sm:hidden"
       >
         {PROJECTS.slice(0, IMAGE_FILES.length).map((p, i) => (
           <li
@@ -1714,6 +1767,7 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
             <FlipHoverButton
               label={`${String(i + 1).padStart(3, "0")}  ${p.listLabel}`}
               showHoverMark
+              groupEntryWords
               aria-label={`定位到 ${p.listLabel}`}
               onClick={() => categorySelectRef.current?.(i)}
               className="h-5 transition-colors group-hover:text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"

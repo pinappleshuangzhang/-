@@ -1,8 +1,9 @@
 "use client";
 
-import type { Ref } from "react";
+import { useLayoutEffect, useRef, type Ref } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { FlipHoverButton } from "@/components/ui/flip-hover-button";
+import { MobileSiteNav } from "@/components/ui/mobile-site-nav";
 import type { MessageKey } from "@/lib/i18n/messages";
 import type { NavVariant } from "@/lib/nav-variants";
 
@@ -42,8 +43,8 @@ const NAV_CODE: Partial<Record<NavVariant, string>> = {
 };
 
 /**
- * 全站公共导航（唯一实现）。
- * 左：品牌 / 分屏命名；右：目录、联系我们、语言（Figma 891:2481 / 875:511）。
+ * 全站公共导航入口。
+ * 移动端委托 MobileSiteNav；桌面端右侧保留目录、联系我们、语言。
  * 右侧操作区绝对贴右、固定 507px（与各屏 right-5 + w-[507px] 图左缘对齐），
  * 避免左侧长标题挤缩导致「目录」右移。
  */
@@ -70,38 +71,94 @@ export function SiteNav({
   const code = NAV_CODE[navVariant];
   // 目录展开或首屏：品牌名；其它分屏：编号 + 标题
   const showBrand = isIndex || navVariant === "studio" || !titleKey || !code;
+  const mobileCloseRef = useRef<HTMLButtonElement>(null);
+  const desktopCloseRef = useRef<HTMLButtonElement>(null);
+
+  useLayoutEffect(() => {
+    if (!closeRef) return;
+    const media = window.matchMedia("(max-width: 767px)");
+    const assignCloseRef = (node: HTMLButtonElement | null) => {
+      if (typeof closeRef === "function") {
+        closeRef(node);
+      } else {
+        closeRef.current = node;
+      }
+    };
+    const syncCloseRef = () => {
+      assignCloseRef(
+        isIndex
+          ? media.matches
+            ? mobileCloseRef.current
+            : desktopCloseRef.current
+          : null,
+      );
+    };
+
+    syncCloseRef();
+    media.addEventListener("change", syncCloseRef);
+    return () => {
+      media.removeEventListener("change", syncCloseRef);
+      assignCloseRef(null);
+    };
+  }, [closeRef, isIndex]);
+
+  const title = showBrand ? (
+    "Grava Design Studio"
+  ) : (
+    <>
+      <span>{code}</span>
+      {isEn ? " " : null}
+      <span className={isEn ? "italic" : "font-serif-sc"}>
+        {titleKey ? t(titleKey) : null}
+      </span>
+    </>
+  );
+  const indexAriaLabel = isIndex ? t("nav.closeIndex") : t("nav.openIndex");
+  const handleIndexClick = isIndex ? onCloseIndex : onOpenIndex;
+  const handleLanguageClick = () => setLocale(locale === "zh" ? "en" : "zh");
 
   return (
-    <header
-      className={`fixed inset-x-0 top-[20px] ${isIndex ? "z-[70]" : "z-50"} ${className ?? ""}`}
-    >
-      <nav
-        aria-label="Site"
-        className="relative mx-auto flex w-[calc(100%-40px)] items-center"
-      >
-        {showBrand ? (
-          <p className="whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-grey-400">
-            Grava Design Studio
-          </p>
-        ) : (
-          <p className="max-w-[calc(100%-527px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-grey-400">
-            <span>{code}</span>
-            {isEn ? " " : null}
-            <span className={isEn ? "italic" : "font-serif-sc"}>
-              {t(titleKey)}
-            </span>
-          </p>
-        )}
+    <>
+      <MobileSiteNav
+        elevated={isIndex}
+        title={title}
+        showBrand={showBrand}
+        isEnglish={isEn}
+        indexLabel={indexLabel}
+        indexAriaLabel={indexAriaLabel}
+        onIndexClick={handleIndexClick}
+        languageLabel={langLabel}
+        languageAriaLabel={t("nav.language")}
+        onLanguageClick={handleLanguageClick}
+        closeRef={mobileCloseRef}
+        className={className}
+      />
 
-        {/* 与屏内 right-5 + w-[507px] 图同缘：贴版心右、宽 507；目录在区左缘 */}
-        <div className="absolute right-0 top-1/2 flex w-[507px] -translate-y-1/2 items-center justify-between">
-          {/* 中文落 161 栅格；英文随文案撑开 + gap-8，避免 INDEX 与 CONTACT 及 hover 方块重叠 */}
-          <div className="flex min-w-[161px] w-max shrink-0 items-center justify-between gap-8">
+      <header
+        className={`fixed inset-x-0 top-[20px] hidden md:block ${isIndex ? "z-[70]" : "z-50"} ${className ?? ""}`}
+      >
+        <nav
+          aria-label="Site"
+          className="relative mx-auto flex w-[calc(100%-40px)] items-center"
+        >
+          <p
+            className={
+              showBrand
+                ? "whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-grey-400"
+                : "max-w-[calc(100%-527px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-grey-400"
+            }
+          >
+            {title}
+          </p>
+
+          {/* 与屏内 right-5 + w-[507px] 图同缘：贴版心右、宽 507；目录在区左缘 */}
+          <div className="absolute right-0 top-1/2 flex w-[507px] -translate-y-1/2 items-center justify-between">
+            <div className="flex w-max min-w-[161px] shrink-0 items-center justify-between gap-8">
             <FlipHoverButton
-              ref={isIndex ? closeRef : undefined}
+              ref={desktopCloseRef}
               label={indexLabel}
-              aria-label={isIndex ? t("nav.closeIndex") : t("nav.openIndex")}
-              onClick={isIndex ? onCloseIndex : onOpenIndex}
+              aria-label={indexAriaLabel}
+              onClick={handleIndexClick}
               className={linkClass}
             />
             <FlipHoverButton
@@ -114,11 +171,12 @@ export function SiteNav({
             label={langLabel}
             aria-label={t("nav.language")}
             aria-pressed={locale === "en"}
-            onClick={() => setLocale(locale === "zh" ? "en" : "zh")}
+            onClick={handleLanguageClick}
             className={`w-16 justify-end ${linkClass}`}
           />
-        </div>
-      </nav>
-    </header>
+          </div>
+        </nav>
+      </header>
+    </>
   );
 }

@@ -22,12 +22,12 @@ import {
 } from "@/components/providers/section-pager-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import archiveFolderImg from "../../public/archive/archive-folder.webp";
+import archiveFolderImg from "../../public/archive/archive-folder-cool-alpha.webp";
 
 gsap.registerPlugin(useGSAP);
 
-const FOLDER_VIDEO_WEBM = "/archive/archive-folder-anim.webm";
-const FOLDER_VIDEO_HEVC = "/archive/archive-folder-anim-hevc.mp4";
+const FOLDER_VIDEO_WEBM = "/archive/archive-folder-cool-alpha.webm";
+const FOLDER_VIDEO_HEVC = "/archive/archive-folder-cool-alpha-hevc.mp4";
 /** 每像素滚动推进的进度量：两段文字 + 间隔 + 切换全程约需 6700px 滚动 */
 const SCRUB_PER_PX = 0.00015;
 /** 进度追踪的阻尼系数（数值越大跟手越紧，越小拖拽感越强） */
@@ -314,20 +314,20 @@ export function ArchiveIntro() {
         >
           <p
             data-title-what-is
-            className="absolute left-[7.2917%] top-[19.5%] font-bodoni text-100 font-normal leading-[125px] text-grey-400"
+            className="absolute left-[3.0769%] top-[21.6825%] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[7.2917%] md:top-[calc(50%+228px)] md:text-100 md:leading-[125px]"
           >
             WHAT IS
           </p>
           <p
             data-title-gravity
-            className="absolute left-[63.4028%] top-[72%] font-bodoni text-100 font-normal leading-[125px] text-grey-400"
+            className="absolute left-[46.9231%] top-[68.365%] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[63.4028%] md:top-[calc(50%+176px)] md:text-100 md:leading-[125px]"
           >
             GRAVITY
           </p>
         </div>
 
-        {/* 档案夹卡片：Figma 486:210 = 563×420，垂直中心略低于屏幕中心 18px；内部字号基准 16px */}
-        <div className="absolute left-1/2 top-[calc(50%+18px)] aspect-[563/420] w-[min(563px,calc(100vw-40px))] -translate-x-1/2 -translate-y-1/2 text-[length:calc(min(563px,100vw-40px)/35.1875)]">
+        {/* 档案夹卡片：桌面 563×420；移动端 Figma 701:204 = 312×233 */}
+        <div className="absolute left-[calc(50%+1px)] top-[47.69%] aspect-[563/420] w-[80%] -translate-x-1/2 -translate-y-1/2 text-14 md:left-[calc(50%+4px)] md:top-[calc(50%+18px)] md:w-[min(563px,calc(100vw-40px))] md:text-[length:calc(min(563px,100vw-40px)/35.1875)]">
           {/* 投影：设计稿手绘投影图形 1:1 还原（SVG 画布含模糊出血，按设计坐标定位） */}
           <span
             aria-hidden="true"
@@ -343,7 +343,7 @@ export function ArchiveIntro() {
               alt={t("intro.folderAlt")}
               fill
               placeholder="blur"
-              sizes="(min-width: 1024px) 563px, 100vw"
+              sizes="(min-width: 768px) 563px, 80vw"
               className="object-contain"
             />
           )}
@@ -361,14 +361,14 @@ export function ArchiveIntro() {
             />
           )}
 
-          {/* 卡片内文字：Figma 790:332 — Regular 24px / 自设计稿位置下移 */}
-          <div className="absolute left-[9.2%] top-[calc(35.7%-10px)] w-[55%]">
+          {/* 卡片内文字：移动端 Figma 701:201/202 = 14px、左 67、顶 368 */}
+          <div className="absolute left-[8.65%] top-[35.2%] w-[49.4%] md:left-[52px] md:top-[35.7%] md:w-[55%]">
             <div className="relative">
-              <div data-swap-a className="flex flex-col gap-[1em]">
-                <div className="font-serif-sc text-[1.5em] font-normal text-grey-200">
+              <div data-swap-a className="flex flex-col gap-3 md:gap-[1em]">
+                <div className="font-serif-sc text-14 font-normal leading-[20px] text-grey-200 md:text-[1.5em] md:leading-normal">
                   <ScrubText text={t("intro.line1")} revealDelay={0.4} />
                 </div>
-                <div className="font-serif-sc text-[1.5em] font-normal text-grey-200">
+                <div className="font-serif-sc text-14 font-normal leading-[20px] text-grey-200 md:text-[1.5em] md:leading-normal">
                   <ScrubText text={t("intro.line2a")} revealDelay={0.5} />
                   <ScrubText text={t("intro.line2b")} revealDelay={0.55} />
                   <ScrubText text={t("intro.line2c")} revealDelay={0.6} />
@@ -376,12 +376,12 @@ export function ArchiveIntro() {
               </div>
               <div
                 data-swap-b
-                className="absolute inset-x-0 top-0 flex flex-col gap-[1em]"
+                className="absolute left-0 top-[-11px] flex w-[124.6%] flex-col gap-3 md:inset-x-0 md:top-0 md:w-auto md:gap-[1em]"
               >
-                <div className="font-serif-sc text-[1.5em] font-normal text-grey-200">
+                <div className="font-serif-sc text-14 font-normal leading-[20px] text-grey-200 md:text-[1.5em] md:leading-normal">
                   <ScrubText text={t("intro.bridge")} />
                 </div>
-                <div className="font-serif-sc text-[3em] font-normal text-grey-200">
+                <div className="font-serif-sc text-32 font-normal leading-[46px] text-grey-200 md:text-[3em] md:leading-normal">
                   <ScrubText text={t("intro.gravity")} />
                 </div>
               </div>

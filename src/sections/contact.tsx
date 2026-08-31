@@ -9,12 +9,14 @@ import {
   setSondavenHidden,
   setSondavenVisible,
 } from "@/animations/sondaven-reveal";
+import { SpotlightReveal } from "@/components/effects/spotlight-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { SectionBackground } from "@/components/ui/section-background";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { SECTION_BACKGROUNDS } from "@/lib/section-backgrounds";
+import studioIntroBgImg from "../../public/org-record/studio-intro-bg.webp";
 
 gsap.registerPlugin(useGSAP);
 
@@ -48,6 +50,11 @@ export function Contact() {
 
   return (
     <ScreenShell ref={container} aria-label={t("contact.aria")}>
+      <SpotlightReveal
+        src={studioIntroBgImg}
+        autoMove
+        className="absolute -left-[37.5vw] -top-[11.25vh] z-[5] aspect-[9/5] w-[220vw]"
+      />
       <div id="contact">
         <ContactLayout heading="h1" animated />
       </div>
@@ -100,7 +107,7 @@ function ContactLayout({
       <a
         href="mailto:shuangzhang@fintopia.tech"
         aria-label={`${t("contact.button")}：shuangzhang@fintopia.tech`}
-        className="group absolute left-5 top-[204px] h-[69px] w-[299px] overflow-hidden text-left focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
+        className="group absolute left-5 top-[204px] h-[69px] w-[325px] overflow-hidden text-left focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
       >
         <span
           aria-hidden="true"
@@ -114,7 +121,7 @@ function ContactLayout({
         />
       </a>
 
-      <dl className="absolute left-5 right-5 top-[319px] grid grid-cols-8 gap-5">
+      <dl className="absolute left-5 right-5 top-[379px] grid grid-cols-8 gap-5">
         <ContactFact
           label={t("contact.addressLabel")}
           value={t("contact.address")}

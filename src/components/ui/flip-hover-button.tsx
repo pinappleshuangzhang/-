@@ -19,6 +19,8 @@ type FlipHoverButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   disableFlip?: boolean;
   /** hover / 焦点时在文案前显示 12px 黑色方块（Figma 893:2761） */
   showHoverMark?: boolean;
+  /** 为外部入场时间轴按词提供分组，不改变内部逐字 hover 结构 */
+  groupEntryWords?: boolean;
   children?: ReactNode;
 };
 
@@ -36,6 +38,7 @@ export const FlipHoverButton = forwardRef<
     hoverLabel,
     disableFlip = false,
     showHoverMark = true,
+    groupEntryWords = false,
     className,
     onMouseEnter,
     onMouseLeave,
@@ -52,6 +55,47 @@ export const FlipHoverButton = forwardRef<
   const outCharsList = Array.from(label);
   const inCharsList = Array.from(hoverLabel ?? label);
   const flipEnabled = !disableFlip && !reducedMotion;
+  let outCharIndex = 0;
+  const outContent = groupEntryWords
+    ? label
+        .split(/(\s+)/)
+        .filter(Boolean)
+        .map((token, tokenIndex) => {
+          const chars = Array.from(token);
+          const content = chars.map((char) => {
+            const index = outCharIndex++;
+            return (
+              <span
+                key={`out-${index}-${char}`}
+                data-flip-out
+                className="inline-block origin-center will-change-transform"
+              >
+                {char === " " ? "\u00A0" : char}
+              </span>
+            );
+          });
+
+          return token.trim() === "" ? (
+            content
+          ) : (
+            <span
+              key={`entry-word-${tokenIndex}-${token}`}
+              data-category-entry-word
+              className="inline-flex origin-center"
+            >
+              {content}
+            </span>
+          );
+        })
+    : outCharsList.map((char, index) => (
+        <span
+          key={`out-${index}-${char}`}
+          data-flip-out
+          className="inline-block origin-center will-change-transform"
+        >
+          {char === " " ? "\u00A0" : char}
+        </span>
+      ));
 
   useEffect(() => {
     // 始终用本地 ref 查 DOM，避免外部 closeRef 尚未写入时时间轴建失败
@@ -171,27 +215,19 @@ export const FlipHoverButton = forwardRef<
       <span className="relative inline-block overflow-visible" aria-hidden="true">
         {/* 绝对定位在文字左侧：默认不占位，hover 翻入且文字不位移 */}
         {showHoverMark && (
-          <span className="pointer-events-none absolute right-full top-1/2 mr-1 flex -translate-y-1/2 items-center">
+          <span className="pointer-events-none absolute right-full top-1/2 mr-0.5 flex -translate-y-1/2 items-center md:mr-1">
             <span
               data-flip-mark
               className={
                 flipEnabled
-                  ? "block size-3 origin-center bg-grey-400 will-change-transform"
-                  : "block size-3 origin-center bg-grey-400 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+                  ? "block size-2 origin-center bg-grey-400 will-change-transform md:size-3"
+                  : "block size-2 origin-center bg-grey-400 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 md:size-3"
               }
             />
           </span>
         )}
         <span className="inline-flex whitespace-nowrap">
-          {outCharsList.map((char, index) => (
-            <span
-              key={`out-${index}-${char}`}
-              data-flip-out
-              className="inline-block origin-center will-change-transform"
-            >
-              {char === " " ? "\u00A0" : char}
-            </span>
-          ))}
+          {outContent}
         </span>
         {!disableFlip && (
           <span className="absolute inset-0 inline-flex whitespace-nowrap">

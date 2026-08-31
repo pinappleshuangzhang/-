@@ -32,8 +32,6 @@ project_dir, log, pidfile = sys.argv[1], sys.argv[2], sys.argv[3]
 if os.fork() > 0:
     sys.exit(0)
 os.setsid()
-if os.fork() > 0:
-    os._exit(0)
 
 os.chdir(project_dir)
 fd = os.open(log, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o644)
@@ -43,7 +41,9 @@ devnull = os.open(os.devnull, os.O_RDONLY)
 os.dup2(devnull, 0)
 
 with open(pidfile, "w") as f:
-    f.write(str(os.getpid()))
+    # 第二次 fork 后的工作子进程仍属于 setsid 创建的进程组；
+    # 记录组长 PID，stop 时才能用 kill -- -<pgid> 终止整组。
+    f.write(str(os.getpgrp()))
 
 loop = r'''
 while true; do
