@@ -178,38 +178,38 @@ export function MemberRecord() {
             <MemberProfile
               identifier="01"
               name="Pineapple"
-              headerClassName="left-[2.55%] top-[5.57%] w-[24.85%]"
-              dividerClassName="left-[2.55%] top-[10.72%] w-[11.91%]"
-              nameClassName="left-[2.55%] top-[13.29%] w-[24.85%]"
-              directionClassName="left-[2.55%] top-[18.11%] w-[24.85%]"
-              actionsClassName="left-[2.55%] top-[27.12%]"
+              headerClassName="left-[2.472%] top-[5.573%] w-[24.85%]"
+              dividerClassName="left-[2.472%] top-[10.611%] w-[11.91%]"
+              nameClassName="left-[2.472%] top-[13.183%] w-[24.85%]"
+              directionClassName="left-[2.472%] top-[17.578%] w-[24.85%]"
+              actionsClassName="left-[2.472%] top-[23.902%]"
             />
             <MemberProfile
               identifier="02"
               name="South"
-              headerClassName="left-[65.94%] top-[5.57%] w-[24.85%]"
-              dividerClassName="left-[66.52%] top-[10.72%] w-[11.91%]"
-              nameClassName="left-[67.87%] top-[13.29%] w-[24.85%]"
-              directionClassName="left-[68.69%] top-[18.11%] w-[24.85%]"
-              actionsClassName="left-[70.56%] top-[27.12%]"
+              headerClassName="left-[66.142%] top-[5.573%] w-[24.85%]"
+              dividerClassName="left-[67.491%] top-[10.611%] w-[11.91%]"
+              nameClassName="left-[68.614%] top-[13.183%] w-[24.85%]"
+              directionClassName="left-[70.187%] top-[17.578%] w-[24.85%]"
+              actionsClassName="left-[71.985%] top-[23.902%]"
             />
             <MemberProfile
               identifier="03"
               name="Sheep"
-              headerClassName="left-[28.44%] top-[37.73%] w-[19.69%]"
-              dividerClassName="left-[28.44%] top-[42.77%] w-[11.91%]"
-              nameClassName="left-[28.44%] top-[45.34%] w-[19.69%]"
-              directionClassName="left-[28.44%] top-[50.16%] w-[19.69%]"
-              actionsClassName="left-[28.44%] top-[57.88%]"
+              headerClassName="left-[28.367%] top-[39.228%] w-[19.69%]"
+              dividerClassName="left-[28.367%] top-[44.266%] w-[11.91%]"
+              nameClassName="left-[28.367%] top-[46.838%] w-[19.69%]"
+              directionClassName="left-[28.367%] top-[51.232%] w-[19.69%]"
+              actionsClassName="left-[28.367%] top-[58.306%]"
             />
             <MemberProfile
               identifier="04"
               name="Joe"
-              headerClassName="left-[68.34%] top-[37.73%] w-[24.85%]"
-              dividerClassName="left-[67.59%] top-[42.77%] w-[13.17%]"
-              nameClassName="left-[67.14%] top-[45.34%] w-[24.85%]"
-              directionClassName="left-[66.24%] top-[50.16%] w-[24.85%]"
-              actionsClassName="left-[65.04%] top-[57.88%]"
+              headerClassName="left-[68.263%] top-[39.228%] w-[24.85%]"
+              dividerClassName="left-[67.514%] top-[44.266%] w-[13.17%]"
+              nameClassName="left-[67.065%] top-[46.838%] w-[24.85%]"
+              directionClassName="left-[66.167%] top-[51.661%] w-[24.85%]"
+              actionsClassName="left-[64.97%] top-[58.306%]"
             />
             <div className="absolute left-[35.3%] top-[16.3%] h-[3.54%] w-[8.69%]">
               <Image

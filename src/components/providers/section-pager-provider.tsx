@@ -232,18 +232,62 @@ export function SectionPagerProvider({
     return () => window.clearTimeout(timer);
   }, []);
 
-  // 分页模式下页面本身不滚动，由属性驱动全局样式
+  // 分页模式下页面本身不滚动；Safari 需额外 fixed 锁，单靠 overflow:hidden 不够
   useEffect(() => {
-    document.documentElement.setAttribute("data-section-pager", "");
-    return () => document.documentElement.removeAttribute("data-section-pager");
+    const html = document.documentElement;
+    const body = document.body;
+    html.setAttribute("data-section-pager", "");
+
+    const prev = {
+      htmlOverflow: html.style.overflow,
+      bodyOverflow: body.style.overflow,
+      bodyPosition: body.style.position,
+      bodyInset: body.style.inset,
+      bodyWidth: body.style.width,
+      bodyHeight: body.style.height,
+      bodyTouchAction: body.style.touchAction,
+    };
+
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.inset = "0";
+    body.style.width = "100%";
+    body.style.height = "100%";
+    body.style.touchAction = "none";
+
+    return () => {
+      html.removeAttribute("data-section-pager");
+      html.style.overflow = prev.htmlOverflow;
+      body.style.overflow = prev.bodyOverflow;
+      body.style.position = prev.bodyPosition;
+      body.style.inset = prev.bodyInset;
+      body.style.width = prev.bodyWidth;
+      body.style.height = prev.bodyHeight;
+      body.style.touchAction = prev.bodyTouchAction;
+    };
   }, []);
 
   useEffect(() => {
+    const WHEEL_ACCUM_RESET_MS = 160;
+    let wheelAccum = 0;
+    let wheelResetTimer = 0;
+    // 同一手势可能同时触发 touch 与 pointer，短暂互斥避免连翻两屏
+    let gestureLockUntil = 0;
+
     const onWheel = (event: WheelEvent) => {
       // 始终吃掉滚轮，避免锁定期间浏览器仍做原生滚动
       event.preventDefault();
-      if (Math.abs(event.deltaY) < WHEEL_THRESHOLD) return;
-      navigate(event.deltaY);
+      // Safari 触控板常发很小的 deltaY，需累计后才切屏
+      wheelAccum += event.deltaY;
+      window.clearTimeout(wheelResetTimer);
+      wheelResetTimer = window.setTimeout(() => {
+        wheelAccum = 0;
+      }, WHEEL_ACCUM_RESET_MS);
+      if (Math.abs(wheelAccum) < WHEEL_THRESHOLD) return;
+      const delta = wheelAccum;
+      wheelAccum = 0;
+      navigate(delta);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -302,6 +346,13 @@ export function SectionPagerProvider({
       return null;
     };
 
+    const commitSwipe = (travelled: number) => {
+      if (Math.abs(travelled) < TOUCH_THRESHOLD) return;
+      if (performance.now() < gestureLockUntil) return;
+      gestureLockUntil = performance.now() + 350;
+      navigate(travelled);
+    };
+
     const onTouchStart = (event: TouchEvent) => {
       if (event.touches.length !== 1) {
         touchStartY = null;
@@ -354,8 +405,45 @@ export function SectionPagerProvider({
         touchHandledByNativeScroll = false;
         return;
       }
-      if (Math.abs(travelled) < TOUCH_THRESHOLD) return;
-      navigate(travelled);
+      commitSwipe(travelled);
+    };
+
+    let pointerStartY: number | null = null;
+    let pointerCurrentY: number | null = null;
+
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (
+        event.pointerType !== "touch" ||
+        !event.isPrimary ||
+        !(target instanceof Element) ||
+        !target.closest("[data-pager-touch-surface]")
+      ) {
+        pointerStartY = null;
+        pointerCurrentY = null;
+        return;
+      }
+      pointerStartY = event.clientY;
+      pointerCurrentY = event.clientY;
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (pointerStartY === null || event.pointerType !== "touch") return;
+      pointerCurrentY = event.clientY;
+      if (
+        Math.abs(pointerStartY - pointerCurrentY) >= WHEEL_THRESHOLD &&
+        event.cancelable
+      ) {
+        event.preventDefault();
+      }
+    };
+
+    const finishPointer = (event: PointerEvent) => {
+      if (pointerStartY === null || event.pointerType !== "touch") return;
+      const travelled = pointerStartY - (pointerCurrentY ?? event.clientY);
+      pointerStartY = null;
+      pointerCurrentY = null;
+      commitSwipe(travelled);
     };
 
     window.addEventListener("wheel", onWheel, { passive: false });
@@ -364,14 +452,23 @@ export function SectionPagerProvider({
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", finishTouch, { passive: true });
     window.addEventListener("touchcancel", finishTouch, { passive: true });
+    window.addEventListener("pointerdown", onPointerDown, { passive: true });
+    window.addEventListener("pointermove", onPointerMove, { passive: false });
+    window.addEventListener("pointerup", finishPointer, { passive: true });
+    window.addEventListener("pointercancel", finishPointer, { passive: true });
 
     return () => {
+      window.clearTimeout(wheelResetTimer);
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", finishTouch);
       window.removeEventListener("touchcancel", finishTouch);
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", finishPointer);
+      window.removeEventListener("pointercancel", finishPointer);
     };
   }, [goToScreen, navigate]);
 
@@ -409,7 +506,10 @@ export function SectionPagerProvider({
 
   return (
     <SectionPagerContext.Provider value={value}>
-      <div className="fixed inset-0 overflow-hidden">
+      <div
+        data-pager-touch-surface
+        className="fixed inset-0 overflow-hidden"
+      >
         <SharedSectionBackgrounds
           active={activeScreen?.background ?? null}
         />

@@ -22,7 +22,7 @@ type SiteNavProps = {
 };
 
 const focusRing =
-  "focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2";
+  "focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-0";
 
 const NAV_TITLE_KEY: Partial<Record<NavVariant, MessageKey>> = {
   "archive-ga-001": "nav.title.ga001",
@@ -65,7 +65,7 @@ export function SiteNav({
   // 中文态显示「英」；英文态显示「CN」
   const langLabel = isEn ? "CN" : "英";
   const navFont = isEn ? "font-bodoni" : "font-serif-sc";
-  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-12 font-normal uppercase leading-none text-grey-400 ${focusRing}`;
+  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-12 font-normal uppercase leading-none text-white ${focusRing}`;
 
   const titleKey = NAV_TITLE_KEY[navVariant];
   const code = NAV_CODE[navVariant];
@@ -135,7 +135,7 @@ export function SiteNav({
       />
 
       <header
-        className={`fixed inset-x-0 top-[20px] hidden md:block ${isIndex ? "z-[70]" : "z-50"} ${className ?? ""}`}
+        className={`fixed inset-x-0 top-[20px] hidden mix-blend-difference md:block ${isIndex ? "z-[70]" : "z-50"} ${className ?? ""}`}
       >
         <nav
           aria-label="Site"
@@ -144,8 +144,8 @@ export function SiteNav({
           <p
             className={
               showBrand
-                ? "whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-grey-400"
-                : "max-w-[calc(100%-527px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-grey-400"
+                ? "whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-white"
+                : "max-w-[calc(100%-527px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-white"
             }
           >
             {title}

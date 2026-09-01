@@ -19,7 +19,7 @@ type MobileSiteNavProps = {
 };
 
 const focusRing =
-  "focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2";
+  "focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-0";
 
 /** Figma 926:1342：移动端公共导航，仅保留目录与语言入口。 */
 export function MobileSiteNav({
@@ -37,21 +37,21 @@ export function MobileSiteNav({
   className,
 }: MobileSiteNavProps) {
   const navFont = isEnglish ? "font-bodoni" : "font-serif-sc";
-  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-12 font-normal uppercase leading-[18px] text-grey-400 ${focusRing}`;
+  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-12 font-normal uppercase leading-[18px] text-white ${focusRing}`;
 
   return (
     <header
-      className={`fixed inset-x-0 top-[15px] md:hidden ${elevated ? "z-[70]" : "z-50"} ${className ?? ""}`}
+      className={`fixed inset-x-0 top-3 mix-blend-difference md:hidden ${elevated ? "z-[70]" : "z-50"} ${className ?? ""}`}
     >
       <nav
         aria-label="Site"
-        className="relative mx-auto flex w-[calc(100%-30px)] items-center"
+        className="relative mx-auto flex w-[calc(100%-24px)] items-center"
       >
         <p
           className={
             showBrand
-              ? "whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] text-grey-400"
-              : "max-w-[calc(100%-98px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] text-grey-400"
+              ? "whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] text-white"
+              : "max-w-[calc(100%-98px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] text-white"
           }
         >
           {title}

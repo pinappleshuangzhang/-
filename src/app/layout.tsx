@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   title: "万有引力设计档案室 | Grava Design Studio",
   description:
     "以数字档案调查为叙事的设计工作室网站——以临时调查员身份，探索设计如何在人、品牌与事物之间建立引力。",
+  icons: {
+    icon: [{ url: "/favicon.png", sizes: "64x64", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {

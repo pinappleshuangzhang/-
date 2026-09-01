@@ -16,7 +16,7 @@ import { ScreenShell } from "@/components/ui/screen-shell";
 import { SectionBackground } from "@/components/ui/section-background";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { SECTION_BACKGROUNDS } from "@/lib/section-backgrounds";
-import studioIntroBgImg from "../../public/org-record/studio-intro-bg.webp";
+import contactEmbossedBgImg from "../../public/contact/contact-embossed-bg.webp";
 
 gsap.registerPlugin(useGSAP);
 
@@ -51,9 +51,9 @@ export function Contact() {
   return (
     <ScreenShell ref={container} aria-label={t("contact.aria")}>
       <SpotlightReveal
-        src={studioIntroBgImg}
+        src={contactEmbossedBgImg}
         autoMove
-        className="absolute -left-[37.5vw] -top-[11.25vh] z-[5] aspect-[9/5] w-[220vw]"
+        className="absolute inset-0 z-[5]"
       />
       <div id="contact">
         <ContactLayout heading="h1" animated />

@@ -63,6 +63,11 @@ export type MessageKey =
   | "member.portfolio"
   | "member.contactMe"
   | "gallery.list"
+  | "gallery.category.brand"
+  | "gallery.category.product"
+  | "gallery.category.website"
+  | "gallery.category.visual"
+  | "gallery.category.motion"
   | "gallery.view"
   | "gallery.detail"
   | "gallery.cursorDetail"
@@ -78,6 +83,7 @@ export type MessageKey =
   | "survey.duration"
   | "survey.description"
   | "survey.heroAlt"
+  | "survey.heroPreview"
   | "survey.billboardAlt"
   | "survey.emptyWork"
   | "ga005.aria"
@@ -156,6 +162,11 @@ const zh: Messages = {
   "member.portfolio": "个人作品站",
   "member.contactMe": "联系我",
   "gallery.list": "档案卡片列表",
+  "gallery.category.brand": "品牌设计",
+  "gallery.category.product": "产品设计",
+  "gallery.category.website": "网站设计",
+  "gallery.category.visual": "视觉设计",
+  "gallery.category.motion": "动态设计",
   "gallery.view": "查看",
   "gallery.detail": "查看作品详情",
   "gallery.cursorDetail": "点击查看详情",
@@ -169,13 +180,15 @@ const zh: Messages = {
   "ga004.aria": "档案 GA_004 视觉调查档案",
   "ga004.detailAria": "档案 GA_004 视觉调查档案 作品详情",
   "survey.categoryNav": "调查类型",
-  "survey.detailAria": "作品详情，上滑或按 Escape 返回档案长廊",
+  "survey.detailAria": "作品详情抽屉，按 Escape 或点击空白处关闭",
   "survey.duration": "一个月",
   "survey.description":
     "Design AI Ops 是设计团队围绕 AI 能力建设与设计生产升级建立的长期知识体系，用于统一沉淀团队在 AI 方向上的规划、项目实践与能力资产。该体系以设计业务场景为核心，通过持续积累工具、方法与案例，使 AI 从零散工具使用逐步演进为稳定、可复用的设计生产能力。",
   "survey.heroAlt":
-    "Design AI Ops 网站首屏，标题 The Apple Moment，下方为作品缩略图",
-  "survey.billboardAlt": "展厅中的大理石数字屏幕，展示 AI Ops 创世纪主题视觉",
+    "Design AI Ops 网站首屏：Brand Creativity、Website Design、Material Collection，中央为 Design AI Ops The Apple Moment，底部为作品缩略图",
+  "survey.heroPreview": "悬停或聚焦时播放预览视频",
+  "survey.billboardAlt":
+    "展厅中的黑色大理石数字屏幕，展示 AI Ops 创世纪主题视觉",
   "survey.emptyWork": "该类型暂无作品",
   "ga005.aria": "档案 GA_005 视觉探索记录",
   "ga005.imageAlt": "三张铺在浅色桌面上的空白视觉探索卡片",
@@ -256,6 +269,11 @@ const en: Messages = {
   "member.portfolio": "Portfolio",
   "member.contactMe": "Contact",
   "gallery.list": "Archive card gallery",
+  "gallery.category.brand": "Brand Design",
+  "gallery.category.product": "Product Design",
+  "gallery.category.website": "Website Interface",
+  "gallery.category.visual": "Visual Design",
+  "gallery.category.motion": "Motion Graphics",
   "gallery.view": "View",
   "gallery.detail": "View work details",
   "gallery.cursorDetail": "Click for details",
@@ -270,14 +288,15 @@ const en: Messages = {
   "ga004.detailAria": "Archive GA_004 Visual Survey Archive work details",
   "survey.categoryNav": "Survey categories",
   "survey.detailAria":
-    "Work details. Scroll up or press Escape to return to the gallery",
+    "Work details drawer. Press Escape or click empty space to close",
   "survey.duration": "One month",
   "survey.description":
     "Design AI Ops is a long-term knowledge system built by the design team around AI capability and production upgrades. It consolidates planning, practice, and assets so AI can evolve from scattered tools into a stable, reusable design production capacity centered on real design scenarios.",
   "survey.heroAlt":
-    "Design AI Ops website hero with the title The Apple Moment and work thumbnails below",
+    "Design AI Ops website hero with Brand Creativity, Website Design, Material Collection, the title The Apple Moment, and work thumbnails below",
+  "survey.heroPreview": "Hover or focus to play a preview video",
   "survey.billboardAlt":
-    "A marble digital screen in a gallery showing the AI Ops Genesis visual",
+    "A black marble digital screen in a gallery showing the AI Ops Genesis visual",
   "survey.emptyWork": "No work in this category yet",
   "ga005.aria": "Archive GA_005 Visual Exploration Record",
   "ga005.imageAlt": "Three blank visual exploration cards on a light desk",

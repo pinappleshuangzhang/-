@@ -276,7 +276,7 @@ export function OrgFoundingMobile() {
     >
       <div
         ref={rootRef}
-        className="mx-auto flex w-full max-w-[390px] flex-col px-[15px] pb-[15px] pt-[56px]"
+        className="mx-auto flex w-full max-w-[390px] flex-col px-3 pb-3 pt-[52px]"
       >
         {/* 第一段：标题 + 雕塑方图 */}
         <div className="flex flex-col gap-6">

@@ -29,6 +29,29 @@ function LenisGsapBridge() {
     };
   }, [lenis]);
 
+  // 整屏分页时停掉 Lenis：Safari 上 Lenis 仍可能改 transform，
+  // 破坏 fixed 舞台，出现“首屏下露出下一屏但切不过去”。
+  useEffect(() => {
+    if (!lenis) return;
+
+    const sync = () => {
+      if (document.documentElement.hasAttribute("data-section-pager")) {
+        lenis.stop();
+        lenis.scrollTo(0, { immediate: true });
+      } else {
+        lenis.start();
+      }
+    };
+
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-section-pager"],
+    });
+    return () => observer.disconnect();
+  }, [lenis]);
+
   return null;
 }
 

@@ -38,7 +38,13 @@ const blankTexture = () => {
   return t;
 };
 
-export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
+export default function Carousel({
+  onSelect,
+  scrollHandlerRef,
+  cursorLabel,
+  categoryLabels,
+  categoryFontClass,
+}) {
   const containerRef = useRef(null);
   const stageBackgroundRef = useRef(null);
   const stageLayer2Ref = useRef(null);
@@ -1693,7 +1699,7 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
       <p
         ref={hoverCloseRef}
         aria-hidden="true"
-        className="pointer-events-none absolute left-0 top-0 z-20 font-bodoni text-20 font-normal uppercase leading-normal text-grey-400 opacity-0"
+        className="pointer-events-none absolute left-0 top-0 z-20 font-bodoni text-20 font-normal uppercase leading-normal text-white opacity-0 mix-blend-difference"
       >
         {cursorLabel}
       </p>
@@ -1751,7 +1757,7 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
           top: "calc(50% - 114px)",
           width: "507px",
         }}
-        className="absolute z-10 flex flex-col items-start gap-8 font-bodoni leading-5 text-grey-300 opacity-0 [--viscose-su:calc(100vw/1440)] max-sm:hidden"
+        className={`absolute z-10 flex flex-col items-start gap-8 leading-5 text-grey-300 opacity-0 [--viscose-su:calc(100vw/1440)] max-sm:hidden ${categoryFontClass}`}
       >
         {PROJECTS.slice(0, IMAGE_FILES.length).map((p, i) => (
           <li
@@ -1761,14 +1767,19 @@ export default function Carousel({ onSelect, scrollHandlerRef, cursorLabel }) {
             }}
             className="group relative h-5 aria-[current=true]:text-grey-400"
           >
-            <span className="pointer-events-none absolute right-full top-1/2 mr-1 flex -translate-y-1/2 items-center">
+            <span
+              className="pointer-events-none absolute right-full top-1/2 mr-1 flex -translate-y-1/2 items-center"
+              style={{ marginTop: "1px" }}
+            >
               <span className="block size-3 bg-grey-400 opacity-0 group-aria-[current=true]:opacity-100" />
             </span>
             <FlipHoverButton
-              label={`${String(i + 1).padStart(3, "0")}  ${p.listLabel}`}
+              label={`${String(i + 1).padStart(3, "0")}  ${categoryLabels[i] ?? p.listLabel}`}
               showHoverMark
               groupEntryWords
-              aria-label={`定位到 ${p.listLabel}`}
+              firstTokenClassName="relative top-0.5 font-bodoni"
+              markOffsetY={1}
+              aria-label={categoryLabels[i] ?? p.listLabel}
               onClick={() => categorySelectRef.current?.(i)}
               className="h-5 transition-colors group-hover:text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
             />

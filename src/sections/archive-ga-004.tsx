@@ -18,21 +18,21 @@ import {
   type CardGalleryControls,
 } from "@/components/ui/card-gallery";
 import { ScreenShell } from "@/components/ui/screen-shell";
+import { SurveyDrawer } from "@/components/ui/survey-drawer";
 import { useDissolveHoverFill } from "@/hooks/use-dissolve-hover-fill";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { ARCHIVE_GA_004_CARDS } from "@/lib/archive-ga-003-cards";
-import { SurveyDetails } from "@/sections/survey-details";
 
 gsap.registerPlugin(useGSAP);
 
 /**
  * 第五屏：档案 GA_004《视觉调查档案》
- * 长廊浏览作品；点击任一张卡片进入调查详情，详情顶部上滑返回长廊。
+ * 长廊浏览作品；点击卡片从右侧滑出作品详情抽屉。
  */
 export function ArchiveGa004() {
   const reducedMotion = useReducedMotion();
   const isActive = useScreenActive();
-  const { registerScrollInterceptor, runWithCurtain } = useSectionPager();
+  const { registerScrollInterceptor } = useSectionPager();
   const galleryControlsRef = useRef<CardGalleryControls | null>(null);
   const detailsScrollRef = useRef<((deltaY: number) => boolean) | null>(null);
   const titlesRef = useRef<HTMLDivElement>(null);
@@ -60,7 +60,7 @@ export function ArchiveGa004() {
       createArchiveGa004TitleSweep(design, works, gallery);
     },
     {
-      dependencies: [isActive, reducedMotion, detailsOpen],
+      dependencies: [isActive, reducedMotion],
       revertOnUpdate: true,
     },
   );
@@ -94,32 +94,12 @@ export function ArchiveGa004() {
   }, [isActive]);
 
   const openDetails = useCallback(() => {
-    window.history.pushState({ surveyDetails: true }, "");
-    if (reducedMotion) {
-      setDetailsOpen(true);
-      return;
-    }
-    runWithCurtain(() => setDetailsOpen(true));
-  }, [reducedMotion, runWithCurtain]);
-
-  // 组件内主动返回（如 Escape）：回退历史，由 popstate 统一关闭详情
-  const closeDetails = useCallback(() => {
-    window.history.back();
+    setDetailsOpen(true);
   }, []);
 
-  // 浏览器返回键：从详情退回长廊
-  useEffect(() => {
-    if (!detailsOpen) return;
-    const onPopState = () => {
-      if (reducedMotion) {
-        setDetailsOpen(false);
-        return;
-      }
-      runWithCurtain(() => setDetailsOpen(false));
-    };
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
-  }, [detailsOpen, reducedMotion, runWithCurtain]);
+  const closeDetails = useCallback(() => {
+    setDetailsOpen(false);
+  }, []);
 
   useEffect(() => {
     if (!isActive) return;
@@ -140,53 +120,50 @@ export function ArchiveGa004() {
         detailsOpen ? t("ga004.detailAria") : t("ga004.aria")
       }
     >
-      {detailsOpen ? (
-        <SurveyDetails
-          scrollHandlerRef={detailsScrollRef}
-          onBack={closeDetails}
+      <div
+        ref={titlesRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden text-grey-400"
+      >
+        <div
+          data-title-design
+          className="absolute left-[20px] top-[64px] origin-top-left whitespace-nowrap font-bodoni text-60 uppercase [transform:scale(1.433)]"
+        >
+          {titleWords?.[0] ?? "DESGIN"}
+        </div>
+        <div
+          data-title-works
+          className="absolute bottom-[0px] right-[20px] origin-bottom-right whitespace-nowrap font-bodoni text-60 uppercase [transform:scale(1.433)]"
+        >
+          {titleWords?.[1] ?? "WORKS"}
+        </div>
+      </div>
+      <div ref={galleryWrapRef} className="relative top-[20px] z-10 h-full">
+        <CardGallery
+          cards={ARCHIVE_GA_004_CARDS}
+          reducedMotion={reducedMotion}
+          interactionMode="buttons"
+          controlsRef={galleryControlsRef}
+          onSelect={openDetails}
+          onHoverCard={(card) => setTitleWords(card?.titleWords ?? null)}
         />
-      ) : (
-        <>
-          <div
-            ref={titlesRef}
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-0 overflow-hidden text-grey-400"
-          >
-            <div
-              data-title-design
-              className="absolute left-[20px] top-[64px] origin-top-left whitespace-nowrap font-bodoni text-60 uppercase [transform:scale(1.433)]"
-            >
-              {titleWords?.[0] ?? "DESGIN"}
-            </div>
-            <div
-              data-title-works
-              className="absolute bottom-[0px] right-[20px] origin-bottom-right whitespace-nowrap font-bodoni text-60 uppercase [transform:scale(1.433)]"
-            >
-              {titleWords?.[1] ?? "WORKS"}
-            </div>
-          </div>
-          <div ref={galleryWrapRef} className="relative top-[20px] z-10 h-full">
-            <CardGallery
-              cards={ARCHIVE_GA_004_CARDS}
-              reducedMotion={reducedMotion}
-              interactionMode="buttons"
-              controlsRef={galleryControlsRef}
-              onSelect={openDetails}
-              onHoverCard={(card) => setTitleWords(card?.titleWords ?? null)}
-            />
-            <GalleryNavButton
-              direction="prev"
-              className="left-[20px] top-1/2 -translate-y-1/2"
-              onClick={() => galleryControlsRef.current?.prev()}
-            />
-            <GalleryNavButton
-              direction="next"
-              className="right-[20px] top-1/2 -translate-y-1/2"
-              onClick={() => galleryControlsRef.current?.next()}
-            />
-          </div>
-        </>
-      )}
+        <GalleryNavButton
+          direction="prev"
+          className="left-[20px] top-1/2 -translate-y-1/2"
+          onClick={() => galleryControlsRef.current?.prev()}
+        />
+        <GalleryNavButton
+          direction="next"
+          className="right-[20px] top-1/2 -translate-y-1/2"
+          onClick={() => galleryControlsRef.current?.next()}
+        />
+      </div>
+      <SurveyDrawer
+        open={detailsOpen}
+        initialCode="C"
+        scrollHandlerRef={detailsScrollRef}
+        onClose={closeDetails}
+      />
     </ScreenShell>
   );
 }

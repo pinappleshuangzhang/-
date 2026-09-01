@@ -14,6 +14,7 @@ type ViscoseCarouselProps = {
   scrollHandlerRef: MutableRefObject<
     ((deltaY: number) => boolean) | null
   >;
+  className?: string;
 };
 
 export function ViscoseCarousel({
@@ -22,8 +23,16 @@ export function ViscoseCarousel({
   reducedMotion,
   onSelect,
   scrollHandlerRef,
+  className,
 }: ViscoseCarouselProps) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
+  const categoryLabels = [
+    t("gallery.category.brand"),
+    t("gallery.category.product"),
+    t("gallery.category.website"),
+    t("gallery.category.visual"),
+    t("gallery.category.motion"),
+  ];
 
   if (reducedMotion) {
     return (
@@ -56,11 +65,17 @@ export function ViscoseCarousel({
   if (!active) return null;
 
   return (
-    <div className="absolute inset-0 isolate overflow-hidden">
+    <div
+      className={`absolute inset-0 isolate overflow-hidden ${className ?? ""}`}
+    >
       <Carousel
         onSelect={onSelect}
         scrollHandlerRef={scrollHandlerRef}
         cursorLabel={t("gallery.view")}
+        categoryLabels={categoryLabels}
+        categoryFontClass={
+          locale === "zh" ? "font-serif-sc" : "font-bodoni"
+        }
       />
     </div>
   );

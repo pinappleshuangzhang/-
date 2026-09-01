@@ -21,6 +21,10 @@ type FlipHoverButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   showHoverMark?: boolean;
   /** 为外部入场时间轴按词提供分组，不改变内部逐字 hover 结构 */
   groupEntryWords?: boolean;
+  /** 首个非空白词的字体等样式，出入两层保持一致 */
+  firstTokenClassName?: string;
+  /** hover 方块相对文字中线的垂直微调 */
+  markOffsetY?: number;
   children?: ReactNode;
 };
 
@@ -39,6 +43,8 @@ export const FlipHoverButton = forwardRef<
     disableFlip = false,
     showHoverMark = true,
     groupEntryWords = false,
+    firstTokenClassName,
+    markOffsetY = 0,
     className,
     onMouseEnter,
     onMouseLeave,
@@ -55,6 +61,9 @@ export const FlipHoverButton = forwardRef<
   const outCharsList = Array.from(label);
   const inCharsList = Array.from(hoverLabel ?? label);
   const flipEnabled = !disableFlip && !reducedMotion;
+  const firstTokenLength = Array.from(
+    label.trimStart().split(/\s+/)[0] ?? "",
+  ).length;
   let outCharIndex = 0;
   const outContent = groupEntryWords
     ? label
@@ -81,7 +90,9 @@ export const FlipHoverButton = forwardRef<
             <span
               key={`entry-word-${tokenIndex}-${token}`}
               data-category-entry-word
-              className="inline-flex origin-center"
+              className={`inline-flex origin-center ${
+                tokenIndex === 0 ? (firstTokenClassName ?? "") : ""
+              }`}
             >
               {content}
             </span>
@@ -215,13 +226,16 @@ export const FlipHoverButton = forwardRef<
       <span className="relative inline-block overflow-visible" aria-hidden="true">
         {/* 绝对定位在文字左侧：默认不占位，hover 翻入且文字不位移 */}
         {showHoverMark && (
-          <span className="pointer-events-none absolute right-full top-1/2 mr-0.5 flex -translate-y-1/2 items-center md:mr-1">
+          <span
+            className="pointer-events-none absolute right-full top-1/2 mr-0.5 flex -translate-y-1/2 items-center md:mr-1"
+            style={markOffsetY ? { marginTop: `${markOffsetY}px` } : undefined}
+          >
             <span
               data-flip-mark
               className={
                 flipEnabled
-                  ? "block size-2 origin-center bg-grey-400 will-change-transform md:size-3"
-                  : "block size-2 origin-center bg-grey-400 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 md:size-3"
+                  ? "block size-2 origin-center bg-current will-change-transform md:size-3"
+                  : "block size-2 origin-center bg-current opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 md:size-3"
               }
             />
           </span>
@@ -235,7 +249,9 @@ export const FlipHoverButton = forwardRef<
               <span
                 key={`in-${index}-${char}`}
                 data-flip-in
-                className="inline-block origin-center will-change-transform"
+              className={`inline-block origin-center will-change-transform ${
+                index < firstTokenLength ? (firstTokenClassName ?? "") : ""
+              }`}
               >
                 {char === " " ? "\u00A0" : char}
               </span>

@@ -20,8 +20,11 @@ export const CELL_FADE_WINDOW = 0.12;
 const MAX_CELL_DELAY = 1 - CELL_FADE_WINDOW;
 
 /** 字符网格的目标格宽与格高（px），决定幕布疏密 */
-const CELL_TARGET_W = 5;
-const CELL_TARGET_H = 8;
+const CELL_TARGET_W = 8;
+const CELL_TARGET_H = 12;
+/** 窄屏 / Safari 轻量网格：格更大、格数更少，避免主线程卡死 */
+const LITE_CELL_TARGET_W = 12;
+const LITE_CELL_TARGET_H = 18;
 
 /** 字形相对格高的比例 */
 const GLYPH_SCALE = 0.86;
@@ -171,14 +174,33 @@ function createGlyphAtlas(
 }
 
 /**
+ * Safari / iOS / 窄屏上完整逐格 drawImage 极易卡死主线程，
+ * 导致切屏相位停在 cover、整站无法再滑动。
+ */
+export function prefersLiteCurtain() {
+  if (typeof window === "undefined") return false;
+  if (window.innerWidth < 768) return true;
+  const ua = navigator.userAgent;
+  const isIOS =
+    /iP(hone|ad|od)/i.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (isIOS) return true;
+  // 桌面 Safari（含部分 iPad 桌面模式 UA）
+  const isSafari =
+    /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|Edg|Android/i.test(ua);
+  return isSafari;
+}
+
+/**
  * 按当前视口尺寸建立幕布网格，并把 canvas 缩放到设备像素比。
  * 颜色取自 CSS 变量，保证幕布配色跟随设计令牌而非写死在脚本里。
  */
 export function createCurtainGrid(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
+  { lite = false }: { lite?: boolean } = {},
 ): CurtainGrid {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, lite ? 1.5 : 2);
   const width = window.innerWidth;
   const height = window.innerHeight;
 
@@ -186,8 +208,10 @@ export function createCurtainGrid(
   canvas.height = Math.round(height * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const cols = Math.max(1, Math.round(width / CELL_TARGET_W));
-  const rows = Math.max(1, Math.round(height / CELL_TARGET_H));
+  const targetW = lite ? LITE_CELL_TARGET_W : CELL_TARGET_W;
+  const targetH = lite ? LITE_CELL_TARGET_H : CELL_TARGET_H;
+  const cols = Math.max(1, Math.round(width / targetW));
+  const rows = Math.max(1, Math.round(height / targetH));
   const cellW = width / cols;
   const cellH = height / rows;
 

@@ -314,13 +314,13 @@ export function ArchiveIntro() {
         >
           <p
             data-title-what-is
-            className="absolute left-[3.0769%] top-[21.6825%] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[7.2917%] md:top-[calc(50%+228px)] md:text-100 md:leading-[125px]"
+            className="absolute left-[3.0769%] top-[21.6825%] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[calc(50%-615px)] md:top-[calc(50%-244px)] md:text-100 md:leading-[125px]"
           >
             WHAT IS
           </p>
           <p
             data-title-gravity
-            className="absolute left-[46.9231%] top-[68.365%] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[63.4028%] md:top-[calc(50%+176px)] md:text-100 md:leading-[125px]"
+            className="absolute left-[46.9231%] top-[68.365%] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[calc(50%+193px)] md:top-[calc(50%+176px)] md:text-100 md:leading-[125px]"
           >
             GRAVITY
           </p>
@@ -362,7 +362,7 @@ export function ArchiveIntro() {
           )}
 
           {/* 卡片内文字：移动端 Figma 701:201/202 = 14px、左 67、顶 368 */}
-          <div className="absolute left-[8.65%] top-[35.2%] w-[49.4%] md:left-[52px] md:top-[35.7%] md:w-[55%]">
+          <div className="absolute left-[3.5256%] top-[35.2%] w-[49.4%] md:left-[36px] md:top-[35.7%] md:w-[55%]">
             <div className="relative">
               <div data-swap-a className="flex flex-col gap-3 md:gap-[1em]">
                 <div className="font-serif-sc text-14 font-normal leading-[20px] text-grey-200 md:text-[1.5em] md:leading-normal">
@@ -376,7 +376,7 @@ export function ArchiveIntro() {
               </div>
               <div
                 data-swap-b
-                className="absolute left-0 top-[-11px] flex w-[124.6%] flex-col gap-3 md:inset-x-0 md:top-0 md:w-auto md:gap-[1em]"
+                className="absolute left-0 top-[-11px] flex w-[124.6%] flex-col gap-3 md:inset-x-0 md:top-[-10px] md:w-auto md:gap-[1em]"
               >
                 <div className="font-serif-sc text-14 font-normal leading-[20px] text-grey-200 md:text-[1.5em] md:leading-normal">
                   <ScrubText text={t("intro.bridge")} />
