@@ -119,14 +119,27 @@ export default function Carousel({
     // appended and the page is simply blank, which is a miserable thing to
     // debug. Fail loudly instead. See the cleanup for why it should not
     // happen: the context is released explicitly rather than left to GC.
+    // Safari's Metal-backed WebGL chokes on this full-screen SDF fragment
+    // shader (per-pixel loops over 32 planes + 32 links). Drop MSAA there —
+    // the shader does its own edge softening — and halve the pixel ratio,
+    // which cuts fragment work to roughly a quarter.
+    const isSafari =
+      /safari/i.test(navigator.userAgent) &&
+      !/chrome|chromium|crios|edg|android/i.test(navigator.userAgent);
     let renderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer = new THREE.WebGLRenderer({
+        antialias: !isSafari,
+        alpha: true,
+        powerPreference: "high-performance",
+      });
     } catch (err) {
       console.error("[ring] could not create a WebGL context:", err);
       return;
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(
+      isSafari ? 1 : Math.min(window.devicePixelRatio, 2),
+    );
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
