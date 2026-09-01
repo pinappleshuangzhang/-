@@ -19,7 +19,7 @@ import type { MessageKey } from "@/lib/i18n/messages";
 import type { NavVariant } from "@/lib/nav-variants";
 import type { SectionBackgroundKey } from "@/lib/section-backgrounds";
 
-/** 滚轮增量低于该值视为误触，不触发切屏 */
+/** 滚轮累计阈值（换算为像素后）；过低易误触，过高则 Safari 行模式/短手势切不动 */
 const WHEEL_THRESHOLD = 8;
 /** 触摸滑动超过该距离（px）才切屏 */
 const TOUCH_THRESHOLD = 48;
@@ -27,6 +27,17 @@ const TOUCH_THRESHOLD = 48;
 const NAVIGATION_COOLDOWN_MS = 400;
 /** 首屏序幕的兜底解锁时限，防止序幕异常导致全站卡死 */
 const LOCK_SAFETY_TIMEOUT_MS = 15000;
+/** 幕布相位卡死兜底：cover/reveal 超时强制回到 idle */
+const PHASE_SAFETY_TIMEOUT_MS = 2500;
+/** 诊断开关：需要排查切屏时置 true，Safari 控制台过滤 WHEEL / PAGER */
+const DEBUG_SECTION_PAGER = false;
+
+/** 与 Lenis 一致：把 deltaMode 行/页换算成近似像素，避免 Safari 行模式永远累计不够 */
+function normalizeWheelDeltaY(event: WheelEvent) {
+  if (event.deltaMode === 1) return event.deltaY * (100 / 6);
+  if (event.deltaMode === 2) return event.deltaY * window.innerHeight;
+  return event.deltaY;
+}
 
 export type PagerScreen = {
   key: string;
@@ -116,6 +127,14 @@ export function SectionPagerProvider({
   useEffect(() => {
     countRef.current = screens.length;
   }, [screens.length]);
+
+  useEffect(() => {
+    indexRef.current = index;
+  }, [index]);
+
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
   const setNavigationLocked = useCallback((locked: boolean) => {
     lockedRef.current = locked;
@@ -232,6 +251,24 @@ export function SectionPagerProvider({
     return () => window.clearTimeout(timer);
   }, []);
 
+  // 幕布相位卡死兜底（Safari Canvas/ticker 异常时 cover 永不结束）
+  useEffect(() => {
+    if (phase === "idle") return;
+    const timer = window.setTimeout(() => {
+      if (DEBUG_SECTION_PAGER) {
+        console.warn("PAGER phase safety unlock", phaseRef.current);
+      }
+      if (phaseRef.current === "cover") {
+        handleCoverComplete();
+        return;
+      }
+      if (phaseRef.current === "reveal") {
+        handleRevealComplete();
+      }
+    }, PHASE_SAFETY_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+  }, [phase, handleCoverComplete, handleRevealComplete]);
+
   // 分页模式下页面本身不滚动；Safari 需额外 fixed 锁，单靠 overflow:hidden 不够
   useEffect(() => {
     const html = document.documentElement;
@@ -269,7 +306,7 @@ export function SectionPagerProvider({
   }, []);
 
   useEffect(() => {
-    const WHEEL_ACCUM_RESET_MS = 160;
+    const WHEEL_ACCUM_RESET_MS = 200;
     let wheelAccum = 0;
     let wheelResetTimer = 0;
     // 同一手势可能同时触发 touch 与 pointer，短暂互斥避免连翻两屏
@@ -278,12 +315,33 @@ export function SectionPagerProvider({
     const onWheel = (event: WheelEvent) => {
       // 始终吃掉滚轮，避免锁定期间浏览器仍做原生滚动
       event.preventDefault();
-      // Safari 触控板常发很小的 deltaY，需累计后才切屏
-      wheelAccum += event.deltaY;
+      const normalized = normalizeWheelDeltaY(event);
+      // Safari 触控板/鼠标常发很小的 delta 或 deltaMode=行；需换算后累计
+      wheelAccum += normalized;
       window.clearTimeout(wheelResetTimer);
       wheelResetTimer = window.setTimeout(() => {
         wheelAccum = 0;
       }, WHEEL_ACCUM_RESET_MS);
+
+      if (DEBUG_SECTION_PAGER) {
+        // 临时诊断：Safari 控制台过滤 WHEEL
+        console.warn(
+          "WHEEL",
+          event.deltaY,
+          event.deltaMode,
+          "norm",
+          normalized,
+          "accum",
+          wheelAccum,
+          "page",
+          indexRef.current,
+          "phase",
+          phaseRef.current,
+          "locked",
+          lockedRef.current,
+        );
+      }
+
       if (Math.abs(wheelAccum) < WHEEL_THRESHOLD) return;
       const delta = wheelAccum;
       wheelAccum = 0;
@@ -446,7 +504,8 @@ export function SectionPagerProvider({
       commitSwipe(travelled);
     };
 
-    window.addEventListener("wheel", onWheel, { passive: false });
+    // Safari：capture 阶段挂在 document，避免部分版本 window 冒泡收不到 wheel
+    document.addEventListener("wheel", onWheel, { passive: false, capture: true });
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
@@ -459,7 +518,9 @@ export function SectionPagerProvider({
 
     return () => {
       window.clearTimeout(wheelResetTimer);
-      window.removeEventListener("wheel", onWheel);
+      document.removeEventListener("wheel", onWheel, {
+        capture: true,
+      } as EventListenerOptions);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);

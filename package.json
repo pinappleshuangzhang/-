@@ -2,6 +2,12 @@
   "name": "gravity-site",
   "version": "0.1.0",
   "private": true,
+  "browserslist": [
+    "chrome >= 100",
+    "safari >= 15",
+    "firefox >= 100",
+    "edge >= 100"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

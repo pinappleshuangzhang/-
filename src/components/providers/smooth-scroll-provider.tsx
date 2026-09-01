@@ -36,8 +36,9 @@ function LenisGsapBridge() {
 
     const sync = () => {
       if (document.documentElement.hasAttribute("data-section-pager")) {
+        // stop 之后 scrollTo 默认会被忽略，需 force；先归零再停止
+        lenis.scrollTo(0, { immediate: true, force: true });
         lenis.stop();
-        lenis.scrollTo(0, { immediate: true });
       } else {
         lenis.start();
       }
