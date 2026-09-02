@@ -9,7 +9,6 @@ import {
   type ArchiveIndexItem,
 } from "@/lib/archive-index-items";
 import { useLocale } from "@/components/providers/locale-provider";
-import { useDissolveHoverFill } from "@/hooks/use-dissolve-hover-fill";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import binderImg from "../../../public/archive-index/binder.webp";
 import bgImg from "../../../public/archive-index/bg.webp";
@@ -213,7 +212,8 @@ export function ArchiveIndex({
             className="pointer-events-auto absolute left-[23.38%] top-[34.32%] -rotate-[1.32deg]"
             onClick={(event) => event.stopPropagation()}
           >
-            <ul className="flex w-[calc(var(--su)*267)] flex-col gap-[calc(var(--su)*20)]">
+            {/* 每行按内容宽度收紧，标题单行不换行，高亮黑条与箭头紧贴文字 */}
+            <ul className="flex w-max flex-col gap-[calc(var(--su)*20)]">
               {ARCHIVE_INDEX_ITEMS.map((item) => (
                 <li key={item.code}>
                   <IndexMenuItem
@@ -252,11 +252,6 @@ type IndexMenuItemProps = {
 function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
   const available = item.screenKey !== null;
   const { t } = useLocale();
-  const {
-    fillRef,
-    onMouseEnter: onDissolveEnter,
-    onMouseLeave: onDissolveLeave,
-  } = useDissolveHoverFill();
   const title = t(item.titleKey);
 
   const rowText =
@@ -271,7 +266,9 @@ function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
         <span className="shrink-0 font-bodoni font-normal capitalize">
           ( {item.code} )
         </span>
-        <span className="font-serif-sc font-light uppercase">{title}</span>
+        <span className="whitespace-nowrap font-serif-sc font-light uppercase">
+          {title}
+        </span>
       </div>
     );
   }
@@ -281,51 +278,35 @@ function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
       type="button"
       onClick={() => onSelect(item.screenKey!)}
       aria-current={active ? "page" : undefined}
-      onMouseEnter={() => {
-        if (!active) onDissolveEnter();
-      }}
-      onMouseLeave={() => {
-        if (!active) onDissolveLeave();
-      }}
-      onFocus={() => {
-        if (!active) onDissolveEnter();
-      }}
-      onBlur={() => {
-        if (!active) onDissolveLeave();
-      }}
-      className={`group relative flex w-full items-center justify-between overflow-hidden rounded-rs-4 focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${rowText} ${
+      className={`group relative flex w-max items-center rounded-rs-4 focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${rowText} ${
         active
           ? "bg-grey-400 text-white"
-          : "text-grey-300 transition-colors duration-[600ms] hover:text-white focus-visible:text-white motion-reduce:transition-none"
+          : "text-grey-300 transition-colors duration-[600ms] hover:text-grey-400 focus-visible:text-grey-400 motion-reduce:transition-none"
       }`}
     >
-      {!active && (
-        <div
-          ref={fillRef}
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[inherit] bg-grey-400 opacity-0"
-        />
-      )}
-      <span className="relative z-10 flex items-center gap-[calc(var(--su)*16)]">
+      <span className="flex items-center gap-[calc(var(--su)*16)]">
         <span className="shrink-0 font-bodoni font-normal capitalize">
           ( {item.code} )
         </span>
-        <span className="font-serif-sc font-light uppercase">{title}</span>
+        <span className="whitespace-nowrap font-serif-sc font-light uppercase">
+          {title}
+        </span>
       </span>
       <span
         aria-hidden="true"
-        className={`relative z-10 inline-flex size-[calc(var(--su)*24)] shrink-0 items-center justify-center transition-opacity duration-[600ms] motion-reduce:transition-none ${
+        className={`inline-flex size-[calc(var(--su)*24)] shrink-0 items-center justify-center transition-opacity duration-[600ms] motion-reduce:transition-none ${
           active
             ? "opacity-100"
             : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
         }`}
       >
+        {/* 素材是白色箭头：非选中行反相成黑色，与 hover 后的黑色文字一致 */}
         <Image
           src="/archive-index/arrow.png"
           alt=""
           width={48}
           height={48}
-          className="size-full shrink-0 object-contain"
+          className={`size-full shrink-0 object-contain ${active ? "" : "invert"}`}
         />
       </span>
     </button>
