@@ -266,7 +266,7 @@ function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
         <span className="shrink-0 font-bodoni font-normal capitalize">
           ( {item.code} )
         </span>
-        <span className="whitespace-nowrap font-serif-sc font-light uppercase">
+        <span className="whitespace-nowrap font-serif-sc font-light">
           {title}
         </span>
       </div>
@@ -288,7 +288,7 @@ function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
         <span className="shrink-0 font-bodoni font-normal capitalize">
           ( {item.code} )
         </span>
-        <span className="whitespace-nowrap font-serif-sc font-light uppercase">
+        <span className="whitespace-nowrap font-serif-sc font-light">
           {title}
         </span>
       </span>
