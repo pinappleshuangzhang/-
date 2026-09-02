@@ -83,8 +83,9 @@ type SectionPagerValue = {
   /**
    * 不切换屏幕，但走一次完整的幕布过场：
    * 幕布铺满视口时执行 onCovered（如重置首屏序幕），随后幕布消散。
+   * 幕布正忙或处于切屏冷却期时返回 false，调用方可自行兜底。
    */
-  runWithCurtain: (onCovered: () => void) => void;
+  runWithCurtain: (onCovered: () => void) => boolean;
   /** 注册“已在第一屏仍继续向上滑”的处理器（如重播首屏序幕），返回注销函数 */
   registerTopOverscroll: (handler: () => void) => () => void;
   /**
@@ -208,12 +209,13 @@ export function SectionPagerProvider({
   }, []);
 
   const runWithCurtain = useCallback((onCovered: () => void) => {
-    if (phaseRef.current !== "idle") return;
-    if (performance.now() < cooldownUntilRef.current) return;
+    if (phaseRef.current !== "idle") return false;
+    if (performance.now() < cooldownUntilRef.current) return false;
 
     pendingActionRef.current = onCovered;
     phaseRef.current = "cover";
     setPhase("cover");
+    return true;
   }, []);
 
   /** 切屏前先询问屏内拦截器，被消费则不切屏 */

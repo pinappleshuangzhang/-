@@ -21,8 +21,13 @@ const SCREEN_INDEX_BY_KEY: Record<string, number> = {
  * 导航覆盖所有分屏；目录打开时切换为 index 变体。
  */
 export function PageChrome() {
-  const { navVariant, index, goToScreen, registerScrollInterceptor } =
-    useSectionPager();
+  const {
+    navVariant,
+    index,
+    goToScreen,
+    runWithCurtain,
+    registerScrollInterceptor,
+  } = useSectionPager();
   const [indexOpen, setIndexOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -31,6 +36,12 @@ export function PageChrome() {
     if (!indexOpen) return;
     return registerScrollInterceptor(() => true);
   }, [indexOpen, registerScrollInterceptor]);
+
+  // 目录展开走一次幕布；幕布正忙时直接展开，避免点击落空
+  const handleOpenIndex = useCallback(() => {
+    const open = () => setIndexOpen(true);
+    if (!runWithCurtain(open)) open();
+  }, [runWithCurtain]);
 
   // 目录收起延到幕布铺满时执行，避免列表先凭空消失再走过场
   const handleSelect = useCallback(
@@ -50,7 +61,7 @@ export function PageChrome() {
       <SiteNav
         variant={indexOpen ? "index" : "default"}
         navVariant={navVariant}
-        onOpenIndex={() => setIndexOpen(true)}
+        onOpenIndex={handleOpenIndex}
         onCloseIndex={() => setIndexOpen(false)}
         onContact={() => {
           setIndexOpen(false);
