@@ -74,7 +74,8 @@ type SectionPagerValue = {
   navVariant: NavVariant;
   /** 首屏序幕等场景是否锁定切屏（锁定时隐藏切屏提示） */
   navigationLocked: boolean;
-  goToScreen: (index: number) => void;
+  /** onCovered 在幕布铺满时执行，用于把关闭覆盖层等动作藏在幕布后面 */
+  goToScreen: (index: number, onCovered?: () => void) => void;
   goToNextScreen: () => void;
   goToPrevScreen: () => void;
   /** 首屏序幕等场景下暂时禁止切屏 */
@@ -186,7 +187,7 @@ export function SectionPagerProvider({
   );
 
   // 相位与索引同步写入 ref：事件回调据此判定，不必等 React 提交
-  const goToScreen = useCallback((next: number) => {
+  const goToScreen = useCallback((next: number, onCovered?: () => void) => {
     if (lockedRef.current) return;
     if (phaseRef.current !== "idle") return;
     if (performance.now() < cooldownUntilRef.current) return;
@@ -201,6 +202,7 @@ export function SectionPagerProvider({
     if (target === indexRef.current) return;
 
     pendingIndexRef.current = target;
+    if (onCovered) pendingActionRef.current = onCovered;
     phaseRef.current = "cover";
     setPhase("cover");
   }, []);

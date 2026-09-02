@@ -32,12 +32,15 @@ export function PageChrome() {
     return registerScrollInterceptor(() => true);
   }, [indexOpen, registerScrollInterceptor]);
 
+  // 目录收起延到幕布铺满时执行，避免列表先凭空消失再走过场
   const handleSelect = useCallback(
     (screenKey: string) => {
-      setIndexOpen(false);
       const target = SCREEN_INDEX_BY_KEY[screenKey];
-      if (target === undefined || target === index) return;
-      goToScreen(target);
+      if (target === undefined || target === index) {
+        setIndexOpen(false);
+        return;
+      }
+      goToScreen(target, () => setIndexOpen(false));
     },
     [goToScreen, index],
   );
