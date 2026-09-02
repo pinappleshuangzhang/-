@@ -4,9 +4,7 @@ import Image from "next/image";
 import { SpotlightReveal } from "@/components/effects/spotlight-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
-import { SectionBackground } from "@/components/ui/section-background";
 import { SplitWords } from "@/components/ui/split-words";
-import { SECTION_BACKGROUNDS } from "@/lib/section-backgrounds";
 import contactEmbossedBgImg from "../../public/contact/contact-embossed-bg.webp";
 
 /**
@@ -27,26 +25,6 @@ export function Contact() {
         <ContactLayout heading="h1" animated />
       </div>
     </ScreenShell>
-  );
-}
-
-/** 嵌在作品详情底部的整屏联系区块：自带联系页背景，不依赖分屏共享层。 */
-export function ContactEmbed() {
-  const { t } = useLocale();
-  const background = SECTION_BACKGROUNDS.contact;
-
-  return (
-    <section
-      aria-label={t("contact.aria")}
-      className={`relative min-h-full overflow-hidden ${background.fallbackClassName}`}
-    >
-      <SectionBackground
-        src={background.src}
-        imageClassName={background.imageClassName}
-        unoptimized={background.unoptimized}
-      />
-      <ContactLayout heading="h2" />
-    </section>
   );
 }
 

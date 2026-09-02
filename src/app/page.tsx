@@ -27,7 +27,6 @@ const SCREENS: PagerScreen[] = [
     titleKey: "screen.ga001",
     node: <ArchiveIntro />,
   },
-  // 原《组织记录》铭牌屏（OrgRecord）暂时下线，成立屏顶替为第三屏
   {
     key: "archive-ga-002",
     navVariant: "archive-ga-002",
