@@ -1,55 +1,23 @@
 "use client";
 
-import { useRef } from "react";
 import Image from "next/image";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import {
-  playSondavenReveal,
-  setSondavenHidden,
-  setSondavenVisible,
-} from "@/animations/sondaven-reveal";
 import { SpotlightReveal } from "@/components/effects/spotlight-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
-import { useScreenActive } from "@/components/providers/section-pager-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { SectionBackground } from "@/components/ui/section-background";
-import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { SplitWords } from "@/components/ui/split-words";
 import { SECTION_BACKGROUNDS } from "@/lib/section-backgrounds";
 import contactEmbossedBgImg from "../../public/contact/contact-embossed-bg.webp";
-
-gsap.registerPlugin(useGSAP);
 
 /**
  * 最后一屏：GA_ARCHIVE_006《开启一份新调查》。
  * 背景由共享背景层提供，这里只承载联系 CTA 与工作室信息。
  */
 export function Contact() {
-  const container = useRef<HTMLElement>(null);
-  const isActive = useScreenActive();
-  const reducedMotion = useReducedMotion();
-  const { locale, t } = useLocale();
-
-  useGSAP(
-    () => {
-      const root = container.current;
-      if (!root) return;
-
-      if (reducedMotion) {
-        setSondavenVisible(root);
-        return;
-      }
-      if (!isActive) {
-        setSondavenHidden(root);
-        return;
-      }
-      playSondavenReveal(root);
-    },
-    { dependencies: [isActive, reducedMotion, locale], scope: container },
-  );
+  const { t } = useLocale();
 
   return (
-    <ScreenShell ref={container} aria-label={t("contact.aria")}>
+    <ScreenShell aria-label={t("contact.aria")}>
       <SpotlightReveal
         src={contactEmbossedBgImg}
         autoMove
@@ -101,13 +69,15 @@ function ContactLayout({
         aria-label={t("contact.cta")}
         className={`absolute left-5 top-[133px] text-48 font-normal uppercase leading-[68px] text-grey-400 ${titleFont}`}
       >
-        <SplitChars text={t("contact.cta")} animated={animated} />
+        <SplitWords text={t("contact.cta")} animated={animated} />
       </Title>
 
       <a
         href="mailto:shuangzhang@fintopia.tech"
         aria-label={`${t("contact.button")}：shuangzhang@fintopia.tech`}
-        className="group absolute left-5 top-[204px] h-[69px] w-[325px] overflow-hidden text-left focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
+        className={`group absolute left-5 top-[204px] h-[69px] overflow-hidden text-left focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${
+          locale === "en" ? "w-[410px]" : "w-[325px]"
+        }`}
       >
         <span
           aria-hidden="true"
@@ -117,6 +87,8 @@ function ContactLayout({
           label={t("contact.button")}
           arrowSrc="/contact/contact-arrow-white.png"
           className="text-white"
+          fontClassName={titleFont}
+          positionClassName={locale === "en" ? "left-0 top-1" : undefined}
           animated={animated}
         />
       </a>
@@ -126,7 +98,7 @@ function ContactLayout({
           label={t("contact.addressLabel")}
           value={t("contact.address")}
           className="col-start-1 w-[180px]"
-          valueClassName="text-16 leading-6"
+          valueClassName="whitespace-nowrap text-16 leading-6"
           animated={animated}
         />
         <ContactFact
@@ -151,6 +123,7 @@ type ContactButtonContentProps = {
   label: string;
   arrowSrc: string;
   className: string;
+  fontClassName: string;
   positionClassName?: string;
   animated?: boolean;
 };
@@ -159,6 +132,7 @@ function ContactButtonContent({
   label,
   arrowSrc,
   className,
+  fontClassName,
   positionClassName = "left-0 top-0",
   animated = false,
 }: ContactButtonContentProps) {
@@ -167,10 +141,10 @@ function ContactButtonContent({
       data-sd-words={animated ? "" : undefined}
       data-sd-delay={animated ? "0.35" : undefined}
       aria-label={label}
-      className={`absolute flex h-[69px] items-center gap-1.5 whitespace-nowrap font-serif-sc text-48 font-normal uppercase leading-[68px] ${positionClassName} ${className}`}
+      className={`absolute flex h-[69px] items-center gap-1.5 whitespace-nowrap text-48 font-normal uppercase leading-[68px] ${fontClassName} ${positionClassName} ${className}`}
     >
       <span>
-        <SplitChars text={label} animated={animated} />
+        <SplitWords text={label} animated={animated} />
       </span>
       <ContactArrow src={arrowSrc} />
     </span>
@@ -182,7 +156,10 @@ function ContactArrow({ src }: { src: string }) {
     "transition-transform duration-500 ease-out motion-reduce:transition-none";
 
   return (
-    <span aria-hidden="true" className="relative block size-[51px] overflow-hidden">
+    <span
+      aria-hidden="true"
+      className="relative block size-[51px] shrink-0 overflow-hidden"
+    >
       <Image
         src={src}
         alt=""
@@ -226,7 +203,7 @@ function ContactFact({
           data-sd-delay={animated ? "0.5" : undefined}
           aria-label={label}
         >
-          <SplitChars text={label} animated={animated} />
+          <SplitWords text={label} animated={animated} />
         </span>
       </dt>
       <dd
@@ -239,28 +216,8 @@ function ContactFact({
             : "text-grey-400"
         }`}
       >
-        <SplitChars text={value} animated={animated} />
+        <SplitWords text={value} animated={animated} />
       </dd>
     </div>
-  );
-}
-
-function SplitChars({ text, animated }: { text: string; animated: boolean }) {
-  return (
-    <>
-      {Array.from(text).map((char, index) =>
-        char === " " ? (
-          "\u00A0"
-        ) : (
-          <span
-            key={`${char}-${index}`}
-            aria-hidden="true"
-            className={`sd-word inline-block ${animated ? "opacity-0" : ""}`}
-          >
-            {char}
-          </span>
-        ),
-      )}
-    </>
   );
 }

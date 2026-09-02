@@ -5,8 +5,10 @@ import gsap from "gsap";
 import { MEMBER_RECORD_HOVER_REVEAL_DURATION } from "@/animations/member-record-reveal";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import {
-  createDissolveMaskFrames,
-  setElementMask,
+  clearElementMask,
+  createDissolveMaskSprite,
+  setSpriteMaskFrame,
+  type DissolveMaskSprite,
 } from "@/lib/dissolve-mask";
 
 /**
@@ -20,9 +22,12 @@ const MIN_MASK_ROWS = 6;
 const MAX_MASK_COLS = 160;
 const MAX_MASK_ROWS = 48;
 
-const navDissolveFrameCache = new Map<string, string[]>();
+const navDissolveSpriteCache = new Map<string, DissolveMaskSprite | null>();
 
-function getNavDissolveFrames(width: number, height: number): string[] {
+function getNavDissolveSprite(
+  width: number,
+  height: number,
+): DissolveMaskSprite | null {
   const cols = Math.min(
     MAX_MASK_COLS,
     Math.max(MIN_MASK_COLS, Math.round(width / TARGET_CELL_PX)),
@@ -32,11 +37,11 @@ function getNavDissolveFrames(width: number, height: number): string[] {
     Math.max(MIN_MASK_ROWS, Math.round(height / TARGET_CELL_PX)),
   );
   const key = `${cols}x${rows}`;
-  const cached = navDissolveFrameCache.get(key);
-  if (cached) return cached;
-  const frames = createDissolveMaskFrames(cols, rows, NAV_MASK_FRAME_COUNT);
-  navDissolveFrameCache.set(key, frames);
-  return frames;
+  const cached = navDissolveSpriteCache.get(key);
+  if (cached !== undefined) return cached;
+  const sprite = createDissolveMaskSprite(cols, rows, NAV_MASK_FRAME_COUNT);
+  navDissolveSpriteCache.set(key, sprite);
+  return sprite;
 }
 
 /**
@@ -66,39 +71,38 @@ export function useDissolveHoverFill({
     proxy.frame = initiallyVisible ? NAV_MASK_FRAME_COUNT - 1 : 0;
     if (!fill) return;
     fill.style.opacity = initiallyVisible ? "1" : "0";
-    setElementMask(fill, null);
+    clearElementMask(fill);
   }, [initiallyVisible]);
 
   const animate = useCallback(
     (entering: boolean) => {
       const fill = fillRef.current;
       if (!fill) return;
-      const frames = getNavDissolveFrames(
+      const sprite = getNavDissolveSprite(
         fill.offsetWidth,
         fill.offsetHeight,
       );
-      if (reducedMotion || frames.length === 0) {
+      if (reducedMotion || !sprite) {
         fill.style.opacity = entering ? "1" : "0";
-        setElementMask(fill, null);
+        clearElementMask(fill);
         return;
       }
       const proxy = proxyRef.current;
       gsap.killTweensOf(proxy);
       fill.style.opacity = "1";
       gsap.to(proxy, {
-        frame: entering ? frames.length - 1 : 0,
+        frame: entering ? sprite.frameCount - 1 : 0,
         duration: MEMBER_RECORD_HOVER_REVEAL_DURATION,
         ease: "none",
         onUpdate: () => {
-          const frame = frames[Math.round(proxy.frame)];
-          if (frame) setElementMask(fill, frame);
+          setSpriteMaskFrame(fill, sprite, Math.round(proxy.frame));
         },
         onComplete: () => {
           if (entering) {
-            setElementMask(fill, null);
+            clearElementMask(fill);
           } else {
             fill.style.opacity = "0";
-            setElementMask(fill, null);
+            clearElementMask(fill);
           }
         },
       });

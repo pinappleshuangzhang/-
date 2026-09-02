@@ -23,7 +23,7 @@ type SpotlightRevealProps = {
 
 /** WebGL 不可用时的 CSS 蒙版兜底（无水波，仅羽化光圈） */
 const FALLBACK_GRADIENT =
-  "radial-gradient(circle calc(var(--spot-r)*1px) at calc(var(--spot-x)*1px) calc(var(--spot-y)*1px), #000 70%, transparent 100%)";
+  "radial-gradient(circle calc(var(--spot-r)*1px) at calc(var(--spot-x)*1px) calc(var(--spot-y)*1px), #000 70%, rgba(0,0,0,0) 100%)";
 
 /**
  * 水波聚光揭示层：鼠标设备首进全隐藏，移动鼠标后光标周围一圈显现图片；
@@ -258,7 +258,10 @@ export function SpotlightReveal({
         />
       </div>
       {/* 水波聚光画布：与图片同尺寸叠放 */}
-      <canvas ref={canvasRef} className="absolute inset-0 size-full" />
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 size-full bg-transparent outline-none"
+      />
     </div>
   );
 }

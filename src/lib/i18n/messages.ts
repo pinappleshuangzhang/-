@@ -60,6 +60,14 @@ export type MessageKey =
   | "member.investigator"
   | "member.namePrefix"
   | "member.direction"
+  | "member.role01"
+  | "member.role02"
+  | "member.role03"
+  | "member.role04"
+  | "member.direction01"
+  | "member.direction02"
+  | "member.direction03"
+  | "member.direction04"
   | "member.portfolio"
   | "member.contactMe"
   | "gallery.list"
@@ -84,7 +92,10 @@ export type MessageKey =
   | "survey.description"
   | "survey.heroAlt"
   | "survey.heroPreview"
-  | "survey.billboardAlt"
+  | "survey.media2Alt"
+  | "survey.media3Alt"
+  | "survey.media4Alt"
+  | "survey.media5Alt"
   | "survey.emptyWork"
   | "ga005.aria"
   | "ga005.imageAlt"
@@ -159,6 +170,14 @@ const zh: Messages = {
   "member.investigator": "调查员",
   "member.namePrefix": "姓名_",
   "member.direction": "调查方向_产品与用户体验",
+  "member.role01": "连接者",
+  "member.role02": "定向者",
+  "member.role03": "构建者",
+  "member.role04": "探索者",
+  "member.direction01": "调查方向_建立人与产品、人与体验的连接",
+  "member.direction02": "调查方向_信息判断，找寻探索方向",
+  "member.direction03": "调查方向_抽象概念，建立完整系统",
+  "member.direction04": "调查方向_不断尝试新的视觉表达与创意可能",
   "member.portfolio": "个人作品站",
   "member.contactMe": "联系我",
   "gallery.list": "档案卡片列表",
@@ -187,8 +206,14 @@ const zh: Messages = {
   "survey.heroAlt":
     "Design AI Ops 网站首屏：Brand Creativity、Website Design、Material Collection，中央为 Design AI Ops The Apple Moment，底部为作品缩略图",
   "survey.heroPreview": "悬停或聚焦时播放预览视频",
-  "survey.billboardAlt":
-    "展厅中的黑色大理石数字屏幕，展示 AI Ops 创世纪主题视觉",
+  "survey.media2Alt":
+    "亚当与上帝指尖之间悬浮青苹果，左上角为 The Apple Moment",
+  "survey.media3Alt":
+    "女性侧脸将咬下青苹果，蛇缠绕手腕，左上角写当人咬下苹果关系开始改变",
+  "survey.media4Alt":
+    "男子面容被青苹果遮住，左上角写当苹果出现在画面中世界的结构被重新观看",
+  "survey.media5Alt":
+    "身着文艺复兴服饰的男子在笔记本前沉思，电脑上的苹果标志发出绿光",
   "survey.emptyWork": "该类型暂无作品",
   "ga005.aria": "档案 GA_005 视觉探索记录",
   "ga005.imageAlt": "三张铺在浅色桌面上的空白视觉探索卡片",
@@ -205,8 +230,8 @@ const zh: Messages = {
 
 const en: Messages = {
   "nav.contact": "Contact Us",
-  "nav.openIndex": "Open archive index",
-  "nav.closeIndex": "Close archive index",
+  "nav.openIndex": "Open Archive Index",
+  "nav.closeIndex": "Close Archive Index",
   "nav.language": "Language",
   "nav.index": "Index",
   "nav.close": "Close",
@@ -216,92 +241,105 @@ const en: Messages = {
   "nav.title.ga003": "Member Record",
   "nav.title.ga004": "Visual Survey Archive",
   "nav.title.ga005": "Visual Exploration Record",
-  "nav.title.contact": "Start a New Survey",
+  "nav.title.contact": "Start A New Survey",
   "screen.studio": "Universal Gravity Design Archive",
   "screen.ga001": "Archive GA_001 What Is Gravity?",
   "screen.ga002": "Archive GA_002 Organization Record",
   "screen.ga003": "Archive GA_003 Member Record",
   "screen.ga004": "Archive GA_004 Visual Survey Archive",
   "screen.ga005": "Archive GA_005 Visual Exploration Record",
-  "screen.contact": "Archive GA_006 Start a New Survey",
+  "screen.contact": "Archive GA_006 Start A New Survey",
   "index.heading": "Archive Index",
-  "index.nav": "Archive index",
+  "index.nav": "Archive Index",
   "index.ga001": "What Is Gravity?",
   "index.ga002": "Organization Record",
   "index.ga003": "Member Record",
   "index.ga004": "Visual Survey Archive",
   "index.ga005": "Visual Exploration Record",
-  "index.ga006": "Start a New Survey",
-  "hero.title": "Universal Gravity Design Archive",
-  "hero.subtitle":
-    "Follow the design survey records to complete this exploration of gravity",
-  "intro.line1": "We keep seeing the same pattern",
-  "intro.line2a": "Some brands are remembered",
-  "intro.line2b": "Some products are chosen",
-  "intro.line2c": "Some designs are trusted",
+  "index.ga006": "Start A New Survey",
+  "hero.title": "Grava Design Archive",
+  "hero.subtitle": "Follow The Design Log As We Explore Gravity Together",
+  "intro.line1": "One Pattern Repeats",
+  "intro.line2a": "Some Brands Stick,",
+  "intro.line2b": "Some Products Win",
+  "intro.line2c": "Some Designs Earn\u00A0Trust",
   "intro.bridge":
-    "Between people and brands, products and experience, an invisible connection remains — we call it",
+    "An Unseen Bond Links\nPeople To Brands\nProducts To Experiences\nWe Call It—",
   "intro.gravity": "Gravity",
-  "intro.folderAlt": "Archive GA_001 folder",
-  "org.line1a": "To understand this connection",
-  "org.line1b": "To explore gravity",
-  "org.founded": "This is why we began",
-  "org.enter1": "We enter different",
-  "org.enter2": "brands, products, spaces, and digital experiences",
-  "org.archive1": "Every design",
-  "org.archive2": "becomes a survey archive",
+  "intro.folderAlt": "Archive GA_001 Folder",
+  "org.line1a": "To Understand This Connection",
+  "org.line1b": "To Explore Gravity",
+  "org.founded": "This Is Why We Began",
+  "org.enter1": "We Enter Different",
+  "org.enter2": "Brands, Products, Spaces, And Digital Experiences",
+  "org.archive1": "Every Design",
+  "org.archive2": "Becomes A Survey Archive",
   "orgFounding.aria": "Archive GA_002 Organization Record — Studio Founding",
-  "orgFounding.designers": "Four designers",
+  "orgFounding.designers": "Four Designers",
   "orgFounding.statuesAlt":
-    "White sculpture of four designers in discussion around a table",
-  "orgFounding.plateAlt": "Metal plate installation with the studio logo",
-  "orgFounding.foundedPrefix": "We founded ",
-  "orgFounding.foundedHighlight": "Universal Gravity Design Studio",
+    "White Sculpture Of Four Designers In Discussion Around A Table",
+  "orgFounding.plateAlt": "Metal Plate Installation With The Studio Logo",
+  "orgFounding.foundedPrefix": "We Founded ",
+  "orgFounding.foundedHighlight": "Universal Grava Design Studio",
   "orgFounding.detail1":
-    "We enter different brands, products, spaces, and digital experiences",
-  "orgFounding.detail2": "Every design becomes a survey archive",
+    "We Enter Different Brands, Products, Spaces, And Digital Experiences",
+  "orgFounding.detail2": "Every Design Becomes A Survey Archive",
   "member.aria": "Archive GA_003 Member Record",
   "member.imageAlt":
-    "Member archive display with white books and a sculpted bust",
+    "Member Archive Display With White Books And A Sculpted Bust",
   "member.investigator": "Investigator",
   "member.namePrefix": "Name_",
   "member.direction": "Focus_Product & User Experience",
+  "member.role01": "Connector",
+  "member.role02": "Navigator",
+  "member.role03": "Builder",
+  "member.role04": "Explorer",
+  "member.direction01": "Focus_People, Products & Experiences",
+  "member.direction02": "Focus_Assessing Info & Finding Direction",
+  "member.direction03": "Focus_Ideas into Complete Systems",
+  "member.direction04": "Focus_Testing Visual & Creative Possibilities",
   "member.portfolio": "Portfolio",
   "member.contactMe": "Contact",
-  "gallery.list": "Archive card gallery",
+  "gallery.list": "Archive Card Gallery",
   "gallery.category.brand": "Brand Design",
   "gallery.category.product": "Product Design",
   "gallery.category.website": "Website Interface",
   "gallery.category.visual": "Visual Design",
   "gallery.category.motion": "Motion Graphics",
   "gallery.view": "View",
-  "gallery.detail": "View work details",
-  "gallery.cursorDetail": "Click for details",
+  "gallery.detail": "View Work Details",
+  "gallery.cursorDetail": "Click For Details",
   "gallery.hintButtons":
-    "Use the side buttons to switch cards, click or press Enter for details, scroll down for the next screen",
+    "Use The Side Buttons To Switch Cards, Click Or Press Enter For Details, Scroll Down For The Next Screen",
   "gallery.hintFree":
-    "Drag or use arrow keys to browse cards, click or press Enter for details, scroll down to keep rotating, scroll up to return",
-  "gallery.prev": "Previous works",
-  "gallery.next": "Next works",
-  "gallery.cardAlt": "Visual survey archive card",
+    "Drag Or Use Arrow Keys To Browse Cards, Click Or Press Enter For Details, Scroll Down To Keep Rotating, Scroll Up To Return",
+  "gallery.prev": "Previous Works",
+  "gallery.next": "Next Works",
+  "gallery.cardAlt": "Visual Survey Archive Card",
   "ga004.aria": "Archive GA_004 Visual Survey Archive",
-  "ga004.detailAria": "Archive GA_004 Visual Survey Archive work details",
-  "survey.categoryNav": "Survey categories",
+  "ga004.detailAria": "Archive GA_004 Visual Survey Archive Work Details",
+  "survey.categoryNav": "Survey Categories",
   "survey.detailAria":
-    "Work details drawer. Press Escape or click empty space to close",
-  "survey.duration": "One month",
+    "Work Details Drawer. Press Escape Or Click Empty Space To Close",
+  "survey.duration": "One Month",
   "survey.description":
-    "Design AI Ops is a long-term knowledge system built by the design team around AI capability and production upgrades. It consolidates planning, practice, and assets so AI can evolve from scattered tools into a stable, reusable design production capacity centered on real design scenarios.",
+    "Design AI Ops Is A Long-Term Knowledge System Built By The Design Team Around AI Capability And Production Upgrades. It Consolidates Planning, Practice, And Assets So AI Can Evolve From Scattered Tools Into A Stable, Reusable Design Production Capacity Centered On Real Design Scenarios.",
   "survey.heroAlt":
-    "Design AI Ops website hero with Brand Creativity, Website Design, Material Collection, the title The Apple Moment, and work thumbnails below",
-  "survey.heroPreview": "Hover or focus to play a preview video",
-  "survey.billboardAlt":
-    "A black marble digital screen in a gallery showing the AI Ops Genesis visual",
-  "survey.emptyWork": "No work in this category yet",
+    "Design AI Ops Website Hero With Brand Creativity, Website Design, Material Collection, The Title The Apple Moment, And Work Thumbnails Below",
+  "survey.heroPreview": "Hover Or Focus To Play A Preview Video",
+  "survey.media2Alt":
+    "Adam And God Reach Toward A Green Apple Between Their Fingertips, Titled The Apple Moment",
+  "survey.media3Alt":
+    "A Woman In Profile About To Bite A Green Apple, A Snake Coiled Around The Wrist",
+  "survey.media4Alt":
+    "A Man Whose Face Is Hidden By A Green Apple, With Text About Seeing The World Anew",
+  "survey.media5Alt":
+    "A Man In Renaissance Dress Thinking At A Laptop Whose Apple Logo Glows Green",
+  "survey.emptyWork": "No Work In This Category Yet",
   "ga005.aria": "Archive GA_005 Visual Exploration Record",
-  "ga005.imageAlt": "Three blank visual exploration cards on a light desk",
-  "contact.aria": "Start a new survey with us",
-  "contact.cta": "Start a New Survey With Us",
+  "ga005.imageAlt": "Three Blank Visual Exploration Cards On A Light Desk",
+  "contact.aria": "Start A New Survey With Us",
+  "contact.cta": "Start A New Survey With Us",
   "contact.addressLabel": "Location",
   "contact.address": "Chaoyang District · Beijing · China",
   "contact.foundedLabel": "Founded",

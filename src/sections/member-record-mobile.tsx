@@ -9,33 +9,32 @@ import {
 } from "@/animations/member-record-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { createDissolveMaskFrames } from "@/lib/dissolve-mask";
+import {
+  clearElementMask,
+  createDissolveMaskSprite,
+  setSpriteMaskFrame,
+  type DissolveMaskSprite,
+} from "@/lib/dissolve-mask";
 
 const MOBILE_MASK_COLS = 66;
 const MOBILE_MASK_ROWS = 149;
 
-let mobileDissolveFrames: string[] | null = null;
+let mobileDissolveSprite: DissolveMaskSprite | null = null;
 
-function getMobileDissolveFrames(): string[] {
-  mobileDissolveFrames ??= createDissolveMaskFrames(
+function getMobileDissolveSprite(): DissolveMaskSprite | null {
+  mobileDissolveSprite ??= createDissolveMaskSprite(
     MOBILE_MASK_COLS,
     MOBILE_MASK_ROWS,
     MEMBER_RECORD_MASK_FRAME_COUNT,
   );
-  return mobileDissolveFrames;
-}
-
-function setMobileMask(el: HTMLElement, url: string | null) {
-  const value = url ? `url(${url})` : "";
-  el.style.maskImage = value;
-  el.style.webkitMaskImage = value;
-  el.style.maskSize = url ? "100% 100%" : "";
-  el.style.webkitMaskSize = url ? "100% 100%" : "";
+  return mobileDissolveSprite;
 }
 
 type MobileMemberProfileProps = {
   identifier: string;
   name: string;
+  role: string;
+  direction: string;
   headerClassName: string;
   dividerClassName: string;
   nameClassName: string;
@@ -50,6 +49,8 @@ type MobileMemberProfileProps = {
  * 网格以 331×747 设计坐标贴住视口底部，四组成员信息按纵向卡片重排。
  */
 export function MemberRecordMobile() {
+  const { t } = useLocale();
+
   return (
     <div className="absolute inset-0 z-10 md:hidden">
       <div
@@ -72,6 +73,8 @@ export function MemberRecordMobile() {
           <MobileMemberProfile
             identifier="01"
             name="Pineapple"
+            role={t("member.role01")}
+            direction={t("member.direction01")}
             headerClassName="left-[4.834%] top-[3.748%]"
             dividerClassName="left-[4.834%] top-[8.166%]"
             nameClassName="left-[4.834%] top-[10.308%]"
@@ -83,6 +86,8 @@ export function MemberRecordMobile() {
           <MobileMemberProfile
             identifier="02"
             name="South"
+            role={t("member.role02")}
+            direction={t("member.direction02")}
             headerClassName="left-[4.834%] top-[32.129%]"
             dividerClassName="left-[4.834%] top-[36.546%]"
             nameClassName="left-[4.834%] top-[38.688%]"
@@ -94,6 +99,8 @@ export function MemberRecordMobile() {
           <MobileMemberProfile
             identifier="03"
             name="Sheep"
+            role={t("member.role03")}
+            direction={t("member.direction03")}
             headerClassName="left-[27.493%] top-[57.831%]"
             dividerClassName="left-[27.493%] top-[62.249%]"
             nameClassName="left-[27.493%] top-[64.391%]"
@@ -105,6 +112,8 @@ export function MemberRecordMobile() {
           <MobileMemberProfile
             identifier="04"
             name="Joe"
+            role={t("member.role04")}
+            direction={t("member.direction04")}
             headerClassName="left-[4.834%] top-[80.455%]"
             dividerClassName="left-[4.834%] top-[84.873%]"
             nameClassName="left-[4.834%] top-[87.015%]"
@@ -122,6 +131,8 @@ export function MemberRecordMobile() {
 function MobileMemberProfile({
   identifier,
   name,
+  role,
+  direction,
   headerClassName,
   dividerClassName,
   nameClassName,
@@ -140,11 +151,11 @@ function MobileMemberProfile({
   const animateFill = (entering: boolean) => {
     const fill = fillRef.current;
     if (!fill) return;
-    const frames = getMobileDissolveFrames();
+    const sprite = getMobileDissolveSprite();
 
-    if (reducedMotion || frames.length === 0) {
+    if (reducedMotion || !sprite) {
       fill.style.opacity = entering ? "1" : "0";
-      setMobileMask(fill, null);
+      clearElementMask(fill);
       return;
     }
 
@@ -152,19 +163,18 @@ function MobileMemberProfile({
     gsap.killTweensOf(proxy);
     fill.style.opacity = "1";
     gsap.to(proxy, {
-      frame: entering ? frames.length - 1 : 0,
+      frame: entering ? sprite.frameCount - 1 : 0,
       duration: MEMBER_RECORD_HOVER_REVEAL_DURATION,
       ease: "none",
       onUpdate: () => {
-        const frame = frames[Math.round(proxy.frame)];
-        if (frame) setMobileMask(fill, frame);
+        setSpriteMaskFrame(fill, sprite, Math.round(proxy.frame));
       },
       onComplete: () => {
         if (entering) {
-          setMobileMask(fill, null);
+          clearElementMask(fill);
         } else {
           fill.style.opacity = "0";
-          setMobileMask(fill, null);
+          clearElementMask(fill);
         }
       },
     });
@@ -220,11 +230,19 @@ function MobileMemberProfile({
         className={`absolute z-10 whitespace-nowrap transition-colors duration-[600ms] group-hover:text-grey-400 group-focus-within:text-grey-400 ${headerClassName}`}
       >
         {t("member.investigator")}
-        <span className="font-bodoni">_{identifier}_Connector</span>
+        <span className="font-bodoni">_{identifier}_</span>
+        {role}
       </p>
       <span
-        className={`absolute z-10 w-[48.036%] border-t border-dashed border-white/30 transition-colors duration-[600ms] group-hover:border-grey-400/30 group-focus-within:border-grey-400/30 ${dividerClassName}`}
-      />
+        className={`absolute z-10 border-t border-dashed border-white/30 transition-colors duration-[600ms] group-hover:border-grey-400/30 group-focus-within:border-grey-400/30 ${dividerClassName}`}
+        aria-hidden="true"
+      >
+        <span className="invisible whitespace-nowrap">
+          {t("member.investigator")}
+          <span className="font-bodoni">_{identifier}_</span>
+          {role}
+        </span>
+      </span>
       <p
         className={`absolute z-10 whitespace-nowrap transition-colors duration-[600ms] group-hover:text-grey-400 group-focus-within:text-grey-400 ${nameClassName}`}
       >
@@ -234,7 +252,7 @@ function MobileMemberProfile({
       <p
         className={`absolute z-10 whitespace-nowrap transition-colors duration-[600ms] group-hover:text-grey-400 group-focus-within:text-grey-400 ${directionClassName}`}
       >
-        {t("member.direction")}
+        {direction}
       </p>
       <div
         className={`absolute z-10 flex items-center gap-4 whitespace-nowrap transition-colors duration-[600ms] group-hover:text-grey-400 group-focus-within:text-grey-400 ${actionsClassName}`}

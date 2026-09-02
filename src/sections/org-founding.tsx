@@ -2,17 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import Image from "next/image";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
 import { createPointerParallax } from "@/animations/pointer-parallax";
-import {
-  playSondavenReveal,
-  setSondavenHidden,
-  setSondavenVisible,
-} from "@/animations/sondaven-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
+import { SplitWords } from "@/components/ui/split-words";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { OrgFoundingMobile } from "@/sections/org-founding-mobile";
 import plateBgImg from "../../public/org-record/founding-plate-bg.webp";
@@ -20,49 +14,22 @@ import plateFgImg from "../../public/org-record/founding-plate-fg.webp";
 import statuesBgImg from "../../public/org-record/founding-statues-bg.webp";
 import statuesFgImg from "../../public/org-record/founding-statues-fg.webp";
 
-gsap.registerPlugin(useGSAP);
+/**
+ * 标题黑条几何：中文取 Figma 780:96；英文取 983:1425
+ * （英文从 “To ” 之后起笔，条更长、顶略下移）
+ */
+const TITLE_BAR_BY_LOCALE = {
+  zh: { inset: 76, extend: 133, top: 46, height: 43 },
+  en: { inset: 46, extend: 220, top: 49, height: 43 },
+} as const;
 
-// 高亮条几何（取自 Figma 780:96，设计稿 1440×800）：
-// 黑条从标题第二行左起 76px 处切入，右端越过文字末尾再延伸 133px
-const BLACK_BAR_INSET = 76;
-const BLACK_BAR_EXTEND = 133;
-// 绿条比高亮词组左移 1px 起笔，右端越过词组末尾再延伸 30px
+// 高亮条比高亮词组左移 1px 起笔，右端越过词组末尾再延伸 30px
 const GREEN_BAR_SHIFT = 1;
 const GREEN_BAR_EXTEND = 30;
 
 // 鼠标视差：左下雕塑与右上铭牌均拆前后景，幅度相同
 const LAYER_FG_PARALLAX = { amp: 4, scale: 1.03 };
 const LAYER_BG_PARALLAX = { amp: -4, scale: 1.03 };
-
-/** 按词切分：中文用 Intl.Segmenter 分词，英文按空格；不支持时整段作一个词 */
-function segmentWords(text: string): string[] {
-  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
-    const segmenter = new Intl.Segmenter("zh-Hans", { granularity: "word" });
-    return Array.from(segmenter.segment(text), (seg) => seg.segment);
-  }
-  return text.split(/(\s+)/).filter(Boolean);
-}
-
-/** 逐词拆分：空白保留为文本节点，词 span 由父级 aria-label 兜底语义 */
-function SplitWords({ text }: { text: string }) {
-  return (
-    <>
-      {segmentWords(text).map((word, index) =>
-        word.trim() === "" ? (
-          word
-        ) : (
-          <span
-            key={`${word}-${index}`}
-            aria-hidden="true"
-            className="sd-word inline-block opacity-0"
-          >
-            {word}
-          </span>
-        ),
-      )}
-    </>
-  );
-}
 
 /**
  * 《组织记录》第二幕：工作室成立。
@@ -87,16 +54,24 @@ export function OrgFounding() {
   const plateFgParallaxRef = useRef<HTMLDivElement>(null);
   const plateBgParallaxRef = useRef<HTMLDivElement>(null);
 
-  // 高亮条位置与长度按实测文字宽度计算，中英文环境均自动适配；
-  // 字体加载完成后宽度会变，需再校准一次
+  // 高亮条位置与长度按实测文字宽度 + 语言几何计算；字体加载后再校准
   useEffect(() => {
+    const bar = TITLE_BAR_BY_LOCALE[locale];
     const apply = () => {
       const line2 = titleLine2Ref.current;
       const blackBar = blackBarRef.current;
       if (line2 && blackBar) {
-        const width =
-          Math.max(line2.offsetWidth - BLACK_BAR_INSET, 0) + BLACK_BAR_EXTEND;
-        blackBar.style.width = `${width}px`;
+        blackBar.style.left = `${bar.inset}px`;
+        blackBar.style.top = `${bar.top}px`;
+        blackBar.style.height = `${bar.height}px`;
+        blackBar.style.width = `${
+          Math.max(line2.offsetWidth - bar.inset, 0) + bar.extend
+        }px`;
+        const copy = blackBar.querySelector<HTMLElement>("[data-sd-title-copy]");
+        if (copy) {
+          copy.style.left = `${-bar.inset}px`;
+          copy.style.top = `${-bar.top}px`;
+        }
       }
       const highlight = foundedHighlightRef.current;
       const greenBar = greenBarRef.current;
@@ -149,29 +124,6 @@ export function OrgFounding() {
     );
   }, [isActive, reducedMotion]);
 
-  // locale 变化会重建词 span（初始隐藏），需重跑动画否则文字停在隐藏态
-  useGSAP(
-    () => {
-      const root = container.current;
-      if (!root) return;
-      // 桌面入场只驱动桌面层，避免隐藏的移动端节点一起播
-      const desktop = root.querySelector<HTMLElement>("[data-founding-desktop]");
-      if (!desktop) return;
-      if (reducedMotion) {
-        setSondavenVisible(desktop);
-        return;
-      }
-      if (!isActive) {
-        setSondavenHidden(desktop);
-        return;
-      }
-      // 窄屏不播桌面入场
-      if (window.matchMedia("(max-width: 767px)").matches) return;
-      playSondavenReveal(desktop);
-    },
-    { dependencies: [isActive, reducedMotion, locale], scope: container },
-  );
-
   const titleLabel = `${t("org.line1a")} ${t("org.line1b")}`;
   // 英文前缀带尾随空格，须落在两个 span 之间的文本节点上，否则被 inline-block 吞掉
   const foundedPrefixRaw = t("orgFounding.foundedPrefix");
@@ -188,11 +140,11 @@ export function OrgFounding() {
         data-sd-words
         data-sd-delay="0.2"
         aria-label={t("orgFounding.designers")}
-        className="absolute left-5 top-[30.5%] font-serif-sc text-12 uppercase text-grey-300"
+        className="absolute left-5 top-[30.5%] font-serif-sc text-12 text-grey-300"
       >
         <SplitWords text={t("orgFounding.designers")} />
       </p>
-      <div className="absolute left-5 top-[33.6%] whitespace-nowrap font-serif-sc text-32 uppercase text-grey-400">
+      <div className="absolute left-5 top-[33.6%] whitespace-nowrap font-serif-sc text-32 leading-[46px] text-grey-400">
         <div className="relative">
           <div
             data-sd-words
@@ -209,7 +161,7 @@ export function OrgFounding() {
               </span>
             </p>
           </div>
-          {/* 高亮条压在原文上：条内是同排版的反白副本，形成切字反色效果；宽度随文字实测适配 */}
+          {/* 高亮条：中英几何不同（英文更长、起笔更靠后），由 effect 写入尺寸 */}
           <div
             ref={blackBarRef}
             aria-hidden="true"
@@ -224,6 +176,7 @@ export function OrgFounding() {
               data-sd-words
               data-sd-sync="founding-title"
               data-sd-delay="0.35"
+              data-sd-title-copy
               className="absolute left-[-76px] top-[-46px] whitespace-nowrap text-white"
             >
               <p>
@@ -271,7 +224,7 @@ export function OrgFounding() {
       </div>
 
       <div className="min-w-0 pb-0">
-        <div className="relative h-[38px] whitespace-nowrap font-serif-sc text-24 uppercase text-grey-400">
+        <div className="relative h-[38px] whitespace-nowrap font-serif-sc text-24 text-grey-400">
           <p
             data-sd-words
             data-sd-sync="founding-founded"
@@ -320,7 +273,7 @@ export function OrgFounding() {
           data-sd-lines
           data-sd-delay="0.75"
           aria-label={`${t("orgFounding.detail1")} ${t("orgFounding.detail2")}`}
-          className="mt-1 font-serif-sc text-12 uppercase text-grey-300"
+          className="mt-1 font-serif-sc text-12 text-grey-300"
         >
           <span aria-hidden="true" className="block overflow-hidden">
             <span className="sd-line block opacity-0">

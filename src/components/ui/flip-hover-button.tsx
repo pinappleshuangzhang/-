@@ -19,6 +19,8 @@ type FlipHoverButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   disableFlip?: boolean;
   /** hover / 焦点时在文案前显示 12px 黑色方块（Figma 893:2761） */
   showHoverMark?: boolean;
+  /** 点击后立即收起方块并失焦，需再次 hover 才出现（语言切换等） */
+  resetMarkOnClick?: boolean;
   /** 为外部入场时间轴按词提供分组，不改变内部逐字 hover 结构 */
   groupEntryWords?: boolean;
   /** 首个非空白词的字体等样式，出入两层保持一致 */
@@ -42,6 +44,7 @@ export const FlipHoverButton = forwardRef<
     hoverLabel,
     disableFlip = false,
     showHoverMark = true,
+    resetMarkOnClick = false,
     groupEntryWords = false,
     firstTokenClassName,
     markOffsetY = 0,
@@ -50,6 +53,7 @@ export const FlipHoverButton = forwardRef<
     onMouseLeave,
     onFocus,
     onBlur,
+    onClick,
     children,
     ...props
   },
@@ -221,6 +225,13 @@ export const FlipHoverButton = forwardRef<
       onBlur={(event) => {
         reverse();
         onBlur?.(event);
+      }}
+      onClick={(event) => {
+        onClick?.(event);
+        if (!resetMarkOnClick || event.defaultPrevented) return;
+        // 点完立刻收起方块；仍悬停时需移出再移入才会再次出现
+        reverse();
+        localRef.current?.blur();
       }}
     >
       <span className="relative inline-block overflow-visible" aria-hidden="true">

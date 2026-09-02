@@ -13,6 +13,7 @@ import gsap from "gsap";
 import { useLocale } from "@/components/providers/locale-provider";
 import { SurveyDrawerContent } from "@/components/ui/survey-drawer-content";
 import { useCloseCursor } from "@/hooks/use-close-cursor";
+import { useOverlayScroller } from "@/hooks/use-overlay-scroller";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import type { SurveyCategoryCode } from "@/lib/survey-details";
 
@@ -62,6 +63,7 @@ export function SurveyDrawer({
   }
 
   useCloseCursor(open && mounted, rootRef, closeLabelRef, reducedMotion);
+  useOverlayScroller(open && mounted, overlayRef, scrollerRef);
 
   useLayoutEffect(() => {
     const overlay = overlayRef.current;
@@ -87,7 +89,16 @@ export function SurveyDrawer({
       );
       tl.to(
         panel,
-        { xPercent: 0, duration: 0.7, ease: "expo.out", overwrite: "auto" },
+        {
+          xPercent: 0,
+          duration: 0.7,
+          ease: "expo.out",
+          overwrite: "auto",
+          onComplete: () => {
+            // 入场结束后清掉 transform，否则内部 overflow 无法走 GPU 原生滚动
+            gsap.set(panel, { clearProps: "transform" });
+          },
+        },
         0,
       );
     } else {
@@ -97,8 +108,9 @@ export function SurveyDrawer({
         { opacity: 0, duration: 0.6, ease: "none", force3D: false },
         0,
       );
-      tl.to(
+      tl.fromTo(
         panel,
+        { xPercent: 0 },
         { xPercent: 100, duration: 0.7, ease: "expo.out", overwrite: "auto" },
         0,
       );
@@ -172,6 +184,8 @@ export function SurveyDrawer({
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
+      data-survey-drawer=""
+      data-lenis-prevent=""
       className={`absolute inset-0 z-40 cursor-none ${open ? "" : "pointer-events-none"}`}
     >
       <button
@@ -180,7 +194,7 @@ export function SurveyDrawer({
         tabIndex={-1}
         aria-label={t("nav.close")}
         onClick={onClose}
-        className={`absolute inset-0 opacity-0 focus-visible:outline-none ${
+        className={`absolute inset-0 touch-none opacity-0 focus-visible:outline-none ${
           reducedMotion ? "bg-grey-400/70" : "bg-grey-400/55"
         }`}
       />
@@ -199,8 +213,9 @@ export function SurveyDrawer({
         </button>
         <div
           ref={scrollerRef}
+          data-survey-scroller=""
           tabIndex={-1}
-          className="h-full overflow-y-auto overscroll-contain focus-visible:outline-none"
+          className="h-full overflow-y-auto overscroll-contain touch-pan-y focus-visible:outline-none"
           aria-label={t("survey.detailAria")}
         >
           <SurveyDrawerContent

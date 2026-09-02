@@ -15,6 +15,7 @@ import {
   SURVEY_G_001,
   SURVEY_WORK_BY_CATEGORY,
   type SurveyCategoryCode,
+  type SurveyMediaItem,
   type SurveyWork,
 } from "@/lib/survey-details";
 
@@ -25,7 +26,7 @@ type SurveyDrawerContentProps = {
 };
 
 /**
- * 抽屉内容对照 Figma 957:4375：标题栏、主图、说明、展厅图。
+ * 抽屉内容对照 Figma 957:4375：标题栏、图 1（无 hover）、说明、图 2–5（hover 视频）。
  */
 export function SurveyDrawerContent({
   open,
@@ -113,55 +114,78 @@ function WorkContent({ work }: { work: SurveyWork }) {
     work.description === SURVEY_G_001.description
       ? t("survey.description")
       : work.description;
-  const heroAlt =
-    work.hero.alt === SURVEY_G_001.hero.alt
-      ? t("survey.heroAlt")
-      : work.hero.alt;
-  const billboardAlt =
-    work.billboard.alt === SURVEY_G_001.billboard.alt
-      ? t("survey.billboardAlt")
-      : work.billboard.alt;
+  const [first, ...rest] = work.media;
+  const laterDelays = ["0.5", "0.55", "0.6", "0.65"];
 
   return (
     <div className="flex flex-col gap-20">
-      <div className="flex flex-col gap-6">
-        <KeepHoverMedia
-          hover="video"
-          src={work.hero.src}
-          alt={heroAlt}
-          width={work.hero.width}
-          height={work.hero.height}
-          revealDelay="0.28"
-          videoSrc={work.hoverVideoSrc}
-          previewLabel={`${heroAlt}。${t("survey.heroPreview")}`}
-        />
-        <div className="flex flex-col gap-3">
-          <p
-            data-sd-words
-            data-sd-delay="0.4"
-            aria-label={work.projectTitle}
-            className="whitespace-nowrap font-serif-sc text-20 font-medium capitalize leading-normal text-grey-400"
+      {first ? (
+        <div className="flex flex-col gap-6">
+          <WorkMedia item={first} revealDelay="0.28" />
+          <div
+            data-survey-keep=""
+            data-sd-media
+            data-sd-delay="0.28"
+            className="overflow-hidden"
           >
-            <SplitWords text={work.projectTitle} />
-          </p>
-          <p
-            data-sd-words
-            data-sd-delay="0.45"
-            aria-label={description}
-            className="font-serif-sc text-14 font-normal leading-5 text-grey-300"
-          >
-            <SplitWords text={description} />
-          </p>
+            <div
+              data-sd-media-inner
+              className="flex translate-y-[105%] flex-col gap-3"
+            >
+              <p className="whitespace-nowrap font-serif-sc text-20 font-medium capitalize leading-normal text-grey-400">
+                {work.projectTitle}
+              </p>
+              <p className="font-serif-sc text-14 font-normal leading-5 text-grey-300">
+                {description}
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
-      <KeepHoverMedia
-        hover="none"
-        src={work.billboard.src}
-        alt={billboardAlt}
-        width={work.billboard.width}
-        height={work.billboard.height}
-        revealDelay="0.5"
-      />
+      ) : null}
+      {rest.map((item, index) => (
+        <WorkMedia
+          key={item.src}
+          item={item}
+          revealDelay={laterDelays[index] ?? "0.65"}
+        />
+      ))}
     </div>
+  );
+}
+
+function WorkMedia({
+  item,
+  revealDelay,
+}: {
+  item: SurveyMediaItem;
+  revealDelay: string;
+}) {
+  const { t } = useLocale();
+  const alt = t(item.altKey);
+  if (item.hover === "video") {
+    return (
+      <KeepHoverMedia
+        hover="video"
+        src={item.src}
+        alt={alt}
+        width={item.width}
+        height={item.height}
+        revealDelay={revealDelay}
+        innerClassName={item.innerClassName}
+        videoSrc={item.videoSrc}
+        previewLabel={`${alt}。${t("survey.heroPreview")}`}
+      />
+    );
+  }
+  return (
+    <KeepHoverMedia
+      hover="none"
+      src={item.src}
+      alt={alt}
+      width={item.width}
+      height={item.height}
+      revealDelay={revealDelay}
+      innerClassName={item.innerClassName}
+    />
   );
 }

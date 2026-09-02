@@ -51,7 +51,7 @@ export function PageChrome() {
         onCloseIndex={() => setIndexOpen(false)}
         onContact={() => {
           setIndexOpen(false);
-          goToScreen(SCREEN_INDEX_BY_KEY.contact);
+          window.location.href = "mailto:shuangzhang@fintopia.tech";
         }}
         closeRef={closeRef}
       />

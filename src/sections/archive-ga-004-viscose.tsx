@@ -66,6 +66,7 @@ export function ArchiveGa004Viscose() {
       <ViscoseCarousel
         items={VISCOSE_CAROUSEL_ITEMS}
         active={isActive && phase === "idle"}
+        paused={coverPresent}
         reducedMotion={reducedMotion}
         onSelect={openDetails}
         scrollHandlerRef={carouselScrollRef}

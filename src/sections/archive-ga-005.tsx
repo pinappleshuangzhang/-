@@ -1,13 +1,9 @@
 "use client";
 
-import { useRef } from "react";
 import Image from "next/image";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
 import { useLocale } from "@/components/providers/locale-provider";
-import { useScreenActive } from "@/components/providers/section-pager-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
-import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { SplitWords } from "@/components/ui/split-words";
 import {
   EXPLORE_GROUPS,
   EXPLORE_TICK_SRC,
@@ -18,8 +14,6 @@ import {
 } from "@/lib/archive-ga-005-marks";
 import cardsImg from "../../public/archive-ga-005/cards.webp";
 
-gsap.registerPlugin(useGSAP);
-
 function su(value: number) {
   return `calc(var(--su) * ${value})`;
 }
@@ -29,40 +23,10 @@ function su(value: number) {
  * 三张空白实验卡铺满视口，周边刻度与元数据按设计稿锁定在卡片边缘。
  */
 export function ArchiveGa005() {
-  const container = useRef<HTMLElement>(null);
-  const isActive = useScreenActive();
-  const reducedMotion = useReducedMotion();
   const { t } = useLocale();
 
-  useGSAP(
-    () => {
-      const root = container.current;
-      if (!root) return;
-      const groups = gsap.utils.toArray<HTMLElement>("[data-exp-group]", root);
-      if (!groups.length) return;
-
-      if (reducedMotion) {
-        gsap.set(groups, { opacity: 1 });
-        return;
-      }
-      if (!isActive) {
-        gsap.set(groups, { opacity: 0 });
-        return;
-      }
-
-      gsap.to(groups, {
-        opacity: 1,
-        delay: 0.4,
-        duration: 0.6,
-        stagger: 0.12,
-        ease: "power2.out",
-      });
-    },
-    { dependencies: [isActive, reducedMotion], scope: container },
-  );
-
   return (
-    <ScreenShell ref={container} aria-label={t("ga005.aria")}>
+    <ScreenShell aria-label={t("ga005.aria")}>
       <div className="absolute left-1/2 top-1/2 aspect-[1440/800] w-[max(100%,calc(100vh*1440/800))] -translate-x-1/2 -translate-y-1/2 [--su:calc(max(100vw,100vh*1440/800)/1440)]">
         <Image
           src={cardsImg}
@@ -78,7 +42,7 @@ export function ArchiveGa005() {
               data-exp-group
               role="group"
               aria-label={group.ariaLabel}
-              className="absolute inset-0 opacity-0"
+              className="absolute inset-0"
             >
               {group.marks.map((mark, index) => (
                 <ExploreMarkItem key={`${group.id}-${index}`} mark={mark} />
@@ -109,6 +73,9 @@ function MarkLabel({ mark }: { mark: ExploreLabelMark }) {
       }}
     >
       <p
+        data-sd-words
+        data-sd-delay="0.3"
+        aria-label={mark.text}
         className="whitespace-nowrap font-bodoni text-[length:calc(var(--su)*10)] uppercase leading-normal text-grey-300"
         style={
           mark.rotate !== undefined
@@ -116,7 +83,7 @@ function MarkLabel({ mark }: { mark: ExploreLabelMark }) {
             : undefined
         }
       >
-        {mark.text}
+        <SplitWords text={mark.text} />
       </p>
     </div>
   );

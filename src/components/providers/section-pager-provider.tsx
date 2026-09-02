@@ -5,11 +5,17 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
+import {
+  playSondavenReveal,
+  setSondavenHidden,
+  setSondavenVisible,
+} from "@/animations/sondaven-reveal";
 import { AsciiCurtain } from "@/components/effects/ascii-curtain";
 import { useLocale } from "@/components/providers/locale-provider";
 import { SharedSectionBackgrounds } from "@/components/ui/shared-section-backgrounds";
@@ -29,6 +35,9 @@ const NAVIGATION_COOLDOWN_MS = 400;
 const LOCK_SAFETY_TIMEOUT_MS = 15000;
 /** 幕布相位卡死兜底：cover/reveal 超时强制回到 idle */
 const PHASE_SAFETY_TIMEOUT_MS = 2500;
+/** 作品详情抽屉与屏内延迟文案由各自时序管理，不参与整屏统一入场 */
+const GLOBAL_REVEAL_EXCLUDE =
+  "[data-survey-drawer], [data-sd-global-ignore]";
 /** 诊断开关：需要排查切屏时置 true，Safari 控制台过滤 WHEEL / PAGER */
 const DEBUG_SECTION_PAGER = false;
 
@@ -39,6 +48,13 @@ function normalizeWheelDeltaY(event: WheelEvent) {
   return event.deltaY;
 }
 
+/** wheel 落在文字节点上时 target 不是 Element，closest 会失效并被切屏逻辑吃掉 */
+function eventClosest(target: EventTarget | null, selector: string): Element | null {
+  if (target instanceof Element) return target.closest(selector);
+  if (target instanceof Node) return target.parentElement?.closest(selector) ?? null;
+  return null;
+}
+
 export type PagerScreen = {
   key: string;
   navVariant: NavVariant;
@@ -46,6 +62,8 @@ export type PagerScreen = {
   titleKey: MessageKey;
   /** 共享背景键：同键多屏共用一份背景，不在屏内重复挂图 */
   background: SectionBackgroundKey;
+  /** 特殊序幕屏可关闭统一入场，默认开启 */
+  globalWordReveal?: boolean;
   node: ReactNode;
 };
 
@@ -109,7 +127,7 @@ export function SectionPagerProvider({
   children,
 }: SectionPagerProviderProps) {
   const reducedMotion = useReducedMotion();
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<CurtainPhase>("idle");
   const [navigationLocked, setNavigationLockedState] = useState(true);
@@ -123,6 +141,7 @@ export function SectionPagerProvider({
   // 首屏序幕先占住锁，序幕结束时再放行
   const lockedRef = useRef(true);
   const cooldownUntilRef = useRef(0);
+  const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     countRef.current = screens.length;
@@ -313,6 +332,12 @@ export function SectionPagerProvider({
     let gestureLockUntil = 0;
 
     const onWheel = (event: WheelEvent) => {
+      if (
+        eventClosest(event.target, "[data-survey-drawer]") ||
+        document.querySelector("[data-survey-drawer]")
+      ) {
+        return;
+      }
       // 始终吃掉滚轮，避免锁定期间浏览器仍做原生滚动
       event.preventDefault();
       const normalized = normalizeWheelDeltaY(event);
@@ -412,6 +437,17 @@ export function SectionPagerProvider({
     };
 
     const onTouchStart = (event: TouchEvent) => {
+      const target = event.target;
+      if (
+        eventClosest(target, "[data-survey-drawer]") &&
+        !eventClosest(target, "[data-survey-scroller]")
+      ) {
+        touchStartY = null;
+        touchCurrentY = null;
+        touchScrollContainer = null;
+        touchHandledByNativeScroll = false;
+        return;
+      }
       if (event.touches.length !== 1) {
         touchStartY = null;
         touchCurrentY = null;
@@ -534,6 +570,39 @@ export function SectionPagerProvider({
   }, [goToScreen, navigate]);
 
   const activeScreen = screens[index];
+
+  // 所有普通分屏共用同一套逐词入场：新屏在幕布揭开期间保持隐藏，
+  // 幕布完全退场后统一播放；作品详情抽屉不在扫描范围内。
+  useLayoutEffect(() => {
+    const root = stageRef.current?.querySelector<HTMLElement>(
+      `[data-pager-screen="${activeScreen?.key ?? ""}"]`,
+    );
+    if (!root || activeScreen?.globalWordReveal === false) return;
+
+    const options = { exclude: GLOBAL_REVEAL_EXCLUDE };
+    if (reducedMotion) {
+      setSondavenVisible(root, options);
+      return;
+    }
+    if (phase === "cover") return;
+    if (phase === "reveal") {
+      setSondavenHidden(root, options);
+      return;
+    }
+
+    setSondavenHidden(root, options);
+    const timeline = playSondavenReveal(root, options);
+    return () => {
+      timeline.kill();
+    };
+  }, [
+    activeScreen?.globalWordReveal,
+    activeScreen?.key,
+    locale,
+    phase,
+    reducedMotion,
+  ]);
+
   const value = useMemo<SectionPagerValue>(
     () => ({
       index,
@@ -568,6 +637,7 @@ export function SectionPagerProvider({
   return (
     <SectionPagerContext.Provider value={value}>
       <div
+        ref={stageRef}
         data-pager-touch-surface
         className="fixed inset-0 overflow-hidden"
       >
@@ -579,6 +649,7 @@ export function SectionPagerProvider({
           return (
             <div
               key={screen.key}
+              data-pager-screen={screen.key}
               className={`absolute inset-0 ${isActive ? "" : "invisible"}`}
               inert={!isActive}
             >

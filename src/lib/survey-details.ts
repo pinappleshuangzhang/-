@@ -1,3 +1,5 @@
+import type { MessageKey } from "@/lib/i18n/messages";
+
 export type SurveyCategoryCode = "A" | "B" | "C" | "D" | "E";
 
 export type SurveyCategory = {
@@ -9,6 +11,17 @@ export type SurveyCategory = {
   typeLabel: string;
 };
 
+export type SurveyMediaItem = {
+  src: string;
+  altKey: MessageKey;
+  width: number;
+  height: number;
+  innerClassName?: string;
+} & (
+  | { hover: "none" }
+  | { hover: "video"; videoSrc: string }
+);
+
 export type SurveyWork = {
   id: string;
   title: string;
@@ -18,19 +31,7 @@ export type SurveyWork = {
   duration: string;
   projectTitle: string;
   description: string;
-  hero: {
-    src: string;
-    alt: string;
-    width: number;
-    height: number;
-  };
-  hoverVideoSrc: string;
-  billboard: {
-    src: string;
-    alt: string;
-    width: number;
-    height: number;
-  };
+  media: SurveyMediaItem[];
 };
 
 export const SURVEY_CATEGORY_BY_CODE: Record<
@@ -41,7 +42,7 @@ export const SURVEY_CATEGORY_BY_CODE: Record<
     code: "A",
     number: "001",
     letter: "( A )",
-    label: "Brand Desgin",
+    label: "Brand Design",
     typeLabel: "( A Brand)",
   },
   B: {
@@ -90,22 +91,51 @@ export const SURVEY_G_001: SurveyWork = {
   archivedLabel: "( 2026 Archived)",
   activeCategory: "C",
   duration: "一个月",
-  projectTitle: "AI Ops - The apple Moment",
+  projectTitle: "AI Ops - The Apple Moment",
   description:
     "Design AI Ops 是设计团队围绕 AI 能力建设与设计生产升级建立的长期知识体系，用于统一沉淀团队在 AI 方向上的规划、项目实践与能力资产。该体系以设计业务场景为核心，通过持续积累工具、方法与案例，使 AI 从零散工具使用逐步演进为稳定、可复用的设计生产能力。",
-  hero: {
-    src: "/archive-ga-004/survey-hero.webp",
-    alt: "Design AI Ops 网站首屏：Brand Creativity、Website Design、Material Collection，中央为 Design AI Ops The Apple Moment，底部为作品缩略图",
-    width: 1792,
-    height: 1006,
-  },
-  hoverVideoSrc: "/archive-ga-004/survey-hero-hover.mp4",
-  billboard: {
-    src: "/archive-ga-004/survey-billboard.webp",
-    alt: "展厅中的黑色大理石数字屏幕，展示 AI Ops 创世纪主题视觉",
-    width: 896,
-    height: 503,
-  },
+  media: [
+    {
+      src: "/archive-ga-004/survey-1.webp",
+      altKey: "survey.heroAlt",
+      width: 1792,
+      height: 1006,
+      hover: "none",
+      innerClassName: "bg-white",
+    },
+    {
+      src: "/archive-ga-004/survey-2.webp",
+      altKey: "survey.media2Alt",
+      width: 1920,
+      height: 1080,
+      hover: "video",
+      videoSrc: "/archive-ga-004/survey-2-hover.mp4",
+    },
+    {
+      src: "/archive-ga-004/survey-3.webp",
+      altKey: "survey.media3Alt",
+      width: 1920,
+      height: 1080,
+      hover: "video",
+      videoSrc: "/archive-ga-004/survey-3-hover.mp4",
+    },
+    {
+      src: "/archive-ga-004/survey-4.webp",
+      altKey: "survey.media4Alt",
+      width: 1920,
+      height: 1080,
+      hover: "video",
+      videoSrc: "/archive-ga-004/survey-4-hover.mp4",
+    },
+    {
+      src: "/archive-ga-004/survey-5.webp",
+      altKey: "survey.media5Alt",
+      width: 1920,
+      height: 1080,
+      hover: "video",
+      videoSrc: "/archive-ga-004/survey-5-hover.mp4",
+    },
+  ],
 };
 
 /** 各调查类型对应作品；尚无内容的类型为 null，详情页右侧留空 */

@@ -32,6 +32,45 @@ import {
 // The fan starts fractionally into the spread so the seed reads first.
 const FAN_START = 0.06;
 
+/** Figma 最终卡片投影盒（1440 基准 px） */
+const FINAL_SHADOW_BOX = { left: 371, top: 136, width: 385, height: 306 };
+/** 高斯模糊约 3σ 才收干净；Safari 把 filter 裁在盒边上，必须预留这段溢出 */
+const FINAL_SHADOW_BLEED = 102;
+
+function su(value) {
+  return `calc(var(--viscose-su) * ${value})`;
+}
+
+/**
+ * 第三阶段卡片投影块。Safari 会把 `filter: blur` 裁在被滤镜元素的边框内，
+ * 所以滤镜加在更大的透明外壳上，实色块仍保持设计稿尺寸。
+ */
+function FinalCardShadowBlob({ left, right, top, width, height, blur }) {
+  const pad = blur * 3;
+  return (
+    <span
+      className="absolute"
+      style={{
+        ...(left != null ? { left: su(left - pad) } : { right: su(right - pad) }),
+        top: su(top - pad),
+        width: su(width + pad * 2),
+        height: su(height + pad * 2),
+        filter: `blur(${su(blur)})`,
+      }}
+    >
+      <span
+        className="absolute bg-grey-400 opacity-10"
+        style={{
+          left: su(pad),
+          top: su(pad),
+          width: su(width),
+          height: su(height),
+        }}
+      />
+    </span>
+  );
+}
+
 const blankTexture = () => {
   const t = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
   t.needsUpdate = true;
@@ -44,13 +83,20 @@ export default function Carousel({
   cursorLabel,
   categoryLabels,
   categoryFontClass,
+  nameFont,
+  paused = false,
 }) {
+  const pausedRef = useRef(paused);
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
   const containerRef = useRef(null);
   const stageBackgroundRef = useRef(null);
   const stageLayer2Ref = useRef(null);
   const stageLayer3Ref = useRef(null);
   const stageLayer4Ref = useRef(null);
   const finalShadowRef = useRef(null);
+  const finalShadowPinRef = useRef(null);
   const hoverCloseRef = useRef(null);
   const listRef = useRef(null);
   const itemsRef = useRef([]);
@@ -61,7 +107,6 @@ export default function Carousel({
   const brandStageRef = useRef(null);
   const brandBackgroundRef = useRef(null);
   const brandTextRef = useRef(null);
-  const brandInverseTextRef = useRef(null);
   // Per side: the box that positions the lockup, the filtered wrapper the goo
   // happens inside, the two rows that melt within it, and one more row outside
   // for words carrying over unchanged. See ring/meta.js.
@@ -89,16 +134,17 @@ export default function Carousel({
       ...immediateBackgroundLayers,
     ].filter(Boolean);
     const finalShadow = finalShadowRef.current;
+    const finalShadowPin = finalShadowPinRef.current;
     const hoverClose = hoverCloseRef.current;
     const brandStage = brandStageRef.current;
     const brandBackground = brandBackgroundRef.current;
     const brandText = brandTextRef.current;
-    const brandInverseText = brandInverseTextRef.current;
     // Async atlas decoding can land after cleanup under StrictMode's double
     // mount. Everything deferred checks this flag.
     let disposed = false;
 
     const params = defaultParams();
+    params.nameFont = nameFont;
     // progress: the seed is born at screen centre
     // launch:   the seed travels out to its place on the ring
     // spread:   the rest peel off it and the ring draws
@@ -137,8 +183,12 @@ export default function Carousel({
       console.error("[ring] could not create a WebGL context:", err);
       return;
     }
+    // Safari (Metal WebGL) is slower on this shader, so cap the DPR lower
+    // than other browsers — but not below 1.5: further down the atlas art
+    // reads as out of focus on Retina panels. Antialias stays off there,
+    // the SDF does its own edge softening.
     renderer.setPixelRatio(
-      isSafari ? 1 : Math.min(window.devicePixelRatio, 2),
+      Math.min(window.devicePixelRatio, isSafari ? 1.5 : 2),
     );
     container.appendChild(renderer.domElement);
 
@@ -995,6 +1045,17 @@ export default function Carousel({
         paintList();
       }
 
+      // 投影钉在当前正面卡片上，随圆环转动/悬停位移，而不是钉死在视口。
+      if (finalShadowPin && frontI >= 0) {
+        const pos = uniforms.uPos.value[frontI];
+        const sc = uniforms.uScale.value[frontI];
+        const rot = uniforms.uRot.value[frontI];
+        const refW = (FINAL_SHADOW_BOX.width / params.refWidth) * viewW;
+        const k = refW > 0.001 ? (W * sc.x) / refW : 1;
+        finalShadowPin.style.transform =
+          `translate(-50%, -50%) translate(${pos.x}px, ${-pos.y}px) rotate(${-rot}rad) scale(${k})`;
+      }
+
       /* ---- honey ---- */
       // One bridge per parent/child pair, in ring order. Deliberately none
       // closing the circle while the fan is opening: those two planes were
@@ -1134,13 +1195,11 @@ export default function Carousel({
         rotation: 0,
         transformOrigin: "50% 50%",
       });
-      if (finalShadow) gsap.set(finalShadow, { opacity: 0 });
-      if (brandStage && brandBackground && brandText && brandInverseText) {
+      if (finalShadow) gsap.set(finalShadow, { opacity: 0, force3D: false });
+      if (brandStage && brandBackground && brandText) {
         gsap.set(brandStage, { opacity: 1 });
-        gsap.set(brandBackground, { scaleX: 0, transformOrigin: "left center" });
-        gsap.set([brandText, brandInverseText], {
-          clipPath: "inset(0 100% 0 0)",
-        });
+        gsap.set(brandBackground, { clipPath: "inset(0 100% 0 0)" });
+        gsap.set(brandText, { clipPath: "inset(0 100% 0 0)" });
       }
 
       const tl = gsap.timeline({ delay: 0.25 });
@@ -1181,7 +1240,7 @@ export default function Carousel({
         },
         launchStart,
       );
-      if (brandStage && brandBackground && brandText && brandInverseText) {
+      if (brandStage && brandBackground && brandText) {
         const textStart =
           launchStart + params.launchTime * params.brandTextAt;
         const backgroundStart =
@@ -1195,19 +1254,12 @@ export default function Carousel({
           },
           textStart,
         );
+        // Clip the bar, not the type: white copy sits inside so it stays
+        // white wherever the black fill is, at any viewport.
         tl.to(
           brandBackground,
           {
-            scaleX: 1,
-            duration: params.brandBackgroundTime,
-            ease: "power2.inOut",
-          },
-          backgroundStart,
-        );
-        tl.to(
-          brandInverseText,
-          {
-            clipPath: "inset(0 19.7% 0 0)",
+            clipPath: "inset(0 0% 0 0)",
             duration: params.brandBackgroundTime,
             ease: "power2.inOut",
           },
@@ -1267,10 +1319,8 @@ export default function Carousel({
 
       const ringLanded = spreadStart + params.spreadTime;
       const backgroundStart = spreadStart + params.backgroundInDelay;
-      const holdStart = Math.max(
-        ringLanded,
-        backgroundStart + params.backgroundInTime,
-      );
+      // Stage 2 starts when the ring lands; background can keep fading in.
+      const holdStart = ringLanded;
       if (stageBackground) {
         tl.to(
           stageBackground,
@@ -1286,7 +1336,12 @@ export default function Carousel({
         if (!disposed && gen === entryGen) ringAutoRotating = true;
       }, undefined, ringLanded);
       tl.call(() => {
-        if (!disposed && gen === entryGen) stagePhase = "hold";
+        if (disposed || gen !== entryGen) return;
+        stagePhase = "hold";
+        if (pendingGoFinal) {
+          pendingGoFinal = false;
+          transitionToFinal();
+        }
       }, undefined, holdStart);
 
       return tl;
@@ -1297,12 +1352,19 @@ export default function Carousel({
     let tl = null;
     let finalTl = null;
 
+    let pendingGoFinal = false;
+
     const transitionToFinal = () => {
       if (stagePhase !== "hold") return;
 
       stagePhase = "transitioning";
       ringAutoRotating = false;
       finalTl?.kill();
+      // Entry still fades the backdrop in; kill it or stage 3 keeps the rings.
+      if (stageBackground) {
+        tl?.killTweensOf(stageBackground);
+        gsap.killTweensOf(stageBackground);
+      }
       const finalSpin = state.spin - params.spinTurns * TAU;
       finalTl = gsap.timeline({
         onComplete: () => {
@@ -1311,6 +1373,7 @@ export default function Carousel({
           announced = -1;
           interactive = true;
           if (listEl) listEl.style.pointerEvents = "auto";
+          if (stageBackground) gsap.set(stageBackground, { opacity: 0 });
         },
       });
 
@@ -1321,6 +1384,7 @@ export default function Carousel({
             opacity: 0,
             duration: params.backgroundOutTime,
             ease: "power2.inOut",
+            overwrite: "auto",
           },
           0,
         );
@@ -1371,6 +1435,7 @@ export default function Carousel({
             opacity: 1,
             duration: params.textTime,
             ease: params.textEase,
+            force3D: false,
           },
           Math.max(params.moveDelay, params.moveTime * 0.55),
         );
@@ -1378,10 +1443,14 @@ export default function Carousel({
     };
 
     const handleStageScroll = (deltaY) => {
-      if (Math.abs(deltaY) < 8) return false;
       if (stagePhase === "transitioning") return true;
-      if (deltaY < 0 || stagePhase === "final") return false;
-      if (stagePhase === "hold") transitionToFinal();
+      if (deltaY <= 0 || stagePhase === "final") return false;
+      if (stagePhase === "hold") {
+        transitionToFinal();
+        return true;
+      }
+      // 圆环已在转、hold 回调还没落到：记下这次下滑，落地后立刻进第三阶段
+      if (ringAutoRotating) pendingGoFinal = true;
       return true;
     };
 
@@ -1390,6 +1459,7 @@ export default function Carousel({
     }
 
     const replay = () => {
+      pendingGoFinal = false;
       finalTl?.kill();
       tl?.kill();
       tl = build();
@@ -1422,6 +1492,10 @@ export default function Carousel({
 
     renderer.setAnimationLoop(() => {
       const now = performance.now();
+      if (pausedRef.current) {
+        prevT = now;
+        return;
+      }
       // Clamped, so a backgrounded tab does not resume with one huge step.
       const dt = Math.min(0.05, (now - prevT) / 1000);
       prevT = now;
@@ -1571,7 +1645,7 @@ export default function Carousel({
       renderer.forceContextLoss();
       renderer.domElement.remove();
     };
-  }, [onSelect, scrollHandlerRef]);
+  }, [nameFont, onSelect, scrollHandlerRef]);
 
   return (
     <>
@@ -1658,44 +1732,41 @@ export default function Carousel({
       <div
         ref={finalShadowRef}
         aria-hidden="true"
-        className="pointer-events-none absolute z-[1] opacity-0 [--viscose-su:calc(100vw/1440)]"
-        style={{
-          left: "calc(50% - var(--viscose-su) * 371)",
-          top: "calc(50% - var(--viscose-su) * 136)",
-          width: "calc(var(--viscose-su) * 385)",
-          height: "calc(var(--viscose-su) * 306)",
-        }}
+        className="pointer-events-none absolute inset-0 z-[1] overflow-visible opacity-0"
       >
-        <span
-          className="absolute bg-grey-400 opacity-10"
+        <div
+          ref={finalShadowPinRef}
+          className="absolute left-1/2 top-1/2 box-border overflow-visible [--viscose-su:calc(100vw/1440)]"
           style={{
-            left: "calc(var(--viscose-su) * 14)",
-            top: "calc(var(--viscose-su) * 245)",
-            width: "calc(var(--viscose-su) * 338)",
-            height: "calc(var(--viscose-su) * 61)",
-            filter: "blur(calc(var(--viscose-su) * 34))",
+            width: su(FINAL_SHADOW_BOX.width + FINAL_SHADOW_BLEED * 2),
+            height: su(FINAL_SHADOW_BOX.height + FINAL_SHADOW_BLEED * 2),
+            padding: su(FINAL_SHADOW_BLEED),
           }}
-        />
-        <span
-          className="absolute bg-grey-400 opacity-10"
-          style={{
-            left: 0,
-            top: 0,
-            width: "calc(var(--viscose-su) * 28)",
-            height: "calc(var(--viscose-su) * 258)",
-            filter: "blur(calc(var(--viscose-su) * 26))",
-          }}
-        />
-        <span
-          className="absolute bg-grey-400 opacity-10"
-          style={{
-            right: 0,
-            top: "calc(var(--viscose-su) * 28)",
-            width: "calc(var(--viscose-su) * 32)",
-            height: "calc(var(--viscose-su) * 222)",
-            filter: "blur(calc(var(--viscose-su) * 26))",
-          }}
-        />
+        >
+          <div className="relative size-full overflow-visible">
+            <FinalCardShadowBlob
+              left={14}
+              top={245}
+              width={338}
+              height={61}
+              blur={34}
+            />
+            <FinalCardShadowBlob
+              left={0}
+              top={0}
+              width={28}
+              height={258}
+              blur={26}
+            />
+            <FinalCardShadowBlob
+              right={0}
+              top={28}
+              width={32}
+              height={222}
+              blur={26}
+            />
+          </div>
+        </div>
       </div>
 
       {/* touch-none, or the browser claims the gesture for panning and the
@@ -1723,16 +1794,6 @@ export default function Carousel({
         className="pointer-events-none absolute inset-0 z-10 opacity-0 [--viscose-su:calc(100vw/1440)]"
       >
         <div
-          ref={brandBackgroundRef}
-          className="absolute bg-grey-400"
-          style={{
-            left: "calc(50% - var(--viscose-su) * 172)",
-            top: "calc(50% - var(--viscose-su) * 23)",
-            width: "calc(var(--viscose-su) * 235)",
-            height: "calc(var(--viscose-su) * 43)",
-          }}
-        />
-        <div
           className="absolute font-bodoni uppercase"
           style={{
             left: "calc(50% - var(--viscose-su) * 104)",
@@ -1745,13 +1806,29 @@ export default function Carousel({
         >
           <span
             ref={brandTextRef}
-            className="absolute inset-0 whitespace-nowrap text-grey-400"
+            className="absolute left-0 top-0 w-max whitespace-nowrap text-grey-400"
           >
             Grava Design Studio
           </span>
+        </div>
+        <div
+          ref={brandBackgroundRef}
+          className="absolute overflow-hidden bg-grey-400"
+          style={{
+            left: "calc(50% - var(--viscose-su) * 172)",
+            top: "calc(50% - var(--viscose-su) * 23)",
+            width: "calc(var(--viscose-su) * 235)",
+            height: "calc(var(--viscose-su) * 43)",
+          }}
+        >
           <span
-            ref={brandInverseTextRef}
-            className="absolute inset-0 whitespace-nowrap text-white"
+            className="absolute whitespace-nowrap font-bodoni uppercase text-white"
+            style={{
+              left: "calc(var(--viscose-su) * 68)",
+              top: "calc(var(--viscose-su) * 12)",
+              fontSize: "calc(var(--viscose-su) * 18)",
+              lineHeight: "calc(var(--viscose-su) * 24)",
+            }}
           >
             Grava Design Studio
           </span>

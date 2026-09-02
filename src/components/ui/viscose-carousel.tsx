@@ -14,6 +14,8 @@ type ViscoseCarouselProps = {
   scrollHandlerRef: MutableRefObject<
     ((deltaY: number) => boolean) | null
   >;
+  /** 抽屉打开时暂停渲染，避免模糊长廊抢 GPU 导致抽屉滚动卡顿 */
+  paused?: boolean;
   className?: string;
 };
 
@@ -23,6 +25,7 @@ export function ViscoseCarousel({
   reducedMotion,
   onSelect,
   scrollHandlerRef,
+  paused = false,
   className,
 }: ViscoseCarouselProps) {
   const { locale, t } = useLocale();
@@ -71,11 +74,13 @@ export function ViscoseCarousel({
       <Carousel
         onSelect={onSelect}
         scrollHandlerRef={scrollHandlerRef}
+        paused={paused}
         cursorLabel={t("gallery.view")}
         categoryLabels={categoryLabels}
         categoryFontClass={
           locale === "zh" ? "font-serif-sc" : "font-bodoni"
         }
+        nameFont={locale === "zh" ? "Noto Serif SC" : "Libre Bodoni"}
       />
     </div>
   );

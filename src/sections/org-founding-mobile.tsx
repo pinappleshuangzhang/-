@@ -2,66 +2,32 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 import Image from "next/image";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
 import {
   createPointerParallax,
   createScrollParallax,
 } from "@/animations/pointer-parallax";
-import {
-  playSondavenReveal,
-  setSondavenHidden,
-  setSondavenVisible,
-} from "@/animations/sondaven-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
   useScreenActive,
   useSectionPager,
 } from "@/components/providers/section-pager-provider";
+import { SplitWords } from "@/components/ui/split-words";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import plateBgImg from "../../public/org-record/founding-plate-bg-m.webp";
 import plateFgImg from "../../public/org-record/founding-plate-fg-m.webp";
 import statuesBgImg from "../../public/org-record/founding-statues-bg-m.webp";
 import statuesFgImg from "../../public/org-record/founding-statues-fg-m.webp";
 
-gsap.registerPlugin(useGSAP);
-
-/** Figma 926:1394：标题高亮条相对文案左缘切入 60px，右端越过词尾再延伸 */
-const TITLE_BAR_INSET = 60;
-const TITLE_BAR_EXTEND = 95;
+/** 标题高亮条：中文取移动稿；英文按桌面 983:1425 比例换算到 24px 字号 */
+const TITLE_BAR_BY_LOCALE = {
+  zh: { inset: 60, extend: 95, top: 37, height: 28 },
+  en: { inset: 34, extend: 165, top: 37, height: 32 },
+} as const;
 const FOUNDED_BAR_EXTEND = 24;
 
 const LAYER_FG_PARALLAX = { amp: 4, scale: 1.03 };
 const LAYER_BG_PARALLAX = { amp: -4, scale: 1.03 };
 const SCROLL_PARALLAX_AMP = 4;
-
-function segmentWords(text: string): string[] {
-  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
-    const segmenter = new Intl.Segmenter("zh-Hans", { granularity: "word" });
-    return Array.from(segmenter.segment(text), (seg) => seg.segment);
-  }
-  return text.split(/(\s+)/).filter(Boolean);
-}
-
-function SplitWords({ text }: { text: string }) {
-  return (
-    <>
-      {segmentWords(text).map((word, index) =>
-        word.trim() === "" ? (
-          word
-        ) : (
-          <span
-            key={`${word}-${index}`}
-            aria-hidden="true"
-            className="sd-word inline-block opacity-0"
-          >
-            {word}
-          </span>
-        ),
-      )}
-    </>
-  );
-}
 
 type HighlightTitleProps = {
   syncId: string;
@@ -70,9 +36,10 @@ type HighlightTitleProps = {
   line2: string;
   ariaLabel: string;
   barInset: number;
+  barTop: number;
+  barHeight: number;
   line2Ref?: RefObject<HTMLSpanElement | null>;
   barRef?: RefObject<HTMLDivElement | null>;
-  barCopyOffsetClass: string;
 };
 
 /** 双行标题 + 第二行黑色切字高亮条（宽度由外层实测写入） */
@@ -83,12 +50,13 @@ function HighlightTitle({
   line2,
   ariaLabel,
   barInset,
+  barTop,
+  barHeight,
   line2Ref,
   barRef,
-  barCopyOffsetClass,
 }: HighlightTitleProps) {
   return (
-    <div className="relative font-serif-sc text-24 uppercase leading-normal text-grey-400">
+    <div className="relative font-serif-sc text-24 leading-[34px] text-grey-400">
       <div data-sd-words data-sd-sync={syncId} data-sd-delay={delay} aria-label={ariaLabel}>
         <p aria-hidden="true">
           <SplitWords text={line1} />
@@ -102,8 +70,8 @@ function HighlightTitle({
       <div
         ref={barRef}
         aria-hidden="true"
-        className="absolute top-[37px] h-7 overflow-hidden"
-        style={{ left: barInset }}
+        className="absolute overflow-hidden"
+        style={{ left: barInset, top: barTop, height: barHeight }}
       >
         <span
           data-sd-bar
@@ -114,7 +82,8 @@ function HighlightTitle({
           data-sd-words
           data-sd-sync={syncId}
           data-sd-delay={delay}
-          className={`absolute top-[-37px] whitespace-nowrap text-white ${barCopyOffsetClass}`}
+          className="absolute whitespace-nowrap text-white"
+          style={{ left: -barInset, top: -barTop }}
         >
           <p>
             <SplitWords text={line1} />
@@ -153,12 +122,13 @@ export function OrgFoundingMobile() {
   const plateBgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const bar = TITLE_BAR_BY_LOCALE[locale];
     const apply = () => {
       const line2 = titleLine2Ref.current;
       const titleBar = titleBarRef.current;
       if (line2 && titleBar) {
         titleBar.style.width = `${
-          Math.max(line2.offsetWidth - TITLE_BAR_INSET, 0) + TITLE_BAR_EXTEND
+          Math.max(line2.offsetWidth - bar.inset, 0) + bar.extend
         }px`;
       }
       const foundedLine2 = foundedLine2Ref.current;
@@ -247,27 +217,12 @@ export function OrgFoundingMobile() {
     ]);
   }, [isActive, reducedMotion]);
 
-  useGSAP(
-    () => {
-      const root = rootRef.current;
-      if (!root) return;
-      if (reducedMotion) {
-        setSondavenVisible(root);
-        return;
-      }
-      if (!isActive) {
-        setSondavenHidden(root);
-        return;
-      }
-      playSondavenReveal(root);
-    },
-    { dependencies: [isActive, reducedMotion, locale], scope: rootRef },
-  );
-
   const titleLabel = `${t("org.line1a")} ${t("org.line1b")}`;
   const foundedLabel = `${t("orgFounding.foundedPrefix")}${t(
     "orgFounding.foundedHighlight",
   )}`;
+  const titleBar = TITLE_BAR_BY_LOCALE[locale];
+  const foundedBar = { inset: 0, top: titleBar.top, height: titleBar.height };
 
   return (
     <div
@@ -285,7 +240,7 @@ export function OrgFoundingMobile() {
               data-sd-words
               data-sd-delay="0.2"
               aria-label={t("orgFounding.designers")}
-              className="font-serif-sc text-12 uppercase text-grey-300"
+              className="font-serif-sc text-12 text-grey-300"
             >
               <SplitWords text={t("orgFounding.designers")} />
             </p>
@@ -295,10 +250,11 @@ export function OrgFoundingMobile() {
               line1={t("org.line1a")}
               line2={t("org.line1b")}
               ariaLabel={titleLabel}
-              barInset={TITLE_BAR_INSET}
+              barInset={titleBar.inset}
+              barTop={titleBar.top}
+              barHeight={titleBar.height}
               line2Ref={titleLine2Ref}
               barRef={titleBarRef}
-              barCopyOffsetClass="left-[-60px]"
             />
           </div>
           <div
@@ -342,7 +298,7 @@ export function OrgFoundingMobile() {
               data-sd-words
               data-sd-delay="0.45"
               aria-label={t("orgFounding.designers")}
-              className="font-serif-sc text-12 uppercase text-grey-300"
+              className="font-serif-sc text-12 text-grey-300"
             >
               <SplitWords text={t("orgFounding.designers")} />
             </p>
@@ -352,10 +308,11 @@ export function OrgFoundingMobile() {
               line1={t("orgFounding.foundedPrefix").trimEnd()}
               line2={t("orgFounding.foundedHighlight")}
               ariaLabel={foundedLabel}
-              barInset={0}
+              barInset={foundedBar.inset}
+              barTop={foundedBar.top}
+              barHeight={foundedBar.height}
               line2Ref={foundedLine2Ref}
               barRef={foundedBarRef}
-              barCopyOffsetClass="left-0"
             />
           </div>
           <div

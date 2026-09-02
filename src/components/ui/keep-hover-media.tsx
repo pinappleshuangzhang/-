@@ -10,6 +10,9 @@ const HOVER_REVEAL_DURATION = 1.2;
 const HOVER_REVEAL_EASE = "power2.out";
 const HOVER_HIDDEN = { yPercent: 105, y: 0 };
 const HOVER_VISIBLE = { yPercent: 0, y: 0 };
+/** 视频后黑色遮罩单独用 opacity 淡入 */
+const MASK_FADE_DURATION = 0.6;
+const MASK_FADE_EASE = "none";
 
 type KeepHoverMediaBase = {
   src: string;
@@ -20,6 +23,7 @@ type KeepHoverMediaBase = {
   /** 第三屏入场延迟，写入 data-sd-delay */
   revealDelay: string;
   className?: string;
+  innerClassName?: string;
 };
 
 export type KeepHoverMediaProps =
@@ -100,9 +104,14 @@ function StaticKeepMedia({
   sizes = "896px",
   revealDelay,
   className,
+  innerClassName,
 }: KeepHoverMediaBase) {
   return (
-    <MediaFrame revealDelay={revealDelay} className={className}>
+    <MediaFrame
+      revealDelay={revealDelay}
+      className={className}
+      innerClassName={innerClassName}
+    >
       <Image
         src={src}
         alt={alt}
@@ -122,6 +131,7 @@ function VideoKeepMedia({
   sizes = "896px",
   revealDelay,
   className,
+  innerClassName,
   videoSrc,
   previewLabel,
 }: KeepHoverMediaBase & {
@@ -131,32 +141,50 @@ function VideoKeepMedia({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverInnerRef = useRef<HTMLDivElement>(null);
+  const maskRef = useRef<HTMLDivElement>(null);
   const hoveringRef = useRef(false);
   const focusedRef = useRef(false);
   const reducedMotion = useReducedMotion();
 
   useLayoutEffect(() => {
     const layer = hoverInnerRef.current;
-    if (!layer) return;
-    gsap.set(layer, HOVER_HIDDEN);
+    const mask = maskRef.current;
+    if (layer) gsap.set(layer, HOVER_HIDDEN);
+    if (mask) gsap.set(mask, { opacity: 0, force3D: false });
     return () => {
-      gsap.killTweensOf(layer);
+      if (layer) gsap.killTweensOf(layer);
+      if (mask) gsap.killTweensOf(mask);
     };
   }, []);
 
   const revealHover = useCallback(
     (show: boolean) => {
       const layer = hoverInnerRef.current;
-      if (!layer) return;
-      gsap.killTweensOf(layer);
+      const mask = maskRef.current;
+      if (layer) {
+        gsap.killTweensOf(layer);
+        if (reducedMotion) {
+          gsap.set(layer, show ? HOVER_VISIBLE : HOVER_HIDDEN);
+        } else {
+          gsap.to(layer, {
+            ...(show ? HOVER_VISIBLE : HOVER_HIDDEN),
+            duration: HOVER_REVEAL_DURATION,
+            ease: HOVER_REVEAL_EASE,
+            overwrite: "auto",
+          });
+        }
+      }
+      if (!mask) return;
+      gsap.killTweensOf(mask);
       if (reducedMotion) {
-        gsap.set(layer, show ? HOVER_VISIBLE : HOVER_HIDDEN);
+        gsap.set(mask, { opacity: show ? 1 : 0, force3D: false });
         return;
       }
-      gsap.to(layer, {
-        ...(show ? HOVER_VISIBLE : HOVER_HIDDEN),
-        duration: HOVER_REVEAL_DURATION,
-        ease: HOVER_REVEAL_EASE,
+      gsap.to(mask, {
+        opacity: show ? 1 : 0,
+        duration: MASK_FADE_DURATION,
+        ease: MASK_FADE_EASE,
+        force3D: false,
         overwrite: "auto",
       });
     },
@@ -190,7 +218,7 @@ function VideoKeepMedia({
     <MediaFrame
       revealDelay={revealDelay}
       className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 ${className ?? ""}`}
-      innerClassName="bg-white"
+      innerClassName={innerClassName}
       tabIndex={0}
       aria-label={previewLabel}
       onMouseEnter={() => {
@@ -222,8 +250,11 @@ function VideoKeepMedia({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
+        <div
+          ref={maskRef}
+          className="absolute inset-0 bg-grey-400/50 opacity-0"
+        />
         <div ref={hoverInnerRef} className="absolute inset-0">
-          <div className="absolute inset-0 bg-grey-400/30" />
           <video
             ref={videoRef}
             src={videoSrc}
@@ -231,7 +262,7 @@ function VideoKeepMedia({
             loop
             playsInline
             preload="none"
-            className="absolute inset-0 size-full object-cover motion-reduce:hidden"
+            className="absolute left-[6.027%] top-[5.964%] h-[88.072%] w-[87.835%] object-cover motion-reduce:hidden"
           />
         </div>
       </div>

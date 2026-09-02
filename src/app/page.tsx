@@ -17,6 +17,7 @@ const SCREENS: PagerScreen[] = [
     navVariant: "studio",
     background: "studio",
     titleKey: "screen.studio",
+    globalWordReveal: false,
     node: <Hero />,
   },
   {

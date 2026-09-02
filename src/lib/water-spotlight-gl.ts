@@ -47,17 +47,35 @@ void main() {
 }
 `;
 
+/**
+ * 手动双线性：WebGL2 半浮点/浮点纹理的 LINEAR 依赖 OES_texture_float_linear，
+ * Safari 常缺失该扩展，NEAREST 放大后光斑边缘会呈一圈锯齿外框。
+ */
+const SAMPLE_FIELD_GLSL = `vec4 sampleField(sampler2D tex, vec2 uv) {
+  vec2 coord = uv / uTexelSize - 0.5;
+  vec2 f = fract(coord);
+  vec2 base = (floor(coord) + 0.5) * uTexelSize;
+  vec4 c00 = texture(tex, base);
+  vec4 c10 = texture(tex, base + vec2(uTexelSize.x, 0.0));
+  vec4 c01 = texture(tex, base + vec2(0.0, uTexelSize.y));
+  vec4 c11 = texture(tex, base + uTexelSize);
+  return mix(mix(c00, c10, f.x), mix(c01, c11, f.x), f.y);
+}
+`;
+
 /** 平流 + 耗散：场沿自身速度回溯采样，速度与密度分别衰减 */
 const ADVECT_SRC = `#version 300 es
 precision highp float;
 uniform sampler2D uField;
 uniform float uDt;
 uniform vec2 uDissipation;
+uniform vec2 uTexelSize;
 in vec2 vUv;
 out vec4 outColor;
+${SAMPLE_FIELD_GLSL}
 void main() {
   vec2 vel = texture(uField, vUv).rg;
-  vec4 field = texture(uField, vUv - vel * uDt);
+  vec4 field = sampleField(uField, vUv - vel * uDt);
   field.rg *= uDissipation.x;
   field.b *= uDissipation.y;
   outColor = field;
@@ -70,17 +88,20 @@ precision highp float;
 uniform sampler2D uField;
 uniform sampler2D uTex;
 uniform float uIntensity;
+uniform vec2 uTexelSize;
 in vec2 vUv;
 out vec4 outColor;
+${SAMPLE_FIELD_GLSL}
 void main() {
-  vec4 field = texture(uField, vUv);
+  vec4 field = sampleField(uField, vUv);
   vec2 refr = field.rg * 0.01;
   vec4 col = texture(uTex, vUv + refr);
   // 密度越高越清晰显影，低密度处呈柔和液体边缘
   float alpha = smoothstep(0.04, 0.35, field.b) * uIntensity;
   // 流速处微弱提亮，强化液面反光质感
   col.rgb += length(field.rg) * 0.03;
-  outColor = vec4(col.rgb, col.a * alpha);
+  // 预乘 alpha：Safari 合成 WebGL 画布时按预乘处理，未预乘会在光斑外沿画出一圈底图外框
+  outColor = vec4(col.rgb * alpha, alpha);
 }
 `;
 
@@ -131,7 +152,8 @@ export function createWaterSpotlight(
 ): WaterSpotlight | null {
   const gl = canvas.getContext("webgl2", {
     alpha: true,
-    premultipliedAlpha: false,
+    // Safari 合成层按预乘 alpha 处理画布；与着色器输出保持一致，避免光斑外框
+    premultipliedAlpha: true,
     antialias: false,
     depth: false,
     stencil: false,
@@ -139,7 +161,6 @@ export function createWaterSpotlight(
   if (!gl) return null;
   // 流体场需要半浮点渲染目标
   if (!gl.getExtension("EXT_color_buffer_float")) return null;
-  const halfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
 
   const vs = compile(gl, gl.VERTEX_SHADER, VERTEX_SRC);
   if (!vs) return null;
@@ -174,11 +195,13 @@ export function createWaterSpotlight(
     field: gl.getUniformLocation(advectProgram, "uField"),
     dt: gl.getUniformLocation(advectProgram, "uDt"),
     dissipation: gl.getUniformLocation(advectProgram, "uDissipation"),
+    texelSize: gl.getUniformLocation(advectProgram, "uTexelSize"),
   };
   const displayU = {
     field: gl.getUniformLocation(displayProgram, "uField"),
     tex: gl.getUniformLocation(displayProgram, "uTex"),
     intensity: gl.getUniformLocation(displayProgram, "uIntensity"),
+    texelSize: gl.getUniformLocation(displayProgram, "uTexelSize"),
   };
 
   // 画布尺寸（CSS px）与流体场分辨率
@@ -187,7 +210,6 @@ export function createWaterSpotlight(
   let simW = SIM_WIDTH;
   let simH = 126;
 
-  const filter = halfFloatLinear ? gl.LINEAR : gl.NEAREST;
   const makeFieldTexture = () => {
     const tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -202,8 +224,9 @@ export function createWaterSpotlight(
       gl.HALF_FLOAT,
       null,
     );
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+    // 场纹理用 NEAREST，显示/平流在着色器里手动双线性，避开 Safari 浮点 LINEAR 限制
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     return tex;
@@ -342,6 +365,7 @@ export function createWaterSpotlight(
       gl.uniform1i(advectU.field, 0);
       gl.uniform1f(advectU.dt, dt);
       gl.uniform2f(advectU.dissipation, velDiss, denDiss);
+      gl.uniform2f(advectU.texelSize, 1 / simW, 1 / simH);
     });
     // 上屏
     runPass(displayProgram, null, () => {
@@ -352,6 +376,7 @@ export function createWaterSpotlight(
       gl.bindTexture(gl.TEXTURE_2D, imageTexture);
       gl.uniform1i(displayU.tex, 1);
       gl.uniform1f(displayU.intensity, spot.intensity);
+      gl.uniform2f(displayU.texelSize, 1 / simW, 1 / simH);
     });
   };
   rafId = requestAnimationFrame(frame);

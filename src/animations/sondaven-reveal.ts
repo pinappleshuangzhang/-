@@ -37,16 +37,32 @@ function readDelay(el: HTMLElement): number {
   return Number.isFinite(value) ? value : 0;
 }
 
+type SondavenRevealOptions = {
+  /** 跳过位于这些祖先容器内的节点 */
+  exclude?: string;
+};
+
+function collectTargets(
+  root: HTMLElement,
+  selector: string,
+  options?: SondavenRevealOptions,
+): HTMLElement[] {
+  return gsap.utils
+    .toArray<HTMLElement>(selector, root)
+    .filter((node) => !options?.exclude || !node.closest(options.exclude));
+}
+
 /** 播放整屏入场时间轴 */
 export function playSondavenReveal(
   root: HTMLElement | null | undefined,
+  options?: SondavenRevealOptions,
 ): gsap.core.Timeline {
   const tl = gsap.timeline({ defaults: { ease: EASE } });
   if (!root) return tl;
 
   // 词组：同 data-sd-sync 的多份文本共享同一随机顺序，保证反白副本与原文同步
   const syncOrders = new Map<string, number[]>();
-  for (const el of gsap.utils.toArray<HTMLElement>("[data-sd-words]", root)) {
+  for (const el of collectTargets(root, "[data-sd-words]", options)) {
     const words = Array.from(el.querySelectorAll<HTMLElement>(".sd-word"));
     if (words.length === 0) continue;
     const delay = readDelay(el);
@@ -67,7 +83,7 @@ export function playSondavenReveal(
     });
   }
 
-  for (const el of gsap.utils.toArray<HTMLElement>("[data-sd-lines]", root)) {
+  for (const el of collectTargets(root, "[data-sd-lines]", options)) {
     const lines = el.querySelectorAll<HTMLElement>(".sd-line");
     if (lines.length === 0) continue;
     tl.fromTo(
@@ -78,7 +94,7 @@ export function playSondavenReveal(
     );
   }
 
-  for (const el of gsap.utils.toArray<HTMLElement>("[data-sd-bar]", root)) {
+  for (const el of collectTargets(root, "[data-sd-bar]", options)) {
     tl.fromTo(
       el,
       BAR_HIDDEN,
@@ -87,7 +103,7 @@ export function playSondavenReveal(
     );
   }
 
-  for (const el of gsap.utils.toArray<HTMLElement>("[data-sd-media]", root)) {
+  for (const el of collectTargets(root, "[data-sd-media]", options)) {
     const inner = el.querySelector<HTMLElement>("[data-sd-media-inner]");
     if (!inner) continue;
     tl.fromTo(
@@ -106,26 +122,33 @@ function setIfPresent(
   root: HTMLElement,
   selector: string,
   vars: gsap.TweenVars,
+  options?: SondavenRevealOptions,
 ) {
-  const nodes = root.querySelectorAll(selector);
+  const nodes = collectTargets(root, selector, options);
   if (nodes.length === 0) return;
   gsap.set(nodes, vars);
 }
 
 /** 复位到入场前的隐藏态（离屏时用） */
-export function setSondavenHidden(root: HTMLElement | null | undefined) {
+export function setSondavenHidden(
+  root: HTMLElement | null | undefined,
+  options?: SondavenRevealOptions,
+) {
   if (!root) return;
-  setIfPresent(root, ".sd-word", WORD_HIDDEN);
-  setIfPresent(root, ".sd-line", LINE_HIDDEN);
-  setIfPresent(root, "[data-sd-bar]", BAR_HIDDEN);
-  setIfPresent(root, "[data-sd-media-inner]", MEDIA_HIDDEN);
+  setIfPresent(root, ".sd-word", WORD_HIDDEN, options);
+  setIfPresent(root, ".sd-line", LINE_HIDDEN, options);
+  setIfPresent(root, "[data-sd-bar]", BAR_HIDDEN, options);
+  setIfPresent(root, "[data-sd-media-inner]", MEDIA_HIDDEN, options);
 }
 
 /** 直接呈现最终态（减少动效场景用） */
-export function setSondavenVisible(root: HTMLElement | null | undefined) {
+export function setSondavenVisible(
+  root: HTMLElement | null | undefined,
+  options?: SondavenRevealOptions,
+) {
   if (!root) return;
-  setIfPresent(root, ".sd-word", WORD_VISIBLE);
-  setIfPresent(root, ".sd-line", LINE_VISIBLE);
-  setIfPresent(root, "[data-sd-bar]", BAR_VISIBLE);
-  setIfPresent(root, "[data-sd-media-inner]", MEDIA_VISIBLE);
+  setIfPresent(root, ".sd-word", WORD_VISIBLE, options);
+  setIfPresent(root, ".sd-line", LINE_VISIBLE, options);
+  setIfPresent(root, "[data-sd-bar]", BAR_VISIBLE, options);
+  setIfPresent(root, "[data-sd-media-inner]", MEDIA_VISIBLE, options);
 }

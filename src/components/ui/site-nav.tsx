@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, type Ref } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { FlipHoverButton } from "@/components/ui/flip-hover-button";
 import { MobileSiteNav } from "@/components/ui/mobile-site-nav";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -59,6 +60,7 @@ export function SiteNav({
 }: SiteNavProps) {
   const isIndex = variant === "index";
   const { locale, setLocale, t } = useLocale();
+  const { runWithCurtain } = useSectionPager();
   const isEn = locale === "en";
   const indexLabel = isIndex ? t("nav.close") : t("nav.index");
   const contactLabel = t("nav.contact");
@@ -115,7 +117,11 @@ export function SiteNav({
   );
   const indexAriaLabel = isIndex ? t("nav.closeIndex") : t("nav.openIndex");
   const handleIndexClick = isIndex ? onCloseIndex : onOpenIndex;
-  const handleLanguageClick = () => setLocale(locale === "zh" ? "en" : "zh");
+  // 语言切换走一次完整幕布：铺满后再换文案，避免字面“跳变”
+  const handleLanguageClick = () => {
+    const next = locale === "zh" ? "en" : "zh";
+    runWithCurtain(() => setLocale(next));
+  };
 
   return (
     <>
@@ -171,6 +177,7 @@ export function SiteNav({
             label={langLabel}
             aria-label={t("nav.language")}
             aria-pressed={locale === "en"}
+            resetMarkOnClick
             onClick={handleLanguageClick}
             className={`w-16 justify-end ${linkClass}`}
           />

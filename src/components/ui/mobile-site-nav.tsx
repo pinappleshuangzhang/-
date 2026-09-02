@@ -69,6 +69,7 @@ export function MobileSiteNav({
             label={languageLabel}
             aria-label={languageAriaLabel}
             aria-pressed={isEnglish}
+            resetMarkOnClick
             onClick={onLanguageClick}
             className={`w-[22px] justify-end ${linkClass}`}
           />

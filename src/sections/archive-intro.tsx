@@ -6,11 +6,6 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { createCornerTitleSweep } from "@/animations/archive-ga-004-title-sweep";
 import {
-  playSondavenReveal,
-  setSondavenHidden,
-  setSondavenVisible,
-} from "@/animations/sondaven-reveal";
-import {
   AlphaScrubVideo,
   type AlphaScrubVideoHandle,
 } from "@/components/effects/alpha-scrub-video";
@@ -32,13 +27,21 @@ const FOLDER_VIDEO_HEVC = "/archive/archive-folder-cool-alpha-hevc.mp4";
 const SCRUB_PER_PX = 0.00015;
 /** 进度追踪的阻尼系数（数值越大跟手越紧，越小拖拽感越强） */
 const SCRUB_DAMPING = 3;
-/** 第一段开始退场的主时间轴节点（总时长 132） */
-const FIRST_COPY_EXIT_PROGRESS = 38 / 132;
 
 /** 按词切分：与第三屏 Son Daven 式逐词入场的规则保持一致。 */
 function segmentWords(text: string): string[] {
   const attachClosingPunctuation = (segments: string[]) =>
     segments.reduce<string[]>((words, segment) => {
+      // 不间断空格把前后词绑在同一行，避免 “Trust” 落到 “Earn” 下一行。
+      if (segment === "\u00A0") {
+        if (words.length > 0) words[words.length - 1] += "\u00A0";
+        else words.push("\u00A0");
+        return words;
+      }
+      if (words.length > 0 && words[words.length - 1].endsWith("\u00A0")) {
+        words[words.length - 1] += segment;
+        return words;
+      }
       // 标点作为独立 inline-block 时可能被换到下一行行首；将其并回前词。
       if (
         /^[，。！？；：、】【）》〉〕］｝”’]+$/u.test(segment) &&
@@ -104,7 +107,6 @@ export function ArchiveIntro() {
 
   const targetRef = useRef(0);
   const displayRef = useRef(0);
-  const hasPlayedFirstCopyEntranceRef = useRef(false);
 
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
@@ -115,43 +117,12 @@ export function ArchiveIntro() {
   const isActive = useScreenActive();
   const { registerScrollInterceptor, navigationLocked } = useSectionPager();
   const { t, locale } = useLocale();
+  const isEnglish = locale === "en";
 
   // 渲染期间锁存：一旦解锁过就保持允许（序幕重播时不重新卸载视频）
   if (!navigationLocked && !videoAllowed) {
     setVideoAllowed(true);
   }
-
-  // 中间文案复用第三屏的 Son Daven 式随机逐词上浮入场。
-  useGSAP(
-    () => {
-      const root = container.current;
-      const primaryCopy = root?.querySelector<HTMLElement>("[data-swap-a]");
-      if (!primaryCopy) return;
-
-      if (reducedMotion) {
-        setSondavenVisible(primaryCopy);
-        return;
-      }
-      if (!isActive) {
-        // 首次进入前才预设隐藏；离开后保留当前段落状态，返回时不重播第一段。
-        if (!hasPlayedFirstCopyEntranceRef.current) {
-          setSondavenHidden(primaryCopy);
-        }
-        return;
-      }
-      if (hasPlayedFirstCopyEntranceRef.current) {
-        // locale 切换会重建词节点；第一段尚未退场时，直接恢复其最终可见状态。
-        if (displayRef.current < FIRST_COPY_EXIT_PROGRESS) {
-          setSondavenVisible(primaryCopy);
-        }
-        return;
-      }
-
-      hasPlayedFirstCopyEntranceRef.current = true;
-      playSondavenReveal(primaryCopy);
-    },
-    { dependencies: [isActive, reducedMotion, locale], scope: container },
-  );
 
   // 页面角标大字与第六屏 DESIGN / WORKS 共用横穿后回位的出场节奏。
   useGSAP(
@@ -362,13 +333,36 @@ export function ArchiveIntro() {
           )}
 
           {/* 卡片内文字：移动端 Figma 701:201/202 = 14px、左 67、顶 368 */}
-          <div className="absolute left-[3.5256%] top-[35.2%] w-[49.4%] md:left-[36px] md:top-[35.7%] md:w-[55%]">
+          <div
+            className={`absolute left-[3.5256%] top-[35.2%] w-[49.4%] ${
+              isEnglish
+                ? "md:left-[36px] md:top-[calc(35.7%-36px)] md:w-[308px]"
+                : "md:left-[36px] md:top-[35.7%] md:w-[55%]"
+            }`}
+          >
             <div className="relative">
-              <div data-swap-a className="flex flex-col gap-3 md:gap-[1em]">
-                <div className="font-serif-sc text-14 font-normal leading-[20px] text-grey-200 md:text-[1.5em] md:leading-normal">
+              <div
+                data-swap-a
+                className={`flex flex-col gap-3 md:gap-[1em] ${
+                  isEnglish ? "md:relative md:top-[26px]" : ""
+                }`}
+              >
+                <div
+                  className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200 ${
+                    isEnglish
+                      ? "md:text-24 md:leading-[30px]"
+                      : "md:text-[1.5em] md:leading-normal"
+                  }`}
+                >
                   <ScrubText text={t("intro.line1")} revealDelay={0.4} />
                 </div>
-                <div className="font-serif-sc text-14 font-normal leading-[20px] text-grey-200 md:text-[1.5em] md:leading-normal">
+                <div
+                  className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200 ${
+                    isEnglish
+                      ? "md:w-[308px] md:text-24 md:leading-[36px]"
+                      : "md:text-[1.5em] md:leading-normal"
+                  }`}
+                >
                   <ScrubText text={t("intro.line2a")} revealDelay={0.5} />
                   <ScrubText text={t("intro.line2b")} revealDelay={0.55} />
                   <ScrubText text={t("intro.line2c")} revealDelay={0.6} />
@@ -376,12 +370,36 @@ export function ArchiveIntro() {
               </div>
               <div
                 data-swap-b
-                className="absolute left-0 top-[-11px] flex w-[124.6%] flex-col gap-3 md:inset-x-0 md:top-[-10px] md:w-auto md:gap-[1em]"
+                data-sd-global-ignore
+                className={`absolute left-0 top-[-11px] flex w-[124.6%] flex-col gap-3 md:inset-x-0 ${
+                  isEnglish
+                    ? "md:top-0 md:w-[308px] md:gap-2"
+                    : "md:top-[-10px] md:w-auto md:gap-[1em]"
+                }`}
               >
-                <div className="font-serif-sc text-14 font-normal leading-[20px] text-grey-200 md:text-[1.5em] md:leading-normal">
-                  <ScrubText text={t("intro.bridge")} />
+                <div
+                  className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200 ${
+                    isEnglish
+                      ? "md:text-24 md:leading-[40px]"
+                      : "md:text-[1.5em] md:leading-normal"
+                  }`}
+                >
+                  {t("intro.bridge")
+                    .split("\n")
+                    .map((line, lineIndex) => (
+                      <ScrubText
+                        key={`${line}-${lineIndex}`}
+                        text={line}
+                      />
+                    ))}
                 </div>
-                <div className="font-serif-sc text-32 font-normal leading-[46px] text-grey-200 md:text-[3em] md:leading-normal">
+                <div
+                  className={`font-serif-sc text-32 font-normal leading-[46px] text-grey-200 ${
+                    isEnglish
+                      ? "md:relative md:-top-1 md:text-48 md:leading-[70px]"
+                      : "md:text-[3em] md:leading-normal"
+                  }`}
+                >
                   <ScrubText text={t("intro.gravity")} />
                 </div>
               </div>

@@ -5,7 +5,12 @@ import Image from "next/image";
 import { useLocale } from "@/components/providers/locale-provider";
 import type { GalleryCard } from "@/lib/archive-ga-003-cards";
 import gsap from "gsap";
-import { createDissolveMaskFrames } from "@/lib/dissolve-mask";
+import {
+  clearElementMask,
+  createDissolveMaskSprite,
+  setSpriteMaskFrame,
+  type DissolveMaskSprite,
+} from "@/lib/dissolve-mask";
 import { MEMBER_RECORD_HOVER_REVEAL_DURATION } from "@/animations/member-record-reveal";
 
 /** 长廊几何尺寸：图片本体宽度保持不变 */
@@ -69,22 +74,14 @@ const HOVER_MASK_COLS = 112;
 const HOVER_MASK_ROWS = 56;
 const HOVER_MASK_FRAME_COUNT = 24;
 
-let hoverDissolveFrames: string[] | null = null;
-function getHoverDissolveFrames(): string[] {
-  hoverDissolveFrames ??= createDissolveMaskFrames(
+let hoverDissolveSprite: DissolveMaskSprite | null = null;
+function getHoverDissolveSprite(): DissolveMaskSprite | null {
+  hoverDissolveSprite ??= createDissolveMaskSprite(
     HOVER_MASK_COLS,
     HOVER_MASK_ROWS,
     HOVER_MASK_FRAME_COUNT,
   );
-  return hoverDissolveFrames;
-}
-
-function setElementMask(el: HTMLElement, url: string | null) {
-  const value = url ? `url(${url})` : "";
-  el.style.maskImage = value;
-  el.style.webkitMaskImage = value;
-  el.style.maskSize = url ? "100% 100%" : "";
-  el.style.webkitMaskSize = url ? "100% 100%" : "";
+  return hoverDissolveSprite;
 }
 
 export type CardGalleryControls = {
@@ -574,29 +571,28 @@ function CardFaceImage({
   const animateHover = (entering: boolean) => {
     const layer = hoverLayerRef.current;
     if (!layer) return;
-    const frames = getHoverDissolveFrames();
-    if (reducedMotion || frames.length === 0) {
+    const sprite = getHoverDissolveSprite();
+    if (reducedMotion || !sprite) {
       layer.style.opacity = entering ? "1" : "0";
-      setElementMask(layer, null);
+      clearElementMask(layer);
       return;
     }
     const proxy = proxyRef.current;
     gsap.killTweensOf(proxy);
     layer.style.opacity = "1";
     gsap.to(proxy, {
-      frame: entering ? frames.length - 1 : 0,
+      frame: entering ? sprite.frameCount - 1 : 0,
       duration: MEMBER_RECORD_HOVER_REVEAL_DURATION,
       ease: "none",
       onUpdate: () => {
-        const frame = frames[Math.round(proxy.frame)];
-        if (frame) setElementMask(layer, frame);
+        setSpriteMaskFrame(layer, sprite, Math.round(proxy.frame));
       },
       onComplete: () => {
         if (entering) {
-          setElementMask(layer, null);
+          clearElementMask(layer);
         } else {
           layer.style.opacity = "0";
-          setElementMask(layer, null);
+          clearElementMask(layer);
         }
       },
     });

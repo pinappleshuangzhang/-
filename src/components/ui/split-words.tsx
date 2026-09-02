@@ -23,17 +23,23 @@ export function segmentWords(text: string): string[] {
 }
 
 /** 逐词入场：词包在 .sd-word 中，初始透明，由 sondaven-reveal 播动画 */
-export function SplitWords({ text }: { text: string }) {
+export function SplitWords({
+  text,
+  animated = true,
+}: {
+  text: string;
+  animated?: boolean;
+}) {
   return (
     <>
       {segmentWords(text).map((word, index) =>
         word.trim() === "" ? (
-          word
+          "\u00A0"
         ) : (
           <span
             key={`${word}-${index}`}
             aria-hidden="true"
-            className="sd-word inline-block opacity-0"
+            className={`sd-word inline-block ${animated ? "opacity-0" : ""}`}
           >
             {word}
           </span>

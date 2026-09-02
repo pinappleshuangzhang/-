@@ -88,6 +88,28 @@ export function Hero() {
     [registerTopOverscroll],
   );
 
+  useEffect(() => {
+    if (!doneRef.current) return;
+    setSondavenVisible(container.current);
+  }, [locale]);
+
+  // 独立于 GSAP 媒体查询的保险：即使 Safari 未触发 matchMedia 回调，
+  // 也不能让加载层和分页锁永久留在页面上。
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (doneRef.current) return;
+      const loader = loaderRef.current;
+      const videoLayer = videoLayerRef.current;
+      if (loader) gsap.set(loader, { autoAlpha: 0 });
+      if (videoLayer) gsap.set(videoLayer, { autoAlpha: 0 });
+      setSondavenVisible(container.current);
+      doneRef.current = true;
+      setNavigationLocked(false);
+    }, 5000);
+
+    return () => window.clearTimeout(timeout);
+  }, [setNavigationLocked]);
+
   useGSAP(
     (_, contextSafe) => {
       const root = container.current;
@@ -98,6 +120,7 @@ export function Hero() {
       if (!root || !loader || !videoLayer || !video || !counterEl) return;
 
       const finish = () => {
+        setSondavenVisible(root);
         doneRef.current = true;
         setNavigationLocked(false);
       };
@@ -226,7 +249,7 @@ export function Hero() {
 
   const subtitle = t("hero.subtitle");
   const highlight =
-    locale === "zh" ? '"引力"的探索' : "exploration of gravity";
+    locale === "zh" ? '"引力"的探索' : "Explore Gravity Together";
   const highlightIndex = subtitle.lastIndexOf(highlight);
   const subtitlePrefix =
     highlightIndex >= 0 ? subtitle.slice(0, highlightIndex) : subtitle;
@@ -267,12 +290,20 @@ export function Hero() {
 
       {/* 最终首屏内容：Figma 884:2070，标题组与目录左侧光学对齐 */}
       <div className="absolute inset-0 z-30">
-        <div className="absolute left-1/2 top-[113px] flex w-[290px] -translate-x-1/2 flex-col items-center gap-2 text-center md:hidden">
+        <div
+          className={`absolute left-1/2 top-[113px] flex -translate-x-1/2 flex-col items-center gap-2 text-center md:hidden ${
+            locale === "zh" ? "w-[290px]" : "w-[366px]"
+          }`}
+        >
           <h1
             data-sd-words
             data-sd-delay="0.15"
             aria-label={t("hero.title")}
-            className="whitespace-nowrap font-serif-sc text-32 font-medium uppercase leading-[48px] text-grey-400"
+            className={`whitespace-nowrap font-serif-sc font-medium uppercase text-grey-400 ${
+              locale === "zh"
+                ? "text-32 leading-[48px]"
+                : "text-40 leading-[48px]"
+            }`}
           >
             <SplitWords text={t("hero.title")} />
           </h1>
@@ -281,7 +312,11 @@ export function Hero() {
               data-sd-words
               data-sd-delay="0.3"
               aria-label={subtitle}
-              className="w-full whitespace-nowrap font-serif-sc text-12 uppercase leading-[18px] text-grey-400"
+              className={`w-full whitespace-nowrap font-serif-sc uppercase text-grey-400 ${
+                locale === "zh"
+                  ? "text-12 leading-[18px]"
+                  : "text-14 leading-[20px]"
+              }`}
             >
               <SplitWords text={subtitlePrefix} />
             </p>
@@ -290,15 +325,21 @@ export function Hero() {
                 data-sd-words
                 data-sd-delay="0.3"
                 aria-hidden="true"
-                className="relative -top-px h-[17px] w-[88px] px-2 font-serif-sc text-12 uppercase leading-[18px] text-white"
+                className={`relative -top-px whitespace-nowrap font-serif-sc uppercase text-white ${
+                  locale === "zh"
+                    ? "h-[17px] w-[88px] px-2 text-12 leading-[18px]"
+                    : "h-[20px] w-auto px-2.5 text-14 leading-[20px]"
+                }`}
               >
                 <span
                   data-sd-bar
                   data-sd-delay="0.3"
                   aria-hidden="true"
-                  className="absolute inset-0 origin-left scale-x-0 bg-grey-400"
+                  className={`absolute inset-0 origin-left bg-grey-400 ${
+                    locale === "zh" ? "scale-x-0" : "scale-x-100"
+                  }`}
                 />
-                <span className="relative">
+                <span className="relative inline-block whitespace-nowrap">
                   <SplitWords
                     text={
                       locale === "zh"
@@ -313,15 +354,19 @@ export function Hero() {
         </div>
 
         <div
-          className={`absolute right-[92px] top-[126px] hidden w-[432px] -translate-x-[2.6px] flex-col gap-2 md:flex ${
-            locale === "zh" ? "items-start text-left" : "items-end text-right"
+          className={`absolute top-[126px] hidden items-start gap-2 text-left ${
+            locale === "zh"
+              ? "right-[92px] w-[432px] -translate-x-[2.6px] flex-col md:flex"
+              : "left-[calc(100%-527px)] w-max grid-cols-[max-content] md:grid"
           }`}
         >
           <h1
             data-sd-words
             data-sd-delay="0.15"
             aria-label={t("hero.title")}
-            className="whitespace-nowrap font-serif-sc text-48 font-medium uppercase text-grey-400"
+            className={`whitespace-nowrap font-serif-sc font-medium uppercase text-grey-400 ${
+              locale === "zh" ? "text-48" : "text-40"
+            }`}
           >
             <SplitWords text={t("hero.title")} />
           </h1>
@@ -329,22 +374,34 @@ export function Hero() {
             data-sd-words
             data-sd-delay="0.3"
             aria-label={subtitle}
-            className={`whitespace-nowrap font-serif-sc text-16 uppercase text-grey-400 ${
-              locale === "zh" ? "w-full text-left" : "text-right"
+            className={`whitespace-nowrap font-serif-sc uppercase text-grey-400 ${
+              locale === "zh"
+                ? "w-full text-left text-16"
+                : "flex w-full items-stretch text-left text-14"
             }`}
           >
-            <SplitWords text={subtitlePrefix} />
+            <span className={locale === "zh" ? undefined : "mr-1 shrink-0"}>
+              <SplitWords
+                text={
+                  locale === "zh" ? subtitlePrefix : subtitlePrefix.trimEnd()
+                }
+              />
+            </span>
             {subtitleHighlight ? (
               <span
                 className={`relative inline-block text-white ${
-                  locale === "zh" ? "pr-9" : ""
+                  locale === "zh" ? "pr-9" : "min-w-0 flex-1"
                 }`}
               >
                 <span
                   data-sd-bar
                   data-sd-delay="0.3"
                   aria-hidden="true"
-                  className="absolute inset-0 origin-left scale-x-0 bg-grey-400"
+                  className={`absolute bottom-0 left-0 top-0 origin-left bg-grey-400 ${
+                    locale === "zh"
+                      ? "right-0 scale-x-0"
+                      : "right-0 scale-x-100"
+                  }`}
                 />
                 <span className="relative">
                   <SplitWords text={subtitleHighlight} />

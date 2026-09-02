@@ -21,30 +21,28 @@ import {
   MEMBER_CELL_VIEW_BOX,
 } from "@/lib/member-record-cells";
 import { ScreenShell } from "@/components/ui/screen-shell";
+import { SplitWords } from "@/components/ui/split-words";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { createDissolveMaskFrames } from "@/lib/dissolve-mask";
+import {
+  clearElementMask,
+  createDissolveMaskSprite,
+  setSpriteMaskFrame,
+  type DissolveMaskSprite,
+} from "@/lib/dissolve-mask";
 import { MemberRecordMobile } from "@/sections/member-record-mobile";
 import memberRecordImg from "../../public/archive/member-record.webp";
 
 gsap.registerPlugin(useGSAP);
 
-/** 入场与 hover 共用一套溶解遮罩帧，首次使用时生成并缓存 */
-let dissolveFrames: string[] | null = null;
-function getDissolveFrames(): string[] {
-  dissolveFrames ??= createDissolveMaskFrames(
+/** 入场与 hover 共用一张溶解雪碧图，首次使用时生成并缓存 */
+let dissolveSprite: DissolveMaskSprite | null = null;
+function getDissolveSprite(): DissolveMaskSprite | null {
+  dissolveSprite ??= createDissolveMaskSprite(
     MEMBER_RECORD_MASK_COLS,
     MEMBER_RECORD_MASK_ROWS,
     MEMBER_RECORD_MASK_FRAME_COUNT,
   );
-  return dissolveFrames;
-}
-
-function setElementMask(el: HTMLElement, url: string | null) {
-  const value = url ? `url(${url})` : "";
-  el.style.maskImage = value;
-  el.style.webkitMaskImage = value;
-  el.style.maskSize = url ? "100% 100%" : "";
-  el.style.webkitMaskSize = url ? "100% 100%" : "";
+  return dissolveSprite;
 }
 
 /**
@@ -74,8 +72,7 @@ export function MemberRecord() {
           grid.querySelector<HTMLElement>("[data-member-mask]");
         if (!overlay || !masked) return;
 
-        const clearMask = () => setElementMask(masked, null);
-        const applyMask = (url: string) => setElementMask(masked, url);
+        const clearMask = () => clearElementMask(masked);
 
         if (reducedMotion) {
           clearMask();
@@ -88,15 +85,15 @@ export function MemberRecord() {
           return;
         }
 
-        const frames = getDissolveFrames();
-        if (frames.length === 0) {
+        const sprite = getDissolveSprite();
+        if (!sprite) {
           gsap.to([overlay, masked], MEMBER_RECORD_GRID_VISIBLE);
           return;
         }
 
         // 借用切屏幕布的斑块生长节奏：网格文字藏在全透明遮罩后逐帧显现，
         // 模糊灰底同步淡入；斑块铺满后移除遮罩。
-        applyMask(frames[0] ?? "");
+        setSpriteMaskFrame(masked, sprite, 0);
         const proxy = { frame: 0 };
         const timeline = gsap.timeline({
           delay: MEMBER_RECORD_REVEAL_DELAY,
@@ -114,12 +111,11 @@ export function MemberRecord() {
         timeline.to(
           proxy,
           {
-            frame: frames.length - 1,
+            frame: sprite.frameCount - 1,
             duration: MEMBER_RECORD_REVEAL_DURATION,
             ease: "none",
             onUpdate: () => {
-              const frame = frames[Math.round(proxy.frame)];
-              if (frame) applyMask(frame);
+              setSpriteMaskFrame(masked, sprite, Math.round(proxy.frame));
             },
             onComplete: clearMask,
           },
@@ -178,8 +174,10 @@ export function MemberRecord() {
             <MemberProfile
               identifier="01"
               name="Pineapple"
+              role={t("member.role01")}
+              direction={t("member.direction01")}
               headerClassName="left-[2.472%] top-[5.573%] w-[24.85%]"
-              dividerClassName="left-[2.472%] top-[10.611%] w-[11.91%]"
+              dividerClassName="left-[2.472%] top-[10.611%]"
               nameClassName="left-[2.472%] top-[13.183%] w-[24.85%]"
               directionClassName="left-[2.472%] top-[17.578%] w-[24.85%]"
               actionsClassName="left-[2.472%] top-[23.902%]"
@@ -187,8 +185,10 @@ export function MemberRecord() {
             <MemberProfile
               identifier="02"
               name="South"
+              role={t("member.role02")}
+              direction={t("member.direction02")}
               headerClassName="left-[66.142%] top-[5.573%] w-[24.85%]"
-              dividerClassName="left-[67.491%] top-[10.611%] w-[11.91%]"
+              dividerClassName="left-[67.491%] top-[10.611%]"
               nameClassName="left-[68.614%] top-[13.183%] w-[24.85%]"
               directionClassName="left-[70.187%] top-[17.578%] w-[24.85%]"
               actionsClassName="left-[71.985%] top-[23.902%]"
@@ -196,8 +196,10 @@ export function MemberRecord() {
             <MemberProfile
               identifier="03"
               name="Sheep"
+              role={t("member.role03")}
+              direction={t("member.direction03")}
               headerClassName="left-[28.367%] top-[39.228%] w-[19.69%]"
-              dividerClassName="left-[28.367%] top-[44.266%] w-[11.91%]"
+              dividerClassName="left-[28.367%] top-[44.266%]"
               nameClassName="left-[28.367%] top-[46.838%] w-[19.69%]"
               directionClassName="left-[28.367%] top-[51.232%] w-[19.69%]"
               actionsClassName="left-[28.367%] top-[58.306%]"
@@ -205,8 +207,10 @@ export function MemberRecord() {
             <MemberProfile
               identifier="04"
               name="Joe"
+              role={t("member.role04")}
+              direction={t("member.direction04")}
               headerClassName="left-[68.263%] top-[39.228%] w-[24.85%]"
-              dividerClassName="left-[67.514%] top-[44.266%] w-[13.17%]"
+              dividerClassName="left-[67.514%] top-[44.266%]"
               nameClassName="left-[67.065%] top-[46.838%] w-[24.85%]"
               directionClassName="left-[66.167%] top-[51.661%] w-[24.85%]"
               actionsClassName="left-[64.97%] top-[58.306%]"
@@ -237,6 +241,8 @@ export function MemberRecord() {
 type MemberProfileProps = {
   identifier: string;
   name: string;
+  role: string;
+  direction: string;
   headerClassName: string;
   dividerClassName: string;
   nameClassName: string;
@@ -247,6 +253,8 @@ type MemberProfileProps = {
 function MemberProfile({
   identifier,
   name,
+  role,
+  direction,
   headerClassName,
   dividerClassName,
   nameClassName,
@@ -262,29 +270,28 @@ function MemberProfile({
   const animateFill = (entering: boolean) => {
     const fill = fillRef.current;
     if (!fill) return;
-    const frames = getDissolveFrames();
-    if (reducedMotion || frames.length === 0) {
+    const sprite = getDissolveSprite();
+    if (reducedMotion || !sprite) {
       fill.style.opacity = entering ? "1" : "0";
-      setElementMask(fill, null);
+      clearElementMask(fill);
       return;
     }
     const proxy = proxyRef.current;
     gsap.killTweensOf(proxy);
     fill.style.opacity = "1";
     gsap.to(proxy, {
-      frame: entering ? frames.length - 1 : 0,
+      frame: entering ? sprite.frameCount - 1 : 0,
       duration: MEMBER_RECORD_HOVER_REVEAL_DURATION,
       ease: "none",
       onUpdate: () => {
-        const frame = frames[Math.round(proxy.frame)];
-        if (frame) setElementMask(fill, frame);
+        setSpriteMaskFrame(fill, sprite, Math.round(proxy.frame));
       },
       onComplete: () => {
         if (entering) {
-          setElementMask(fill, null);
+          clearElementMask(fill);
         } else {
           fill.style.opacity = "0";
-          setElementMask(fill, null);
+          clearElementMask(fill);
         }
       },
     });
@@ -325,26 +332,57 @@ function MemberProfile({
         />
       </svg>
       <p
+        data-sd-words
+        data-sd-delay="0.2"
+        aria-label={`${t("member.investigator")}_${identifier}_${role}`}
         className={`absolute z-10 text-16 text-white transition-colors duration-[600ms] group-hover:text-grey-400 ${headerClassName}`}
       >
-        <span className="font-serif-sc font-normal">{t("member.investigator")}</span>
-        <span className="font-bodoni font-normal">_{identifier}_Connector</span>
+        <span className="font-serif-sc font-normal">
+          <SplitWords text={t("member.investigator")} />
+        </span>
+        <span className="font-bodoni font-normal">
+          <SplitWords text={`_${identifier}_`} />
+        </span>
+        <span className="font-serif-sc font-normal">
+          <SplitWords text={role} />
+        </span>
       </p>
       <span
         className={`absolute z-10 border-t border-dashed border-white/30 transition-colors duration-[600ms] group-hover:border-grey-400/30 ${dividerClassName}`}
-      />
-      <p
-        className={`absolute z-10 text-20 text-white transition-colors duration-[600ms] group-hover:text-grey-400 ${nameClassName}`}
+        aria-hidden="true"
       >
-        <span className="font-serif-sc font-normal">{t("member.namePrefix")}</span>
-        <span className="font-serif-sc font-medium">{name}</span>
+        <span className="invisible whitespace-nowrap text-16">
+          <span className="font-serif-sc font-normal">
+            {t("member.investigator")}
+          </span>
+          <span className="font-bodoni font-normal">_{identifier}_</span>
+          <span className="font-serif-sc font-normal">{role}</span>
+        </span>
+      </span>
+      <p
+        data-sd-words
+        data-sd-delay="0.3"
+        aria-label={`${t("member.namePrefix")}${name}`}
+        className={`absolute z-10 whitespace-nowrap text-16 text-white transition-colors duration-[600ms] group-hover:text-grey-400 ${nameClassName}`}
+      >
+        <span className="font-serif-sc font-normal">
+          <SplitWords text={t("member.namePrefix")} />
+        </span>
+        <span className="font-serif-sc font-medium">
+          <SplitWords text={name} />
+        </span>
       </p>
       <p
-        className={`absolute z-10 font-serif-sc text-20 font-normal text-white transition-colors duration-[600ms] group-hover:text-grey-400 ${directionClassName}`}
+        data-sd-words
+        data-sd-delay="0.4"
+        aria-label={direction}
+        className={`absolute z-10 whitespace-nowrap font-serif-sc text-16 font-normal text-white transition-colors duration-[600ms] group-hover:text-grey-400 ${directionClassName}`}
       >
-        {t("member.direction")}
+        <SplitWords text={direction} />
       </p>
       <div
+        data-sd-words
+        data-sd-delay="0.5"
         className={`absolute z-10 flex items-center gap-4 text-white transition-colors duration-[600ms] group-hover:text-grey-400 ${actionsClassName}`}
       >
         <ProfileAction label={t("member.portfolio")} />
@@ -357,7 +395,7 @@ function MemberProfile({
 function ProfileAction({ label }: { label: string }) {
   return (
     <span className="profile-action pointer-events-auto flex items-center gap-0.5 font-serif-sc text-16 font-normal">
-      {label}
+      <SplitWords text={label} />
       <span aria-hidden="true" className="relative block size-4 overflow-hidden">
         <Image
           src="/archive/member-record-external-arrow.png"
