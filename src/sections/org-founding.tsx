@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { createPointerParallax } from "@/animations/pointer-parallax";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -13,6 +13,22 @@ import plateBgImg from "../../public/org-record/founding-plate-bg.webp";
 import plateFgImg from "../../public/org-record/founding-plate-fg.webp";
 import statuesBgImg from "../../public/org-record/founding-statues-bg.webp";
 import statuesFgImg from "../../public/org-record/founding-statues-fg.webp";
+
+const MOBILE_QUERY = "(max-width: 767px)";
+
+function subscribeMobileViewport(callback: () => void) {
+  const media = window.matchMedia(MOBILE_QUERY);
+  media.addEventListener("change", callback);
+  return () => media.removeEventListener("change", callback);
+}
+
+function getMobileViewportSnapshot() {
+  return window.matchMedia(MOBILE_QUERY).matches;
+}
+
+function getMobileViewportServerSnapshot() {
+  return false;
+}
 
 /**
  * 标题黑条几何：中文取 Figma 780:96；英文取 983:1425
@@ -28,8 +44,8 @@ const GREEN_BAR_SHIFT = 1;
 const GREEN_BAR_EXTEND = 30;
 
 // 鼠标视差：左下雕塑与右上铭牌均拆前后景，幅度相同
-const LAYER_FG_PARALLAX = { amp: 4, scale: 1.03 };
-const LAYER_BG_PARALLAX = { amp: -4, scale: 1.03 };
+const LAYER_FG_PARALLAX = { amp: 8, scale: 1.06 };
+const LAYER_BG_PARALLAX = { amp: -8, scale: 1.06 };
 
 /**
  * 《组织记录》第二幕：工作室成立。
@@ -43,6 +59,11 @@ export function OrgFounding() {
   const reducedMotion = useReducedMotion();
   const isActive = useScreenActive();
   const { t, locale } = useLocale();
+  const isMobileViewport = useSyncExternalStore(
+    subscribeMobileViewport,
+    getMobileViewportSnapshot,
+    getMobileViewportServerSnapshot,
+  );
 
   const titleLine2Ref = useRef<HTMLSpanElement>(null);
   const blackBarRef = useRef<HTMLDivElement>(null);
@@ -56,6 +77,7 @@ export function OrgFounding() {
 
   // 高亮条位置与长度按实测文字宽度 + 语言几何计算；字体加载后再校准
   useEffect(() => {
+    if (isMobileViewport) return;
     const bar = TITLE_BAR_BY_LOCALE[locale];
     const apply = () => {
       const line2 = titleLine2Ref.current;
@@ -87,10 +109,11 @@ export function OrgFounding() {
     };
     apply();
     document.fonts?.ready.then(apply);
-  }, [locale]);
+  }, [locale, isMobileViewport]);
 
   // 鼠标视差：仅悬停型精准指针启用，触屏与减少动效场景不启用
   useEffect(() => {
+    if (isMobileViewport) return;
     const area = container.current?.querySelector<HTMLElement>(
       "[data-founding-desktop]",
     );
@@ -120,9 +143,9 @@ export function OrgFounding() {
         { el: plateFg, ...LAYER_FG_PARALLAX },
         { el: plateBg, ...LAYER_BG_PARALLAX },
       ],
-      { mouseOnly: true },
+      { mouseOnly: true, autoDrift: true },
     );
-  }, [isActive, reducedMotion]);
+  }, [isActive, isMobileViewport, reducedMotion]);
 
   const titleLabel = `${t("org.line1a")} ${t("org.line1b")}`;
   // 英文前缀带尾随空格，须落在两个 span 之间的文本节点上，否则被 inline-block 吞掉
@@ -134,7 +157,10 @@ export function OrgFounding() {
 
   return (
     <ScreenShell ref={container} aria-label={t("orgFounding.aria")}>
-      <div data-founding-desktop className="absolute inset-0 hidden md:block">
+      {isMobileViewport ? (
+        <OrgFoundingMobile />
+      ) : (
+      <div data-founding-desktop className="absolute inset-0">
       {/* 左上：小字标注 + 大标题（黑色高亮条反白） */}
       <p
         data-sd-words
@@ -320,8 +346,7 @@ export function OrgFounding() {
         </div>
       </div>
       </div>
-
-      <OrgFoundingMobile />
+      )}
     </ScreenShell>
   );
 }

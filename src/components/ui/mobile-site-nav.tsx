@@ -8,6 +8,8 @@ type MobileSiteNavProps = {
   title: ReactNode;
   showBrand: boolean;
   isEnglish: boolean;
+  /** 浅色底用实色字，避免 mix-blend 在滚动时每帧重采样 */
+  tone?: "light" | "dark";
   indexLabel: string;
   indexAriaLabel: string;
   onIndexClick?: () => void;
@@ -18,15 +20,15 @@ type MobileSiteNavProps = {
   className?: string;
 };
 
-const focusRing =
-  "focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-0";
+const focusRing = "focus-visible:outline-none";
 
-/** Figma 926:1342：移动端公共导航，仅保留目录与语言入口。 */
+/** Figma 926:1342：移动端公共导航，仅保留目录与语言入口。页边 12px。 */
 export function MobileSiteNav({
   elevated,
   title,
   showBrand,
   isEnglish,
+  tone = "dark",
   indexLabel,
   indexAriaLabel,
   onIndexClick,
@@ -37,11 +39,16 @@ export function MobileSiteNav({
   className,
 }: MobileSiteNavProps) {
   const navFont = isEnglish ? "font-bodoni" : "font-serif-sc";
-  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-12 font-normal uppercase leading-[18px] text-white ${focusRing}`;
+  const ink = tone === "light" ? "text-grey-400" : "text-white";
+  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-12 font-normal uppercase leading-[18px] ${ink} ${focusRing}`;
+  // Bodoni 全大写的视觉中线比中文低，方块上提 1px 才与文字对齐
+  const markOffsetY = isEnglish ? -1 : 0;
+  // 仅深色屏保留 mix-blend；浅色屏实色字，减轻滑动合成成本
+  const blend = tone === "dark" ? "mix-blend-difference" : "";
 
   return (
     <header
-      className={`fixed inset-x-0 top-3 mix-blend-difference md:hidden ${elevated ? "z-[70]" : "z-50"} ${className ?? ""}`}
+      className={`fixed inset-x-0 top-[calc(env(safe-area-inset-top)+12px)] md:hidden ${blend} ${elevated ? "z-[70]" : "z-50"} ${className ?? ""}`}
     >
       <nav
         aria-label="Site"
@@ -50,8 +57,8 @@ export function MobileSiteNav({
         <p
           className={
             showBrand
-              ? "whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] text-white"
-              : "max-w-[calc(100%-98px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] text-white"
+              ? `whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
+              : `max-w-[calc(100%-98px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
           }
         >
           {title}
@@ -63,6 +70,7 @@ export function MobileSiteNav({
             label={indexLabel}
             aria-label={indexAriaLabel}
             onClick={onIndexClick}
+            markOffsetY={markOffsetY}
             className={`w-[34px] justify-end ${linkClass}`}
           />
           <FlipHoverButton
@@ -71,6 +79,7 @@ export function MobileSiteNav({
             aria-pressed={isEnglish}
             resetMarkOnClick
             onClick={onLanguageClick}
+            markOffsetY={markOffsetY}
             className={`w-[22px] justify-end ${linkClass}`}
           />
         </div>

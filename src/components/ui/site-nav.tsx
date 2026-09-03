@@ -22,8 +22,7 @@ type SiteNavProps = {
   className?: string;
 };
 
-const focusRing =
-  "focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-0";
+const focusRing = "focus-visible:outline-none";
 
 const NAV_TITLE_KEY: Partial<Record<NavVariant, MessageKey>> = {
   "archive-ga-001": "nav.title.ga001",
@@ -68,6 +67,8 @@ export function SiteNav({
   const langLabel = isEn ? "CN" : "英";
   const navFont = isEn ? "font-bodoni" : "font-serif-sc";
   const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-12 font-normal uppercase leading-none text-white ${focusRing}`;
+  // Bodoni 全大写的视觉中线比中文低，方块上提 1px 才与文字对齐
+  const markOffsetY = isEn ? -1 : 0;
 
   const titleKey = NAV_TITLE_KEY[navVariant];
   const code = NAV_CODE[navVariant];
@@ -130,6 +131,7 @@ export function SiteNav({
         title={title}
         showBrand={showBrand}
         isEnglish={isEn}
+        tone={navVariant === "studio" ? "dark" : "light"}
         indexLabel={indexLabel}
         indexAriaLabel={indexAriaLabel}
         onIndexClick={handleIndexClick}
@@ -165,11 +167,13 @@ export function SiteNav({
               label={indexLabel}
               aria-label={indexAriaLabel}
               onClick={handleIndexClick}
+              markOffsetY={markOffsetY}
               className={linkClass}
             />
             <FlipHoverButton
               label={contactLabel}
               onClick={onContact}
+              markOffsetY={markOffsetY}
               className={linkClass}
             />
           </div>
@@ -179,6 +183,7 @@ export function SiteNav({
             aria-pressed={locale === "en"}
             resetMarkOnClick
             onClick={handleLanguageClick}
+            markOffsetY={markOffsetY}
             className={`w-16 justify-end ${linkClass}`}
           />
           </div>

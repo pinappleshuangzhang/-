@@ -2,21 +2,14 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 import Image from "next/image";
-import {
-  createPointerParallax,
-  createScrollParallax,
-} from "@/animations/pointer-parallax";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
   useScreenActive,
   useSectionPager,
 } from "@/components/providers/section-pager-provider";
 import { SplitWords } from "@/components/ui/split-words";
-import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import plateBgImg from "../../public/org-record/founding-plate-bg-m.webp";
-import plateFgImg from "../../public/org-record/founding-plate-fg-m.webp";
-import statuesBgImg from "../../public/org-record/founding-statues-bg-m.webp";
-import statuesFgImg from "../../public/org-record/founding-statues-fg-m.webp";
+import plateImg from "../../public/org-record/founding-plate-m.webp";
+import statuesImg from "../../public/org-record/founding-statues-m.webp";
 
 /** 标题高亮条：中文取移动稿；英文按桌面 983:1425 比例换算到 24px 字号 */
 const TITLE_BAR_BY_LOCALE = {
@@ -24,10 +17,6 @@ const TITLE_BAR_BY_LOCALE = {
   en: { inset: 34, extend: 165, top: 37, height: 32 },
 } as const;
 const FOUNDED_BAR_EXTEND = 24;
-
-const LAYER_FG_PARALLAX = { amp: 4, scale: 1.03 };
-const LAYER_BG_PARALLAX = { amp: -4, scale: 1.03 };
-const SCROLL_PARALLAX_AMP = 4;
 
 type HighlightTitleProps = {
   syncId: string;
@@ -98,13 +87,10 @@ function HighlightTitle({
 }
 
 /**
- * 第三屏移动端（Figma 926:1394，390×1452）：纵向两段文案 + 方图 / 竖图，
- * 入场与高亮条交互同桌面；触控滑动与页内滚动驱动前后景视差。
+ * 第三屏移动端（Figma 926:1394）：纵向两段文案 + 单图；页边 12px；无视差。
  */
 export function OrgFoundingMobile() {
-  const rootRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const reducedMotion = useReducedMotion();
   const isActive = useScreenActive();
   const { registerScrollInterceptor } = useSectionPager();
   const { t, locale } = useLocale();
@@ -113,13 +99,6 @@ export function OrgFoundingMobile() {
   const titleBarRef = useRef<HTMLDivElement>(null);
   const foundedLine2Ref = useRef<HTMLSpanElement>(null);
   const foundedBarRef = useRef<HTMLDivElement>(null);
-
-  const statuesRootRef = useRef<HTMLDivElement>(null);
-  const statuesFgRef = useRef<HTMLDivElement>(null);
-  const statuesBgRef = useRef<HTMLDivElement>(null);
-  const plateRootRef = useRef<HTMLDivElement>(null);
-  const plateFgRef = useRef<HTMLDivElement>(null);
-  const plateBgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const bar = TITLE_BAR_BY_LOCALE[locale];
@@ -143,7 +122,14 @@ export function OrgFoundingMobile() {
     document.fonts?.ready.then(apply);
   }, [locale]);
 
-  // 页内滚动时消费手势，滚到顶/底再允许切屏
+  // 回到本屏时展示首屏（滚回顶部）
+  useEffect(() => {
+    if (!isActive) return;
+    const el = scrollerRef.current;
+    if (el) el.scrollTop = 0;
+  }, [isActive]);
+
+  // 滚轮：页内滚动；触控走原生 pan-y。顶/底再放行切屏
   useEffect(() => {
     if (!isActive) return;
     return registerScrollInterceptor((deltaY) => {
@@ -158,65 +144,6 @@ export function OrgFoundingMobile() {
     });
   }, [isActive, registerScrollInterceptor]);
 
-  // 触控 / 指针视差（与 PC 相同幅度）
-  useEffect(() => {
-    const area = scrollerRef.current;
-    const statuesFg = statuesFgRef.current;
-    const statuesBg = statuesBgRef.current;
-    const plateFg = plateFgRef.current;
-    const plateBg = plateBgRef.current;
-    if (
-      !area ||
-      !statuesFg ||
-      !statuesBg ||
-      !plateFg ||
-      !plateBg ||
-      !isActive ||
-      reducedMotion
-    ) {
-      return;
-    }
-    return createPointerParallax(area, [
-      { el: statuesFg, ...LAYER_FG_PARALLAX },
-      { el: statuesBg, ...LAYER_BG_PARALLAX },
-      { el: plateFg, ...LAYER_FG_PARALLAX },
-      { el: plateBg, ...LAYER_BG_PARALLAX },
-    ]);
-  }, [isActive, reducedMotion]);
-
-  // 页内滑动：块经过视口时前后景反向位移
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-    const statuesRoot = statuesRootRef.current;
-    const statuesFg = statuesFgRef.current;
-    const statuesBg = statuesBgRef.current;
-    const plateRoot = plateRootRef.current;
-    const plateFg = plateFgRef.current;
-    const plateBg = plateBgRef.current;
-    if (
-      !scroller ||
-      !statuesRoot ||
-      !statuesFg ||
-      !statuesBg ||
-      !plateRoot ||
-      !plateFg ||
-      !plateBg ||
-      !isActive ||
-      reducedMotion
-    ) {
-      return;
-    }
-    return createScrollParallax(scroller, [
-      {
-        root: statuesRoot,
-        fg: statuesFg,
-        bg: statuesBg,
-        amp: SCROLL_PARALLAX_AMP,
-      },
-      { root: plateRoot, fg: plateFg, bg: plateBg, amp: SCROLL_PARALLAX_AMP },
-    ]);
-  }, [isActive, reducedMotion]);
-
   const titleLabel = `${t("org.line1a")} ${t("org.line1b")}`;
   const foundedLabel = `${t("orgFounding.foundedPrefix")}${t(
     "orgFounding.foundedHighlight",
@@ -225,14 +152,16 @@ export function OrgFoundingMobile() {
   const foundedBar = { inset: 0, top: titleBar.top, height: titleBar.height };
 
   return (
+    // data-lenis-prevent：分页模式下 Lenis 处于 stop 态，会对 touchmove 一律 preventDefault，
+    // 路径上没有该标记的嵌套滚动容器在 iOS 上完全无法原生滚动
     <div
       ref={scrollerRef}
-      className="absolute inset-0 overflow-y-auto overscroll-contain md:hidden"
+      data-pager-scroller
+      data-lenis-prevent=""
+      className="absolute inset-0 overflow-y-scroll overscroll-y-contain touch-pan-y"
     >
-      <div
-        ref={rootRef}
-        className="mx-auto flex w-full max-w-[390px] flex-col px-3 pb-3 pt-[52px]"
-      >
+      {/* 页边距恒定 12px，通栏不限 390 */}
+      <div className="flex w-full flex-col px-3 pb-3 pt-[52px]">
         {/* 第一段：标题 + 雕塑方图 */}
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
@@ -258,35 +187,20 @@ export function OrgFoundingMobile() {
             />
           </div>
           <div
-            ref={statuesRootRef}
             data-sd-media
             data-sd-delay="0.55"
-            className="relative aspect-square w-full overflow-hidden"
+            className="w-full overflow-hidden"
           >
-            <div
-              data-sd-media-inner
-              className="absolute inset-0 translate-y-[105%]"
-            >
-              <div ref={statuesBgRef} className="absolute inset-0">
-                <Image
-                  src={statuesBgImg}
-                  alt=""
-                  fill
-                  sizes="(max-width: 767px) 100vw, 366px"
-                  unoptimized
-                  className="object-cover"
-                />
-              </div>
-              <div ref={statuesFgRef} className="absolute inset-0">
-                <Image
-                  src={statuesFgImg}
-                  alt={t("orgFounding.statuesAlt")}
-                  fill
-                  sizes="(max-width: 767px) 100vw, 366px"
-                  unoptimized
-                  className="object-cover"
-                />
-              </div>
+            <div data-sd-media-inner className="translate-y-[105%]">
+              <Image
+                src={statuesImg}
+                alt={t("orgFounding.statuesAlt")}
+                width={732}
+                height={732}
+                sizes="100vw"
+                priority
+                className="h-auto w-full"
+              />
             </div>
           </div>
         </div>
@@ -316,35 +230,21 @@ export function OrgFoundingMobile() {
             />
           </div>
           <div
-            ref={plateRootRef}
             data-sd-media
             data-sd-delay="0.65"
-            className="relative aspect-[366/488] w-full overflow-hidden"
+            className="w-full overflow-hidden"
           >
-            <div
-              data-sd-media-inner
-              className="absolute inset-0 translate-y-[105%]"
-            >
-              <div ref={plateBgRef} className="absolute inset-0">
-                <Image
-                  src={plateBgImg}
-                  alt=""
-                  fill
-                  sizes="(max-width: 767px) 100vw, 366px"
-                  unoptimized
-                  className="object-cover"
-                />
-              </div>
-              <div ref={plateFgRef} className="absolute inset-0">
-                <Image
-                  src={plateFgImg}
-                  alt={t("orgFounding.plateAlt")}
-                  fill
-                  sizes="(max-width: 767px) 100vw, 366px"
-                  unoptimized
-                  className="object-cover"
-                />
-              </div>
+            <div data-sd-media-inner className="translate-y-[105%]">
+              {/* iOS Safari 对嵌套滚动容器内的 lazy 图可能永不触发加载，此处直接 eager */}
+              <Image
+                src={plateImg}
+                alt={t("orgFounding.plateAlt")}
+                width={732}
+                height={1147}
+                sizes="100vw"
+                loading="eager"
+                className="h-auto w-full"
+              />
             </div>
           </div>
         </div>

@@ -292,7 +292,9 @@ export function SectionPagerProvider({
     return () => window.clearTimeout(timer);
   }, [phase, handleCoverComplete, handleRevealComplete]);
 
-  // 分页模式下页面本身不滚动；Safari 需额外 fixed 锁，单靠 overflow:hidden 不够
+  // 分页模式下页面本身不滚动；Safari 需额外 fixed 锁，单靠 overflow:hidden 不够。
+  // 不要给 body 设 touch-action:none：iOS WebKit 沿祖先链直接求交、不在滚动容器处重置，
+  // 会把屏内 touch-pan-y 一并抹掉，导致原生滚动完全失效。回弹由 touchmove 里 preventDefault 处理。
   useEffect(() => {
     const html = document.documentElement;
     const body = document.body;
@@ -305,7 +307,6 @@ export function SectionPagerProvider({
       bodyInset: body.style.inset,
       bodyWidth: body.style.width,
       bodyHeight: body.style.height,
-      bodyTouchAction: body.style.touchAction,
     };
 
     html.style.overflow = "hidden";
@@ -314,7 +315,6 @@ export function SectionPagerProvider({
     body.style.inset = "0";
     body.style.width = "100%";
     body.style.height = "100%";
-    body.style.touchAction = "none";
 
     return () => {
       html.removeAttribute("data-section-pager");
@@ -324,7 +324,6 @@ export function SectionPagerProvider({
       body.style.inset = prev.bodyInset;
       body.style.width = prev.bodyWidth;
       body.style.height = prev.bodyHeight;
-      body.style.touchAction = prev.bodyTouchAction;
     };
   }, []);
 
@@ -417,6 +416,15 @@ export function SectionPagerProvider({
     let touchCurrentY: number | null = null;
     let touchScrollContainer: HTMLElement | null = null;
     let touchHandledByNativeScroll = false;
+    // 手势起点是否已贴在滚动容器的顶/底，用于松手时兜底判定切屏
+    let touchStartAtTop = false;
+    let touchStartAtBottom = false;
+    // 首个 touchmove 常带亚像素抖动，未超过死区前不下判断
+    const TOUCH_DECISION_DEADZONE = 4;
+
+    const isAtTop = (el: HTMLElement) => el.scrollTop <= 1;
+    const isAtBottom = (el: HTMLElement) =>
+      el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
 
     const findScrollableAncestor = (target: EventTarget | null) => {
       let element = target instanceof HTMLElement ? target : null;
@@ -463,20 +471,29 @@ export function SectionPagerProvider({
       touchCurrentY = touchStartY;
       touchScrollContainer = findScrollableAncestor(event.target);
       touchHandledByNativeScroll = false;
+      touchStartAtTop = touchScrollContainer
+        ? isAtTop(touchScrollContainer)
+        : false;
+      touchStartAtBottom = touchScrollContainer
+        ? isAtBottom(touchScrollContainer)
+        : false;
     };
 
     const onTouchMove = (event: TouchEvent) => {
       if (touchStartY === null) return;
+      // 本手势已判定为屏内原生滚动后，绝不再 preventDefault，避免打断惯性
+      if (touchHandledByNativeScroll) return;
       touchCurrentY = event.touches[0]?.clientY ?? touchCurrentY;
       const travelled =
         touchCurrentY === null ? 0 : touchStartY - touchCurrentY;
+      if (touchScrollContainer && Math.abs(travelled) < TOUCH_DECISION_DEADZONE) {
+        return;
+      }
       const canScrollNatively =
         touchScrollContainer &&
         (travelled > 0
-          ? touchScrollContainer.scrollTop +
-              touchScrollContainer.clientHeight <
-            touchScrollContainer.scrollHeight - 1
-          : touchScrollContainer.scrollTop > 1);
+          ? !isAtBottom(touchScrollContainer)
+          : !isAtTop(touchScrollContainer));
       if (canScrollNatively) {
         touchHandledByNativeScroll = true;
         return;
@@ -496,53 +513,28 @@ export function SectionPagerProvider({
       const endY =
         event.changedTouches[0]?.clientY ?? touchCurrentY ?? touchStartY;
       const travelled = touchStartY - endY;
+      const container = touchScrollContainer;
       touchStartY = null;
       touchCurrentY = null;
       touchScrollContainer = null;
       if (touchHandledByNativeScroll) {
         touchHandledByNativeScroll = false;
-        return;
+        // iOS 回弹/惯性阶段可能误判为原生滚动：起点与终点都贴边、
+        // 且滚动位置没变时，视为在边缘继续滑，放行切屏
+        const stuckAtEdge =
+          container &&
+          (travelled > 0
+            ? touchStartAtBottom && isAtBottom(container)
+            : touchStartAtTop && isAtTop(container));
+        if (!stuckAtEdge) return;
       }
       commitSwipe(travelled);
     };
 
-    let pointerStartY: number | null = null;
-    let pointerCurrentY: number | null = null;
-
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (
-        event.pointerType !== "touch" ||
-        !event.isPrimary ||
-        !(target instanceof Element) ||
-        !target.closest("[data-pager-touch-surface]")
-      ) {
-        pointerStartY = null;
-        pointerCurrentY = null;
-        return;
-      }
-      pointerStartY = event.clientY;
-      pointerCurrentY = event.clientY;
-    };
-
-    const onPointerMove = (event: PointerEvent) => {
-      if (pointerStartY === null || event.pointerType !== "touch") return;
-      pointerCurrentY = event.clientY;
-      if (
-        Math.abs(pointerStartY - pointerCurrentY) >= WHEEL_THRESHOLD &&
-        event.cancelable
-      ) {
-        event.preventDefault();
-      }
-    };
-
-    const finishPointer = (event: PointerEvent) => {
-      if (pointerStartY === null || event.pointerType !== "touch") return;
-      const travelled = pointerStartY - (pointerCurrentY ?? event.clientY);
-      pointerStartY = null;
-      pointerCurrentY = null;
-      commitSwipe(travelled);
-    };
+    // 注意：不要再挂 pointer* 触控切屏。
+    // iOS Safari 会同时派发 touch 与 pointer；原先 pointermove 无条件
+    // preventDefault，并在 pointerup 再次 commitSwipe → scrollTop 叠滚，
+    // 屏内原生滑动会严重掉帧。触控只走上方 touch* 路径。
 
     // Safari：capture 阶段挂在 document，避免部分版本 window 冒泡收不到 wheel
     document.addEventListener("wheel", onWheel, { passive: false, capture: true });
@@ -551,10 +543,6 @@ export function SectionPagerProvider({
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", finishTouch, { passive: true });
     window.addEventListener("touchcancel", finishTouch, { passive: true });
-    window.addEventListener("pointerdown", onPointerDown, { passive: true });
-    window.addEventListener("pointermove", onPointerMove, { passive: false });
-    window.addEventListener("pointerup", finishPointer, { passive: true });
-    window.addEventListener("pointercancel", finishPointer, { passive: true });
 
     return () => {
       window.clearTimeout(wheelResetTimer);
@@ -566,10 +554,6 @@ export function SectionPagerProvider({
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", finishTouch);
       window.removeEventListener("touchcancel", finishTouch);
-      window.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", finishPointer);
-      window.removeEventListener("pointercancel", finishPointer);
     };
   }, [goToScreen, navigate]);
 
@@ -643,7 +627,7 @@ export function SectionPagerProvider({
       <div
         ref={stageRef}
         data-pager-touch-surface
-        className="fixed inset-0 overflow-hidden"
+        className="fixed inset-x-0 top-0 h-[100dvh] overflow-hidden md:inset-0 md:h-auto"
       >
         <SharedSectionBackgrounds
           active={activeScreen?.background ?? null}
