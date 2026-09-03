@@ -61,6 +61,13 @@ export function defaultParams() {
     mobileRefWidth: 390,
     mobileEntryPlaneSize: 100, // 第一阶段小图 100 × 62.5，居中
     mobileEntryRingRadius: 133, // 第二阶段小图右缘距屏 12px：195 - 12 - 50
+    // 第三阶段（Figma 947-3937）：小图直接放大为 365.5 宽的大图，顶边 305px，
+    // 不展开圆环、不旋转、不出现背景；工作室名称停留后自动进入。
+    mobileFinalPlaneSize: 365.5,
+    mobileFinalCardTop: 305, // px，设备像素，不随宽度缩放
+    mobileHoldTime: 0.8, // 品牌文字揭示完成后的停留秒数
+    mobileRevealAt: 0.5, // 文字逐词出现的时机，占 moveTime 的比例
+    mobileSwapDip: 0.94, // 切换分类时卡片先缩到该比例再换图放回
 
     // -- geometry, all at the reference window ---------------------------
     entryPlaneSize: 108, // 圆环阶段卡片等比缩小 10%，给背景轨道留出间距

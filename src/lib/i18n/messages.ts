@@ -85,6 +85,8 @@ export type MessageKey =
   | "gallery.prev"
   | "gallery.next"
   | "gallery.cardAlt"
+  | "gallery.mobile.heading"
+  | "gallery.mobile.viewDetails"
   | "ga004.aria"
   | "ga004.detailAria"
   | "survey.categoryNav"
@@ -198,6 +200,8 @@ const zh: Messages = {
   "gallery.prev": "查看上一组作品",
   "gallery.next": "查看下一组作品",
   "gallery.cardAlt": "视觉调查档案卡片",
+  "gallery.mobile.heading": "调查记录",
+  "gallery.mobile.viewDetails": "查看详情",
   "ga004.aria": "档案 GA_004 视觉调查档案",
   "ga004.detailAria": "档案 GA_004 视觉调查档案 作品详情",
   "survey.categoryNav": "调查类型",
@@ -226,7 +230,7 @@ const zh: Messages = {
   "contact.foundedLabel": "成立于",
   "contact.founded": "2021年",
   "contact.servicesLabel": "服务范围",
-  "contact.services": "品牌 / 视觉 / 产品 / 网站 / 动态",
+  "contact.services": "品牌 · 视觉 · 产品 · 网站 · 动态",
   "contact.button": "联系我们",
 };
 
@@ -319,6 +323,8 @@ const en: Messages = {
   "gallery.prev": "Previous Works",
   "gallery.next": "Next Works",
   "gallery.cardAlt": "Visual Survey Archive Card",
+  "gallery.mobile.heading": "Survey Records",
+  "gallery.mobile.viewDetails": "View Details",
   "ga004.aria": "Archive GA_004 Visual Survey Archive",
   "ga004.detailAria": "Archive GA_004 Visual Survey Archive Work Details",
   "survey.categoryNav": "Survey Categories",

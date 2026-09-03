@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import * as THREE from "three";
 import gsap from "gsap";
+import { ViscoseMobileStage } from "@/components/ui/viscose-mobile-stage";
 
 import { FlipHoverButton } from "@/components/ui/flip-hover-button";
 import {
@@ -71,6 +72,9 @@ function FinalCardShadowBlob({ left, right, top, width, height, blur }) {
   );
 }
 
+/** 入场种子所穿的贴图格，也是移动端第三阶段最初展示的分类 */
+const INITIAL_CELL = Math.round(defaultParams().imageOffset);
+
 const blankTexture = () => {
   const t = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
   t.needsUpdate = true;
@@ -84,6 +88,9 @@ export default function Carousel({
   categoryLabels,
   categoryFontClass,
   nameFont,
+  mobileHeading,
+  mobileViewDetails,
+  mobileWorks,
   paused = false,
 }) {
   const pausedRef = useRef(paused);
@@ -91,6 +98,10 @@ export default function Carousel({
     pausedRef.current = paused;
   }, [paused]);
   const containerRef = useRef(null);
+  const mobileStageRef = useRef(null);
+  // Which cell the single phone card is wearing; drives the chips and copy.
+  // Updated only when the front cell changes, never per frame.
+  const [mobileShown, setMobileShown] = useState(INITIAL_CELL);
   const stageBackgroundRef = useRef(null);
   const stageLayer2Ref = useRef(null);
   const stageLayer3Ref = useRef(null);
@@ -139,6 +150,7 @@ export default function Carousel({
     const brandStage = brandStageRef.current;
     const brandBackground = brandBackgroundRef.current;
     const brandText = brandTextRef.current;
+    const mobileStage = mobileStageRef.current;
     // Async atlas decoding can land after cleanup under StrictMode's double
     // mount. Everything deferred checks this flag.
     let disposed = false;
@@ -342,6 +354,10 @@ export default function Carousel({
     // off them still answers to the dev panel between resizes.
     let narrowNow = false;
     let tightNow = false;
+    // Phones get a different third act altogether: one card grows in place,
+    // no ring, no spin, no backdrop. Sized off the 390 artboard by width.
+    let mobileNow = false;
+    let mobileFit = 1;
 
     const refit = () => {
       const byW = viewW / Math.max(1, params.refWidth);
@@ -351,7 +367,8 @@ export default function Carousel({
       fit = Math.min(params.maxScale, Math.max(params.minScale, s));
 
       const mobile = viewW <= params.mobileAt;
-      const mobileFit = viewW / Math.max(1, params.mobileRefWidth);
+      mobileNow = mobile;
+      mobileFit = viewW / Math.max(1, params.mobileRefWidth);
       entryPlaneK = mobile
         ? (params.mobileEntryPlaneSize * mobileFit)
           / (params.entryPlaneSize * fit)
@@ -488,8 +505,29 @@ export default function Carousel({
       });
     };
 
+    // Phone category switch: there is only one card, so the ring cannot turn
+    // to the picture — the seed dips, changes its cell, and settles back.
+    const mobileSwap = { t: 1 };
+    const swapSeedCell = (cell) => {
+      if (cell === Math.round(params.imageOffset)) return;
+      gsap.killTweensOf(mobileSwap);
+      gsap.to(mobileSwap, {
+        t: 0,
+        duration: 0.22,
+        ease: "power2.in",
+        onComplete: () => {
+          params.imageOffset = cell;
+          gsap.to(mobileSwap, { t: 1, duration: 0.4, ease: "power2.out" });
+        },
+      });
+    };
+
     const pickCategory = (cell) => {
       if (!interactive || imageCount <= 0) return;
+      if (mobileNow) {
+        swapSeedCell(cell);
+        return;
+      }
 
       const count = Math.round(params.count);
       const slot = TAU / count;
@@ -581,7 +619,8 @@ export default function Carousel({
     };
 
     const applyWheelDelta = (deltaX, deltaY) => {
-      if (!interactive) return;
+      // A single phone card has nothing to turn; spin would only tilt it.
+      if (!interactive || mobileNow) return;
       // Trackpads send horizontal deltas too; take whichever dominates.
       const d = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY;
       // Fresh input hands the ring back to its own momentum.
@@ -609,6 +648,8 @@ export default function Carousel({
       if (!interactive) return;
       stopPick();
       if (coarse) beginHold();
+      // Tracked (so a tap can still hit the card) but never dragged on phones.
+      if (mobileNow) return;
       dragging = true;
       settling = false;
       spinVel = 0;
@@ -778,6 +819,7 @@ export default function Carousel({
         if (on) el.setAttribute("aria-current", "true");
         else el.removeAttribute("aria-current");
       }
+      if (shown >= 0) setMobileShown(shown);
     };
 
     const layout = (dt) => {
@@ -799,11 +841,20 @@ export default function Carousel({
       // The stage transform. Everything in plane-pixels goes through g, which
       // is why the window fit rides in here rather than on a dozen params.
       const shift = clamp01(state.shift);
-      const g = (1 + (endScale - 1) * shift) * fit;
-      const stageCx = posX * viewW * 0.5 * shift;
-      const stageCy = params.posY * viewH * 0.5 * shift;
-      const cx = stageCx + params.ringOffsetX * fit * spread;
-      const cy = stageCy - params.ringOffsetY * fit * spread;
+      // On phones the stage never moves or rescales the field: the card's own
+      // size carries the whole third act, so g stays at the plain window fit.
+      const g = mobileNow ? fit : (1 + (endScale - 1) * shift) * fit;
+      const stageCx = mobileNow ? 0 : posX * viewW * 0.5 * shift;
+      const stageCy = mobileNow ? 0 : params.posY * viewH * 0.5 * shift;
+      // Phone final card: 365.5 wide off the 390 artboard, top edge pinned at
+      // 305 device px (Figma 947-3937). World Y is up.
+      const mobileFinalW = params.mobileFinalPlaneSize * mobileFit;
+      const mobileFinalCy =
+        viewH * 0.5 - (params.mobileFinalCardTop + mobileFinalW / 1.6 / 2);
+      const cx = mobileNow ? 0 : stageCx + params.ringOffsetX * fit * spread;
+      const cy = mobileNow
+        ? mobileFinalCy * shift
+        : stageCy - params.ringOffsetY * fit * spread;
 
       // Screen-space centre, for pointer maths. World Y is up, page Y is down.
       ringCentre.x = viewW * 0.5 + cx;
@@ -821,7 +872,9 @@ export default function Carousel({
       const entryPlane = params.entryPlaneSize * entryPlaneK;
       const basePlaneSize = entryPlane + (params.planeSize - entryPlane) * shift;
       const responsivePlaneK = 1 + (planeK - 1) * shift;
-      const W = basePlaneSize * responsivePlaneK * g;
+      const W = mobileNow
+        ? entryPlane * fit + (mobileFinalW - entryPlane * fit) * shift
+        : basePlaneSize * responsivePlaneK * g;
       const H = W / 1.6;
       uniforms.uSize.value.set(W, H);
       // Tracks the plane, not the window: a card 25% bigger with the same
@@ -837,7 +890,11 @@ export default function Carousel({
       const baseRingRadius =
         entryRadius + (params.ringRadius - entryRadius) * shift;
       const responsiveRadiusK = 1 + (radiusK - 1) * shift;
-      const R = baseRingRadius * responsiveRadiusK * g;
+      // Phone: the launch radius folds back to zero, so the seed rides from
+      // its stage-2 perch on the right straight back to centre as it grows.
+      const R = mobileNow
+        ? entryRadius * fit * (1 - shift)
+        : baseRingRadius * responsiveRadiusK * g;
       const restingGap = 2 * R * Math.sin(step / 2) - sepExtent;
       info.restingGap = Math.round((restingGap / g) * 10) / 10;
       // The whole stretch plays out across this, so it is the yardstick.
@@ -991,8 +1048,13 @@ export default function Carousel({
             ? easeOutCubic(clamp01((u - 0.18) / 0.74))
             : easeOutCubic(clamp01((u - 0.06) / 0.36));
         // The swell rides on the birth scale rather than uSize, so a plane
-        // under the cursor grows about its own centre.
-        const sw = swellOf(i);
+        // under the cursor grows about its own centre. On phones the seed
+        // also dips while its art is swapped for another category.
+        const dip =
+          i === 0 && mobileNow
+            ? params.mobileSwapDip + (1 - params.mobileSwapDip) * mobileSwap.t
+            : 1;
+        const sw = swellOf(i) * dip;
         uniforms.uScale.value[i].set(
           sx * sw,
           sy * sw,
@@ -1294,6 +1356,33 @@ export default function Carousel({
         );
       }
 
+      // Phone: no ring. The lockup holds a beat and fades, then the seed grows
+      // into the third act by itself; a downward swipe during the hold only
+      // brings that forward.
+      if (mobileNow) {
+        params.imageOffset = INITIAL_CELL;
+        mobileSwap.t = 1;
+        mobileStage?.hide();
+        const holdStart = tl.duration() + params.mobileHoldTime;
+        if (brandStage) {
+          tl.to(
+            brandStage,
+            { opacity: 0, duration: 0.4, ease: "power2.in" },
+            holdStart,
+          );
+        }
+        tl.call(
+          () => {
+            if (disposed || gen !== entryGen) return;
+            stagePhase = "hold";
+            transitionToFinal();
+          },
+          undefined,
+          holdStart + 0.2,
+        );
+        return tl;
+      }
+
       // Absolute positions from here, so the stage can be dropped anywhere
       // inside the spread rather than only after it.
       const spreadStart = tl.duration() - 0.15;
@@ -1403,6 +1492,24 @@ export default function Carousel({
           if (stageBackground) gsap.set(stageBackground, { opacity: 0 });
         },
       });
+
+      // Phone: the seed grows straight into the big card — no spin, no
+      // backdrop to fade — and the copy comes in word by word as it lands.
+      if (mobileNow) {
+        finalTl.to(
+          state,
+          { shift: 1, duration: params.moveTime, ease: params.moveEase },
+          0,
+        );
+        finalTl.call(
+          () => {
+            if (!disposed) mobileStage?.reveal();
+          },
+          undefined,
+          params.moveTime * params.mobileRevealAt,
+        );
+        return;
+      }
 
       if (stageBackground) {
         finalTl.to(
@@ -1759,7 +1866,7 @@ export default function Carousel({
       <div
         ref={finalShadowRef}
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[1] overflow-visible opacity-0"
+        className="pointer-events-none absolute inset-0 z-[1] overflow-visible opacity-0 max-md:hidden"
       >
         <div
           ref={finalShadowPinRef}
@@ -1876,7 +1983,7 @@ export default function Carousel({
           top: "calc(50% - 114px)",
           width: "507px",
         }}
-        className={`absolute z-10 flex flex-col items-start gap-8 leading-5 text-grey-300 opacity-0 [--viscose-su:calc(100vw/1440)] max-sm:hidden ${categoryFontClass}`}
+        className={`absolute z-10 flex flex-col items-start gap-8 leading-5 text-grey-300 opacity-0 [--viscose-su:calc(100vw/1440)] max-md:hidden ${categoryFontClass}`}
       >
         {PROJECTS.slice(0, IMAGE_FILES.length).map((p, i) => (
           <li
@@ -1977,6 +2084,19 @@ export default function Carousel({
       />
 
       <div ref={liveRef} aria-live="polite" className="sr-only" />
+
+      {/* Phone third act (Figma 947-3937). The big picture is the WebGL seed
+          grown in place; this carries the heading, chips, copy and button. */}
+      <ViscoseMobileStage
+        ref={mobileStageRef}
+        active={mobileShown}
+        heading={mobileHeading ?? ""}
+        categoryLabels={categoryLabels ?? []}
+        works={mobileWorks ?? []}
+        viewDetailsLabel={mobileViewDetails ?? ""}
+        onPickCategory={(i) => categorySelectRef.current?.(i)}
+        onViewDetails={(i) => onSelect?.(i)}
+      />
 
       {/* Alpha multiplied up hard and biased down, so a pixel is either fully
           opaque or gone. That is what fuses two blurred words into one

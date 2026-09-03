@@ -3,6 +3,12 @@
 import Image from "next/image";
 import type { MutableRefObject } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
+import type { ViscoseMobileWork } from "@/components/ui/viscose-mobile-stage";
+import {
+  SURVEY_CATEGORIES,
+  SURVEY_G_001,
+  SURVEY_WORK_BY_CATEGORY,
+} from "@/lib/survey-details";
 import type { ViscoseCarouselItem } from "@/lib/viscose-carousel-items";
 import Carousel from "@/vendor/viscose/carousel";
 
@@ -36,6 +42,22 @@ export function ViscoseCarousel({
     t("gallery.category.visual"),
     t("gallery.category.motion"),
   ];
+  // 移动端第三阶段文字块：有详情的类型取作品标题与简介，其余先用卡片标题占位
+  const mobileWorks: ViscoseMobileWork[] = SURVEY_CATEGORIES.map(
+    (category, index) => {
+      const work = SURVEY_WORK_BY_CATEGORY[category.code];
+      if (!work) {
+        return { title: items[index]?.title ?? "", description: "" };
+      }
+      return {
+        title: work.projectTitle,
+        description:
+          work.description === SURVEY_G_001.description
+            ? t("survey.description")
+            : work.description,
+      };
+    },
+  );
 
   if (reducedMotion) {
     return (
@@ -77,6 +99,9 @@ export function ViscoseCarousel({
         paused={paused}
         cursorLabel={t("gallery.view")}
         categoryLabels={categoryLabels}
+        mobileHeading={t("gallery.mobile.heading")}
+        mobileViewDetails={t("gallery.mobile.viewDetails")}
+        mobileWorks={mobileWorks}
         categoryFontClass={
           locale === "zh" ? "font-serif-sc" : "font-bodoni"
         }
