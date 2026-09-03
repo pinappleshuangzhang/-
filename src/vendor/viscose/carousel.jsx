@@ -296,18 +296,27 @@ export default function Carousel({
     });
 
     uniforms.uAtlas.value.dispose();
-    atlas.texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    if (isSafari) {
+      // Safari can sample stale black levels while an asynchronously painted
+      // CanvasTexture regenerates mipmaps. Linear level-0 sampling is stable
+      // and also removes the mip-generation spike during the entry.
+      atlas.texture.generateMipmaps = false;
+      atlas.texture.minFilter = THREE.LinearFilter;
+      atlas.texture.anisotropy = 1;
+    } else {
+      atlas.texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    }
     uniforms.uAtlas.value = atlas.texture;
     uniforms.uGrid.value.set(atlas.grid[0], atlas.grid[1]);
     // Up front, not on completion: the cell each plane wears is derived from
     // this and has to be right from the first frame, blank cells or not.
     const imageCount = atlas.count;
 
-    atlas.first.then(() => {
-      if (!disposed) firstIn = true;
-    });
     atlas.ready.then(() => {
-      if (!disposed) loadProg = 1;
+      if (!disposed) {
+        firstIn = true;
+        loadProg = 1;
+      }
     });
 
     /* --------------------------------------------------------------- size */
@@ -324,6 +333,11 @@ export default function Carousel({
     let planeK = 1;
     let radiusK = 1;
     let textK = 1;
+    // Entry-only (shift = 0) multipliers. On phones the seed and its launch
+    // radius are drawn at the 390-wide artboard and scale with width; these
+    // fold that back onto the desktop figures so layout() stays one formula.
+    let entryPlaneK = 1;
+    let entryRadiusK = 1;
     // Kept as flags rather than resolved into values here, so anything picked
     // off them still answers to the dev panel between resizes.
     let narrowNow = false;
@@ -335,6 +349,17 @@ export default function Carousel({
       const s =
         byW * (1 - params.fitHeight) + Math.max(byW, byH) * params.fitHeight;
       fit = Math.min(params.maxScale, Math.max(params.minScale, s));
+
+      const mobile = viewW <= params.mobileAt;
+      const mobileFit = viewW / Math.max(1, params.mobileRefWidth);
+      entryPlaneK = mobile
+        ? (params.mobileEntryPlaneSize * mobileFit)
+          / (params.entryPlaneSize * fit)
+        : 1;
+      entryRadiusK = mobile
+        ? (params.mobileEntryRingRadius * mobileFit)
+          / (params.entryRingRadius * fit)
+        : 1;
 
       const narrow = viewW <= params.narrowAt;
       const tight = viewW <= params.tightAt;
@@ -458,6 +483,7 @@ export default function Carousel({
         ease: params.pickEase,
         onComplete: () => {
           picking = false;
+          if (openWhenCurrent) onSelect?.(i);
         },
       });
     };
@@ -629,14 +655,16 @@ export default function Carousel({
       endHold();
       if (!dragging) return;
       dragging = false;
-      renderer.domElement.releasePointerCapture?.(e.pointerId);
+      if (renderer.domElement.hasPointerCapture?.(e.pointerId)) {
+        renderer.domElement.releasePointerCapture(e.pointerId);
+      }
     };
 
     // A drag ends in a click too, so only a near-stationary press counts.
     // `over` comes from the same hit test that decides the tag, so a click
     // only ever lands on the card the tag was offering.
     const onClick = () => {
-      if (!interactive || pointerTravel >= 5 || over < 0) return;
+      if (!interactive || pointerTravel >= params.touchSlop || over < 0) return;
       pick(over);
     };
 
@@ -790,9 +818,8 @@ export default function Carousel({
 
       // Anything measured in plane long edges — hover reach, thread reach,
       // side falloff — comes off W, so the narrow bump reaches them for free.
-      const basePlaneSize =
-        params.entryPlaneSize
-        + (params.planeSize - params.entryPlaneSize) * shift;
+      const entryPlane = params.entryPlaneSize * entryPlaneK;
+      const basePlaneSize = entryPlane + (params.planeSize - entryPlane) * shift;
       const responsivePlaneK = 1 + (planeK - 1) * shift;
       const W = basePlaneSize * responsivePlaneK * g;
       const H = W / 1.6;
@@ -806,9 +833,9 @@ export default function Carousel({
       const sepExtent = params.radial ? H : W;
       const faceEdge = params.radial ? W : H;
 
+      const entryRadius = params.entryRingRadius * entryRadiusK;
       const baseRingRadius =
-        params.entryRingRadius
-        + (params.ringRadius - params.entryRingRadius) * shift;
+        entryRadius + (params.ringRadius - entryRadius) * shift;
       const responsiveRadiusK = 1 + (radiusK - 1) * shift;
       const R = baseRingRadius * responsiveRadiusK * g;
       const restingGap = 2 * R * Math.sin(step / 2) - sepExtent;
@@ -1788,20 +1815,22 @@ export default function Carousel({
         {cursorLabel}
       </p>
 
+      {/* Geometry lives in unitless custom properties so the phone artboard
+          (Figma 947-726, 390 wide) swaps in with max-md: overrides. dx/dy are
+          offsets in design units from --brand-anchor (50% on desktop, the
+          left edge on phones) and the vertical centre. */}
       <div
         ref={brandStageRef}
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-10 opacity-0 [--viscose-su:calc(100vw/1440)]"
+        className="pointer-events-none absolute inset-0 z-10 opacity-0 [--viscose-su:calc(100vw/1440)] [--brand-anchor:50%] [--brand-text-dx:-104] [--brand-text-dy:-11] [--brand-font:18] [--brand-line:24] [--brand-bar-dx:-172] [--brand-bar-dy:-23] [--brand-bar-w:235] [--brand-bar-h:43] max-md:[--viscose-su:calc(100vw/390)] max-md:[--brand-anchor:0%] max-md:[--brand-text-dx:54] max-md:[--brand-text-dy:-10] max-md:[--brand-font:16] max-md:[--brand-line:20] max-md:[--brand-bar-dx:0] max-md:[--brand-bar-dy:-22] max-md:[--brand-bar-w:201]"
       >
         <div
           className="absolute font-bodoni uppercase"
           style={{
-            left: "calc(50% - var(--viscose-su) * 104)",
-            top: "calc(50% - var(--viscose-su) * 11)",
-            width: "calc(var(--viscose-su) * 208)",
-            height: "calc(var(--viscose-su) * 23)",
-            fontSize: "calc(var(--viscose-su) * 18)",
-            lineHeight: "calc(var(--viscose-su) * 24)",
+            left: "calc(var(--brand-anchor) + var(--viscose-su) * var(--brand-text-dx))",
+            top: "calc(50% + var(--viscose-su) * var(--brand-text-dy))",
+            fontSize: "calc(var(--viscose-su) * var(--brand-font))",
+            lineHeight: "calc(var(--viscose-su) * var(--brand-line))",
           }}
         >
           <span
@@ -1815,19 +1844,19 @@ export default function Carousel({
           ref={brandBackgroundRef}
           className="absolute overflow-hidden bg-grey-400"
           style={{
-            left: "calc(50% - var(--viscose-su) * 172)",
-            top: "calc(50% - var(--viscose-su) * 23)",
-            width: "calc(var(--viscose-su) * 235)",
-            height: "calc(var(--viscose-su) * 43)",
+            left: "calc(var(--brand-anchor) + var(--viscose-su) * var(--brand-bar-dx))",
+            top: "calc(50% + var(--viscose-su) * var(--brand-bar-dy))",
+            width: "calc(var(--viscose-su) * var(--brand-bar-w))",
+            height: "calc(var(--viscose-su) * var(--brand-bar-h))",
           }}
         >
           <span
             className="absolute whitespace-nowrap font-bodoni uppercase text-white"
             style={{
-              left: "calc(var(--viscose-su) * 68)",
-              top: "calc(var(--viscose-su) * 12)",
-              fontSize: "calc(var(--viscose-su) * 18)",
-              lineHeight: "calc(var(--viscose-su) * 24)",
+              left: "calc(var(--viscose-su) * (var(--brand-text-dx) - var(--brand-bar-dx)))",
+              top: "calc(var(--viscose-su) * (var(--brand-text-dy) - var(--brand-bar-dy)))",
+              fontSize: "calc(var(--viscose-su) * var(--brand-font))",
+              lineHeight: "calc(var(--viscose-su) * var(--brand-line))",
             }}
           >
             Grava Design Studio

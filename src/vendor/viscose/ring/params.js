@@ -55,6 +55,13 @@ export function defaultParams() {
     tightNameRight: 16, // px
     tightMetaWidth: 70, // vw of box, and so of filter region, around it
 
+    // 移动端（Figma 947-657 / 947-726，390 × 844 画板）入场几何按宽度缩放，
+    // 不走桌面端与背景共用的 cover 缩放，否则小图会被放大并飞出屏幕。
+    mobileAt: 767, // inclusive，与站点 md 断点一致
+    mobileRefWidth: 390,
+    mobileEntryPlaneSize: 100, // 第一阶段小图 100 × 62.5，居中
+    mobileEntryRingRadius: 133, // 第二阶段小图右缘距屏 12px：195 - 12 - 50
+
     // -- geometry, all at the reference window ---------------------------
     entryPlaneSize: 108, // 圆环阶段卡片等比缩小 10%，给背景轨道留出间距
     planeSize: 90, // 圆环展开后的原版卡片基准，不改变最终构图尺度
