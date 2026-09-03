@@ -74,7 +74,7 @@ function ContactLayout({
         />
         <ContactButtonContent
           label={t("contact.button")}
-          arrowSrc="/contact/contact-arrow-white.png"
+          arrowSrc="/contact/contact-arrow-white.webp"
           className="text-white"
           fontClassName={titleFont}
           animated={animated}

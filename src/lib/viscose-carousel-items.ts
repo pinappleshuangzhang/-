@@ -11,7 +11,7 @@ export type ViscoseCarouselItem = {
 export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
   {
     id: "survey-a",
-    src: "/archive-ga-004/work-01-hover.png",
+    src: "/archive-ga-004/work-01-hover.webp",
     alt: "品牌设计作品",
     title: "Brand Archive",
     discipline: "Brand Design",
@@ -19,7 +19,7 @@ export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
   },
   {
     id: "survey-b",
-    src: "/archive-ga-004/work-02-hover.png",
+    src: "/archive-ga-004/work-02-hover.webp",
     alt: "产品设计作品",
     title: "Product Study",
     discipline: "Product Design",
@@ -27,7 +27,7 @@ export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
   },
   {
     id: "survey-c",
-    src: "/archive-ga-004/work-03-hover.png",
+    src: "/archive-ga-004/work-03-hover.webp",
     alt: "网站界面设计作品",
     title: "Apple Moment",
     discipline: "Web Interface",
@@ -35,7 +35,7 @@ export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
   },
   {
     id: "survey-d",
-    src: "/archive-ga-004/work-04-hover.png",
+    src: "/archive-ga-004/work-04-hover.webp",
     alt: "视觉设计作品",
     title: "Visual Field",
     discipline: "Visual Design",
@@ -43,7 +43,7 @@ export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
   },
   {
     id: "survey-e",
-    src: "/archive-ga-004/work-05-hover.png",
+    src: "/archive-ga-004/work-05-hover.webp",
     alt: "动态视觉作品",
     title: "Motion Trace",
     discipline: "Motion Graphics",

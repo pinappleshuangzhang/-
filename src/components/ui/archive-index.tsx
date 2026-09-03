@@ -302,7 +302,7 @@ function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
       >
         {/* 素材是白色箭头：非选中行反相成黑色，与 hover 后的黑色文字一致 */}
         <Image
-          src="/archive-index/arrow.png"
+          src="/archive-index/arrow.webp"
           alt=""
           width={48}
           height={48}

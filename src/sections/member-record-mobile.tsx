@@ -169,14 +169,14 @@ function MobileProfileAction({ label }: { label: string }) {
       {label}
       <span aria-hidden="true" className="relative block size-4 overflow-hidden">
         <Image
-          src="/archive/member-record-external-arrow.png"
+          src="/archive/member-record-external-arrow.webp"
           alt=""
           fill
           sizes="16px"
           className="profile-action-arrow profile-action-arrow-current object-contain"
         />
         <Image
-          src="/archive/member-record-external-arrow.png"
+          src="/archive/member-record-external-arrow.webp"
           alt=""
           fill
           sizes="16px"

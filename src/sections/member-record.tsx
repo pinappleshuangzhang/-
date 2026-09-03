@@ -401,14 +401,14 @@ function ProfileAction({ label }: { label: string }) {
       <SplitWords text={label} />
       <span aria-hidden="true" className="relative block size-4 overflow-hidden">
         <Image
-          src="/archive/member-record-external-arrow.png"
+          src="/archive/member-record-external-arrow.webp"
           alt=""
           fill
           sizes="16px"
           className="profile-action-arrow profile-action-arrow-current object-contain group-hover:invert"
         />
         <Image
-          src="/archive/member-record-external-arrow.png"
+          src="/archive/member-record-external-arrow.webp"
           alt=""
           fill
           sizes="16px"
