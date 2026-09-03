@@ -53,6 +53,7 @@ export type MessageKey =
   | "orgFounding.plateAlt"
   | "orgFounding.foundedPrefix"
   | "orgFounding.foundedHighlight"
+  | "orgFounding.foundedHighlightMobile"
   | "orgFounding.detail1"
   | "orgFounding.detail2"
   | "member.aria"
@@ -163,6 +164,7 @@ const zh: Messages = {
   "orgFounding.plateAlt": "嵌有工作室标识的金属铭牌装置",
   "orgFounding.foundedPrefix": "我们成立了",
   "orgFounding.foundedHighlight": "万有引力设计工作室",
+  "orgFounding.foundedHighlightMobile": "万有引力工作室",
   "orgFounding.detail1": "我们进入不同的品牌、产品、空间与数字体验",
   "orgFounding.detail2": "每一次设计都会形成一份“调查档案”",
   "member.aria": "档案 GA_003 成员记录",
@@ -281,6 +283,7 @@ const en: Messages = {
   "orgFounding.plateAlt": "Metal Plate Installation With The Studio Logo",
   "orgFounding.foundedPrefix": "We Founded ",
   "orgFounding.foundedHighlight": "Universal Grava Design Studio",
+  "orgFounding.foundedHighlightMobile": "Universal Grava Design Studio",
   "orgFounding.detail1":
     "We Enter Different Brands, Products, Spaces, And Digital Experiences",
   "orgFounding.detail2": "Every Design Becomes A Survey Archive",

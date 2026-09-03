@@ -16,7 +16,8 @@ const TITLE_BAR_BY_LOCALE = {
   zh: { inset: 60, extend: 95, top: 37, height: 28 },
   en: { inset: 34, extend: 165, top: 37, height: 32 },
 } as const;
-const FOUNDED_BAR_EXTEND = 24;
+/** 成立宣言黑条：稿内 239 宽 − 7 字 × 24px，起点与文字齐 */
+const FOUNDED_BAR_EXTEND_BY_LOCALE = { zh: 71, en: 24 } as const;
 
 type HighlightTitleProps = {
   syncId: string;
@@ -114,7 +115,7 @@ export function OrgFoundingMobile() {
       const foundedBar = foundedBarRef.current;
       if (foundedLine2 && foundedBar) {
         foundedBar.style.width = `${
-          foundedLine2.offsetWidth + FOUNDED_BAR_EXTEND
+          foundedLine2.offsetWidth + FOUNDED_BAR_EXTEND_BY_LOCALE[locale]
         }px`;
       }
     };
@@ -146,8 +147,9 @@ export function OrgFoundingMobile() {
 
   const titleLabel = `${t("org.line1a")} ${t("org.line1b")}`;
   const foundedLabel = `${t("orgFounding.foundedPrefix")}${t(
-    "orgFounding.foundedHighlight",
+    "orgFounding.foundedHighlightMobile",
   )}`;
+  const detailLabel = `${t("orgFounding.detail1")} ${t("orgFounding.detail2")}`;
   const titleBar = TITLE_BAR_BY_LOCALE[locale];
   const foundedBar = { inset: 0, top: titleBar.top, height: titleBar.height };
 
@@ -160,8 +162,8 @@ export function OrgFoundingMobile() {
       data-lenis-prevent=""
       className="absolute inset-0 overflow-y-scroll overscroll-y-contain touch-pan-y"
     >
-      {/* 页边距恒定 12px，通栏不限 390 */}
-      <div className="flex w-full flex-col px-3 pb-3 pt-[52px]">
+      {/* 页边距恒定 12px，通栏不限 390；内容起点取稿 top 109 */}
+      <div className="flex w-full flex-col px-3 pb-3 pt-[109px]">
         {/* 第一段：标题 + 雕塑方图 */}
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
@@ -205,22 +207,14 @@ export function OrgFoundingMobile() {
           </div>
         </div>
 
-        {/* 第二段：成立宣言 + 铭牌竖图（间距取自稿 112px） */}
-        <div className="mt-28 flex flex-col gap-6">
+        {/* 第二段：成立宣言 + 两行说明 + 铭牌竖图（模块间距取自稿 80px） */}
+        <div className="mt-20 flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <p
-              data-sd-words
-              data-sd-delay="0.45"
-              aria-label={t("orgFounding.designers")}
-              className="font-serif-sc text-12 text-grey-300"
-            >
-              <SplitWords text={t("orgFounding.designers")} />
-            </p>
             <HighlightTitle
               syncId="founding-founded-m"
-              delay="0.55"
+              delay="0.45"
               line1={t("orgFounding.foundedPrefix").trimEnd()}
-              line2={t("orgFounding.foundedHighlight")}
+              line2={t("orgFounding.foundedHighlightMobile")}
               ariaLabel={foundedLabel}
               barInset={foundedBar.inset}
               barTop={foundedBar.top}
@@ -228,6 +222,23 @@ export function OrgFoundingMobile() {
               line2Ref={foundedLine2Ref}
               barRef={foundedBarRef}
             />
+            <div
+              data-sd-lines
+              data-sd-delay="0.6"
+              aria-label={detailLabel}
+              className="font-serif-sc text-12 leading-[18px] text-grey-300"
+            >
+              <span aria-hidden="true" className="block overflow-hidden">
+                <span className="sd-line block opacity-0">
+                  {t("orgFounding.detail1")}
+                </span>
+              </span>
+              <span aria-hidden="true" className="block overflow-hidden">
+                <span className="sd-line block opacity-0">
+                  {t("orgFounding.detail2")}
+                </span>
+              </span>
+            </div>
           </div>
           <div
             data-sd-media
