@@ -14,8 +14,12 @@ gsap.registerPlugin(useGSAP);
 
 type SpotlightRevealProps = {
   src: StaticImageData;
+  /** 小于 768px 时使用的移动端构图 */
+  mobileSrc?: StaticImageData;
   /** 聚光半径（px） */
   radius?: number;
+  /** 移动端聚光半径（px），默认沿用桌面值 */
+  mobileRadius?: number;
   /** 无鼠标输入时，让聚光点沿内容区域自动巡游 */
   autoMove?: boolean;
   className?: string;
@@ -34,7 +38,9 @@ const FALLBACK_GRADIENT =
  */
 export function SpotlightReveal({
   src,
+  mobileSrc,
   radius = 160,
+  mobileRadius,
   autoMove = false,
   className,
 }: SpotlightRevealProps) {
@@ -50,17 +56,23 @@ export function SpotlightReveal({
       const canvas = canvasRef.current;
       const imageEl = imageRef.current;
       if (!el || !canvas || !imageEl || reducedMotion) return;
-      // 只有悬停型精准指针（鼠标/触控板）才启用聚光模式，触屏保持常显
-      if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      const hasPrecisePointer = window.matchMedia(
+        "(hover: hover) and (pointer: fine)",
+      ).matches;
+      // 无自动巡游时仅鼠标设备启用；自动巡游允许移动端自行显影。
+      if (!autoMove && !hasPrecisePointer) {
         return;
       }
       const section = el.closest("section");
       if (!section) return;
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      const activeSrc = mobileSrc && isMobile ? mobileSrc : src;
+      const activeRadius = isMobile ? (mobileRadius ?? radius) : radius;
 
       // WebGL 渲染器就绪后隐藏静态图；失败则退回 CSS 蒙版
       const renderer: WaterSpotlight | null = createWaterSpotlight(
         canvas,
-        src.src,
+        activeSrc.src,
       );
       let fallbackTweens: { xTo?: gsap.QuickToFunc; yTo?: gsap.QuickToFunc } =
         {};
@@ -125,7 +137,7 @@ export function SpotlightReveal({
         if (!autoMove || mode === "full") return;
         mode = "auto";
         lastTime = 0;
-        setRadius(radius);
+        setRadius(activeRadius);
       };
 
       const scheduleAuto = () => {
@@ -172,7 +184,7 @@ export function SpotlightReveal({
               autoAlpha: 1,
             });
           }
-          setRadius(radius);
+          setRadius(activeRadius);
         }
         moveSpotlight(x, y, event.timeStamp);
         scheduleAuto();
@@ -193,7 +205,7 @@ export function SpotlightReveal({
       };
       const onEnter = (event: PointerEvent) => {
         if (event.pointerType !== "mouse" || mode !== "pointer") return;
-        setRadius(radius);
+        setRadius(activeRadius);
       };
       const onKeyDown = (event: KeyboardEvent) => {
         if (
@@ -219,7 +231,7 @@ export function SpotlightReveal({
           sectionRect.top + sectionRect.height * 0.72 - rect.top,
           performance.now(),
         );
-        setRadius(radius);
+        setRadius(activeRadius);
         autoFrame = window.requestAnimationFrame(animateAuto);
       }
 
@@ -237,7 +249,17 @@ export function SpotlightReveal({
         window.removeEventListener("keydown", onKeyDown);
       };
     },
-    { dependencies: [autoMove, reducedMotion, radius, src.src], scope: ref },
+    {
+      dependencies: [
+        autoMove,
+        mobileRadius,
+        mobileSrc?.src,
+        reducedMotion,
+        radius,
+        src.src,
+      ],
+      scope: ref,
+    },
   );
 
   return (
@@ -248,13 +270,23 @@ export function SpotlightReveal({
     >
       {/* 静态图：触屏 / 键盘 / 减少动效场景常显；鼠标场景由画布接管 */}
       <div ref={imageRef} className="absolute inset-0">
+        {mobileSrc && (
+          <Image
+            src={mobileSrc}
+            alt=""
+            fill
+            sizes="(max-width: 767px) 100vw, 0px"
+            quality={95}
+            className="object-cover md:hidden"
+          />
+        )}
         <Image
           src={src}
           alt=""
           fill
-          sizes="100vw"
+          sizes={mobileSrc ? "(min-width: 768px) 100vw, 0px" : "100vw"}
           quality={95}
-          className="object-cover"
+          className={`object-cover ${mobileSrc ? "hidden md:block" : ""}`}
         />
       </div>
       {/* 水波聚光画布：与图片同尺寸叠放 */}

@@ -291,7 +291,7 @@ export function Hero() {
       {/* 最终首屏内容：Figma 884:2070，标题组与目录左侧光学对齐 */}
       <div className="absolute inset-0 z-30">
         <div
-          className={`absolute left-1/2 top-[113px] flex -translate-x-1/2 flex-col items-center gap-2 text-center md:hidden ${
+          className={`absolute left-1/2 top-[103px] flex -translate-x-1/2 flex-col items-center gap-2 text-center md:hidden ${
             locale === "zh" ? "w-[290px]" : "w-[366px]"
           }`}
         >
@@ -302,7 +302,7 @@ export function Hero() {
             className={`whitespace-nowrap font-serif-sc font-medium uppercase text-grey-400 ${
               locale === "zh"
                 ? "text-32 leading-[48px]"
-                : "text-40 leading-[48px]"
+                : "text-28 leading-[48px]"
             }`}
           >
             <SplitWords text={t("hero.title")} />

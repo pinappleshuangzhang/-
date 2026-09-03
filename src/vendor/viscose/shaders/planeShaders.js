@@ -2,8 +2,10 @@
 // The guaranteed WebGL2 minimum is 224 vec4s, so the link parameters are
 // packed into one vec4 array and the image index is derived arithmetically
 // rather than passed as a tenth array.
-export const MAX_PLANES = 32;
-export const MAX_LINKS = 32;
+// The ring currently contains twelve cards. Keeping these at 32 makes Safari's
+// Metal compiler unroll 64 costly SDF iterations for every full-screen pixel.
+export const MAX_PLANES = 12;
+export const MAX_LINKS = 12;
 
 export const vertexShader = /* glsl */ `
   varying vec2 vUv;

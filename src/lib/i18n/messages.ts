@@ -90,6 +90,7 @@ export type MessageKey =
   | "ga004.aria"
   | "ga004.detailAria"
   | "survey.categoryNav"
+  | "survey.detailTitle"
   | "survey.detailAria"
   | "survey.duration"
   | "survey.description"
@@ -205,6 +206,7 @@ const zh: Messages = {
   "ga004.aria": "档案 GA_004 视觉调查档案",
   "ga004.detailAria": "档案 GA_004 视觉调查档案 作品详情",
   "survey.categoryNav": "调查类型",
+  "survey.detailTitle": "调查详情",
   "survey.detailAria": "作品详情抽屉，按 Escape 或点击空白处关闭",
   "survey.duration": "一个月",
   "survey.description":
@@ -328,6 +330,7 @@ const en: Messages = {
   "ga004.aria": "Archive GA_004 Visual Survey Archive",
   "ga004.detailAria": "Archive GA_004 Visual Survey Archive Work Details",
   "survey.categoryNav": "Survey Categories",
+  "survey.detailTitle": "Survey Details",
   "survey.detailAria":
     "Work Details Drawer. Press Escape Or Click Empty Space To Close",
   "survey.duration": "One Month",

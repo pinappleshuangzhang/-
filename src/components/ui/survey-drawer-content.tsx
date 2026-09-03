@@ -35,10 +35,12 @@ export function SurveyDrawerContent({
 }: SurveyDrawerContentProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const activeCategory = SURVEY_CATEGORY_BY_CODE[initialCode];
   const activeWork = SURVEY_WORK_BY_CATEGORY[initialCode];
   const heading = `Survey Details_${activeCategory.number}`;
+  // 手机版标题跟随语言（Figma 1008-561 为「调查详情_003」），桌面版固定英文
+  const mobileHeading = `${t("survey.detailTitle")}_${activeCategory.number}`;
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -55,30 +57,40 @@ export function SurveyDrawerContent({
   }, [open, initialCode, reducedMotion]);
 
   return (
-    <div ref={rootRef} className="relative px-5 pb-20 pt-[105px]">
+    <div
+      ref={rootRef}
+      className="relative px-5 pb-20 pt-[105px] max-md:px-3 max-md:pb-12 max-md:pt-[68px]"
+    >
       <div className="flex w-full max-w-[896px] flex-col gap-10">
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-10 max-md:gap-9">
           <header className="flex items-center justify-between">
             <h1
               id={titleId}
               aria-label={heading}
-              className="whitespace-nowrap font-bodoni text-44 font-normal uppercase leading-[55px] text-grey-400"
+              className="whitespace-nowrap font-bodoni text-44 font-normal uppercase leading-[55px] text-grey-400 max-md:text-24 max-md:normal-case max-md:leading-[34px]"
             >
-              <span data-sd-words data-sd-delay="0.15">
+              <span data-sd-words data-sd-delay="0.15" className="max-md:hidden">
                 <SplitWords text={heading} />
               </span>
+              <span
+                data-sd-words
+                data-sd-delay="0.15"
+                className={`md:hidden ${locale === "zh" ? "font-serif-sc" : ""}`}
+              >
+                <SplitWords text={mobileHeading} />
+              </span>
             </h1>
-            <div className="flex flex-col items-end justify-center gap-2">
-              <div className="flex w-[180px] items-center justify-end gap-1">
+            <div className="flex flex-col items-end justify-center gap-2 max-md:gap-1">
+              <div className="flex w-[180px] items-center justify-end gap-1 max-md:w-[104px]">
                 <div
-                  className="h-px min-w-px flex-1 bg-grey-400"
+                  className="h-px min-w-px flex-1 bg-grey-400 max-md:bg-grey-300"
                   aria-hidden="true"
                 />
                 <p
                   data-sd-words
                   data-sd-delay="0.2"
                   aria-label={activeCategory.typeLabel}
-                  className="whitespace-nowrap font-bodoni text-20 capitalize leading-normal text-grey-400"
+                  className="whitespace-nowrap font-bodoni text-20 capitalize leading-normal text-grey-400 max-md:text-12 max-md:leading-[15px]"
                 >
                   <SplitWords text={activeCategory.typeLabel} />
                 </p>
@@ -87,7 +99,7 @@ export function SurveyDrawerContent({
                 data-sd-words
                 data-sd-delay="0.22"
                 aria-label={SURVEY_G_001.archivedLabel}
-                className="whitespace-nowrap font-bodoni text-20 uppercase leading-normal text-grey-400"
+                className="whitespace-nowrap font-bodoni text-20 uppercase leading-normal text-grey-400 max-md:text-12 max-md:leading-[15px]"
               >
                 <SplitWords text={SURVEY_G_001.archivedLabel} />
               </p>
@@ -118,7 +130,7 @@ function WorkContent({ work }: { work: SurveyWork }) {
   const laterDelays = ["0.5", "0.55", "0.6", "0.65"];
 
   return (
-    <div className="flex flex-col gap-20">
+    <div className="flex flex-col gap-20 max-md:gap-9">
       {first ? (
         <div className="flex flex-col gap-6">
           <WorkMedia item={first} revealDelay="0.28" />
@@ -132,10 +144,10 @@ function WorkContent({ work }: { work: SurveyWork }) {
               data-sd-media-inner
               className="flex translate-y-[105%] flex-col gap-3"
             >
-              <p className="whitespace-nowrap font-serif-sc text-20 font-medium capitalize leading-normal text-grey-400">
+              <p className="whitespace-nowrap font-serif-sc text-20 font-medium capitalize leading-normal text-grey-400 max-md:font-bodoni max-md:text-18 max-md:leading-6">
                 {work.projectTitle}
               </p>
-              <p className="font-serif-sc text-14 font-normal leading-5 text-grey-300">
+              <p className="font-serif-sc text-14 font-normal leading-5 text-grey-300 max-md:text-12 max-md:leading-6">
                 {description}
               </p>
             </div>

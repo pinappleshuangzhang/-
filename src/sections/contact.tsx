@@ -6,6 +6,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { SplitWords } from "@/components/ui/split-words";
 import contactEmbossedBgImg from "../../public/contact/contact-embossed-bg.webp";
+import contactEmbossedBgMobileImg from "../../public/contact/contact-embossed-bg-mobile.webp";
 
 /**
  * 最后一屏：GA_ARCHIVE_006《开启一份新调查》。
@@ -18,6 +19,8 @@ export function Contact() {
     <ScreenShell aria-label={t("contact.aria")}>
       <SpotlightReveal
         src={contactEmbossedBgImg}
+        mobileSrc={contactEmbossedBgMobileImg}
+        mobileRadius={96}
         autoMove
         className="absolute inset-0 z-[5]"
       />
@@ -45,7 +48,7 @@ function ContactLayout({
         data-sd-words={animated ? "" : undefined}
         data-sd-delay={animated ? "0.2" : undefined}
         aria-label={t("contact.cta")}
-        className={`absolute left-5 top-[133px] text-48 font-normal uppercase leading-[68px] text-grey-400 ${titleFont}`}
+        className={`absolute left-3 top-[109px] whitespace-nowrap text-24 font-normal uppercase leading-[34px] text-grey-400 md:left-5 md:top-[133px] md:text-48 md:leading-[68px] ${titleFont}`}
       >
         <SplitWords text={t("contact.cta")} animated={animated} />
       </Title>
@@ -53,42 +56,49 @@ function ContactLayout({
       <a
         href="mailto:shuangzhang@fintopia.tech"
         aria-label={`${t("contact.button")}：shuangzhang@fintopia.tech`}
-        className={`group absolute left-5 top-[204px] h-[69px] overflow-hidden text-left focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${
-          locale === "en" ? "w-[410px]" : "w-[325px]"
+        className={`group absolute left-3 top-[150px] h-[34px] text-left focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:left-5 md:top-[204px] md:h-[69px] ${
+          locale === "en"
+            ? "w-[205px] md:w-[410px]"
+            : "w-[177px] md:w-[325px]"
         }`}
       >
         <span
+          data-sd-bar={animated ? "" : undefined}
+          data-sd-delay={animated ? "0.35" : undefined}
           aria-hidden="true"
-          className="pointer-events-none absolute left-0 top-0.5 h-[66px] w-full translate-y-px bg-grey-400"
+          className={`pointer-events-none absolute left-0 w-full origin-left bg-grey-400 ${
+            locale === "en"
+              ? "top-px h-[29px] md:bottom-3.5 md:top-auto md:h-[60px]"
+              : "top-px h-[29px] md:top-0.5 md:h-[66px] md:translate-y-px"
+          } ${animated ? "scale-x-0" : ""}`}
         />
         <ContactButtonContent
           label={t("contact.button")}
           arrowSrc="/contact/contact-arrow-white.png"
           className="text-white"
           fontClassName={titleFont}
-          positionClassName={locale === "en" ? "left-0 top-1" : undefined}
           animated={animated}
         />
       </a>
 
-      <dl className="absolute left-5 right-5 top-[379px] grid grid-cols-8 gap-5">
+      <dl className="absolute left-3 top-[256px] flex w-[345px] flex-col gap-8 md:left-5 md:right-5 md:top-[379px] md:grid md:w-auto md:grid-cols-8 md:gap-5">
         <ContactFact
           label={t("contact.addressLabel")}
           value={t("contact.address")}
-          className="col-start-1 w-[180px]"
+          className="h-[50px] w-[139px] md:col-start-1 md:h-auto md:w-[180px]"
           valueClassName="whitespace-nowrap text-16 leading-6"
           animated={animated}
         />
         <ContactFact
           label={t("contact.foundedLabel")}
           value={t("contact.founded")}
-          className="col-span-2 col-start-4 w-[277px] -translate-x-1"
+          className="h-[47px] w-[277px] md:col-span-2 md:col-start-4 md:h-auto md:-translate-x-1"
           animated={animated}
         />
         <ContactFact
           label={t("contact.servicesLabel")}
           value={t("contact.services")}
-          className="col-span-2 col-start-6 w-[345px] translate-x-1.5"
+          className="w-[345px] md:col-span-2 md:col-start-6 md:translate-x-1.5"
           highlighted
           animated={animated}
         />
@@ -119,37 +129,45 @@ function ContactButtonContent({
       data-sd-words={animated ? "" : undefined}
       data-sd-delay={animated ? "0.35" : undefined}
       aria-label={label}
-      className={`absolute flex h-[69px] items-center gap-1.5 whitespace-nowrap text-48 font-normal uppercase leading-[68px] ${fontClassName} ${positionClassName} ${className}`}
+      className={`absolute flex h-[34px] items-center gap-1.5 whitespace-nowrap text-24 font-normal uppercase leading-[34px] md:h-[69px] md:text-48 md:leading-[68px] ${fontClassName} ${positionClassName} ${className}`}
     >
       <span>
         <SplitWords text={label} animated={animated} />
       </span>
-      <ContactArrow src={arrowSrc} />
+      <ContactArrow src={arrowSrc} animated={animated} />
     </span>
   );
 }
 
-function ContactArrow({ src }: { src: string }) {
+function ContactArrow({
+  src,
+  animated,
+}: {
+  src: string;
+  animated: boolean;
+}) {
   const motionClass =
     "transition-transform duration-500 ease-out motion-reduce:transition-none";
 
   return (
     <span
       aria-hidden="true"
-      className="relative block size-[51px] shrink-0 overflow-hidden"
+      className={`sd-word relative block size-6 shrink-0 overflow-hidden md:-top-0.5 md:size-[51px] ${
+        animated ? "opacity-0" : ""
+      }`}
     >
       <Image
         src={src}
         alt=""
         fill
-        sizes="51px"
+        sizes="(max-width: 767px) 24px, 51px"
         className={`object-contain group-hover:translate-x-full group-hover:-translate-y-full group-focus-visible:translate-x-full group-focus-visible:-translate-y-full ${motionClass}`}
       />
       <Image
         src={src}
         alt=""
         fill
-        sizes="51px"
+        sizes="(max-width: 767px) 24px, 51px"
         className={`-translate-x-full translate-y-full object-contain group-hover:translate-x-0 group-hover:translate-y-0 group-focus-visible:translate-x-0 group-focus-visible:translate-y-0 motion-reduce:hidden ${motionClass}`}
       />
     </span>
@@ -188,13 +206,25 @@ function ContactFact({
         data-sd-words={animated ? "" : undefined}
         data-sd-delay={animated ? "0.6" : undefined}
         aria-label={value}
-        className={`font-serif-sc font-normal ${valueClassName} ${
+        className={`relative font-serif-sc font-normal ${valueClassName} ${
           highlighted
-            ? "flex h-[26px] items-center bg-grey-400 text-white"
+            ? "flex h-[26px] items-center text-white"
             : "text-grey-400"
         }`}
       >
-        <SplitWords text={value} animated={animated} />
+        {highlighted && (
+          <span
+            data-sd-bar={animated ? "" : undefined}
+            data-sd-delay={animated ? "0.6" : undefined}
+            aria-hidden="true"
+            className={`absolute inset-0 origin-left bg-grey-400 ${
+              animated ? "scale-x-0" : ""
+            }`}
+          />
+        )}
+        <span className="relative z-10">
+          <SplitWords text={value} animated={animated} />
+        </span>
       </dd>
     </div>
   );

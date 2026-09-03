@@ -1,34 +1,7 @@
 "use client";
 
-import { useRef } from "react";
 import Image from "next/image";
-import gsap from "gsap";
-import {
-  MEMBER_RECORD_HOVER_REVEAL_DURATION,
-  MEMBER_RECORD_MASK_FRAME_COUNT,
-} from "@/animations/member-record-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
-import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import {
-  clearElementMask,
-  createDissolveMaskSprite,
-  setSpriteMaskFrame,
-  type DissolveMaskSprite,
-} from "@/lib/dissolve-mask";
-
-const MOBILE_MASK_COLS = 66;
-const MOBILE_MASK_ROWS = 149;
-
-let mobileDissolveSprite: DissolveMaskSprite | null = null;
-
-function getMobileDissolveSprite(): DissolveMaskSprite | null {
-  mobileDissolveSprite ??= createDissolveMaskSprite(
-    MOBILE_MASK_COLS,
-    MOBILE_MASK_ROWS,
-    MEMBER_RECORD_MASK_FRAME_COUNT,
-  );
-  return mobileDissolveSprite;
-}
 
 type MobileMemberProfileProps = {
   identifier: string;
@@ -41,12 +14,12 @@ type MobileMemberProfileProps = {
   directionClassName: string;
   actionsClassName: string;
   fillClassName: string;
-  fillSrc: string;
 };
 
 /**
  * Figma 926:2358（390×844）：第四屏移动端第一阶段。
- * 网格以 331×747 设计坐标贴住视口底部，四组成员信息按纵向卡片重排。
+ * 390×844 仅作为横向坐标与银色边框锚点基准；网格正文使用实际
+ * 动态视口高度，在短屏上压缩纵向间距，不缩放文字和交互元素。
  */
 export function MemberRecordMobile() {
   const { t } = useLocale();
@@ -55,20 +28,27 @@ export function MemberRecordMobile() {
     <div className="absolute inset-0 z-10 md:hidden">
       <div
         data-member-grid
-        className="pointer-events-none absolute inset-x-[7.436%] bottom-0 top-[11.493%] *:opacity-0"
+        className="pointer-events-none absolute inset-x-[7.949%] bottom-[env(safe-area-inset-bottom)] top-[max(calc(env(safe-area-inset-top)+52px),24.872vw,11.493dvh)] *:opacity-0"
       >
         <div
           data-member-overlay
           aria-hidden="true"
-          className="absolute inset-0 rounded-t-rl-32 rounded-b-rm-16 bg-[#2B2B2B]/[0.55] backdrop-blur-[4px]"
+            className="absolute inset-0 rounded-t-rl-32 rounded-b-rm-16 backdrop-blur-[4px]"
         />
-        <div data-member-mask className="absolute inset-0">
+        <div
+          data-member-mask
+          className="absolute inset-0 overflow-hidden rounded-t-rl-32 rounded-b-rm-16"
+        >
           <Image
-            src="/archive/member-record-grid-mobile.webp"
+            src="/archive/member-record-grid-mobile.svg"
             alt=""
             fill
             sizes="84.87vw"
-            className="object-fill"
+            className="object-fill [clip-path:inset(1px)]"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-t-rl-32 rounded-b-rm-16 border border-white"
           />
           <MobileMemberProfile
             identifier="01"
@@ -81,7 +61,6 @@ export function MemberRecordMobile() {
             directionClassName="left-[4.834%] top-[14.19%]"
             actionsClassName="left-[4.834%] top-[21.82%]"
             fillClassName="left-[0.604%] top-[0.268%] h-[34.404%] w-[76.888%]"
-            fillSrc="/archive/member-record-mobile-cell-01.webp"
           />
           <MobileMemberProfile
             identifier="02"
@@ -94,7 +73,6 @@ export function MemberRecordMobile() {
             directionClassName="left-[4.834%] top-[42.57%]"
             actionsClassName="left-[4.834%] top-[47.523%]"
             fillClassName="left-[0.604%] top-[26.506%] h-[29.251%] w-[101.662%]"
-            fillSrc="/archive/member-record-mobile-cell-02.webp"
           />
           <MobileMemberProfile
             identifier="03"
@@ -107,7 +85,6 @@ export function MemberRecordMobile() {
             directionClassName="left-[27.493%] top-[68.273%]"
             actionsClassName="left-[27.493%] top-[73.226%]"
             fillClassName="left-[17.825%] top-[52.878%] h-[26.506%] w-[81.571%]"
-            fillSrc="/archive/member-record-mobile-cell-03.webp"
           />
           <MobileMemberProfile
             identifier="04"
@@ -120,7 +97,6 @@ export function MemberRecordMobile() {
             directionClassName="left-[4.834%] top-[90.897%]"
             actionsClassName="left-[4.834%] top-[95.85%]"
             fillClassName="left-[0.302%] top-[77.175%] h-[22.557%] w-[99.094%]"
-            fillSrc="/archive/member-record-mobile-cell-04.webp"
           />
         </div>
       </div>
@@ -139,102 +115,25 @@ function MobileMemberProfile({
   directionClassName,
   actionsClassName,
   fillClassName,
-  fillSrc,
 }: MobileMemberProfileProps) {
   const { t } = useLocale();
-  const reducedMotion = useReducedMotion();
-  const fillRef = useRef<HTMLDivElement>(null);
-  const proxyRef = useRef({ frame: 0 });
-  const hoveredRef = useRef(false);
-  const focusedRef = useRef(false);
-
-  const animateFill = (entering: boolean) => {
-    const fill = fillRef.current;
-    if (!fill) return;
-    const sprite = getMobileDissolveSprite();
-
-    if (reducedMotion || !sprite) {
-      fill.style.opacity = entering ? "1" : "0";
-      clearElementMask(fill);
-      return;
-    }
-
-    const proxy = proxyRef.current;
-    gsap.killTweensOf(proxy);
-    fill.style.opacity = "1";
-    gsap.to(proxy, {
-      frame: entering ? sprite.frameCount - 1 : 0,
-      duration: MEMBER_RECORD_HOVER_REVEAL_DURATION,
-      ease: "none",
-      onUpdate: () => {
-        setSpriteMaskFrame(fill, sprite, Math.round(proxy.frame));
-      },
-      onComplete: () => {
-        if (entering) {
-          clearElementMask(fill);
-        } else {
-          fill.style.opacity = "0";
-          clearElementMask(fill);
-        }
-      },
-    });
-  };
-
-  const handleMouseEnter = () => {
-    hoveredRef.current = true;
-    animateFill(true);
-  };
-
-  const handleMouseLeave = () => {
-    hoveredRef.current = false;
-    if (!focusedRef.current) animateFill(false);
-  };
-
-  const handleFocus = () => {
-    focusedRef.current = true;
-    animateFill(true);
-  };
-
-  const handleBlur = () => {
-    focusedRef.current = false;
-    if (!hoveredRef.current) animateFill(false);
-  };
 
   return (
-    <div
-      className="group pointer-events-none absolute inset-0 font-serif-sc text-12 font-normal leading-[18px] text-white"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-    >
-      <div
-        ref={fillRef}
-        aria-hidden="true"
-        className={`absolute opacity-0 ${fillClassName}`}
-      >
-        <Image
-          src={fillSrc}
-          alt=""
-          fill
-          sizes="86vw"
-          className="object-fill brightness-0 invert"
-        />
-      </div>
+    <div className="group pointer-events-none absolute inset-0 font-serif-sc text-12 font-normal leading-[18px] text-white">
       <button
         type="button"
         aria-label={`${name} ${t("member.investigator")}`}
         className={`pointer-events-auto absolute bg-transparent focus-visible:ring-2 focus-visible:ring-green-500 ${fillClassName}`}
       />
       <p
-        className={`absolute z-10 whitespace-nowrap transition-colors duration-[600ms] group-hover:text-grey-400 group-focus-within:text-grey-400 ${headerClassName}`}
+        className={`absolute z-10 whitespace-nowrap ${headerClassName}`}
       >
         {t("member.investigator")}
         <span className="font-bodoni">_{identifier}_</span>
         {role}
       </p>
       <span
-        className={`absolute z-10 border-t border-dashed border-white/30 transition-colors duration-[600ms] group-hover:border-grey-400/30 group-focus-within:border-grey-400/30 ${dividerClassName}`}
+        className={`absolute z-10 border-t border-dashed border-white/30 ${dividerClassName}`}
         aria-hidden="true"
       >
         <span className="invisible whitespace-nowrap">
@@ -244,18 +143,18 @@ function MobileMemberProfile({
         </span>
       </span>
       <p
-        className={`absolute z-10 whitespace-nowrap transition-colors duration-[600ms] group-hover:text-grey-400 group-focus-within:text-grey-400 ${nameClassName}`}
+        className={`absolute z-10 whitespace-nowrap ${nameClassName}`}
       >
         {t("member.namePrefix")}
         {name}
       </p>
       <p
-        className={`absolute z-10 whitespace-nowrap transition-colors duration-[600ms] group-hover:text-grey-400 group-focus-within:text-grey-400 ${directionClassName}`}
+        className={`absolute z-10 whitespace-nowrap ${directionClassName}`}
       >
         {direction}
       </p>
       <div
-        className={`absolute z-10 flex items-center gap-4 whitespace-nowrap transition-colors duration-[600ms] group-hover:text-grey-400 group-focus-within:text-grey-400 ${actionsClassName}`}
+        className={`absolute z-10 flex items-center gap-4 whitespace-nowrap ${actionsClassName}`}
       >
         <MobileProfileAction label={t("member.portfolio")} />
         <MobileProfileAction label={t("member.contactMe")} />
@@ -274,14 +173,14 @@ function MobileProfileAction({ label }: { label: string }) {
           alt=""
           fill
           sizes="16px"
-          className="profile-action-arrow profile-action-arrow-current object-contain group-hover:invert group-focus-within:invert"
+          className="profile-action-arrow profile-action-arrow-current object-contain"
         />
         <Image
           src="/archive/member-record-external-arrow.png"
           alt=""
           fill
           sizes="16px"
-          className="profile-action-arrow profile-action-arrow-next object-contain group-hover:invert group-focus-within:invert motion-reduce:hidden"
+          className="profile-action-arrow profile-action-arrow-next object-contain motion-reduce:hidden"
         />
       </span>
     </span>

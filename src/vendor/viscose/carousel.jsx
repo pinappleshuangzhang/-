@@ -701,12 +701,39 @@ export default function Carousel({
       }
     };
 
+    // Same box the frame loop tests, but against the raw pointer and right
+    // now: a tap has no hover before it, so `over` is still last frame's.
+    const hitPlane = () => {
+      const count = Math.round(params.count);
+      const W = uniforms.uSize.value.x;
+      const H = uniforms.uSize.value.y;
+      for (let i = 0; i < count; i++) {
+        const sc = uniforms.uScale.value[i];
+        if (sc.x <= 0.001 || sc.y <= 0.001) continue;
+        const p = uniforms.uPos.value[i];
+        const rot = uniforms.uRot.value[i];
+        const qx = pointer.x - p.x;
+        const qy = pointer.y - p.y;
+        const cr = Math.cos(rot);
+        const sr = Math.sin(rot);
+        if (
+          Math.abs(qx * cr + qy * sr) <= W * 0.5 * sc.x &&
+          Math.abs(-qx * sr + qy * cr) <= H * 0.5 * sc.y
+        ) {
+          return i;
+        }
+      }
+      return -1;
+    };
+
     // A drag ends in a click too, so only a near-stationary press counts.
     // `over` comes from the same hit test that decides the tag, so a click
     // only ever lands on the card the tag was offering.
     const onClick = () => {
-      if (!interactive || pointerTravel >= params.touchSlop || over < 0) return;
-      pick(over);
+      if (!interactive || pointerTravel >= params.touchSlop) return;
+      const target = over >= 0 ? over : hitPlane();
+      if (target < 0) return;
+      pick(target);
     };
 
     container.addEventListener("pointerdown", onPointerDown);

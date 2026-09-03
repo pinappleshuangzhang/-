@@ -11,6 +11,9 @@ import {
 export type AlphaScrubVideoHandle = {
   /** 把视频定位到 0~1 进度处 */
   seekTo: (progress: number) => void;
+  /** 从当前位置原生播放至结尾，可指定完整播放时长。 */
+  playToEnd: (durationSeconds?: number) => void;
+  pause: () => void;
 };
 
 type AlphaScrubVideoProps = {
@@ -56,6 +59,22 @@ export const AlphaScrubVideo = forwardRef<
       // 收尾帧留一点余量，避免 currentTime == duration 时部分浏览器回跳
       const clamped = Math.min(Math.max(progress, 0), 0.999);
       video.currentTime = clamped * video.duration;
+    },
+    playToEnd(durationSeconds) {
+      const video = videoRef.current;
+      if (!video) return;
+      video.playbackRate =
+        durationSeconds &&
+        durationSeconds > 0 &&
+        Number.isFinite(video.duration)
+          ? video.duration / durationSeconds
+          : 1;
+      void video.play().catch(() => {
+        // 静音内联视频通常允许自动播放；若浏览器仍拦截则保留当前帧。
+      });
+    },
+    pause() {
+      videoRef.current?.pause();
     },
   }));
 

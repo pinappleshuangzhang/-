@@ -19,6 +19,15 @@ import type { SurveyCategoryCode } from "@/lib/survey-details";
 
 const KEY_SCROLL_DELTA = 120;
 const PAGE_SCROLL_DELTA = 240;
+/** 与站点 md 断点一致；手机上抽屉改为从底部拉起（Figma 1008-561） */
+const MOBILE_QUERY = "(max-width: 767px)";
+
+/** 桌面端从右侧滑入，手机从底部拉起；返回收起态的 transform */
+function hiddenTransform() {
+  return window.matchMedia(MOBILE_QUERY).matches
+    ? { xPercent: 0, yPercent: 100 }
+    : { xPercent: 100, yPercent: 0 };
+}
 
 function resetHorizontalScroll(start: HTMLElement | null) {
   let node = start;
@@ -38,7 +47,7 @@ type SurveyDrawerProps = {
 };
 
 /**
- * 第五屏作品详情抽屉：右侧滑入，背后黑色模糊遮罩。
+ * 第五屏作品详情抽屉：桌面端右侧滑入，手机端自底部拉起（顶部留 67px 露出遮罩）。
  * 图片外区域跟随鼠标显示「关闭」，点击收起。
  */
 export function SurveyDrawer({
@@ -70,9 +79,12 @@ export function SurveyDrawer({
     const panel = panelRef.current;
     if (!overlay || !panel || !mounted) return;
 
+    const hidden = hiddenTransform();
+    const shown = { xPercent: 0, yPercent: 0 };
+
     if (reducedMotion) {
       gsap.set(overlay, { opacity: open ? 1 : 0, force3D: false });
-      gsap.set(panel, { xPercent: open ? 0 : 100 });
+      gsap.set(panel, open ? shown : hidden);
       if (open) return;
       const frame = window.requestAnimationFrame(() => setMounted(false));
       return () => window.cancelAnimationFrame(frame);
@@ -81,7 +93,7 @@ export function SurveyDrawer({
     const tl = gsap.timeline();
     if (open) {
       gsap.set(overlay, { opacity: 0, force3D: false });
-      gsap.set(panel, { xPercent: 100 });
+      gsap.set(panel, hidden);
       tl.to(
         overlay,
         { opacity: 1, duration: 0.6, ease: "none", force3D: false },
@@ -90,7 +102,7 @@ export function SurveyDrawer({
       tl.to(
         panel,
         {
-          xPercent: 0,
+          ...shown,
           duration: 0.7,
           ease: "expo.out",
           overwrite: "auto",
@@ -110,8 +122,8 @@ export function SurveyDrawer({
       );
       tl.fromTo(
         panel,
-        { xPercent: 0 },
-        { xPercent: 100, duration: 0.7, ease: "expo.out", overwrite: "auto" },
+        shown,
+        { ...hidden, duration: 0.7, ease: "expo.out", overwrite: "auto" },
         0,
       );
     }
@@ -201,15 +213,26 @@ export function SurveyDrawer({
       <aside
         ref={panelRef}
         onClick={handlePanelClick}
-        className="absolute inset-y-0 right-0 z-10 flex w-[min(935px,calc(100%-80px))] flex-col bg-grey-50"
+        className="absolute inset-y-0 right-0 z-10 flex w-[min(935px,calc(100%-80px))] flex-col bg-grey-50 max-md:inset-x-0 max-md:top-[67px] max-md:w-auto max-md:bg-white"
       >
+        {/* 桌面端靠跟随光标的「关闭」收起，按钮仅供读屏；手机上显示 16px 叉号（Figma 1008-561） */}
         <button
           ref={closeButtonRef}
           type="button"
-          className="sr-only"
+          aria-label={t("nav.close")}
           onClick={onClose}
+          className="absolute right-1 top-1 z-10 flex size-8 items-center justify-center text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 md:sr-only"
         >
-          {t("nav.close")}
+          <svg
+            aria-hidden="true"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            className="md:hidden"
+          >
+            <path d="M1 1l14 14M15 1L1 15" stroke="currentColor" strokeWidth="1" />
+          </svg>
         </button>
         <div
           ref={scrollerRef}

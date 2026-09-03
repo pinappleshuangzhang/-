@@ -79,14 +79,13 @@ export function buildAtlas(files = IMAGE_FILES, onProgress) {
         tick();
       });
 
-  // Cell 0 is the seed's art, the only thing on screen during the hold, so it
-  // is asked for ahead of the rest and uploaded the moment it lands.
-  const first = fetchInto(0, "high").then(() => {
-    texture.needsUpdate = true;
-  });
+  // Cell 0 is requested first, but the GPU upload waits for the complete
+  // sheet. Uploading this partly transparent canvas first can leave Safari
+  // sampling black intermediate mip levels while the ring unfolds.
+  const first = fetchInto(0, "high");
 
-  // One upload at the end for everything else. Marking dirty per image would
-  // re-send the whole sheet eighteen times for cells nobody is looking at yet.
+  // Upload the completed sheet exactly once. Marking dirty per image would
+  // repeatedly resend the whole canvas and regenerate every mip level.
   const ready = Promise.all([
     first,
     ...files.slice(1).map((_, k) => fetchInto(k + 1, "low")),

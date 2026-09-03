@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { createCornerTitleSweep } from "@/animations/archive-ga-004-title-sweep";
+import {
+  playSondavenReveal,
+  setSondavenHidden,
+  setSondavenVisible,
+} from "@/animations/sondaven-reveal";
 import {
   AlphaScrubVideo,
   type AlphaScrubVideoHandle,
@@ -27,6 +32,25 @@ const FOLDER_VIDEO_HEVC = "/archive/archive-folder-cool-alpha-hevc.mp4";
 const SCRUB_PER_PX = 0.00015;
 /** 进度追踪的阻尼系数（数值越大跟手越紧，越小拖拽感越强） */
 const SCRUB_DAMPING = 3;
+/** 第一段开始退场的主时间轴节点（总时长 132） */
+const FIRST_COPY_EXIT_PROGRESS = 38 / 132;
+/** 移动端文字与书本视频的完整自动播放时长。 */
+const MOBILE_AUTO_DURATION = 12;
+const MOBILE_QUERY = "(max-width: 767px)";
+
+function subscribeMobileViewport(callback: () => void) {
+  const media = window.matchMedia(MOBILE_QUERY);
+  media.addEventListener("change", callback);
+  return () => media.removeEventListener("change", callback);
+}
+
+function getMobileViewportSnapshot() {
+  return window.matchMedia(MOBILE_QUERY).matches;
+}
+
+function getMobileViewportServerSnapshot() {
+  return false;
+}
 
 /** 按词切分：与第三屏 Son Daven 式逐词入场的规则保持一致。 */
 function segmentWords(text: string): string[] {
@@ -107,6 +131,8 @@ export function ArchiveIntro() {
 
   const targetRef = useRef(0);
   const displayRef = useRef(0);
+  const hasPlayedFirstCopyEntranceRef = useRef(false);
+  const mobileAutoTweenRef = useRef<gsap.core.Tween | null>(null);
 
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
@@ -114,6 +140,11 @@ export function ArchiveIntro() {
   const [videoAllowed, setVideoAllowed] = useState(false);
 
   const reducedMotion = useReducedMotion();
+  const isMobileViewport = useSyncExternalStore(
+    subscribeMobileViewport,
+    getMobileViewportSnapshot,
+    getMobileViewportServerSnapshot,
+  );
   const isActive = useScreenActive();
   const { registerScrollInterceptor, navigationLocked } = useSectionPager();
   const { t, locale } = useLocale();
@@ -123,6 +154,36 @@ export function ArchiveIntro() {
   if (!navigationLocked && !videoAllowed) {
     setVideoAllowed(true);
   }
+
+  // 书内第一段由本屏自己入场；两段都排除整屏统一入场，避免第二段被一起点亮后叠字。
+  useGSAP(
+    () => {
+      const root = container.current;
+      const primaryCopy = root?.querySelector<HTMLElement>("[data-swap-a]");
+      if (!primaryCopy) return;
+
+      if (reducedMotion) {
+        setSondavenVisible(primaryCopy);
+        return;
+      }
+      if (!isActive) {
+        if (!hasPlayedFirstCopyEntranceRef.current) {
+          setSondavenHidden(primaryCopy);
+        }
+        return;
+      }
+      if (hasPlayedFirstCopyEntranceRef.current) {
+        if (displayRef.current < FIRST_COPY_EXIT_PROGRESS) {
+          setSondavenVisible(primaryCopy);
+        }
+        return;
+      }
+
+      hasPlayedFirstCopyEntranceRef.current = true;
+      playSondavenReveal(primaryCopy);
+    },
+    { dependencies: [isActive, reducedMotion, locale], scope: container },
+  );
 
   // 页面角标大字与第六屏 DESIGN / WORKS 共用横穿后回位的出场节奏。
   useGSAP(
@@ -149,7 +210,14 @@ export function ArchiveIntro() {
 
   // 屏内滚动拦截：先推进屏内进度（文字 + 切换 + 视频），两端到头才放行切屏
   useEffect(() => {
-    if (!isActive || reducedMotion || videoFailed) return;
+    if (
+      !isActive ||
+      isMobileViewport ||
+      reducedMotion ||
+      videoFailed
+    ) {
+      return;
+    }
     return registerScrollInterceptor((deltaY) => {
       const target = targetRef.current;
       if (deltaY > 0 && target >= 1) return false;
@@ -160,7 +228,13 @@ export function ArchiveIntro() {
       );
       return true;
     });
-  }, [isActive, reducedMotion, videoFailed, registerScrollInterceptor]);
+  }, [
+    isActive,
+    isMobileViewport,
+    reducedMotion,
+    videoFailed,
+    registerScrollInterceptor,
+  ]);
 
   useGSAP(
     () => {
@@ -192,8 +266,12 @@ export function ArchiveIntro() {
       );
       const shuffledWordsA = gsap.utils.shuffle([...wordsA]);
       const shuffledWordsB = gsap.utils.shuffle([...wordsB]);
-      // 第二段在切换前保持第三屏同款的逐词隐藏姿态。
+      const swapA = root.querySelector<HTMLElement>("[data-swap-a]");
+      const swapB = root.querySelector<HTMLElement>("[data-swap-b]");
+      // 第二段整层隐藏，避免与下移后的第一段叠在同一位置。
       gsap.set(wordsB, { opacity: 0, yPercent: 75, scale: 0 });
+      if (swapB) gsap.set(swapB, { autoAlpha: 0 });
+      if (swapA) gsap.set(swapA, { autoAlpha: 1 });
 
       const timeline = gsap.timeline({ paused: true });
       timeline
@@ -219,6 +297,8 @@ export function ArchiveIntro() {
           },
           38,
         )
+        .to(swapA, { autoAlpha: 0, duration: 0.01 }, 50)
+        .to(swapB, { autoAlpha: 1, duration: 0.01 }, 59)
         .to(
           shuffledWordsB,
           {
@@ -269,6 +349,68 @@ export function ArchiveIntro() {
     { dependencies: [locale], scope: container },
   );
 
+  // 移动端进入第二屏后自动跑完整段落与视频，不再依赖屏内滑动擦拭。
+  useEffect(() => {
+    mobileAutoTweenRef.current?.kill();
+    mobileAutoTweenRef.current = null;
+    videoHandleRef.current?.pause();
+
+    if (
+      !isActive ||
+      !isMobileViewport ||
+      !videoReady ||
+      !videoHandleRef.current ||
+      !textTimelineRef.current
+    ) {
+      return;
+    }
+
+    const videoHandle = videoHandleRef.current;
+    const playhead = { progress: displayRef.current };
+    const applyTextProgress = (progress: number) => {
+      targetRef.current = progress;
+      displayRef.current = progress;
+      textTimelineRef.current?.progress(progress);
+    };
+
+    if (reducedMotion) {
+      applyTextProgress(1);
+      videoHandle.seekTo(1);
+      return;
+    }
+
+    // 原生播放由浏览器连续解码，避免 iPhone Safari 每帧 seek 导致页面卡死。
+    videoHandle.seekTo(playhead.progress);
+    videoHandle.playToEnd(MOBILE_AUTO_DURATION);
+    const remainingDuration =
+      MOBILE_AUTO_DURATION * (1 - playhead.progress);
+    mobileAutoTweenRef.current = gsap.to(playhead, {
+      progress: 1,
+      duration: remainingDuration,
+      ease: "none",
+      onUpdate: () => applyTextProgress(playhead.progress),
+      onComplete: () => {
+        applyTextProgress(1);
+        videoHandle.pause();
+        videoHandle.seekTo(1);
+        mobileAutoTweenRef.current = null;
+      },
+    });
+
+    return () => {
+      mobileAutoTweenRef.current?.kill();
+      mobileAutoTweenRef.current = null;
+      videoHandle.pause();
+      // 中途切屏后复位；再次进入第二屏时从头自动播放。
+      if (playhead.progress < 0.999) {
+        targetRef.current = 0;
+        displayRef.current = 0;
+        textTimelineRef.current?.progress(0);
+        videoHandle.seekTo(0);
+      }
+    };
+  }, [isActive, isMobileViewport, locale, reducedMotion, videoReady]);
+
   const showVideo = videoAllowed && !reducedMotion && !videoFailed;
   const showPoster = !showVideo || !videoReady;
 
@@ -285,13 +427,13 @@ export function ArchiveIntro() {
         >
           <p
             data-title-what-is
-            className="absolute left-[3.0769%] top-[21.6825%] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[calc(50%-615px)] md:top-[calc(50%-244px)] md:text-100 md:leading-[125px]"
+            className="absolute left-[3.0769%] top-[calc(47.69%-80vw*420/563/2-103px)] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[calc(50%-615px)] md:top-[calc(50%-244px)] md:text-100 md:leading-[125px]"
           >
             WHAT IS
           </p>
           <p
             data-title-gravity
-            className="absolute left-[46.9231%] top-[68.365%] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[calc(50%+193px)] md:top-[calc(50%+176px)] md:text-100 md:leading-[125px]"
+            className="absolute left-[46.9231%] top-[calc(47.69%+80vw*420/563/2+58px)] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[calc(50%+193px)] md:top-[calc(50%+176px)] md:text-100 md:leading-[125px]"
           >
             GRAVITY
           </p>
@@ -334,15 +476,16 @@ export function ArchiveIntro() {
 
           {/* 卡片内文字：移动端 Figma 701:201/202 = 14px、左 67、顶 368 */}
           <div
-            className={`absolute left-[3.5256%] top-[35.2%] w-[49.4%] ${
+            className={`absolute left-[8.6538%] top-[35.2%] w-[49.4%] ${
               isEnglish
-                ? "md:left-[36px] md:top-[calc(35.7%-36px)] md:w-[308px]"
-                : "md:left-[36px] md:top-[35.7%] md:w-[55%]"
+                ? "md:left-[52px] md:top-[calc(35.7%-36px)] md:w-[308px]"
+                : "md:left-[52px] md:top-[35.7%] md:w-[55%]"
             }`}
           >
             <div className="relative">
               <div
                 data-swap-a
+                data-sd-global-ignore
                 className={`flex flex-col gap-3 md:gap-[1em] ${
                   isEnglish ? "md:relative md:top-[26px]" : ""
                 }`}

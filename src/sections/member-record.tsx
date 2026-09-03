@@ -142,14 +142,17 @@ export function MemberRecord() {
         sizes="100vw"
         className="hidden object-cover object-top md:block"
       />
-      <Image
-        src="/archive/member-record-mobile.webp"
-        alt={t("member.imageAlt")}
-        fill
-        sizes="100vw"
-        className="object-cover object-top md:hidden"
-      />
-      <MemberRecordMobile />
+      <div className="absolute inset-0 md:hidden">
+        <Image
+          src="/archive/member-record-mobile.webp"
+          alt={t("member.imageAlt")}
+          fill
+          sizes="100vw"
+          unoptimized
+          className="object-cover object-top"
+        />
+        <MemberRecordMobile />
+      </div>
       {/* 与背景图 object-cover object-top 裁切同步的定位盒：
           宽 = max(100vw, 100vh×4096/2401)，顶部对齐、水平居中，
           浮层按盒内百分比定位即可在任何分辨率下贴住银色边框 */}
