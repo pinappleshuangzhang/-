@@ -59,7 +59,7 @@ export function SiteNav({
 }: SiteNavProps) {
   const isIndex = variant === "index";
   const { locale, setLocale, t } = useLocale();
-  const { runWithCurtain } = useSectionPager();
+  const { runWithCurtain, navigationLocked } = useSectionPager();
   const isEn = locale === "en";
   const indexLabel = isIndex ? t("nav.close") : t("nav.index");
   const contactLabel = t("nav.contact");
@@ -123,6 +123,7 @@ export function SiteNav({
     const next = locale === "zh" ? "en" : "zh";
     runWithCurtain(() => setLocale(next));
   };
+  const hideNav = navigationLocked && !isIndex;
 
   return (
     <>
@@ -139,11 +140,13 @@ export function SiteNav({
         languageAriaLabel={t("nav.language")}
         onLanguageClick={handleLanguageClick}
         closeRef={mobileCloseRef}
-        className={className}
+        className={`${hideNav ? "invisible pointer-events-none" : ""} ${className ?? ""}`}
       />
 
       <header
-        className={`fixed inset-x-0 top-[20px] hidden mix-blend-difference md:block ${isIndex ? "z-[70]" : "z-50"} ${className ?? ""}`}
+        className={`fixed inset-x-0 top-[20px] hidden mix-blend-difference md:block ${isIndex ? "z-[70]" : "z-50"} ${hideNav ? "invisible pointer-events-none" : ""} ${className ?? ""}`}
+        aria-hidden={hideNav}
+        {...(hideNav ? { inert: true } : {})}
       >
         <nav
           aria-label="Site"

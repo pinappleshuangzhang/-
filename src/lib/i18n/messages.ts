@@ -33,6 +33,12 @@ export type MessageKey =
   | "index.ga006"
   | "hero.title"
   | "hero.subtitle"
+  | "loader.role"
+  | "loader.id"
+  | "loader.apply"
+  | "loader.review"
+  | "loader.approved"
+  | "loader.cardAlt"
   | "intro.line1"
   | "intro.line2a"
   | "intro.line2b"
@@ -146,6 +152,12 @@ const zh: Messages = {
   "index.ga006": "《开启一份新调查》",
   "hero.title": "万有引力设计档案室",
   "hero.subtitle": '跟随设计调查记录，我们一起完成本次关于"引力"的探索',
+  "loader.role": "临时调查员",
+  "loader.id": "0_41",
+  "loader.apply": "申请临时访问",
+  "loader.review": "审批中",
+  "loader.approved": "已批准申请",
+  "loader.cardAlt": "用户临时身份档案卡",
   "intro.line1": "我们不断看到同一种现象",
   "intro.line2a": "有些品牌会被记住",
   "intro.line2b": "有些产品会被选择",
@@ -267,6 +279,12 @@ const en: Messages = {
   "index.ga006": "Start A New Survey",
   "hero.title": "Grava Design Archive",
   "hero.subtitle": "Follow The Design Log As We Explore Gravity Together",
+  "loader.role": "Temporary Investigator ",
+  "loader.id": "0_41",
+  "loader.apply": "Requesting Access",
+  "loader.review": "Under Review",
+  "loader.approved": "Application Approved",
+  "loader.cardAlt": "Temporary identity archive card",
   "intro.line1": "One Pattern Repeats",
   "intro.line2a": "Some Brands Stick",
   "intro.line2b": "Some Products Win",
