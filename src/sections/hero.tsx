@@ -104,8 +104,10 @@ export function Hero() {
       if (doneRef.current) return;
       const loader = loaderRef.current;
       const videoLayer = videoLayerRef.current;
+      const firstFrame = firstFrameRef.current;
       if (loader) gsap.set(loader, { autoAlpha: 0 });
       if (videoLayer) gsap.set(videoLayer, { autoAlpha: 0 });
+      if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
       setSondavenVisible(container.current);
       doneRef.current = true;
       setNavigationLocked(false);
@@ -134,35 +136,29 @@ export function Hero() {
         setNavigationLocked(false);
       };
 
-      // 首帧静帧淡入：加载层退场时露出 Figma 01首屏-1 画面
-      const showFirstFrame = () => {
-        const firstFrame = firstFrameRef.current;
-        if (firstFrame) {
-          gsap.to(firstFrame, {
-            autoAlpha: 1,
-            duration: 0.6,
-            ease: "power2.out",
-          });
-        }
-      };
-
-      // 降级路径：跳过（或中断）视频，直接交叉淡化到静态首屏
+      // 无视频路径：加载层淡出露出首帧，停留后首帧渐隐、尾帧与标题渐入
       const runFallback = contextSafe!(() => {
         if (revealStartedRef.current) return;
         revealStartedRef.current = true;
         video.pause();
         gsap.set(videoLayer, { autoAlpha: 0 });
-        showFirstFrame();
-        buildFallbackReveal({ loader, root }).eventCallback("onComplete", finish);
+        buildFallbackReveal({
+          loader,
+          firstFrame: firstFrameRef.current,
+          root,
+        }).eventCallback("onComplete", finish);
       });
 
-      // 阶段三：最后一帧同步入场；同时交叉淡出视频层，
+      // 阶段三：最后一帧同步入场；同时交叉淡出视频层与首帧，
       // 露出下方 4K 静态图（Figma 01首屏-2 指定画面，比视频末帧更干净）
       const runReveal = contextSafe!(() => {
         if (revealStartedRef.current) return;
         revealStartedRef.current = true;
-        gsap.to(videoLayer, { autoAlpha: 0, duration: 1, ease: "power2.out" });
-        showFirstFrame();
+        gsap.to([videoLayer, firstFrameRef.current], {
+          autoAlpha: 0,
+          duration: 1,
+          ease: "power2.out",
+        });
         buildHeroReveal(root).eventCallback("onComplete", finish);
       });
 
@@ -204,7 +200,7 @@ export function Hero() {
         revealStartedRef.current = true;
         gsap.set(loader, { autoAlpha: 0 });
         gsap.set(videoLayer, { autoAlpha: 0 });
-        gsap.set(firstFrameRef.current, { autoAlpha: 1 });
+        gsap.set(firstFrameRef.current, { autoAlpha: 0 });
         setSondavenVisible(root);
         finish();
       });
@@ -264,7 +260,7 @@ export function Hero() {
               video.pause();
               gsap.set(loader, { autoAlpha: 1 });
               gsap.set(videoLayer, { autoAlpha: 0 });
-              gsap.set(firstFrameRef.current, { autoAlpha: 0 });
+              gsap.set(firstFrameRef.current, { autoAlpha: 1 });
               setSondavenHidden(root);
               startSequence();
             }),
@@ -313,10 +309,10 @@ export function Hero() {
         />
       </div>
 
-      {/* 首屏首帧：Figma 01首屏-1 静帧，加载层退场时淡入 */}
+      {/* 首屏首帧：Figma 01首屏-1 静帧，初始就在加载层下方，加载层退场即露出 */}
       <div
         ref={firstFrameRef}
-        className="invisible absolute inset-0 z-20 opacity-0"
+        className="absolute inset-0 z-20 hidden md:block motion-reduce:hidden"
       >
         <Image
           src="/hero/hero-loader-bg.webp"

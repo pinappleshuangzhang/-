@@ -113,21 +113,37 @@ export function buildHeroReveal(root: HTMLElement): gsap.core.Timeline {
   return playSondavenReveal(root);
 }
 
+/** 首帧露出后停留多久再渐入尾帧 */
+export const FIRST_FRAME_HOLD_S = 1.2;
+
 /**
- * 降级路径：跳过视频，加载层直接交叉淡化到静态首屏。
+ * 无视频路径：加载层淡出露出首帧（01首屏-1 静帧）→ 停留 →
+ * 首帧渐隐露出尾帧底图（01首屏-2），标题同时逐词入场。
  */
 export function buildFallbackReveal({
   loader,
+  firstFrame,
   root,
 }: {
   loader: HTMLElement;
+  firstFrame: HTMLElement | null;
   root: HTMLElement;
 }): gsap.core.Timeline {
   setSondavenHidden(root);
   const reveal = playSondavenReveal(root);
+  const revealAt = 0.8 + FIRST_FRAME_HOLD_S;
 
-  return gsap
+  const timeline = gsap
     .timeline()
-    .to(loader, { autoAlpha: 0, duration: 0.8, ease: "power2.inOut" }, 0)
-    .add(reveal, 0.2);
+    .to(loader, { autoAlpha: 0, duration: 0.8, ease: "power2.inOut" }, 0);
+
+  if (firstFrame) {
+    timeline.to(
+      firstFrame,
+      { autoAlpha: 0, duration: 1, ease: "power2.inOut" },
+      revealAt,
+    );
+  }
+
+  return timeline.add(reveal, revealAt + 0.2);
 }
