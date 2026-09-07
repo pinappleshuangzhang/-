@@ -25,8 +25,12 @@ import archiveFolderImg from "../../public/archive/archive-folder-cool-alpha.web
 
 gsap.registerPlugin(useGSAP);
 
+// 桌面版全关键帧编码（滚动任意跳帧擦拭）；手机只顺序自动播放，
+// 用普通帧间压缩的小文件（约为桌面版体积的 1/20）。
 const FOLDER_VIDEO_WEBM = "/archive/archive-folder-cool-alpha.webm";
 const FOLDER_VIDEO_HEVC = "/archive/archive-folder-cool-alpha-hevc.mp4";
+const FOLDER_VIDEO_MOBILE_WEBM = "/archive/archive-folder-cool-alpha-mobile.webm";
+const FOLDER_VIDEO_MOBILE_HEVC = "/archive/archive-folder-cool-alpha-mobile-hevc.mp4";
 /** 每像素滚动推进的进度量：两段文字 + 间隔 + 切换全程约需 6700px 滚动 */
 const SCRUB_PER_PX = 0.00015;
 /** 进度追踪的阻尼系数（数值越大跟手越紧，越小拖拽感越强） */
@@ -471,8 +475,12 @@ export function ArchiveIntro() {
           {showVideo && (
             <AlphaScrubVideo
               ref={videoHandleRef}
-              srcWebm={FOLDER_VIDEO_WEBM}
-              srcHevc={FOLDER_VIDEO_HEVC}
+              srcWebm={
+                isMobileViewport ? FOLDER_VIDEO_MOBILE_WEBM : FOLDER_VIDEO_WEBM
+              }
+              srcHevc={
+                isMobileViewport ? FOLDER_VIDEO_MOBILE_HEVC : FOLDER_VIDEO_HEVC
+              }
               onFirstFrame={() => setVideoReady(true)}
               onError={() => setVideoFailed(true)}
               className="absolute left-[-2.05%] top-[-0.97%] h-[100.97%] w-[103.73%]"
