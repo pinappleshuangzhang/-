@@ -1855,7 +1855,7 @@ export default function Carousel({
       <div
         ref={stageBackgroundRef}
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-0"
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-0 max-md:hidden"
       >
         <div
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"

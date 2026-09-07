@@ -14,7 +14,6 @@ export const LOADER_ASSET_PATHS = [
   "/hero/loader-mat-metal.webp",
   archiveBackground.src.src,
   "/hero/hero-loader-bg.webp",
-  "/hero/hero-display-bg.webp",
 ] as const;
 
 const MATERIALS = [

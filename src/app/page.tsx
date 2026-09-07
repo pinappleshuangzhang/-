@@ -58,7 +58,7 @@ const SCREENS: PagerScreen[] = [
   {
     key: "contact",
     navVariant: "contact",
-    background: "contact",
+    background: "archive",
     titleKey: "screen.contact",
     node: <Contact />,
   },
