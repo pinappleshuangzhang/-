@@ -94,8 +94,10 @@ export default function Carousel({
   paused = false,
 }) {
   const pausedRef = useRef(paused);
+  const kickLoopRef = useRef(() => {});
   useEffect(() => {
     pausedRef.current = paused;
+    if (!paused) kickLoopRef.current();
   }, [paused]);
   const containerRef = useRef(null);
   const mobileStageRef = useRef(null);
@@ -154,6 +156,8 @@ export default function Carousel({
     // Async atlas decoding can land after cleanup under StrictMode's double
     // mount. Everything deferred checks this flag.
     let disposed = false;
+    let loopOn = false;
+    let ensureLoop = () => {};
 
     const params = defaultParams();
     params.nameFont = nameFont;
@@ -424,6 +428,7 @@ export default function Carousel({
     // styleMeta too, because the breakpoint bumps are steps that vw units
     // cannot express on their own.
     const onResize = () => {
+      ensureLoop();
       resize();
       styleMeta();
     };
@@ -475,6 +480,7 @@ export default function Carousel({
     // spent and is shaped so it can only slow down, but a pick starts from a
     // standstill and has to accelerate.
     const pick = (i, openWhenCurrent = true) => {
+      ensureLoop();
       const slot = TAU / Math.round(params.count);
       // Spread, plane i sits at seed + signedOffset(i) * slot + spin.
       const base = frontAngle - params.seed * DEG - signedOffset(i) * slot;
@@ -510,6 +516,7 @@ export default function Carousel({
     const mobileSwap = { t: 1 };
     const swapSeedCell = (cell) => {
       if (cell === Math.round(params.imageOffset)) return;
+      ensureLoop();
       gsap.killTweensOf(mobileSwap);
       gsap.to(mobileSwap, {
         t: 0,
@@ -616,11 +623,13 @@ export default function Carousel({
 
     const onPointerLeave = () => {
       pointer.inside = false;
+      ensureLoop();
     };
 
     const applyWheelDelta = (deltaX, deltaY) => {
       // A single phone card has nothing to turn; spin would only tilt it.
       if (!interactive || mobileNow) return;
+      ensureLoop();
       // Trackpads send horizontal deltas too; take whichever dominates.
       const d = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY;
       // Fresh input hands the ring back to its own momentum.
@@ -641,6 +650,7 @@ export default function Carousel({
     };
 
     const onPointerDown = (e) => {
+      ensureLoop();
       pointerTravel = 0;
       travelX = e.clientX;
       travelY = e.clientY;
@@ -659,6 +669,7 @@ export default function Carousel({
     };
 
     const onPointerMove = (e) => {
+      ensureLoop();
       trackPointer(e);
 
       // From coordinates, not movementX/Y: those are zero for touch in Safari,
@@ -1604,6 +1615,7 @@ export default function Carousel({
     };
 
     const handleStageScroll = (deltaY) => {
+      ensureLoop();
       if (stagePhase === "transitioning") return true;
       if (deltaY <= 0 || stagePhase === "final") return false;
       if (stagePhase === "hold") {
@@ -1637,6 +1649,7 @@ export default function Carousel({
       if (disposed || tl) return;
       splitText.build();
       styleMeta();
+      ensureLoop();
       replay();
     };
 
@@ -1651,9 +1664,11 @@ export default function Carousel({
     const start = performance.now();
     let prevT = start;
 
-    renderer.setAnimationLoop(() => {
+    const step = () => {
       const now = performance.now();
-      if (pausedRef.current) {
+      if (disposed || pausedRef.current) {
+        loopOn = false;
+        renderer.setAnimationLoop(null);
         prevT = now;
         return;
       }
@@ -1760,10 +1775,37 @@ export default function Carousel({
       }
 
       renderer.render(scene, camera);
-    });
+
+      const hoverBusy =
+        cursor.amt > 0.02 ||
+        cursor.wake > 0.02 ||
+        Math.hypot(pointer.x - cursor.x, pointer.y - cursor.y) > 0.4;
+      const busy =
+        dragging ||
+        picking ||
+        settling ||
+        hoverBusy ||
+        Math.abs(spinVel) > 0.0015 ||
+        Boolean(tl?.isActive()) ||
+        Boolean(finalTl?.isActive());
+      if (!busy) {
+        loopOn = false;
+        renderer.setAnimationLoop(null);
+      }
+    };
+
+    ensureLoop = () => {
+      if (disposed || pausedRef.current || loopOn) return;
+      loopOn = true;
+      prevT = performance.now();
+      renderer.setAnimationLoop(step);
+    };
+    kickLoopRef.current = ensureLoop;
+    ensureLoop();
 
     return () => {
       disposed = true;
+      kickLoopRef.current = () => {};
       clearTimeout(holdTimer);
       clearTimeout(fontFallback);
       renderer.setAnimationLoop(null);

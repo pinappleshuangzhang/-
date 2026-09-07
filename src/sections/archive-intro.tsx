@@ -14,7 +14,6 @@ import {
   AlphaScrubVideo,
   type AlphaScrubVideoHandle,
 } from "@/components/effects/alpha-scrub-video";
-import { RepelFilter } from "@/components/effects/repel-filter";
 import { useLocale } from "@/components/providers/locale-provider";
 import {
   useScreenActive,
@@ -327,27 +326,35 @@ export function ArchiveIntro() {
       // locale 切换会重建文案节点；立即同步当前擦拭进度，避免新节点停在初始隐藏态。
       timeline.progress(displayRef.current);
 
-      // 阻尼追踪：滚动只改目标值，逐帧平滑逼近后再驱动视频与文字
-      const tick = (_time: number, deltaTime: number) => {
-        const target = targetRef.current;
-        let display = displayRef.current;
-        if (display === target) return;
-        const blend = 1 - Math.exp((-SCRUB_DAMPING * deltaTime) / 1000);
-        display += (target - display) * blend;
-        if (Math.abs(target - display) < 0.0005) display = target;
-        displayRef.current = display;
-        videoHandleRef.current?.seekTo(display);
-        textTimelineRef.current?.progress(display);
-      };
-      gsap.ticker.add(tick);
-
       return () => {
-        gsap.ticker.remove(tick);
         textTimelineRef.current = null;
       };
     },
     { dependencies: [locale], scope: container },
   );
+
+  // 仅本屏激活且进度还在追随时才挂 ticker，离屏立即停视频。
+  useEffect(() => {
+    if (!isActive) {
+      videoHandleRef.current?.pause();
+      return;
+    }
+    const tick = (_time: number, deltaTime: number) => {
+      const target = targetRef.current;
+      let display = displayRef.current;
+      if (display === target) return;
+      const blend = 1 - Math.exp((-SCRUB_DAMPING * deltaTime) / 1000);
+      display += (target - display) * blend;
+      if (Math.abs(target - display) < 0.0005) display = target;
+      displayRef.current = display;
+      videoHandleRef.current?.seekTo(display);
+      textTimelineRef.current?.progress(display);
+    };
+    gsap.ticker.add(tick);
+    return () => {
+      gsap.ticker.remove(tick);
+    };
+  }, [isActive]);
 
   // 移动端进入第二屏后自动跑完整段落与视频，不再依赖屏内滑动擦拭。
   useEffect(() => {
@@ -416,8 +423,6 @@ export function ArchiveIntro() {
 
   return (
     <ScreenShell ref={container}>
-      {/* 鼠标排斥滤镜：分屏内图片、文字全部参与变形 */}
-      <RepelFilter className="absolute inset-0">
       <div className="absolute inset-0 z-20">
         {/* Figma 790:324 / 790:325：页面上下两处装饰性大标题 */}
         <div
@@ -491,7 +496,7 @@ export function ArchiveIntro() {
                 }`}
               >
                 <div
-                  className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200 ${
+                  className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200/40 ${
                     isEnglish
                       ? "md:text-24 md:leading-[30px]"
                       : "md:text-[1.5em] md:leading-normal"
@@ -500,7 +505,7 @@ export function ArchiveIntro() {
                   <ScrubText text={t("intro.line1")} revealDelay={0.4} />
                 </div>
                 <div
-                  className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200 ${
+                  className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200/40 ${
                     isEnglish
                       ? "md:w-[308px] md:text-24 md:leading-[36px]"
                       : "md:text-[1.5em] md:leading-normal"
@@ -521,7 +526,7 @@ export function ArchiveIntro() {
                 }`}
               >
                 <div
-                  className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200 ${
+                  className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200/40 ${
                     isEnglish
                       ? "md:text-24 md:leading-[40px]"
                       : "md:text-[1.5em] md:leading-normal"
@@ -537,7 +542,7 @@ export function ArchiveIntro() {
                     ))}
                 </div>
                 <div
-                  className={`font-serif-sc text-32 font-normal leading-[46px] text-grey-200 ${
+                  className={`font-serif-sc text-32 font-normal leading-[46px] text-grey-200/40 ${
                     isEnglish
                       ? "md:relative md:-top-1 md:text-48 md:leading-[70px]"
                       : "md:text-[3em] md:leading-normal"
@@ -550,7 +555,6 @@ export function ArchiveIntro() {
           </div>
         </div>
       </div>
-      </RepelFilter>
     </ScreenShell>
   );
 }

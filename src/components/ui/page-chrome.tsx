@@ -63,10 +63,7 @@ export function PageChrome() {
         navVariant={navVariant}
         onOpenIndex={handleOpenIndex}
         onCloseIndex={() => setIndexOpen(false)}
-        onContact={() => {
-          setIndexOpen(false);
-          window.location.href = "mailto:shuangzhang@fintopia.tech";
-        }}
+        contactHref="mailto:shuangzhang@fintopia.tech"
         closeRef={closeRef}
       />
       <ArchiveIndex

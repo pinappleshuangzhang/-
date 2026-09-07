@@ -11,6 +11,8 @@ import gsap from "gsap";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 type FlipHoverButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  /** 传入后渲染为原生链接；适用于 mailto 等必须由浏览器直接处理的协议 */
+  href?: string;
   /** 默认可见文案 */
   label: string;
   /** hover 时翻入的文案；不传则与 label 相同（自翻滚） */
@@ -41,6 +43,7 @@ export const FlipHoverButton = forwardRef<
 >(function FlipHoverButton(
   {
     label,
+    href,
     hoverLabel,
     disableFlip = false,
     showHoverMark = true,
@@ -59,7 +62,7 @@ export const FlipHoverButton = forwardRef<
   },
   forwardedRef,
 ) {
-  const localRef = useRef<HTMLButtonElement>(null);
+  const localRef = useRef<HTMLElement>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const reducedMotion = useReducedMotion();
   const outCharsList = Array.from(label);
@@ -193,6 +196,9 @@ export const FlipHoverButton = forwardRef<
       forwardedRef.current = node;
     }
   };
+  const setLinkRef = (node: HTMLAnchorElement | null) => {
+    localRef.current = node;
+  };
 
   const play = () => {
     if (!flipEnabled) return;
@@ -203,37 +209,8 @@ export const FlipHoverButton = forwardRef<
     timelineRef.current?.reverse();
   };
 
-  return (
-    <button
-      ref={setRefs}
-      type="button"
-      {...props}
-      aria-label={props["aria-label"] ?? label}
-      className={`group relative inline-flex items-center overflow-visible ${className ?? ""}`}
-      onMouseEnter={(event) => {
-        play();
-        onMouseEnter?.(event);
-      }}
-      onMouseLeave={(event) => {
-        reverse();
-        onMouseLeave?.(event);
-      }}
-      onFocus={(event) => {
-        play();
-        onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        reverse();
-        onBlur?.(event);
-      }}
-      onClick={(event) => {
-        onClick?.(event);
-        if (!resetMarkOnClick || event.defaultPrevented) return;
-        // 点完立刻收起方块；仍悬停时需移出再移入才会再次出现
-        reverse();
-        localRef.current?.blur();
-      }}
-    >
+  const content = (
+    <>
       <span className="relative inline-block overflow-visible" aria-hidden="true">
         {/* 绝对定位在文字左侧：默认不占位，hover 翻入且文字不位移 */}
         {showHoverMark && (
@@ -271,6 +248,60 @@ export const FlipHoverButton = forwardRef<
         )}
       </span>
       {children}
+    </>
+  );
+
+  const controlClassName = `group relative inline-flex items-center overflow-visible ${className ?? ""}`;
+
+  if (href) {
+    return (
+      <a
+        ref={setLinkRef}
+        href={href}
+        aria-label={props["aria-label"] ?? label}
+        className={controlClassName}
+        onMouseEnter={play}
+        onMouseLeave={reverse}
+        onFocus={play}
+        onBlur={reverse}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <button
+      ref={setRefs}
+      type="button"
+      {...props}
+      aria-label={props["aria-label"] ?? label}
+      className={controlClassName}
+      onMouseEnter={(event) => {
+        play();
+        onMouseEnter?.(event);
+      }}
+      onMouseLeave={(event) => {
+        reverse();
+        onMouseLeave?.(event);
+      }}
+      onFocus={(event) => {
+        play();
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        reverse();
+        onBlur?.(event);
+      }}
+      onClick={(event) => {
+        onClick?.(event);
+        if (!resetMarkOnClick || event.defaultPrevented) return;
+        // 点完立刻收起方块；仍悬停时需移出再移入才会再次出现
+        reverse();
+        localRef.current?.blur();
+      }}
+    >
+      {content}
     </button>
   );
 });

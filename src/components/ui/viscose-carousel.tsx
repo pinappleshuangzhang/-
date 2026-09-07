@@ -1,25 +1,27 @@
 "use client";
 
 import Image from "next/image";
-import type { MutableRefObject } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, type MutableRefObject } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
-import type { ViscoseMobileWork } from "@/components/ui/viscose-mobile-stage";
-import {
-  SURVEY_CATEGORIES,
-  SURVEY_G_001,
-  SURVEY_WORK_BY_CATEGORY,
-} from "@/lib/survey-details";
+import { ViscoseMobileGallery } from "@/components/ui/viscose-mobile-gallery";
+import { useDesktopMedia } from "@/hooks/use-desktop-media";
 import type { ViscoseCarouselItem } from "@/lib/viscose-carousel-items";
-import Carousel from "@/vendor/viscose/carousel";
+
+const ViscoseDesktopCarousel = dynamic(
+  () =>
+    import("@/components/ui/viscose-desktop-carousel").then(
+      (module) => module.ViscoseDesktopCarousel,
+    ),
+  { ssr: false },
+);
 
 type ViscoseCarouselProps = {
   items: ViscoseCarouselItem[];
   active: boolean;
   reducedMotion: boolean;
   onSelect: (index: number) => void;
-  scrollHandlerRef: MutableRefObject<
-    ((deltaY: number) => boolean) | null
-  >;
+  scrollHandlerRef: MutableRefObject<((deltaY: number) => boolean) | null>;
   /** 抽屉打开时暂停渲染，避免模糊长廊抢 GPU 导致抽屉滚动卡顿 */
   paused?: boolean;
   className?: string;
@@ -35,29 +37,16 @@ export function ViscoseCarousel({
   className,
 }: ViscoseCarouselProps) {
   const { locale, t } = useLocale();
-  const categoryLabels = [
-    t("gallery.category.brand"),
-    t("gallery.category.product"),
-    t("gallery.category.website"),
-    t("gallery.category.visual"),
-    t("gallery.category.motion"),
-  ];
-  // 移动端第三阶段文字块：有详情的类型取作品标题与简介，其余先用卡片标题占位
-  const mobileWorks: ViscoseMobileWork[] = SURVEY_CATEGORIES.map(
-    (category, index) => {
-      const work = SURVEY_WORK_BY_CATEGORY[category.code];
-      if (!work) {
-        return { title: items[index]?.title ?? "", description: "" };
-      }
-      return {
-        title: work.projectTitle,
-        description:
-          work.description === SURVEY_G_001.description
-            ? t("survey.description")
-            : work.description,
-      };
-    },
-  );
+  const isDesktop = useDesktopMedia();
+
+  useEffect(() => {
+    if (!isDesktop) return;
+    void import("@/components/ui/viscose-desktop-carousel");
+  }, [isDesktop]);
+
+  if (!isDesktop) {
+    return <ViscoseMobileGallery items={items} active={active} onSelect={onSelect} />;
+  }
 
   if (reducedMotion) {
     return (
@@ -93,18 +82,22 @@ export function ViscoseCarousel({
     <div
       className={`absolute inset-0 isolate overflow-hidden ${className ?? ""}`}
     >
-      <Carousel
+      <ViscoseDesktopCarousel
         onSelect={onSelect}
         scrollHandlerRef={scrollHandlerRef}
         paused={paused}
         cursorLabel={t("gallery.view")}
-        categoryLabels={categoryLabels}
+        categoryLabels={[
+          t("gallery.category.brand"),
+          t("gallery.category.product"),
+          t("gallery.category.website"),
+          t("gallery.category.visual"),
+          t("gallery.category.motion"),
+        ]}
         mobileHeading={t("gallery.mobile.heading")}
         mobileViewDetails={t("gallery.mobile.viewDetails")}
-        mobileWorks={mobileWorks}
-        categoryFontClass={
-          locale === "zh" ? "font-serif-sc" : "font-bodoni"
-        }
+        mobileWorks={[]}
+        categoryFontClass={locale === "zh" ? "font-serif-sc" : "font-bodoni"}
         nameFont={locale === "zh" ? "Noto Serif SC" : "Libre Bodoni"}
       />
     </div>

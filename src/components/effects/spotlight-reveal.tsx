@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import Image, { type StaticImageData } from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { useScreenActive } from "@/components/providers/section-pager-provider";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import {
   createWaterSpotlight,
@@ -47,8 +48,13 @@ export function SpotlightReveal({
   const ref = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
-
+  const rendererRef = useRef<WaterSpotlight | null>(null);
+  const isActive = useScreenActive();
   const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    rendererRef.current?.setPaused(!isActive);
+  }, [isActive]);
 
   useGSAP(
     () => {
@@ -59,13 +65,13 @@ export function SpotlightReveal({
       const hasPrecisePointer = window.matchMedia(
         "(hover: hover) and (pointer: fine)",
       ).matches;
-      // 无自动巡游时仅鼠标设备启用；自动巡游允许移动端自行显影。
-      if (!autoMove && !hasPrecisePointer) {
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      // 移动端只保留静态压印图，不创建流体 WebGL。
+      if (isMobile || (!autoMove && !hasPrecisePointer)) {
         return;
       }
       const section = el.closest("section");
       if (!section) return;
-      const isMobile = window.matchMedia("(max-width: 767px)").matches;
       const activeSrc = mobileSrc && isMobile ? mobileSrc : src;
       const activeRadius = isMobile ? (mobileRadius ?? radius) : radius;
 
@@ -74,6 +80,8 @@ export function SpotlightReveal({
         canvas,
         activeSrc.src,
       );
+      rendererRef.current = renderer;
+      renderer?.setPaused(!isActive);
       let fallbackTweens: { xTo?: gsap.QuickToFunc; yTo?: gsap.QuickToFunc } =
         {};
       if (renderer) {
@@ -240,6 +248,7 @@ export function SpotlightReveal({
       section.addEventListener("pointerenter", onEnter);
       window.addEventListener("keydown", onKeyDown);
       return () => {
+        rendererRef.current = null;
         renderer?.dispose();
         window.cancelAnimationFrame(autoFrame);
         window.clearTimeout(idleTimer);

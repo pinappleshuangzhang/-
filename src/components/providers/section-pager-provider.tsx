@@ -193,7 +193,7 @@ export function SectionPagerProvider({
     if (phaseRef.current !== "idle") return;
     if (performance.now() < cooldownUntilRef.current) return;
 
-    // 已在第一屏仍向上滑：交给注册的处理器（重播首屏序幕）
+    // 已在第一屏仍向上滑：交给注册的处理器；未注册则忽略
     if (next < 0 && indexRef.current === 0) {
       topOverscrollRef.current?.();
       return;

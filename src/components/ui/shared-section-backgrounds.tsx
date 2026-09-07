@@ -25,6 +25,7 @@ export function SharedSectionBackgrounds({
           return (
             <div
               key={key}
+              data-shared-bg={key}
               aria-hidden={!isActive}
               className={`absolute inset-0 ${config.fallbackClassName} ${isActive ? "" : "invisible"}`}
             >

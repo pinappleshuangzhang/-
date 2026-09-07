@@ -110,6 +110,8 @@ export type WaterSpotlight = {
   movePointer(x: number, y: number, speed: number): void;
   /** 目标半径（px）：>0 显示（并决定液斑大小），0 淡出隐藏 */
   setRadiusTarget(r: number): void;
+  /** 离屏时暂停循环；回到本屏且仍有内容要画时再恢复 */
+  setPaused(paused: boolean): void;
   dispose(): void;
 };
 
@@ -318,12 +320,33 @@ export function createWaterSpotlight(
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
 
-  const frame = (frameTime: number) => {
-    if (disposed) return;
+  let running = false;
+  let paused = false;
+
+  const stopLoop = () => {
+    running = false;
+    cancelAnimationFrame(rafId);
+    rafId = 0;
+  };
+
+  const startLoop = () => {
+    if (disposed || paused || running) return;
+    running = true;
+    lastFrame = performance.now();
     rafId = requestAnimationFrame(frame);
+  };
+
+  const frame = (frameTime: number) => {
+    if (disposed || paused) {
+      running = false;
+      return;
+    }
     const dt = Math.min((frameTime - lastFrame) / 1000, 1 / 30);
     lastFrame = frameTime;
-    if (dt <= 0) return;
+    if (dt <= 0) {
+      rafId = requestAnimationFrame(frame);
+      return;
+    }
 
     const pointerBlend = 1 - Math.exp(-POINTER_DAMPING * dt);
     pointer.x += (pointer.tx - pointer.x) * pointerBlend;
@@ -337,7 +360,16 @@ export function createWaterSpotlight(
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    if (!textureReady || spot.intensity < 0.01) return;
+
+    const visible = textureReady && spot.intensity >= 0.01;
+    if (!visible) {
+      if (spot.target <= 0) {
+        stopLoop();
+        return;
+      }
+      rafId = requestAnimationFrame(frame);
+      return;
+    }
 
     const aspect = width / height;
     const splatRadius = (spot.radiusPx / height) * 0.62;
@@ -378,8 +410,20 @@ export function createWaterSpotlight(
       gl.uniform1f(displayU.intensity, spot.intensity);
       gl.uniform2f(displayU.texelSize, 1 / simW, 1 / simH);
     });
+
+    const idle =
+      spot.target > 0 &&
+      pointer.speed < 0.01 &&
+      Math.abs(pointer.tx - pointer.x) < 0.001 &&
+      Math.abs(pointer.ty - pointer.y) < 0.001 &&
+      Math.abs(spot.intensity - spot.target) < 0.01;
+    if (idle) {
+      stopLoop();
+      return;
+    }
+
+    rafId = requestAnimationFrame(frame);
   };
-  rafId = requestAnimationFrame(frame);
 
   return {
     movePointer(x, y, speed) {
@@ -397,14 +441,24 @@ export function createWaterSpotlight(
       }
       pointer.tx = u;
       pointer.ty = v;
+      startLoop();
     },
     setRadiusTarget(r) {
       spot.target = r > 0 ? 1 : 0;
       if (r > 0) spot.radiusPx = r;
+      startLoop();
+    },
+    setPaused(nextPaused) {
+      paused = nextPaused;
+      if (paused) {
+        stopLoop();
+        return;
+      }
+      if (spot.target > 0 || spot.intensity >= 0.01) startLoop();
     },
     dispose() {
       disposed = true;
-      cancelAnimationFrame(rafId);
+      stopLoop();
       observer.disconnect();
       gl.deleteTexture(imageTexture);
       if (fieldA) gl.deleteTexture(fieldA);

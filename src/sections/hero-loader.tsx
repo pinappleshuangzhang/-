@@ -1,11 +1,26 @@
 import Image from "next/image";
-import loaderPassImg from "../../public/hero/loader-pass.webp";
+import { SectionBackground } from "@/components/ui/section-background";
+import { SECTION_BACKGROUNDS } from "@/lib/section-backgrounds";
 import mobileBgImg from "../../public/hero/hero-mobile-bg.webp";
+import glassImg from "../../public/hero/loader-mat-glass.webp";
+import metalImg from "../../public/hero/loader-mat-metal.webp";
+import plasterImg from "../../public/hero/loader-mat-plaster.webp";
+
+const archiveBackground = SECTION_BACKGROUNDS.archive;
 
 export const LOADER_ASSET_PATHS = [
-  "/hero/loader-pass.webp",
-  "/hero/loader-gradient.svg",
+  "/hero/loader-mat-plaster.webp",
+  "/hero/loader-mat-glass.webp",
+  "/hero/loader-mat-metal.webp",
+  archiveBackground.src.src,
+  "/hero/hero-loader-bg.webp",
   "/hero/hero-display-bg.webp",
+] as const;
+
+const MATERIALS = [
+  { src: plasterImg, key: "plaster" },
+  { src: glassImg, key: "glass" },
+  { src: metalImg, key: "metal" },
 ] as const;
 
 type HeroLoaderProps = {
@@ -18,7 +33,7 @@ type HeroLoaderProps = {
 };
 
 /**
- * 加载序幕：深底上浅色渐变按进度自上而下铺开，裁切露出居中证件托盘。
+ * 加载序幕：浅底居中材质铭牌自下而上循环替换，底部进度条跟真实加载。
  * 桌面端对稿；移动端仍用既有静帧，进度只播报给读屏。
  */
 export function HeroLoader({
@@ -29,6 +44,8 @@ export function HeroLoader({
   approvedLabel,
   cardAlt,
 }: HeroLoaderProps) {
+  const phases = [applyLabel, reviewLabel, approvedLabel];
+
   return (
     <>
       <Image
@@ -42,74 +59,101 @@ export function HeroLoader({
         className="object-cover md:hidden"
       />
 
-      <div className="absolute inset-0 hidden bg-grey-400 md:block">
+      <div
+        className={`absolute inset-0 hidden md:block ${archiveBackground.fallbackClassName}`}
+      >
+        <SectionBackground src={archiveBackground.src} priority />
         <div
-          data-loader-wipe
-          className="absolute inset-0"
-          style={{ clipPath: "inset(0% 0% 100% 0%)" }}
+          data-loader-materials
+          className="absolute left-1/2 top-1/2 origin-center overflow-hidden"
+          style={{
+            width: 218,
+            height: 218,
+            transform:
+              "translate(-50%, -50%) scale(min(100vw / 1440px, 100vh / 800px))",
+          }}
         >
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-[url('/hero/loader-gradient.svg')] bg-[length:100%_100%]"
-          />
-          <div
-            className="absolute left-1/2 top-1/2 origin-center"
-            style={{
-              width: 295,
-              height: 296,
-              transform:
-                "translate(-50%, -50%) scale(min(100vw / 1440px, 100vh / 800px))",
-            }}
-          >
-            <Image
-              src={loaderPassImg}
-              alt={cardAlt}
-              width={295}
-              height={296}
-              priority
-              sizes="21vw"
-              className="size-full object-cover"
-            />
-            <div className="absolute left-[93px] top-[149px] flex w-[100px] flex-col items-start gap-1.5 text-grey-400" aria-hidden="true">
-              <div className="flex flex-col items-start gap-1">
-                <span className="relative block h-[9px] w-[10px] overflow-clip">
-                  <Image
-                    src="/hero/loader-star.svg"
-                    alt=""
-                    width={10}
-                    height={9}
-                    unoptimized
-                    className="size-full"
-                  />
-                </span>
-                <p className="whitespace-nowrap font-serif-sc text-[11px] font-medium leading-normal uppercase">
-                  万有引力设计档案室
-                </p>
-              </div>
-              <span className="h-px w-full bg-grey-400" aria-hidden="true" />
-              <p className="w-full font-serif-sc text-[8px] font-normal leading-normal uppercase">
-                用户临时身份
-              </p>
-              <p className="font-bodoni text-[25px] font-normal leading-normal uppercase">
-                0_41
-              </p>
+          {MATERIALS.map((material, index) => (
+            <div
+              key={material.key}
+              data-loader-mat
+              className="absolute inset-0"
+              style={{
+                zIndex: index === 0 ? 1 : 0,
+                clipPath: index === 0 ? "none" : "inset(100% 0% 0% 0%)",
+              }}
+            >
+              <Image
+                src={material.src}
+                alt={index === 0 ? cardAlt : ""}
+                width={218}
+                height={218}
+                priority
+                sizes="16vw"
+                className="size-full object-cover"
+              />
             </div>
+          ))}
+        </div>
+
+        <div className="absolute bottom-9 left-5 right-5 flex flex-col gap-1.5">
+          <p
+            data-loader-status
+            aria-hidden="true"
+            className="flex items-end font-serif-sc text-14 font-normal leading-5 text-grey-400"
+          >
+            <span className="whitespace-nowrap">{roleLabel}</span>
+            <span className="font-bodoni">{idLabel}</span>
+            <span className="ml-1 inline-block h-5 overflow-hidden">
+              <span
+                data-loader-phase-track
+                className="flex flex-col items-start will-change-transform"
+              >
+                {phases.map((label) => (
+                  <span
+                    key={label}
+                    className="flex h-5 items-end whitespace-nowrap"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </span>
+            </span>
+          </p>
+
+          <div className="flex items-center gap-3">
+            <div
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={0}
+              data-loader-progressbar
+              className="relative h-px min-w-0 flex-1 bg-grey-100"
+            >
+              <div
+                data-loader-bar
+                className="absolute inset-y-0 left-0 w-full origin-left bg-grey-300"
+                style={{ transform: "scaleX(0)" }}
+              />
+            </div>
+            <span
+              data-loader-percent
+              className="w-9 shrink-0 text-right font-bodoni text-14 leading-5 text-grey-400"
+            >
+              0%
+            </span>
           </div>
         </div>
       </div>
 
       <p
-        data-loader-status
-        data-copy-apply={applyLabel}
-        data-copy-review={reviewLabel}
-        data-copy-approved={approvedLabel}
+        data-loader-live
+        data-role={roleLabel}
+        data-id={idLabel}
         aria-live="polite"
-        className="absolute right-5 top-5 z-10 max-md:sr-only whitespace-nowrap text-right font-serif-sc text-18 font-normal uppercase leading-normal text-white"
+        className="sr-only"
       >
-        <span>{roleLabel}</span>
-        <span className="font-bodoni">{idLabel}</span>
-        {` `}
-        <span data-loader-phase>{applyLabel}</span><span className="font-bodoni">-</span><span data-loader-percent className="font-bodoni">0%</span>
+        {`${roleLabel}${idLabel} ${applyLabel} 0%`}
       </p>
     </>
   );

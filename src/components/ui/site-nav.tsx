@@ -17,7 +17,7 @@ type SiteNavProps = {
   navVariant?: NavVariant;
   onOpenIndex?: () => void;
   onCloseIndex?: () => void;
-  onContact?: () => void;
+  contactHref?: string;
   closeRef?: Ref<HTMLButtonElement>;
   className?: string;
 };
@@ -53,7 +53,7 @@ export function SiteNav({
   navVariant = "studio",
   onOpenIndex,
   onCloseIndex,
-  onContact,
+  contactHref,
   closeRef,
   className,
 }: SiteNavProps) {
@@ -175,7 +175,7 @@ export function SiteNav({
             />
             <FlipHoverButton
               label={contactLabel}
-              onClick={onContact}
+              href={contactHref}
               markOffsetY={markOffsetY}
               className={linkClass}
             />

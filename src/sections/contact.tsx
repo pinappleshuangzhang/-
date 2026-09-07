@@ -20,8 +20,6 @@ export function Contact() {
       <SpotlightReveal
         src={contactEmbossedBgImg}
         mobileSrc={contactEmbossedBgMobileImg}
-        mobileRadius={96}
-        autoMove
         className="absolute inset-0 z-[5]"
       />
       <div id="contact">

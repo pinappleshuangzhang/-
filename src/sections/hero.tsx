@@ -6,32 +6,27 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import {
   buildFallbackReveal,
-  buildHeroReveal,
-  buildLoaderExit,
+  createHeroVideoSequence,
+  createLoaderMaterialCycle,
   createLoaderProgress,
   LOADER_FAILSAFE_MS,
   LOADER_HOLD_MS,
   LOADER_MIN_DURATION_MS,
 } from "@/animations/hero-intro";
-import {
-  setSondavenHidden,
-  setSondavenVisible,
-} from "@/animations/sondaven-reveal";
-import { RepelFilter } from "@/components/effects/repel-filter";
+import { setSondavenVisible } from "@/animations/sondaven-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { useHeroPreloader } from "@/hooks/use-hero-preloader";
 import { HeroLoader, LOADER_ASSET_PATHS } from "@/sections/hero-loader";
+import archiveBoxImg from "../../public/hero/hero-loader-bg.webp";
 import mobileFinalBgImg from "../../public/hero/hero-mobile-final-bg.webp";
 
 gsap.registerPlugin(useGSAP);
 
 const VIDEO_SRC = "/hero/hero-intro.mp4";
 /** 是否播放开场视频；true 时视频下载进度计入加载屏 */
-const SHOW_INTRO_VIDEO = false;
-/** 距视频结尾多少秒触发标题入场，保证与最后一帧同步 */
-const REVEAL_BEFORE_END_S = 0.15;
+const SHOW_INTRO_VIDEO = true;
 
 /** 按第三屏相同规则拆词，供 Son Daven 随机逐词入场。 */
 function segmentWords(text: string): string[] {
@@ -52,7 +47,7 @@ function SplitWords({ text }: { text: string }) {
           <span
             key={`${word}-${index}`}
             aria-hidden="true"
-            className="sd-word inline-block"
+            className="sd-word inline-block opacity-0"
           >
             {word}
           </span>
@@ -70,12 +65,12 @@ export function Hero() {
 
   const preload = useHeroPreloader(VIDEO_SRC, LOADER_ASSET_PATHS, {
     videoEnabled: SHOW_INTRO_VIDEO,
+    timeoutMs: 45000,
   });
   const preloadRef = useRef(preload);
   const { locale, t } = useLocale();
   // 分页器默认锁定，序幕结束后由此放行切屏
-  const { setNavigationLocked, registerTopOverscroll, runWithCurtain } =
-    useSectionPager();
+  const { setNavigationLocked } = useSectionPager();
   const firstFrameRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -84,13 +79,6 @@ export function Hero() {
 
   const doneRef = useRef(false);
   const revealStartedRef = useRef(false);
-  // 序幕重播函数由动画上下文注入；在首屏继续向上滑时触发
-  const replayRef = useRef<(() => void) | null>(null);
-
-  useEffect(
-    () => registerTopOverscroll(() => replayRef.current?.()),
-    [registerTopOverscroll],
-  );
 
   useEffect(() => {
     if (!doneRef.current) return;
@@ -105,9 +93,13 @@ export function Hero() {
       const loader = loaderRef.current;
       const videoLayer = videoLayerRef.current;
       const firstFrame = firstFrameRef.current;
+      const lastFrame = document.querySelector<HTMLElement>(
+        '[data-shared-bg="studio"]',
+      );
       if (loader) gsap.set(loader, { autoAlpha: 0 });
       if (videoLayer) gsap.set(videoLayer, { autoAlpha: 0 });
       if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
+      if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
       setSondavenVisible(container.current);
       doneRef.current = true;
       setNavigationLocked(false);
@@ -124,11 +116,20 @@ export function Hero() {
       const video = videoRef.current;
       if (!root || !loader || !videoLayer || !video) return;
 
-      const wipe = loader.querySelector<HTMLElement>("[data-loader-wipe]");
-      const status = loader.querySelector<HTMLElement>("[data-loader-status]");
-      const phase = loader.querySelector<HTMLElement>("[data-loader-phase]");
+      const materials = loader.querySelector<HTMLElement>(
+        "[data-loader-materials]",
+      );
+      const bar = loader.querySelector<HTMLElement>("[data-loader-bar]");
+      const progressbar = loader.querySelector<HTMLElement>(
+        "[data-loader-progressbar]",
+      );
+      const phaseTrack = loader.querySelector<HTMLElement>(
+        "[data-loader-phase-track]",
+      );
       const percent = loader.querySelector<HTMLElement>("[data-loader-percent]");
-      if (!wipe || !status || !phase || !percent) return;
+      const live = loader.querySelector<HTMLElement>("[data-loader-live]");
+      if (!materials || !bar || !progressbar || !phaseTrack || !percent || !live)
+        return;
 
       const finish = () => {
         setSondavenVisible(root);
@@ -137,62 +138,47 @@ export function Hero() {
       };
 
       // 无视频路径：加载层淡出露出首帧，停留后首帧渐隐、尾帧与标题渐入
-      const runFallback = contextSafe!(() => {
-        if (revealStartedRef.current) return;
-        revealStartedRef.current = true;
+      const playStillSequence = contextSafe!(() => {
         video.pause();
         gsap.set(videoLayer, { autoAlpha: 0 });
         buildFallbackReveal({
           loader,
           firstFrame: firstFrameRef.current,
           root,
+          onRevealStart: () => setNavigationLocked(false),
         }).eventCallback("onComplete", finish);
       });
 
-      // 阶段三：最后一帧同步入场；同时交叉淡出视频层与首帧，
-      // 露出下方 4K 静态图（Figma 01首屏-2 指定画面，比视频末帧更干净）
-      const runReveal = contextSafe!(() => {
+      const runFallback = contextSafe!(() => {
         if (revealStartedRef.current) return;
         revealStartedRef.current = true;
-        gsap.to([videoLayer, firstFrameRef.current], {
-          autoAlpha: 0,
-          duration: 1,
-          ease: "power2.out",
-        });
-        buildHeroReveal(root).eventCallback("onComplete", finish);
+        playStillSequence();
       });
 
-      // 阶段二：等视频首帧解码就绪后先亮出定格画面（与加载层底图同画面，避免闪烁），
-      // 加载层文字退场完毕后才真正开播，避免静止底图叠在动态画面上产生重影
+      let activeVideo: { start: () => void; kill: () => void } | null = null;
+
       const startVideo = contextSafe!(() => {
         const state = preloadRef.current;
         if (state.status !== "ready" || !state.objectUrl) {
           runFallback();
           return;
         }
-        const beginPlayback = contextSafe!(() => {
-          gsap.set(videoLayer, { autoAlpha: 1 });
-          buildLoaderExit(loader).eventCallback("onComplete", () => {
-            video.play().catch(() => runFallback());
-          });
+        if (revealStartedRef.current) return;
+        revealStartedRef.current = true;
+        activeVideo?.kill();
+        activeVideo = createHeroVideoSequence({
+          video,
+          videoLayer,
+          firstFrame: firstFrameRef.current,
+          loader,
+          root,
+          objectUrl: state.objectUrl,
+          onRevealStart: () => setNavigationLocked(false),
+          onComplete: finish,
+          onFallback: playStillSequence,
         });
-        video.addEventListener("loadeddata", beginPlayback, { once: true });
-        video.addEventListener("error", () => runFallback(), { once: true });
-        video.src = state.objectUrl;
-        video.load();
+        activeVideo.start();
       });
-
-      const onTimeUpdate = () => {
-        if (
-          video.duration > 0 &&
-          video.duration - video.currentTime <= REVEAL_BEFORE_END_S
-        ) {
-          runReveal();
-        }
-      };
-      const onEnded = () => runReveal();
-      video.addEventListener("timeupdate", onTimeUpdate);
-      video.addEventListener("ended", onEnded);
 
       const media = gsap.matchMedia();
 
@@ -201,17 +187,25 @@ export function Hero() {
         gsap.set(loader, { autoAlpha: 0 });
         gsap.set(videoLayer, { autoAlpha: 0 });
         gsap.set(firstFrameRef.current, { autoAlpha: 0 });
+        const lastFrame = document.querySelector<HTMLElement>(
+          '[data-shared-bg="studio"]',
+        );
+        if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
+        const titles = root.querySelector<HTMLElement>("[data-hero-titles]");
+        if (titles) gsap.set(titles, { autoAlpha: 1 });
         setSondavenVisible(root);
         finish();
       });
 
       media.add("(prefers-reduced-motion: no-preference)", () => {
         const loaderProgress = createLoaderProgress({
-          wipe,
-          status,
-          phase,
+          bar,
+          progressbar,
+          phaseTrack,
           percent,
+          live,
         });
+        const materialCycle = createLoaderMaterialCycle(materials);
         let gate = 0;
         let startedAt = 0;
 
@@ -224,6 +218,7 @@ export function Hero() {
         const startSequence = () => {
           window.clearInterval(gate);
           loaderProgress.reset();
+          materialCycle.reset();
           startedAt = performance.now();
 
           gate = window.setInterval(() => {
@@ -248,35 +243,15 @@ export function Hero() {
 
         startSequence();
 
-        // 首屏继续向上滑时重播：走一次幕布过场，铺满时重置下层并重新走流程
-        replayRef.current = contextSafe!(() => {
-          if (!doneRef.current) return;
-          runWithCurtain(
-            contextSafe!(() => {
-              doneRef.current = false;
-              revealStartedRef.current = false;
-              setNavigationLocked(true);
-              loaderProgress.reset();
-              video.pause();
-              gsap.set(loader, { autoAlpha: 1 });
-              gsap.set(videoLayer, { autoAlpha: 0 });
-              gsap.set(firstFrameRef.current, { autoAlpha: 1 });
-              setSondavenHidden(root);
-              startSequence();
-            }),
-          );
-        });
-
         return () => {
           window.clearInterval(gate);
           loaderProgress.kill();
-          replayRef.current = null;
+          materialCycle.kill();
+          activeVideo?.kill();
         };
       });
 
       return () => {
-        video.removeEventListener("timeupdate", onTimeUpdate);
-        video.removeEventListener("ended", onEnded);
         media.revert();
       };
     },
@@ -293,8 +268,6 @@ export function Hero() {
 
   return (
     <ScreenShell ref={container}>
-      {/* 鼠标排斥滤镜：分屏内视频、图片、文字全部参与变形 */}
-      <RepelFilter className="absolute inset-0">
       {/* Figma 949:4141：移动端加载完成后的 390×844 终态，使用 3× 无损导出。 */}
       <div className="absolute inset-0 z-10 md:hidden">
         <Image
@@ -309,25 +282,27 @@ export function Hero() {
         />
       </div>
 
-      {/* 首屏首帧：Figma 01首屏-1 静帧，初始就在加载层下方，加载层退场即露出 */}
+      {/* 无视频降级才用的首帧静帧；有视频时保持隐藏，避免和画面交叉闪 */}
       <div
         ref={firstFrameRef}
-        className="absolute inset-0 z-20 hidden md:block motion-reduce:hidden"
+        className="invisible absolute inset-0 z-[25] hidden opacity-0 md:block motion-reduce:hidden"
       >
         <Image
-          src="/hero/hero-loader-bg.webp"
+          src={archiveBoxImg}
           alt=""
           fill
           priority
+          unoptimized
+          placeholder="blur"
           sizes="100vw"
           className="object-cover"
         />
       </div>
 
-      {/* 全屏视频层（静态场景底图由 SharedSectionBackgrounds 提供） */}
+      {/* 全屏视频层：盖住共享尾帧底图，避免播片时静帧露出来闪一下 */}
       <div
         ref={videoLayerRef}
-        className="invisible absolute inset-0 z-20 opacity-0"
+        className="invisible absolute inset-0 z-20 bg-white opacity-0"
       >
         <video
           ref={videoRef}
@@ -340,7 +315,7 @@ export function Hero() {
       </div>
 
       {/* 最终首屏内容：Figma 884:2070，标题组与目录左侧光学对齐 */}
-      <div className="absolute inset-0 z-30">
+      <div data-hero-titles className="invisible absolute inset-0 z-30 opacity-0">
         <div
           className={`absolute left-1/2 top-[103px] flex -translate-x-1/2 flex-col items-center gap-2 text-center md:hidden ${
             locale === "zh" ? "w-[290px]" : "w-[366px]"
@@ -463,10 +438,10 @@ export function Hero() {
         </div>
       </div>
 
-      {/* 加载序幕：浅色渐变按进度铺开，裁切露出证件 */}
+      {/* 加载序幕：材质铭牌循环替换，底部进度条跟真实加载 */}
       <div
         ref={loaderRef}
-        className="absolute inset-0 z-40 bg-grey-400 motion-reduce:hidden"
+        className="absolute inset-0 z-40 bg-white motion-reduce:hidden"
       >
         <HeroLoader
           roleLabel={t("loader.role")}
@@ -477,7 +452,6 @@ export function Hero() {
           cardAlt={t("loader.cardAlt")}
         />
       </div>
-      </RepelFilter>
     </ScreenShell>
   );
 }
