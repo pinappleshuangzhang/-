@@ -206,14 +206,12 @@ export function SurveyDrawer({
         tabIndex={-1}
         aria-label={t("nav.close")}
         onClick={onClose}
-        className={`absolute inset-0 touch-none opacity-0 focus-visible:outline-none ${
-          reducedMotion ? "bg-grey-400/70" : "bg-grey-400/55"
-        }`}
+        className="absolute inset-0 touch-none bg-grey-400/60 opacity-0 focus-visible:outline-none"
       />
       <aside
         ref={panelRef}
         onClick={handlePanelClick}
-        className="absolute inset-y-0 right-0 z-10 flex w-[min(935px,calc(100%-80px))] flex-col bg-grey-50 max-md:inset-x-0 max-md:top-[67px] max-md:w-auto max-md:bg-white"
+        className="absolute inset-y-0 right-0 z-10 flex w-[min(935px,calc(100%-80px))] flex-col bg-[#F7F7F9] max-md:inset-x-0 max-md:top-[67px] max-md:w-auto max-md:bg-white"
       >
         {/* 桌面端靠跟随光标的「关闭」收起，按钮仅供读屏；手机上显示 16px 叉号（Figma 1008-561） */}
         <button

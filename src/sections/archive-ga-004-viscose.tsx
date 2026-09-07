@@ -26,7 +26,6 @@ export function ArchiveGa004Viscose() {
   const [detailsCode, setDetailsCode] = useState<SurveyCategoryCode>("C");
   const [coverPresent, setCoverPresent] = useState(false);
   const { t } = useLocale();
-  const blurCarousel = !reducedMotion && coverPresent;
 
   useEffect(() => {
     if (isActive) return;
@@ -61,8 +60,7 @@ export function ArchiveGa004Viscose() {
         detailsOpen ? t("ga004.detailAria") : t("ga004.aria")
       }
     >
-      {/* 第五屏长廊是 WebGL canvas，backdrop-filter 采不到它；
-          抽屉打开时对长廊层做 32px 模糊，效果对齐第四屏毛玻璃。 */}
+      {/* 抽屉打开时不再模糊长廊（blur 全屏合成太重），由抽屉遮罩压暗背景 */}
       <ViscoseCarousel
         items={VISCOSE_CAROUSEL_ITEMS}
         active={isActive && phase === "idle"}
@@ -70,7 +68,6 @@ export function ArchiveGa004Viscose() {
         reducedMotion={reducedMotion}
         onSelect={openDetails}
         scrollHandlerRef={carouselScrollRef}
-        className={blurCarousel ? "blur-[32px]" : undefined}
       />
       <SurveyDrawer
         open={detailsOpen}
