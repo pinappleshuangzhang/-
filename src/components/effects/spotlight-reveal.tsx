@@ -50,10 +50,15 @@ export function SpotlightReveal({
   const imageRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<WaterSpotlight | null>(null);
   const isActive = useScreenActive();
+  const isActiveRef = useRef(isActive);
+  // 自动巡游循环的开关，由 useGSAP 内部赋值；离屏停 rAF，回屏再启动
+  const autoLoopControlRef = useRef<((run: boolean) => void) | null>(null);
   const reducedMotion = useReducedMotion();
 
   useEffect(() => {
+    isActiveRef.current = isActive;
     rendererRef.current?.setPaused(!isActive);
+    autoLoopControlRef.current?.(isActive);
   }, [isActive]);
 
   useGSAP(
@@ -107,7 +112,17 @@ export function SpotlightReveal({
       let lastY = 0;
       let lastTime = 0;
       let autoFrame = 0;
+      let autoRunning = false;
       let idleTimer = 0;
+
+      // rect 缓存：每帧调 getBoundingClientRect 会反复触发布局查询，
+      // 位置只在尺寸变化 / 循环重启时才需要重新量。
+      let sectionRect = section.getBoundingClientRect();
+      let elRect = el.getBoundingClientRect();
+      const refreshRects = () => {
+        sectionRect = section.getBoundingClientRect();
+        elRect = el.getBoundingClientRect();
+      };
 
       const setRadius = (value: number) => {
         if (renderer) {
@@ -155,28 +170,42 @@ export function SpotlightReveal({
       };
 
       const animateAuto = (time: number) => {
+        if (!autoRunning) return;
         if (mode === "auto") {
-          const sectionRect = section.getBoundingClientRect();
-          const rect = el.getBoundingClientRect();
           const x =
             sectionRect.left +
             sectionRect.width * (0.5 + 0.4 * Math.sin(time * 0.00022)) -
-            rect.left;
+            elRect.left;
           const y =
             sectionRect.top +
             sectionRect.height *
               (0.72 + 0.12 * Math.sin(time * 0.00031 + 1.3)) -
-            rect.top;
+            elRect.top;
           moveSpotlight(x, y, time);
         }
         autoFrame = window.requestAnimationFrame(animateAuto);
       };
 
+      const startAutoLoop = () => {
+        if (!autoMove || autoRunning || mode === "full") return;
+        autoRunning = true;
+        lastTime = 0;
+        refreshRects();
+        autoFrame = window.requestAnimationFrame(animateAuto);
+      };
+      const stopAutoLoop = () => {
+        autoRunning = false;
+        window.cancelAnimationFrame(autoFrame);
+      };
+      autoLoopControlRef.current = (run) => {
+        if (run) startAutoLoop();
+        else stopAutoLoop();
+      };
+
       const onMove = (event: PointerEvent) => {
         if (event.pointerType !== "mouse" || mode === "full") return;
-        const rect = el.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const x = event.clientX - elRect.left;
+        const y = event.clientY - elRect.top;
 
         if (mode !== "pointer") {
           mode = "pointer";
@@ -224,6 +253,7 @@ export function SpotlightReveal({
         }
         mode = "full";
         window.clearTimeout(idleTimer);
+        stopAutoLoop();
         setRadius(0);
         gsap.set(imageEl, {
           autoAlpha: 1,
@@ -232,30 +262,32 @@ export function SpotlightReveal({
       };
 
       if (autoMove) {
-        const sectionRect = section.getBoundingClientRect();
-        const rect = el.getBoundingClientRect();
         moveSpotlight(
-          sectionRect.left + sectionRect.width * 0.5 - rect.left,
-          sectionRect.top + sectionRect.height * 0.72 - rect.top,
+          sectionRect.left + sectionRect.width * 0.5 - elRect.left,
+          sectionRect.top + sectionRect.height * 0.72 - elRect.top,
           performance.now(),
         );
         setRadius(activeRadius);
-        autoFrame = window.requestAnimationFrame(animateAuto);
+        // 巡游循环只在本屏激活时运行，离屏由 autoLoopControlRef 停掉
+        if (isActiveRef.current) startAutoLoop();
       }
 
       section.addEventListener("pointermove", onMove);
       section.addEventListener("pointerleave", onLeave);
       section.addEventListener("pointerenter", onEnter);
       window.addEventListener("keydown", onKeyDown);
+      window.addEventListener("resize", refreshRects);
       return () => {
+        autoLoopControlRef.current = null;
         rendererRef.current = null;
         renderer?.dispose();
-        window.cancelAnimationFrame(autoFrame);
+        stopAutoLoop();
         window.clearTimeout(idleTimer);
         section.removeEventListener("pointermove", onMove);
         section.removeEventListener("pointerleave", onLeave);
         section.removeEventListener("pointerenter", onEnter);
         window.removeEventListener("keydown", onKeyDown);
+        window.removeEventListener("resize", refreshRects);
       };
     },
     {
