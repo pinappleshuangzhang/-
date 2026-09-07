@@ -11,7 +11,6 @@ import {
   LOADER_FAILSAFE_MS,
   LOADER_HOLD_MS,
   LOADER_MIN_DURATION_MS,
-  returnToArchiveHold,
   revealArchiveHold,
   revealHeroFinale,
 } from "@/animations/hero-intro";
@@ -73,18 +72,18 @@ export function Hero() {
   const preloadRef = useRef(preload);
   const { locale, t } = useLocale();
   // 分页器默认锁定；停在档案盒页后解锁，由滚动拦截器决定是否起播视频
-  const { setNavigationLocked, registerScrollInterceptor, registerTopOverscroll } =
-    useSectionPager();
+  const { setNavigationLocked, registerScrollInterceptor } = useSectionPager();
   const firstFrameRef = useRef<HTMLDivElement>(null);
   const introPhaseRef = useRef<"loading" | "holding" | "playing" | "done">(
     "loading",
   );
   const startIntroVideoRef = useRef<(() => void) | null>(null);
   const skipIntroVideoRef = useRef<(() => void) | null>(null);
-  const returnToArchiveRef = useRef<(() => void) | null>(null);
   const [showSkip, setShowSkip] = useState(false);
   // 加载序幕只出现一次：退场动画结束后整体卸载，释放其 DOM 与图片内存
   const [loaderDismissed, setLoaderDismissed] = useState(false);
+  // 开场流程结束后档案盒首帧与视频层不再复用，一并卸载释放内存
+  const [introDone, setIntroDone] = useState(false);
 
   useEffect(() => {
     preloadRef.current = preload;
@@ -108,15 +107,6 @@ export function Hero() {
         return introPhaseRef.current === "playing";
       }),
     [registerScrollInterceptor],
-  );
-
-  // 尾帧标题页（第一屏）继续向上滑：退回档案盒页，可再次下滑重播视频
-  useEffect(
-    () =>
-      registerTopOverscroll(() => {
-        returnToArchiveRef.current?.();
-      }),
-    [registerTopOverscroll],
   );
 
   useEffect(() => {
@@ -217,6 +207,7 @@ export function Hero() {
       doneRef.current = true;
       setNavigationLocked(false);
       setLoaderDismissed(true);
+      setIntroDone(true);
     }, LOADER_FAILSAFE_MS);
 
     return () => window.clearTimeout(timeout);
@@ -255,6 +246,10 @@ export function Hero() {
         setSondavenVisible(root);
         doneRef.current = true;
         setNavigationLocked(false);
+        // 开场视频与档案盒首帧不再复用：卸载对应层并释放视频 blob
+        setIntroDone(true);
+        const objectUrl = preloadRef.current.objectUrl;
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
       };
 
       const playStillFinale = contextSafe!(() => {
@@ -328,22 +323,6 @@ export function Hero() {
 
       startIntroVideoRef.current = startVideo;
       skipIntroVideoRef.current = () => activeVideo?.skip();
-
-      // 尾帧标题页向上滑：回到档案盒页并重置视频序列（仅桌面端有档案盒静帧）
-      const returnToArchive = contextSafe!(() => {
-        if (introPhaseRef.current !== "done") return;
-        const firstFrame = firstFrameRef.current;
-        if (!firstFrame || getComputedStyle(firstFrame).display === "none")
-          return;
-        introPhaseRef.current = "holding";
-        setShowSkip(false);
-        video.pause();
-        activeVideo?.kill();
-        activeVideo = null;
-        gsap.set(videoLayer, { autoAlpha: 0 });
-        returnToArchiveHold({ firstFrame, lastFrame, root });
-      });
-      returnToArchiveRef.current = returnToArchive;
 
       const media = gsap.matchMedia();
 
@@ -448,38 +427,43 @@ export function Hero() {
         />
       </div>
 
-      {/* 01首屏-1 档案盒：加载层退场后停在此页，下滑再播视频 */}
-      <div
-        ref={firstFrameRef}
-        className="invisible absolute inset-0 z-[25] hidden opacity-0 md:block motion-reduce:hidden"
-      >
-        <Image
-          src={archiveBoxImg}
-          alt=""
-          fill
-          priority
-          unoptimized
-          placeholder="blur"
-          sizes="100vw"
-          className="object-cover"
-        />
-      </div>
+      {/* 01首屏-1 档案盒与视频层：开场流程结束后不再复用，整体卸载 */}
+      {introDone ? null : (
+        <>
+          {/* 档案盒静帧：加载层退场后停在此页，下滑再播视频 */}
+          <div
+            ref={firstFrameRef}
+            className="invisible absolute inset-0 z-[25] hidden opacity-0 md:block motion-reduce:hidden"
+          >
+            <Image
+              src={archiveBoxImg}
+              alt=""
+              fill
+              priority
+              unoptimized
+              placeholder="blur"
+              sizes="100vw"
+              className="object-cover"
+            />
+          </div>
 
-      {/* 全屏视频层：盖住共享尾帧底图，避免播片时静帧露出来闪一下 */}
-      <div
-        ref={videoLayerRef}
-        className="invisible absolute inset-0 z-20 bg-white opacity-0"
-      >
-        {/* translateZ(0) 强制视频始终走 GPU 合成路径，避免硬件叠加层来回切换造成亮度闪烁 */}
-        <video
-          ref={videoRef}
-          muted
-          playsInline
-          preload="none"
-          aria-hidden="true"
-          className="size-full object-cover [transform:translateZ(0)]"
-        />
-      </div>
+          {/* 全屏视频层：盖住共享尾帧底图，避免播片时静帧露出来闪一下 */}
+          <div
+            ref={videoLayerRef}
+            className="invisible absolute inset-0 z-20 bg-white opacity-0"
+          >
+            {/* translateZ(0) 强制视频始终走 GPU 合成路径，避免硬件叠加层来回切换造成亮度闪烁 */}
+            <video
+              ref={videoRef}
+              muted
+              playsInline
+              preload="none"
+              aria-hidden="true"
+              className="size-full object-cover [transform:translateZ(0)]"
+            />
+          </div>
+        </>
+      )}
 
       {/* 最终首屏内容：Figma 884:2070，标题组与目录左侧光学对齐 */}
       <div data-hero-titles className="invisible absolute inset-0 z-30 opacity-0">
