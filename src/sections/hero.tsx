@@ -11,6 +11,7 @@ import {
   LOADER_FAILSAFE_MS,
   LOADER_HOLD_MS,
   LOADER_MIN_DURATION_MS,
+  returnToArchiveHold,
   revealArchiveHold,
   revealHeroFinale,
 } from "@/animations/hero-intro";
@@ -72,13 +73,15 @@ export function Hero() {
   const preloadRef = useRef(preload);
   const { locale, t } = useLocale();
   // 分页器默认锁定；停在档案盒页后解锁，由滚动拦截器决定是否起播视频
-  const { setNavigationLocked, registerScrollInterceptor } = useSectionPager();
+  const { setNavigationLocked, registerScrollInterceptor, registerTopOverscroll } =
+    useSectionPager();
   const firstFrameRef = useRef<HTMLDivElement>(null);
   const introPhaseRef = useRef<"loading" | "holding" | "playing" | "done">(
     "loading",
   );
   const startIntroVideoRef = useRef<(() => void) | null>(null);
   const skipIntroVideoRef = useRef<(() => void) | null>(null);
+  const returnToArchiveRef = useRef<(() => void) | null>(null);
   const [showSkip, setShowSkip] = useState(false);
 
   useEffect(() => {
@@ -103,6 +106,15 @@ export function Hero() {
         return introPhaseRef.current === "playing";
       }),
     [registerScrollInterceptor],
+  );
+
+  // 尾帧标题页（第一屏）继续向上滑：退回档案盒页，可再次下滑重播视频
+  useEffect(
+    () =>
+      registerTopOverscroll(() => {
+        returnToArchiveRef.current?.();
+      }),
+    [registerTopOverscroll],
   );
 
   useEffect(() => {
@@ -314,6 +326,22 @@ export function Hero() {
       startIntroVideoRef.current = startVideo;
       skipIntroVideoRef.current = () => activeVideo?.skip();
 
+      // 尾帧标题页向上滑：回到档案盒页并重置视频序列（仅桌面端有档案盒静帧）
+      const returnToArchive = contextSafe!(() => {
+        if (introPhaseRef.current !== "done") return;
+        const firstFrame = firstFrameRef.current;
+        if (!firstFrame || getComputedStyle(firstFrame).display === "none")
+          return;
+        introPhaseRef.current = "holding";
+        setShowSkip(false);
+        video.pause();
+        activeVideo?.kill();
+        activeVideo = null;
+        gsap.set(videoLayer, { autoAlpha: 0 });
+        returnToArchiveHold({ firstFrame, lastFrame, root });
+      });
+      returnToArchiveRef.current = returnToArchive;
+
       const media = gsap.matchMedia();
 
       media.add("(prefers-reduced-motion: reduce)", () => {
@@ -438,13 +466,14 @@ export function Hero() {
         ref={videoLayerRef}
         className="invisible absolute inset-0 z-20 bg-white opacity-0"
       >
+        {/* translateZ(0) 强制视频始终走 GPU 合成路径，避免硬件叠加层来回切换造成亮度闪烁 */}
         <video
           ref={videoRef}
           muted
           playsInline
           preload="none"
           aria-hidden="true"
-          className="size-full object-cover"
+          className="size-full object-cover [transform:translateZ(0)]"
         />
       </div>
 
@@ -572,13 +601,14 @@ export function Hero() {
         </div>
       </div>
 
+      {/* 不用 mix-blend-difference：混合模式会阻止视频进入硬件叠加层，引发亮度闪烁 */}
       {showSkip ? (
-        <div className="absolute right-5 bottom-5 z-[35] mix-blend-difference">
+        <div className="absolute right-5 bottom-5 z-[35]">
           <FlipHoverButton
             label={t("hero.skipVideo")}
             onClick={() => skipIntroVideoRef.current?.()}
             markOffsetY={locale === "en" ? -1 : 0}
-            className={`shrink-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-white focus-visible:outline-none ${
+            className={`shrink-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-grey-400 focus-visible:outline-none ${
               locale === "en" ? "font-bodoni" : "font-serif-sc"
             }`}
           />

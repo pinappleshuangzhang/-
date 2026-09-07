@@ -199,13 +199,13 @@ export default function Carousel({
       console.error("[ring] could not create a WebGL context:", err);
       return;
     }
-    // Safari (Metal WebGL) is slower on this shader, so cap the DPR lower
-    // than other browsers — but not below 1.5: further down the atlas art
-    // reads as out of focus on Retina panels. Antialias stays off there,
-    // the SDF does its own edge softening.
-    renderer.setPixelRatio(
-      Math.min(window.devicePixelRatio, isSafari ? 1.5 : 2),
-    );
+    // The full-screen SDF shader bills per pixel: animate at a capped DPR,
+    // then re-render one sharp frame at native DPR when the ring parks
+    // (see the idle stop in `step`). Motion hides the lower resolution and
+    // the frame the viewer actually studies is full quality.
+    const MOTION_DPR = Math.min(window.devicePixelRatio, 1.5);
+    const SHARP_DPR = Math.min(window.devicePixelRatio, 2);
+    renderer.setPixelRatio(MOTION_DPR);
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
@@ -1801,11 +1801,22 @@ export default function Carousel({
       if (!busy) {
         loopOn = false;
         renderer.setAnimationLoop(null);
+        // 停帧前用原生 DPR 补渲一帧：观众端详的静帧是满画质，
+        // 运动帧维持低像素比省 GPU。
+        if (renderer.getPixelRatio() !== SHARP_DPR) {
+          renderer.setPixelRatio(SHARP_DPR);
+          renderer.setSize(viewW, viewH);
+          renderer.render(scene, camera);
+        }
       }
     };
 
     ensureLoop = () => {
       if (disposed || pausedRef.current || loopOn) return;
+      if (renderer.getPixelRatio() !== MOTION_DPR) {
+        renderer.setPixelRatio(MOTION_DPR);
+        renderer.setSize(viewW, viewH);
+      }
       loopOn = true;
       prevT = performance.now();
       renderer.setAnimationLoop(step);

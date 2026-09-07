@@ -239,6 +239,37 @@ export function revealHeroFinale({
   return timeline.add(reveal, 0.4);
 }
 
+/**
+ * 从尾帧标题页向上滑：标题淡出、档案盒静帧渐入，回到档案盒页。
+ */
+export function returnToArchiveHold({
+  firstFrame,
+  lastFrame,
+  root,
+}: {
+  firstFrame: HTMLElement | null;
+  lastFrame: HTMLElement | null;
+  root: HTMLElement;
+}): gsap.core.Timeline {
+  const titles = root.querySelector<HTMLElement>("[data-hero-titles]");
+  const timeline = gsap.timeline();
+  if (titles) {
+    timeline.to(titles, { autoAlpha: 0, duration: 0.4, ease: "power2.out" }, 0);
+  }
+  if (firstFrame) {
+    timeline.to(
+      firstFrame,
+      { autoAlpha: 1, duration: 0.8, ease: "power2.inOut" },
+      0,
+    );
+  }
+  timeline.call(() => {
+    if (lastFrame) gsap.set(lastFrame, { autoAlpha: 0 });
+    setSondavenHidden(root);
+  });
+  return timeline;
+}
+
 type HeroVideoSequenceOptions = {
   video: HTMLVideoElement;
   videoLayer: HTMLElement;

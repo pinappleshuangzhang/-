@@ -261,15 +261,28 @@ export function createWaterSpotlight(
   const observer = new ResizeObserver(resize);
   observer.observe(canvas);
 
-  // 贴图异步加载
+  // 贴图异步加载；超过 2560 宽先降采样再传 GPU，5K 原图占显存无收益
+  const MAX_TEXTURE_WIDTH = 2560;
   let textureReady = false;
   const imageTexture = gl.createTexture();
   const image = new window.Image();
   image.onload = () => {
     if (disposed) return;
+    let source: TexImageSource = image;
+    if (image.width > MAX_TEXTURE_WIDTH) {
+      const scale = MAX_TEXTURE_WIDTH / image.width;
+      const offscreen = document.createElement("canvas");
+      offscreen.width = MAX_TEXTURE_WIDTH;
+      offscreen.height = Math.max(1, Math.round(image.height * scale));
+      const ctx = offscreen.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(image, 0, 0, offscreen.width, offscreen.height);
+        source = offscreen;
+      }
+    }
     gl.bindTexture(gl.TEXTURE_2D, imageTexture);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);

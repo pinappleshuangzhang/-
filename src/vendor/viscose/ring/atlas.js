@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { IMAGE_FILES } from "./projects";
 
 // Cell aspect matches the Figma seed card's 120 : 75 ratio.
-const CELL_W = 512;
+// 848 = 作品源图宽度；再低会在图集阶段就丢细节，再高只是空放大。
+const CELL_W = 848;
 const CELL_H = Math.round(CELL_W / 1.6);
 
 const load = (src, priority) =>
