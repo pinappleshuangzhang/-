@@ -392,12 +392,12 @@ export function SectionPagerProvider({
         case "PageDown":
         case " ":
           event.preventDefault();
-          goToScreen(indexRef.current + 1);
+          navigate(WHEEL_THRESHOLD + 1);
           break;
         case "ArrowUp":
         case "PageUp":
           event.preventDefault();
-          goToScreen(indexRef.current - 1);
+          navigate(-(WHEEL_THRESHOLD + 1));
           break;
         case "Home":
           event.preventDefault();

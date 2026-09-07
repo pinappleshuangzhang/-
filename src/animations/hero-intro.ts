@@ -181,115 +181,100 @@ export function createLoaderMaterialCycle(
 }
 
 /**
- * 阶段一 → 阶段二：加载层快速淡出，交出视频画面。
- * 底层视频此时定格在与加载层底图相同的首帧上，淡出期间画面静止、无重影。
+ * 加载层淡出，停在 01首屏-1 档案盒页；标题与尾帧先藏住。
  */
-export function buildLoaderExit(loader: HTMLElement): gsap.core.Timeline {
+export function revealArchiveHold({
+  loader,
+  firstFrame,
+  lastFrame,
+  root,
+}: {
+  loader: HTMLElement;
+  firstFrame: HTMLElement | null;
+  lastFrame: HTMLElement | null;
+  root: HTMLElement;
+}): gsap.core.Timeline {
+  setSondavenHidden(root);
+  const titles = root.querySelector<HTMLElement>("[data-hero-titles]");
+  if (titles) gsap.set(titles, { autoAlpha: 0 });
+  if (lastFrame) gsap.set(lastFrame, { autoAlpha: 0 });
+  if (firstFrame) gsap.set(firstFrame, { autoAlpha: 1 });
+
   return gsap.timeline().to(loader, {
     autoAlpha: 0,
-    duration: 0.35,
-    ease: "power2.out",
+    duration: 0.8,
+    ease: "power2.inOut",
   });
 }
 
 /**
- * 阶段三：首屏文字复用第三屏的 Son Daven 随机逐词入场。
+ * 档案盒页继续向下：首帧渐隐，尾帧与标题入场。
  */
-export function buildHeroReveal(root: HTMLElement): gsap.core.Timeline {
-  setSondavenHidden(root);
-  return playSondavenReveal(root);
-}
-
-/** 首帧露出后停留多久再渐入尾帧 */
-export const FIRST_FRAME_HOLD_S = 1.2;
-
-/**
- * 无视频路径：加载层淡出露出首帧（01首屏-1 静帧）→ 停留 →
- * 首帧渐隐露出尾帧底图（01首屏-2），标题同时逐词入场。
- */
-export function buildFallbackReveal({
-  loader,
+export function revealHeroFinale({
   firstFrame,
+  lastFrame,
   root,
   onRevealStart,
 }: {
-  loader: HTMLElement;
   firstFrame: HTMLElement | null;
+  lastFrame: HTMLElement | null;
   root: HTMLElement;
   onRevealStart?: () => void;
 }): gsap.core.Timeline {
   setSondavenHidden(root);
   const titles = root.querySelector<HTMLElement>("[data-hero-titles]");
-  if (titles) gsap.set(titles, { autoAlpha: 0 });
   const reveal = playSondavenReveal(root);
-  const revealAt = 0.8 + FIRST_FRAME_HOLD_S;
 
-  if (firstFrame) gsap.set(firstFrame, { autoAlpha: 1 });
-
-  const timeline = gsap
-    .timeline()
-    .to(loader, { autoAlpha: 0, duration: 0.8, ease: "power2.inOut" }, 0);
-
+  const timeline = gsap.timeline();
   if (firstFrame) {
-    timeline.to(
-      firstFrame,
-      { autoAlpha: 0, duration: 1, ease: "power2.inOut" },
-      revealAt,
-    );
+    timeline.to(firstFrame, { autoAlpha: 0, duration: 0.8, ease: "power2.inOut" }, 0);
   }
-
-  if (onRevealStart) {
-    timeline.call(onRevealStart, undefined, revealAt + 0.2);
+  if (lastFrame) {
+    timeline.set(lastFrame, { autoAlpha: 1 }, 0);
   }
-  if (titles) {
-    timeline.set(titles, { autoAlpha: 1 }, revealAt + 0.2);
-  }
-
-  return timeline.add(reveal, revealAt + 0.2);
+  timeline.call(() => {
+    if (titles) gsap.set(titles, { autoAlpha: 1 });
+    onRevealStart?.();
+  }, undefined, 0.4);
+  return timeline.add(reveal, 0.4);
 }
 
 type HeroVideoSequenceOptions = {
   video: HTMLVideoElement;
   videoLayer: HTMLElement;
   firstFrame: HTMLElement | null;
-  loader: HTMLElement;
   root: HTMLElement;
   objectUrl: string;
+  onPlaying?: () => void;
   onRevealStart?: () => void;
   onComplete: () => void;
   onFallback: () => void;
 };
 
 /**
- * 加载层退后直接连播开场视频，不切入首帧/尾帧静帧。
- * 画面停在视频最后一帧，播完再让标题入场。
+ * 从档案盒页起播开场视频；播完或跳过后切到尾帧并让标题入场。
  */
 export function createHeroVideoSequence({
   video,
   videoLayer,
   firstFrame,
-  loader,
   root,
   objectUrl,
+  onPlaying,
   onRevealStart,
   onComplete,
   onFallback,
-}: HeroVideoSequenceOptions): { start: () => void; kill: () => void } {
+}: HeroVideoSequenceOptions): {
+  prepare: () => void;
+  start: () => void;
+  skip: () => void;
+  kill: () => void;
+} {
   let killed = false;
   let phase: "pre" | "playing" | "done" = "pre";
   const lastFrame = document.querySelector<HTMLElement>(
     '[data-shared-bg="studio"]',
   );
-
-  const hideStills = () => {
-    if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
-    if (lastFrame) gsap.set(lastFrame, { autoAlpha: 0 });
-  };
-
-  const restoreLastFrame = () => {
-    if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
-  };
-
   const titles = root.querySelector<HTMLElement>("[data-hero-titles]");
 
   const hideTitles = () => {
@@ -297,67 +282,93 @@ export function createHeroVideoSequence({
     if (titles) gsap.set(titles, { autoAlpha: 0 });
   };
 
-  const beginTitles = () => {
+  const finishToTitles = () => {
+    if (phase === "done") return;
+    phase = "done";
+    video.pause();
+    if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
+    if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
+    gsap.to(videoLayer, { autoAlpha: 0, duration: 0.45, ease: "power2.out" });
     hideTitles();
     if (titles) gsap.set(titles, { autoAlpha: 1 });
     onRevealStart?.();
-    return playSondavenReveal(root);
-  };
-
-  const finish = () => {
-    if (phase === "done") return;
-    phase = "done";
-    onComplete();
+    playSondavenReveal(root).eventCallback("onComplete", () => {
+      if (!killed) onComplete();
+    });
   };
 
   const onEnded = () => {
-    if (killed || phase === "done") return;
-    hideStills();
-    gsap.set(videoLayer, { autoAlpha: 1 });
-    beginTitles().eventCallback("onComplete", () => {
-      if (!killed) finish();
-    });
-  };
-
-  const onReady = () => {
-    if (killed) return;
-    hideTitles();
-    hideStills();
-    gsap.set(videoLayer, { autoAlpha: 1 });
-    video.currentTime = 0;
-    buildLoaderExit(loader).eventCallback("onComplete", () => {
-      if (killed) return;
-      hideTitles();
-      hideStills();
-      phase = "playing";
-      video.play().catch(() => {
-        restoreLastFrame();
-        onFallback();
-      });
-    });
+    if (killed || phase !== "playing") return;
+    finishToTitles();
   };
 
   const onError = () => {
-    if (killed) return;
-    restoreLastFrame();
+    if (killed || phase === "done") return;
+    if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
     onFallback();
   };
 
+  const playNow = () => {
+    if (killed || phase !== "pre") return;
+    phase = "playing";
+    hideTitles();
+    // 静帧与视频首帧已像素级对齐：等浏览器真正呈现出视频第一帧后瞬间切层。
+    // 若用交叉渐隐，视频在淡出期间已开始运动，会与静帧叠出重影闪烁；
+    // 若在绘制首帧前就显示视频层，seek 空档会露出白底闪一下。
+    const swapToVideo = () => {
+      if (killed || phase !== "playing") return;
+      gsap.set(videoLayer, { autoAlpha: 1 });
+      if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
+      onPlaying?.();
+    };
+    if (video.currentTime > 0.001) video.currentTime = 0;
+    video
+      .play()
+      .then(() => {
+        const withFrameCallback = video as HTMLVideoElement & {
+          requestVideoFrameCallback?: (callback: () => void) => number;
+        };
+        if (withFrameCallback.requestVideoFrameCallback) {
+          withFrameCallback.requestVideoFrameCallback(swapToVideo);
+        } else {
+          swapToVideo();
+        }
+      })
+      .catch(() => {
+        if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
+        onFallback();
+      });
+  };
+
   return {
+    prepare() {
+      if (video.src !== objectUrl) {
+        video.src = objectUrl;
+        video.load();
+      }
+    },
     start() {
+      if (killed || phase !== "pre") return;
       hideTitles();
-      hideStills();
-      video.addEventListener("loadeddata", onReady, { once: true });
       video.addEventListener("error", onError, { once: true });
       video.addEventListener("ended", onEnded);
-      video.src = objectUrl;
-      video.currentTime = 0;
-      video.load();
+      if (video.readyState >= 2 && video.src) {
+        playNow();
+        return;
+      }
+      video.addEventListener("loadeddata", playNow, { once: true });
+      if (video.src !== objectUrl) {
+        video.src = objectUrl;
+        video.load();
+      }
+    },
+    skip() {
+      if (killed || phase !== "playing") return;
+      finishToTitles();
     },
     kill() {
       killed = true;
-      restoreLastFrame();
-      video.removeEventListener("loadeddata", onReady);
+      video.removeEventListener("loadeddata", playNow);
       video.removeEventListener("error", onError);
       video.removeEventListener("ended", onEnded);
       video.pause();

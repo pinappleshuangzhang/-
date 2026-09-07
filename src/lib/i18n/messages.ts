@@ -33,6 +33,7 @@ export type MessageKey =
   | "index.ga006"
   | "hero.title"
   | "hero.subtitle"
+  | "hero.skipVideo"
   | "loader.role"
   | "loader.id"
   | "loader.apply"
@@ -152,6 +153,7 @@ const zh: Messages = {
   "index.ga006": "《开启一份新调查》",
   "hero.title": "万有引力设计档案室",
   "hero.subtitle": '跟随设计调查记录，我们一起完成本次关于"引力"的探索',
+  "hero.skipVideo": "跳过视频",
   "loader.role": "临时调查员",
   "loader.id": "0_41",
   "loader.apply": "申请临时访问权限",
@@ -279,6 +281,7 @@ const en: Messages = {
   "index.ga006": "Start A New Survey",
   "hero.title": "Grava Design Archive",
   "hero.subtitle": "Follow The Design Log As We Explore Gravity Together",
+  "hero.skipVideo": "Skip Video",
   "loader.role": "Temporary Investigator ",
   "loader.id": "0_41",
   "loader.apply": "Requesting Temporary Access",

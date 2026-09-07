@@ -1,21 +1,23 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import {
-  buildFallbackReveal,
   createHeroVideoSequence,
   createLoaderMaterialCycle,
   createLoaderProgress,
   LOADER_FAILSAFE_MS,
   LOADER_HOLD_MS,
   LOADER_MIN_DURATION_MS,
+  revealArchiveHold,
+  revealHeroFinale,
 } from "@/animations/hero-intro";
 import { setSondavenVisible } from "@/animations/sondaven-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
+import { FlipHoverButton } from "@/components/ui/flip-hover-button";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { useHeroPreloader } from "@/hooks/use-hero-preloader";
 import { HeroLoader, LOADER_ASSET_PATHS } from "@/sections/hero-loader";
@@ -69,9 +71,15 @@ export function Hero() {
   });
   const preloadRef = useRef(preload);
   const { locale, t } = useLocale();
-  // 分页器默认锁定，序幕结束后由此放行切屏
-  const { setNavigationLocked } = useSectionPager();
+  // 分页器默认锁定；停在档案盒页后解锁，由滚动拦截器决定是否起播视频
+  const { setNavigationLocked, registerScrollInterceptor } = useSectionPager();
   const firstFrameRef = useRef<HTMLDivElement>(null);
+  const introPhaseRef = useRef<"loading" | "holding" | "playing" | "done">(
+    "loading",
+  );
+  const startIntroVideoRef = useRef<(() => void) | null>(null);
+  const skipIntroVideoRef = useRef<(() => void) | null>(null);
+  const [showSkip, setShowSkip] = useState(false);
 
   useEffect(() => {
     preloadRef.current = preload;
@@ -81,9 +89,99 @@ export function Hero() {
   const revealStartedRef = useRef(false);
 
   useEffect(() => {
-    if (!doneRef.current) return;
+    if (introPhaseRef.current !== "done") return;
     setSondavenVisible(container.current);
   }, [locale]);
+
+  useEffect(
+    () =>
+      registerScrollInterceptor((deltaY) => {
+        if (introPhaseRef.current === "holding" && deltaY > 0) {
+          startIntroVideoRef.current?.();
+          return true;
+        }
+        return introPhaseRef.current === "playing";
+      }),
+    [registerScrollInterceptor],
+  );
+
+  useEffect(() => {
+    const shouldCapture = () =>
+      introPhaseRef.current === "holding" || introPhaseRef.current === "playing";
+
+    const startIfHolding = (deltaY: number) => {
+      if (introPhaseRef.current === "holding" && deltaY > 0) {
+        startIntroVideoRef.current?.();
+        return true;
+      }
+      return introPhaseRef.current === "playing";
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      if (!shouldCapture()) return;
+      if (!startIfHolding(event.deltaY) && introPhaseRef.current !== "playing") {
+        return;
+      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!shouldCapture()) return;
+      if (
+        event.key !== "ArrowDown" &&
+        event.key !== "PageDown" &&
+        event.key !== " "
+      ) {
+        return;
+      }
+      if (startIfHolding(1) || introPhaseRef.current === "playing") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    };
+
+    let touchStartY: number | null = null;
+    const onTouchStart = (event: TouchEvent) => {
+      if (!shouldCapture() || event.touches.length !== 1) {
+        touchStartY = null;
+        return;
+      }
+      touchStartY = event.touches[0]?.clientY ?? null;
+    };
+    const onTouchEnd = (event: TouchEvent) => {
+      if (!shouldCapture() || touchStartY === null) return;
+      const endY = event.changedTouches[0]?.clientY ?? touchStartY;
+      const travelled = touchStartY - endY;
+      touchStartY = null;
+      if (Math.abs(travelled) < 48) return;
+      if (startIfHolding(travelled) || introPhaseRef.current === "playing") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    };
+
+    document.addEventListener("wheel", onWheel, {
+      passive: false,
+      capture: true,
+    });
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("touchstart", onTouchStart, {
+      passive: true,
+      capture: true,
+    });
+    window.addEventListener("touchend", onTouchEnd, {
+      passive: false,
+      capture: true,
+    });
+
+    return () => {
+      document.removeEventListener("wheel", onWheel, true);
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("touchstart", onTouchStart, true);
+      window.removeEventListener("touchend", onTouchEnd, true);
+    };
+  }, []);
 
   // 独立于 GSAP 媒体查询的保险：即使 Safari 未触发 matchMedia 回调，
   // 也不能让加载层和分页锁永久留在页面上。
@@ -101,6 +199,7 @@ export function Hero() {
       if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
       if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
       setSondavenVisible(container.current);
+      introPhaseRef.current = "done";
       doneRef.current = true;
       setNavigationLocked(false);
     }, LOADER_FAILSAFE_MS);
@@ -131,54 +230,89 @@ export function Hero() {
       if (!materials || !bar || !progressbar || !phaseTrack || !percent || !live)
         return;
 
+      const lastFrame = document.querySelector<HTMLElement>(
+        '[data-shared-bg="studio"]',
+      );
+
       const finish = () => {
+        introPhaseRef.current = "done";
+        setShowSkip(false);
         setSondavenVisible(root);
         doneRef.current = true;
         setNavigationLocked(false);
       };
 
-      // 无视频路径：加载层淡出露出首帧，停留后首帧渐隐、尾帧与标题渐入
-      const playStillSequence = contextSafe!(() => {
+      const playStillFinale = contextSafe!(() => {
+        if (introPhaseRef.current === "done") return;
+        introPhaseRef.current = "done";
+        setShowSkip(false);
         video.pause();
         gsap.set(videoLayer, { autoAlpha: 0 });
-        buildFallbackReveal({
-          loader,
+        revealHeroFinale({
           firstFrame: firstFrameRef.current,
+          lastFrame,
           root,
           onRevealStart: () => setNavigationLocked(false),
         }).eventCallback("onComplete", finish);
       });
 
-      const runFallback = contextSafe!(() => {
+      const holdOnArchive = contextSafe!(() => {
         if (revealStartedRef.current) return;
         revealStartedRef.current = true;
-        playStillSequence();
+        introPhaseRef.current = "holding";
+        doneRef.current = true;
+        gsap.set(videoLayer, { autoAlpha: 0 });
+        // 档案盒静帧亮起的同时解锁：导航自此常驻（视频播放期间也不再加锁）。
+        // 视频期间的切屏由滚动拦截器（playing 阶段吞掉滚动）兜住。
+        setNavigationLocked(false);
+        revealArchiveHold({
+          loader,
+          firstFrame: firstFrameRef.current,
+          lastFrame,
+          root,
+        });
       });
 
-      let activeVideo: { start: () => void; kill: () => void } | null = null;
+      let activeVideo: {
+        prepare: () => void;
+        start: () => void;
+        skip: () => void;
+        kill: () => void;
+      } | null = null;
+
+      const ensureVideo = () => {
+        const state = preloadRef.current;
+        if (state.status !== "ready" || !state.objectUrl) return null;
+        if (!activeVideo) {
+          activeVideo = createHeroVideoSequence({
+            video,
+            videoLayer,
+            firstFrame: firstFrameRef.current,
+            root,
+            objectUrl: state.objectUrl,
+            onPlaying: () => setShowSkip(true),
+            onRevealStart: () => setShowSkip(false),
+            onComplete: finish,
+            onFallback: playStillFinale,
+          });
+          activeVideo.prepare();
+        }
+        return activeVideo;
+      };
 
       const startVideo = contextSafe!(() => {
-        const state = preloadRef.current;
-        if (state.status !== "ready" || !state.objectUrl) {
-          runFallback();
+        if (introPhaseRef.current !== "holding") return;
+        const sequence = ensureVideo();
+        if (!sequence) {
+          playStillFinale();
           return;
         }
-        if (revealStartedRef.current) return;
-        revealStartedRef.current = true;
-        activeVideo?.kill();
-        activeVideo = createHeroVideoSequence({
-          video,
-          videoLayer,
-          firstFrame: firstFrameRef.current,
-          loader,
-          root,
-          objectUrl: state.objectUrl,
-          onRevealStart: () => setNavigationLocked(false),
-          onComplete: finish,
-          onFallback: playStillSequence,
-        });
-        activeVideo.start();
+        introPhaseRef.current = "playing";
+        sequence.start();
       });
+
+      startIntroVideoRef.current = startVideo;
+      skipIntroVideoRef.current = () => activeVideo?.skip();
 
       const media = gsap.matchMedia();
 
@@ -187,9 +321,6 @@ export function Hero() {
         gsap.set(loader, { autoAlpha: 0 });
         gsap.set(videoLayer, { autoAlpha: 0 });
         gsap.set(firstFrameRef.current, { autoAlpha: 0 });
-        const lastFrame = document.querySelector<HTMLElement>(
-          '[data-shared-bg="studio"]',
-        );
         if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
         const titles = root.querySelector<HTMLElement>("[data-hero-titles]");
         if (titles) gsap.set(titles, { autoAlpha: 1 });
@@ -230,13 +361,16 @@ export function Hero() {
 
             if (state.status === "error") {
               loaderProgress.update(timeProgress * 100);
-              if (timeProgress >= 1) releaseLoader(runFallback);
+              if (timeProgress >= 1) releaseLoader(holdOnArchive);
               return;
             }
 
             loaderProgress.update(Math.min(state.progress, timeProgress) * 100);
             if (state.status === "ready" && timeProgress >= 1) {
-              releaseLoader(SHOW_INTRO_VIDEO ? startVideo : runFallback);
+              releaseLoader(() => {
+                if (SHOW_INTRO_VIDEO) ensureVideo();
+                holdOnArchive();
+              });
             }
           }, 50);
         };
@@ -282,7 +416,7 @@ export function Hero() {
         />
       </div>
 
-      {/* 无视频降级才用的首帧静帧；有视频时保持隐藏，避免和画面交叉闪 */}
+      {/* 01首屏-1 档案盒：加载层退场后停在此页，下滑再播视频 */}
       <div
         ref={firstFrameRef}
         className="invisible absolute inset-0 z-[25] hidden opacity-0 md:block motion-reduce:hidden"
@@ -437,6 +571,19 @@ export function Hero() {
           </p>
         </div>
       </div>
+
+      {showSkip ? (
+        <div className="absolute right-5 bottom-5 z-[35] mix-blend-difference">
+          <FlipHoverButton
+            label={t("hero.skipVideo")}
+            onClick={() => skipIntroVideoRef.current?.()}
+            markOffsetY={locale === "en" ? -1 : 0}
+            className={`shrink-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-white focus-visible:outline-none ${
+              locale === "en" ? "font-bodoni" : "font-serif-sc"
+            }`}
+          />
+        </div>
+      ) : null}
 
       {/* 加载序幕：材质铭牌循环替换，底部进度条跟真实加载 */}
       <div
