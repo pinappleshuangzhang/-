@@ -308,7 +308,10 @@ export default function Carousel({
     const whenReady = (fn) => (launchReady ? fn() : readyWaiters.push(fn));
 
     const atlas = buildAtlas(IMAGE_FILES, (p) => {
-      if (!disposed) loadProg = p;
+      if (disposed) return;
+      loadProg = p;
+      // 图集回调不在 RAF 里；空闲停环后必须叫醒，否则百分比停在个位数。
+      ensureLoop();
     });
 
     uniforms.uAtlas.value.dispose();
@@ -1346,6 +1349,9 @@ export default function Carousel({
           gsap.delayedCall(params.holdAfter, () => {
             if (disposed || gen !== entryGen) return;
             tl.resume();
+            // 时间轴停在 addPause 时 isActive() 为假，渲染循环可能已经
+            // 自停；恢复播放的同时必须叫醒，否则发射/展开只改状态不上屏。
+            ensureLoop();
             if (loaderEl) {
               gsap.to(loaderEl, {
                 opacity: 0,
@@ -1487,7 +1493,9 @@ export default function Carousel({
         );
       }
       tl.call(() => {
-        if (!disposed && gen === entryGen) ringAutoRotating = true;
+        if (disposed || gen !== entryGen) return;
+        ringAutoRotating = true;
+        ensureLoop();
       }, undefined, ringLanded);
       tl.call(() => {
         if (disposed || gen !== entryGen) return;
@@ -1781,6 +1789,8 @@ export default function Carousel({
         cursor.wake > 0.02 ||
         Math.hypot(pointer.x - cursor.x, pointer.y - cursor.y) > 0.4;
       const busy =
+        !launchReady ||
+        ringAutoRotating ||
         dragging ||
         picking ||
         settling ||

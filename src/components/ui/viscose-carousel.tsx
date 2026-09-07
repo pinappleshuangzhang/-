@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { useEffect, type MutableRefObject } from "react";
+import { useEffect, useState, type MutableRefObject } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { ViscoseMobileGallery } from "@/components/ui/viscose-mobile-gallery";
 import { useDesktopMedia } from "@/hooks/use-desktop-media";
@@ -38,11 +38,15 @@ export function ViscoseCarousel({
 }: ViscoseCarouselProps) {
   const { locale, t } = useLocale();
   const isDesktop = useDesktopMedia();
+  const [hasActivated, setHasActivated] = useState(false);
 
   useEffect(() => {
     if (!isDesktop) return;
     void import("@/components/ui/viscose-desktop-carousel");
   }, [isDesktop]);
+
+  // 首次激活后保持挂载（渲染期守卫式 setState，避免级联渲染）
+  if (active && !hasActivated) setHasActivated(true);
 
   if (!isDesktop) {
     return <ViscoseMobileGallery items={items} active={active} onSelect={onSelect} />;
@@ -76,16 +80,16 @@ export function ViscoseCarousel({
     );
   }
 
-  if (!active) return null;
+  if (!hasActivated) return null;
 
   return (
     <div
-      className={`absolute inset-0 isolate overflow-hidden ${className ?? ""}`}
+      className={`absolute inset-0 isolate overflow-hidden ${active ? "" : "invisible"} ${className ?? ""}`}
     >
       <ViscoseDesktopCarousel
         onSelect={onSelect}
         scrollHandlerRef={scrollHandlerRef}
-        paused={paused}
+        paused={paused || !active}
         cursorLabel={t("gallery.view")}
         categoryLabels={[
           t("gallery.category.brand"),

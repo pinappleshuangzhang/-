@@ -154,9 +154,9 @@ export function MemberRecord() {
         <MemberRecordMobile />
       </div>
       {/* 与背景图 object-cover object-top 裁切同步的定位盒：
-          宽 = max(100vw, 100vh×4096/2401)，顶部对齐、水平居中，
+          宽 = max(100vw, 100vh×2048/1200)，顶部对齐、水平居中，
           浮层按盒内百分比定位即可在任何分辨率下贴住银色边框 */}
-      <div className="pointer-events-none absolute left-1/2 top-0 z-10 hidden aspect-[4096/2401] w-[max(100vw,170.596vh)] -translate-x-1/2 md:block">
+      <div className="pointer-events-none absolute left-1/2 top-0 z-10 hidden aspect-[2048/1200] w-[max(100vw,170.667vh)] -translate-x-1/2 md:block">
         <div
           data-member-grid
           className="pointer-events-none absolute left-[3.611%] top-[15.59%] aspect-[1335/933] w-[92.708%] *:opacity-0"
@@ -215,7 +215,7 @@ export function MemberRecord() {
               headerClassName="left-[68.263%] top-[39.228%] w-[24.85%]"
               dividerClassName="left-[67.514%] top-[44.266%]"
               nameClassName="left-[67.065%] top-[46.838%] w-[24.85%]"
-              directionClassName="left-[66.167%] top-[51.661%] w-[24.85%]"
+              directionClassName="left-[66.167%] top-[51.232%] w-[24.85%]"
               actionsClassName="left-[64.97%] top-[58.306%]"
             />
             <div className="absolute left-[35.3%] top-[16.3%] h-[3.54%] w-[8.69%]">
