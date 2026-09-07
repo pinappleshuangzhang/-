@@ -83,6 +83,8 @@ export function Hero() {
   const skipIntroVideoRef = useRef<(() => void) | null>(null);
   const returnToArchiveRef = useRef<(() => void) | null>(null);
   const [showSkip, setShowSkip] = useState(false);
+  // 加载序幕只出现一次：退场动画结束后整体卸载，释放其 DOM 与图片内存
+  const [loaderDismissed, setLoaderDismissed] = useState(false);
 
   useEffect(() => {
     preloadRef.current = preload;
@@ -214,6 +216,7 @@ export function Hero() {
       introPhaseRef.current = "done";
       doneRef.current = true;
       setNavigationLocked(false);
+      setLoaderDismissed(true);
     }, LOADER_FAILSAFE_MS);
 
     return () => window.clearTimeout(timeout);
@@ -282,7 +285,7 @@ export function Hero() {
           firstFrame: firstFrameRef.current,
           lastFrame,
           root,
-        });
+        }).eventCallback("onComplete", () => setLoaderDismissed(true));
       });
 
       let activeVideo: {
@@ -347,6 +350,7 @@ export function Hero() {
       media.add("(prefers-reduced-motion: reduce)", () => {
         revealStartedRef.current = true;
         gsap.set(loader, { autoAlpha: 0 });
+        setLoaderDismissed(true);
         gsap.set(videoLayer, { autoAlpha: 0 });
         gsap.set(firstFrameRef.current, { autoAlpha: 0 });
         if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
@@ -615,20 +619,22 @@ export function Hero() {
         </div>
       ) : null}
 
-      {/* 加载序幕：材质铭牌循环替换，底部进度条跟真实加载 */}
-      <div
-        ref={loaderRef}
-        className="absolute inset-0 z-40 bg-white motion-reduce:hidden"
-      >
-        <HeroLoader
-          roleLabel={t("loader.role")}
-          idLabel={t("loader.id")}
-          applyLabel={t("loader.apply")}
-          reviewLabel={t("loader.review")}
-          approvedLabel={t("loader.approved")}
-          cardAlt={t("loader.cardAlt")}
-        />
-      </div>
+      {/* 加载序幕：材质铭牌循环替换，底部进度条跟真实加载；退场后整体卸载 */}
+      {loaderDismissed ? null : (
+        <div
+          ref={loaderRef}
+          className="absolute inset-0 z-40 bg-white motion-reduce:hidden"
+        >
+          <HeroLoader
+            roleLabel={t("loader.role")}
+            idLabel={t("loader.id")}
+            applyLabel={t("loader.apply")}
+            reviewLabel={t("loader.review")}
+            approvedLabel={t("loader.approved")}
+            cardAlt={t("loader.cardAlt")}
+          />
+        </div>
+      )}
     </ScreenShell>
   );
 }
