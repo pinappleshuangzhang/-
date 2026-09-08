@@ -107,12 +107,15 @@ export default function Carousel({
     );
     const loaderEl = loaderRef.current;
     const stageBackground = stageBackgroundRef.current;
-    // Hold-stage backdrop: layer 1 (top) and layer 3 stay put; layers 2 and 4
-    // turn counter-clockwise against the ring, layer 2 on a short delay.
+    // Hold-stage backdrop: layer 1 (top) stays put; layers 2 and 4 turn
+    // counter-clockwise against the ring (layer 2 on a short delay), layer 3
+    // turns clockwise with the ring.
     const stageLayer2 = stageLayer2Ref.current;
+    const stageLayer3 = stageLayer3Ref.current;
     const immediateBackgroundLayers = [stageLayer4Ref.current].filter(Boolean);
     const rotatingBackgroundLayers = [
       stageLayer2,
+      stageLayer3,
       ...immediateBackgroundLayers,
     ].filter(Boolean);
     const finalShadow = finalShadowRef.current;
@@ -1661,6 +1664,9 @@ export default function Carousel({
         backgroundSpin -= params.holdSpinSpeed * dt;
         for (const layer of immediateBackgroundLayers) {
           layer.style.transform = `rotate(${backgroundSpin}rad)`;
+        }
+        if (stageLayer3) {
+          stageLayer3.style.transform = `rotate(${-backgroundSpin}rad)`;
         }
         if (
           stageLayer2 &&
