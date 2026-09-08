@@ -42,36 +42,6 @@ function su(value) {
   return `calc(var(--viscose-su) * ${value})`;
 }
 
-/**
- * 第三阶段卡片投影块。Safari 会把 `filter: blur` 裁在被滤镜元素的边框内，
- * 所以滤镜加在更大的透明外壳上，实色块仍保持设计稿尺寸。
- */
-function FinalCardShadowBlob({ left, right, top, width, height, blur }) {
-  const pad = blur * 3;
-  return (
-    <span
-      className="absolute"
-      style={{
-        ...(left != null ? { left: su(left - pad) } : { right: su(right - pad) }),
-        top: su(top - pad),
-        width: su(width + pad * 2),
-        height: su(height + pad * 2),
-        filter: `blur(${su(blur)})`,
-      }}
-    >
-      <span
-        className="absolute bg-grey-400 opacity-10"
-        style={{
-          left: su(pad),
-          top: su(pad),
-          width: su(width),
-          height: su(height),
-        }}
-      />
-    </span>
-  );
-}
-
 /** 入场种子所穿的贴图格，也是移动端第三阶段最初展示的分类 */
 const INITIAL_CELL = Math.round(defaultParams().imageOffset);
 
@@ -137,11 +107,10 @@ export default function Carousel({
     );
     const loaderEl = loaderRef.current;
     const stageBackground = stageBackgroundRef.current;
+    // Hold-stage backdrop: layer 1 (top) and layer 3 stay put; layers 2 and 4
+    // turn counter-clockwise against the ring, layer 2 on a short delay.
     const stageLayer2 = stageLayer2Ref.current;
-    const immediateBackgroundLayers = [
-      stageLayer3Ref.current,
-      stageLayer4Ref.current,
-    ].filter(Boolean);
+    const immediateBackgroundLayers = [stageLayer4Ref.current].filter(Boolean);
     const rotatingBackgroundLayers = [
       stageLayer2,
       ...immediateBackgroundLayers,
@@ -1688,7 +1657,8 @@ export default function Carousel({
       if (ringAutoRotating) {
         state.spin -= params.holdSpinSpeed * dt;
         ringAutoRotateElapsed += dt;
-        backgroundSpin += params.holdSpinSpeed * dt;
+        // Negative CSS rotation = counter-clockwise, opposite to the ring.
+        backgroundSpin -= params.holdSpinSpeed * dt;
         for (const layer of immediateBackgroundLayers) {
           layer.style.transform = `rotate(${backgroundSpin}rad)`;
         }
@@ -1696,7 +1666,7 @@ export default function Carousel({
           stageLayer2 &&
           ringAutoRotateElapsed >= params.layer2SpinDelay
         ) {
-          layer2Spin += params.holdSpinSpeed * dt;
+          layer2Spin -= params.holdSpinSpeed * dt;
           stageLayer2.style.transform = `rotate(${layer2Spin}rad)`;
         }
       }
@@ -1968,27 +1938,28 @@ export default function Carousel({
           }}
         >
           <div className="relative size-full overflow-visible">
-            <FinalCardShadowBlob
-              left={14}
-              top={245}
-              width={338}
-              height={61}
-              blur={34}
-            />
-            <FinalCardShadowBlob
-              left={0}
-              top={0}
-              width={28}
-              height={258}
-              blur={26}
-            />
-            <FinalCardShadowBlob
-              right={0}
-              top={28}
-              width={32}
-              height={222}
-              blur={26}
-            />
+            {/* 设计稿投影（Figma 875:1667）作为静态图加载：SVG 内的滤镜只在
+                栅格化时算一次，替代原先三块实时 filter: blur。
+                新稿截短了两侧光带（画布 450×311），落地影仍贴卡片底边，
+                故按底边对齐：左出血 27.2、底出血 20.8，1:1 摆放。 */}
+            <div
+              className="absolute"
+              style={{
+                left: su(-27.2),
+                bottom: su(-20.8),
+                width: su(450),
+                height: su(311),
+              }}
+            >
+              <Image
+                src="/archive-ga-004/final-card-shadow.svg"
+                alt=""
+                fill
+                unoptimized
+                sizes="40vw"
+                className="object-fill"
+              />
+            </div>
           </div>
         </div>
       </div>
