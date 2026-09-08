@@ -5,10 +5,24 @@ import {
   useEffect,
   useRef,
   type ButtonHTMLAttributes,
+  type FocusEvent,
   type ReactNode,
 } from "react";
 import gsap from "gsap";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+
+/**
+ * 鼠标点击同样会让元素拿到焦点，但只有键盘操作才需要焦点提示；
+ * 若按 :focus 点亮方块，鼠标点完移开也收不回来。
+ * Safari 15.0–15.3 不认 :focus-visible，退回“有焦点即提示”。
+ */
+function shouldMarkFocus(el: Element) {
+  try {
+    return el.matches(":focus-visible");
+  } catch {
+    return true;
+  }
+}
 
 type FlipHoverButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   /** 传入后渲染为原生链接；适用于 mailto 等必须由浏览器直接处理的协议 */
@@ -19,7 +33,7 @@ type FlipHoverButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   hoverLabel?: string;
   /** 关闭翻滚动画，仅作普通按钮 */
   disableFlip?: boolean;
-  /** hover / 焦点时在文案前显示 12px 黑色方块（Figma 893:2761） */
+  /** hover / 键盘焦点时在文案前显示 12px 黑色方块（Figma 893:2761） */
   showHoverMark?: boolean;
   /** 点击后立即收起方块并失焦，需再次 hover 才出现（语言切换等） */
   resetMarkOnClick?: boolean;
@@ -208,6 +222,27 @@ export const FlipHoverButton = forwardRef<
     if (!flipEnabled) return;
     timelineRef.current?.reverse();
   };
+  const handleFocus = (event: FocusEvent<HTMLElement>) => {
+    if (shouldMarkFocus(event.currentTarget)) play();
+  };
+
+  // 页面整体失焦时（mailto 唤起邮件客户端、切应用或切标签页）元素收不到
+  // mouseleave / blur，方块会一直挂着，这里主动收起。
+  useEffect(() => {
+    if (!flipEnabled) return;
+    const collapse = () => {
+      timelineRef.current?.reverse();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") collapse();
+    };
+    window.addEventListener("blur", collapse);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("blur", collapse);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [flipEnabled]);
 
   const content = (
     <>
@@ -262,7 +297,7 @@ export const FlipHoverButton = forwardRef<
         className={controlClassName}
         onMouseEnter={play}
         onMouseLeave={reverse}
-        onFocus={play}
+        onFocus={handleFocus}
         onBlur={reverse}
       >
         {content}
@@ -286,7 +321,7 @@ export const FlipHoverButton = forwardRef<
         onMouseLeave?.(event);
       }}
       onFocus={(event) => {
-        play();
+        handleFocus(event);
         onFocus?.(event);
       }}
       onBlur={(event) => {
