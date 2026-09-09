@@ -65,9 +65,11 @@ export default function Carousel({
 }) {
   const pausedRef = useRef(paused);
   const kickLoopRef = useRef(() => {});
+  const hideCursorTagRef = useRef(() => {});
   useEffect(() => {
     pausedRef.current = paused;
-    if (!paused) kickLoopRef.current();
+    if (paused) hideCursorTagRef.current();
+    else kickLoopRef.current();
   }, [paused]);
   const containerRef = useRef(null);
   const mobileStageRef = useRef(null);
@@ -1798,11 +1800,22 @@ export default function Carousel({
       renderer.setAnimationLoop(step);
     };
     kickLoopRef.current = ensureLoop;
+    // The loop may already be parked when the drawer covers the card, so the
+    // pause effect drops the cursor label directly; the first frame back
+    // re-evaluates hover and brings it up again if still over a card.
+    hideCursorTagRef.current = () => {
+      if (!tagUp) return;
+      tagUp = false;
+      if (hoverClose) {
+        gsap.to(hoverClose, { autoAlpha: 0, duration: 0.2, overwrite: "auto" });
+      }
+    };
     ensureLoop();
 
     return () => {
       disposed = true;
       kickLoopRef.current = () => {};
+      hideCursorTagRef.current = () => {};
       clearTimeout(holdTimer);
       clearTimeout(fontFallback);
       renderer.setAnimationLoop(null);
