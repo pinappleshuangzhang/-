@@ -144,7 +144,9 @@ export function SurveyDrawer({
     }
     const scroller = scrollerRef.current;
     if (scroller) scroller.scrollTop = 0;
-    closeButtonRef.current?.focus({ preventScroll: true });
+    if (!window.matchMedia(MOBILE_QUERY).matches) {
+      closeButtonRef.current?.focus({ preventScroll: true });
+    }
     resetHorizontalScroll(rootRef.current?.parentElement ?? null);
 
     const consumeScroll = (deltaY: number) => {
@@ -211,7 +213,7 @@ export function SurveyDrawer({
       <aside
         ref={panelRef}
         onClick={handlePanelClick}
-        className="absolute inset-y-0 right-0 z-10 flex w-[min(935px,calc(100%-80px))] flex-col bg-[#F7F7F9] max-md:inset-x-0 max-md:top-[67px] max-md:w-auto max-md:bg-white"
+        className="absolute inset-y-0 right-0 z-10 flex w-[min(935px,calc(100%-80px))] flex-col bg-[#F7F7F9] max-md:inset-x-0 max-md:top-[67px] max-md:w-auto"
       >
         {/* 桌面端靠跟随光标的「关闭」收起，按钮仅供读屏；手机上显示 16px 叉号（Figma 1008-561） */}
         <button
@@ -219,7 +221,7 @@ export function SurveyDrawer({
           type="button"
           aria-label={t("nav.close")}
           onClick={onClose}
-          className="absolute right-1 top-1 z-10 flex size-8 items-center justify-center text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 md:sr-only"
+          className="absolute right-1 top-1 z-10 flex size-8 appearance-none items-center justify-center border-0 bg-transparent text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 md:sr-only"
         >
           <svg
             aria-hidden="true"

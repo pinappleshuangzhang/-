@@ -15,7 +15,6 @@ import {
   setViscoseMobileHidden,
 } from "@/animations/viscose-mobile-reveal";
 import {
-  Gap,
   MobileArrowIcon,
   MobileCategoryChips,
   MobileWords,
@@ -113,99 +112,95 @@ export const ViscoseMobileStage = forwardRef<
   const shadowPad = SHADOW.blur * 3;
 
   return (
-    // 纵向流式排布：内容块尺寸固定，块间用弹性间隔（按 844 高画板的设计间距加权分配剩余高度，
-    // 各自设最小值），屏幕越矮间距越紧，图片不裁切、按钮始终露出
+    // Figma 1183-525：正文按设计稿固定间距排布，装不下时在本屏内纵向滚动
+    //（翻屏手势由 SectionPager 识别滚动容器后让位）；「查看详情」固定在底部带背景的工具条中
     <div
       ref={rootRef}
-      className="pointer-events-none absolute inset-0 z-10 flex flex-col px-3 md:hidden"
+      className="pointer-events-auto absolute inset-0 z-10 flex flex-col md:hidden"
     >
-      <Gap weight={109} min={56} />
-      <div className="flex h-[46px] shrink-0 items-center justify-between text-grey-400">
-        <p className="font-serif-sc text-32 leading-[46px]">
-          <MobileWords text={heading} />
-        </p>
-        <p className="font-bodoni text-32 leading-10">
-          <span
-            key={number}
-            data-mobile-word=""
-            data-mobile-swap=""
-            className="inline-block origin-center opacity-0"
-          >
-            {number}
-          </span>
-        </p>
-      </div>
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 pb-9 pt-[109px]">
+        <div className="flex h-[46px] shrink-0 items-center justify-between text-grey-400">
+          <p className="font-serif-sc text-32 leading-[46px]">
+            <MobileWords text={heading} />
+          </p>
+          <p className="font-bodoni text-32 leading-10">
+            <span
+              key={number}
+              data-mobile-word=""
+              data-mobile-swap=""
+              className="inline-block origin-center opacity-0"
+            >
+              {number}
+            </span>
+          </p>
+        </div>
 
-      <Gap weight={36} min={12} />
-      <span
-        data-mobile-line=""
-        aria-hidden="true"
-        className="h-px shrink-0 origin-left scale-x-0 bg-grey-100"
-      />
-
-      <Gap weight={35} min={12} />
-      <MobileCategoryChips
-        label={heading}
-        categoryLabels={categoryLabels}
-        active={active}
-        className="shrink-0"
-        onPick={onPickCategory}
-      />
-
-      {/* 大图槽位：与画板同宽（365.5/390），固定 1.6:1 不裁切；投影挂在卡片底边 */}
-      <Gap weight={28} min={12} />
-      <div className="relative aspect-[1.6/1] w-full shrink-0">
-        {/* Safari 会把 filter 裁在元素框内，模糊放在带外扩的透明壳上 */}
         <span
-          data-mobile-block=""
+          data-mobile-line=""
           aria-hidden="true"
-          className="absolute opacity-0"
-          style={{
-            left: `calc(${SHADOW.left} - ${shadowPad}px)`,
-            bottom: -(SHADOW.belowCard + shadowPad),
-            width: `calc(${SHADOW.width} + ${shadowPad * 2}px)`,
-            height: SHADOW.height + shadowPad * 2,
-            filter: `blur(${SHADOW.blur}px)`,
-          }}
-        >
-          <span
-            className="absolute bg-grey-400 opacity-10"
-            style={{
-              left: shadowPad,
-              top: shadowPad,
-              right: shadowPad,
-              height: SHADOW.height,
-            }}
-          />
-        </span>
-        <div className="relative size-full">{media}</div>
-      </div>
+          className="mt-9 block h-px origin-left scale-x-0 bg-grey-100"
+        />
 
-      {/* 标题与详情作为一个整体上浮（外层裁切，内层从下方滑入），切换分类时重播；
-          详情最多 4 行，溢出省略，保证按钮始终落在可视高度内 */}
-      <Gap weight={42} min={16} />
-      <div className="mx-auto w-[312px] max-w-full shrink-0 overflow-hidden">
-        <div
-          key={`copy-${active}`}
-          data-mobile-copy=""
-          className="flex flex-col gap-3 opacity-0"
-        >
-          <p className="font-bodoni text-18 font-medium leading-6 text-grey-400">
-            {work.title}
-          </p>
-          <p className="line-clamp-4 font-serif-sc text-12 leading-6 text-grey-300">
-            {work.description}
-          </p>
+        <MobileCategoryChips
+          label={heading}
+          categoryLabels={categoryLabels}
+          active={active}
+          className="mt-9"
+          onPick={onPickCategory}
+        />
+
+        {/* 大图槽位：与画板同宽（365.5/390），固定 1.6:1 不裁切；投影挂在卡片底边 */}
+        <div className="relative mt-7 aspect-[1.6/1] w-full">
+          {/* Safari 会把 filter 裁在元素框内，模糊放在带外扩的透明壳上 */}
+          <span
+            data-mobile-block=""
+            aria-hidden="true"
+            className="absolute opacity-0"
+            style={{
+              left: `calc(${SHADOW.left} - ${shadowPad}px)`,
+              bottom: -(SHADOW.belowCard + shadowPad),
+              width: `calc(${SHADOW.width} + ${shadowPad * 2}px)`,
+              height: SHADOW.height + shadowPad * 2,
+              filter: `blur(${SHADOW.blur}px)`,
+            }}
+          >
+            <span
+              className="absolute bg-grey-400 opacity-10"
+              style={{
+                left: shadowPad,
+                top: shadowPad,
+                right: shadowPad,
+                height: SHADOW.height,
+              }}
+            />
+          </span>
+          <div className="relative size-full">{media}</div>
+        </div>
+
+        {/* 标题与详情作为一个整体上浮（外层裁切，内层从下方滑入），切换分类时重播 */}
+        <div className="mx-auto mt-[42px] w-[312px] max-w-full overflow-hidden">
+          <div
+            key={`copy-${active}`}
+            data-mobile-copy=""
+            className="flex flex-col gap-3 opacity-0"
+          >
+            <p className="font-bodoni text-18 font-medium leading-6 text-grey-400">
+              {work.title}
+            </p>
+            <p className="font-serif-sc text-12 leading-6 text-grey-300">
+              {work.description}
+            </p>
+          </div>
         </div>
       </div>
 
-      <Gap weight={40} min={12} />
-      <div className="flex shrink-0 justify-center">
+      {/* 底部工具条：上 16 / 下 28 / 左右 36，背景与手机端页面底色一致，盖住滚动到底下的正文 */}
+      <div className="shrink-0 bg-[var(--mobile-browser-bottom)] px-9 pb-7 pt-4">
         <button
           type="button"
           data-mobile-block=""
           onClick={() => onViewDetails(active)}
-          className="pointer-events-auto flex h-9 items-center gap-0.5 bg-grey-400 py-1.5 pl-7 pr-5 text-white opacity-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
+          className="flex w-full items-center justify-center gap-0.5 bg-grey-400 px-7 py-2.5 text-white opacity-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
         >
           <span className="whitespace-nowrap font-serif-sc text-16 leading-[23px]">
             <MobileWords text={viewDetailsLabel} />
@@ -213,7 +208,6 @@ export const ViscoseMobileStage = forwardRef<
           <MobileArrowIcon />
         </button>
       </div>
-      <Gap weight={42} min={16} />
     </div>
   );
 });

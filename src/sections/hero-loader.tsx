@@ -136,7 +136,9 @@ export function HeroLoader({
           className="flex items-end font-serif-sc text-10 font-normal leading-[14px] text-grey-400 md:text-14 md:leading-5"
         >
           <span className="whitespace-nowrap">{roleLabel}</span>
-          <span className="relative top-0.5 font-bodoni">{idLabel}</span>
+          <span className="relative top-0 font-bodoni md:top-0.5">
+            {idLabel}
+          </span>
           <span className="ml-1 inline-block h-[14px] overflow-hidden md:h-5">
             <span
               data-loader-phase-track

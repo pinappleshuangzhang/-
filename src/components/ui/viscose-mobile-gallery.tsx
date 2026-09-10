@@ -85,7 +85,7 @@ export function ViscoseMobileGallery({
           <button
             type="button"
             onClick={() => onSelect(index)}
-            className="pointer-events-auto absolute inset-0 overflow-hidden rounded-rs-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
+            className="absolute inset-0 overflow-hidden rounded-rs-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
             aria-label={item.alt}
           >
             {/* 内层从下方滑入，按钮本身裁切，与第三屏图片入场一致 */}
