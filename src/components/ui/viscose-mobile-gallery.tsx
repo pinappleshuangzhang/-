@@ -67,13 +67,14 @@ export function ViscoseMobileGallery({
 
   if (!item) return null;
 
+  // 手机端 chip 三列过窄，英文只保留首个单词（"Brand Design" → "Brand"）；中文无空格不受影响
   const categoryLabels = [
     t("gallery.category.brand"),
     t("gallery.category.product"),
     t("gallery.category.website"),
     t("gallery.category.visual"),
     t("gallery.category.motion"),
-  ];
+  ].map((label) => label.trim().split(/\s+/)[0] ?? label);
 
   return (
     <div className="absolute inset-0 isolate overflow-hidden md:hidden">
