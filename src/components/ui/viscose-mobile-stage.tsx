@@ -15,6 +15,7 @@ import {
   setViscoseMobileHidden,
 } from "@/animations/viscose-mobile-reveal";
 import {
+  Gap,
   MobileArrowIcon,
   MobileCategoryChips,
   MobileWords,
@@ -112,12 +113,13 @@ export const ViscoseMobileStage = forwardRef<
   const shadowPad = SHADOW.blur * 3;
 
   return (
-    // 纵向流式排布；各段间距按 844 高画板等比取 dvh 并设下限，短屏先压缩间距，
-    // 按钮始终贴底，保证全部内容落在可视高度内
+    // 纵向流式排布：内容块尺寸固定，块间用弹性间隔（按 844 高画板的设计间距加权分配剩余高度，
+    // 各自设最小值），屏幕越矮间距越紧，图片不裁切、按钮始终露出
     <div
       ref={rootRef}
-      className="pointer-events-none absolute inset-0 z-10 flex flex-col px-3 pb-[clamp(16px,4.976dvh,42px)] pt-[clamp(64px,12.915dvh,109px)] md:hidden"
+      className="pointer-events-none absolute inset-0 z-10 flex flex-col px-3 md:hidden"
     >
+      <Gap weight={109} min={56} />
       <div className="flex h-[46px] shrink-0 items-center justify-between text-grey-400">
         <p className="font-serif-sc text-32 leading-[46px]">
           <MobileWords text={heading} />
@@ -134,23 +136,25 @@ export const ViscoseMobileStage = forwardRef<
         </p>
       </div>
 
+      <Gap weight={36} min={12} />
       <span
         data-mobile-line=""
         aria-hidden="true"
-        className="mt-[clamp(12px,4.265dvh,36px)] h-px shrink-0 origin-left scale-x-0 bg-grey-100"
+        className="h-px shrink-0 origin-left scale-x-0 bg-grey-100"
       />
 
+      <Gap weight={35} min={12} />
       <MobileCategoryChips
         label={heading}
         categoryLabels={categoryLabels}
         active={active}
-        className="mt-[clamp(16px,4.147dvh,35px)] shrink-0"
+        className="shrink-0"
         onPick={onPickCategory}
       />
 
-      {/* 大图槽位：与画板同宽（365.5/390），最高 1.6:1；空间不足时只压缩此槽位高度，
-          图片保持原比例、贴底裁上方。投影挂在卡片底边 */}
-      <div className="relative mt-[clamp(12px,3.318dvh,28px)] min-h-0 w-full flex-1 max-h-[calc((100vw-24px)/1.6)]">
+      {/* 大图槽位：与画板同宽（365.5/390），固定 1.6:1 不裁切；投影挂在卡片底边 */}
+      <Gap weight={28} min={12} />
+      <div className="relative aspect-[1.6/1] w-full shrink-0">
         {/* Safari 会把 filter 裁在元素框内，模糊放在带外扩的透明壳上 */}
         <span
           data-mobile-block=""
@@ -177,30 +181,26 @@ export const ViscoseMobileStage = forwardRef<
         <div className="relative size-full">{media}</div>
       </div>
 
-      {/* 标题与详情整段上浮（外层裁切，内层从下方滑入），切换分类时重播 */}
-      <div className="mx-auto mt-[clamp(20px,4.976dvh,42px)] flex w-[312px] max-w-full shrink-0 flex-col gap-3">
-        <div className="overflow-hidden">
-          <p
-            key={`title-${active}`}
-            data-mobile-copy=""
-            className="font-bodoni text-18 font-medium leading-6 text-grey-400 opacity-0"
-          >
+      {/* 标题与详情作为一个整体上浮（外层裁切，内层从下方滑入），切换分类时重播；
+          详情最多 4 行，溢出省略，保证按钮始终落在可视高度内 */}
+      <Gap weight={42} min={16} />
+      <div className="mx-auto w-[312px] max-w-full shrink-0 overflow-hidden">
+        <div
+          key={`copy-${active}`}
+          data-mobile-copy=""
+          className="flex flex-col gap-3 opacity-0"
+        >
+          <p className="font-bodoni text-18 font-medium leading-6 text-grey-400">
             {work.title}
           </p>
-        </div>
-        <div className="overflow-hidden">
-          <p
-            key={`desc-${active}`}
-            data-mobile-copy=""
-            className="font-serif-sc text-12 leading-6 text-grey-300 opacity-0"
-          >
+          <p className="line-clamp-4 font-serif-sc text-12 leading-6 text-grey-300">
             {work.description}
           </p>
         </div>
       </div>
 
-      {/* 按钮贴底：mt-auto 吃掉剩余高度，pt 保底与文案的最小距离 */}
-      <div className="mt-auto flex shrink-0 justify-center pt-5">
+      <Gap weight={40} min={12} />
+      <div className="flex shrink-0 justify-center">
         <button
           type="button"
           data-mobile-block=""
@@ -213,6 +213,7 @@ export const ViscoseMobileStage = forwardRef<
           <MobileArrowIcon />
         </button>
       </div>
+      <Gap weight={42} min={16} />
     </div>
   );
 });

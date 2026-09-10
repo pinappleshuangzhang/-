@@ -80,7 +80,7 @@ function ContactLayout({
         />
       </a>
 
-      <dl className="absolute left-3 top-[256px] flex w-[345px] flex-col gap-8 md:left-5 md:right-5 md:top-[379px] md:grid md:w-auto md:grid-cols-8 md:gap-5">
+      <dl className="absolute left-3 top-[240px] flex w-[345px] flex-col gap-[22px] md:left-5 md:right-5 md:top-[379px] md:grid md:w-auto md:grid-cols-8 md:gap-5">
         <ContactFact
           label={t("contact.addressLabel")}
           value={t("contact.address")}

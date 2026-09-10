@@ -35,6 +35,20 @@ export function MobileWords({
   );
 }
 
+/**
+ * 弹性间隔：`weight` 取 844 高画板上的设计间距（px），作为分配剩余高度的权重；
+ * 高度充足时各间隔按设计比例展开，不足时一起收缩，最小不低于 `min`。
+ */
+export function Gap({ weight, min }: { weight: number; min: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="block shrink-0"
+      style={{ flex: `${weight} 0 0px`, minHeight: min }}
+    />
+  );
+}
+
 export function MobileArrowIcon() {
   return (
     <svg

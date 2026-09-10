@@ -94,7 +94,7 @@ export function ViscoseMobileGallery({
                 alt={item.alt}
                 fill
                 sizes="94vw"
-                className="object-cover object-bottom"
+                className="object-cover"
               />
             </div>
           </button>
