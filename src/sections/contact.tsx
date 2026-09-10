@@ -21,7 +21,7 @@ export function Contact() {
         src={contactEmbossedBgImg}
         mobileSrc={contactEmbossedBgMobileImg}
         autoMove
-        className="absolute inset-0 z-[5]"
+        className="absolute inset-0 z-[5] bg-[linear-gradient(97deg,var(--color-white)_0%,var(--color-grey-100)_102.81%)]"
       />
       <div id="contact">
         <ContactLayout heading="h1" animated />

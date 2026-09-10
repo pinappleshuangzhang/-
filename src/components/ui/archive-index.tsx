@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, type RefObject } from "react";
+import { useCallback, useEffect, useId, useRef, type RefObject } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -14,6 +14,9 @@ import binderImg from "../../../public/archive-index/binder.webp";
 import bgImg from "../../../public/archive-index/bg.webp";
 
 gsap.registerPlugin(useGSAP);
+
+/** 与工作室简介的高亮条一致：黑底由左向右擦入。 */
+const INDEX_TAB_WIPE_DURATION = 1.2;
 
 type ArchiveIndexProps = {
   open: boolean;
@@ -122,8 +125,17 @@ export function ArchiveIndex({
     () => {
       const panel = panelRef.current;
       if (!panel || !open) return;
+      const activeTabFill = panel.querySelector<HTMLElement>(
+        "[data-index-active-fill]",
+      );
+      // 在首帧直接设为零宽，确保黑底只会随擦入动画出现，不会提前闪现。
+      gsap.set(activeTabFill, {
+        scaleX: 0,
+        transformOrigin: "left center",
+      });
       if (reducedMotion) {
         gsap.set(panel, { autoAlpha: 1 });
+        gsap.set(activeTabFill, { scaleX: 1 });
         return;
       }
       gsap.fromTo(
@@ -131,6 +143,14 @@ export function ArchiveIndex({
         { autoAlpha: 0 },
         { autoAlpha: 1, duration: 0.45, ease: "power2.out" },
       );
+      if (activeTabFill) {
+        gsap.to(activeTabFill, {
+          scaleX: 1,
+          duration: INDEX_TAB_WIPE_DURATION,
+          ease: "power2.out",
+          transformOrigin: "left center",
+        });
+      }
     },
     { dependencies: [open, reducedMotion] },
   );
@@ -152,15 +172,21 @@ export function ArchiveIndex({
         fill
         priority
         sizes="100vw"
-        className="object-cover"
+        className="hidden object-cover md:block"
       />
 
       <h2 id={titleId} className="sr-only">
         {t("index.heading")}
       </h2>
 
+      <MobileArchiveIndex
+        activeScreenKey={activeScreenKey}
+        onClose={onClose}
+        onSelect={onSelect}
+      />
+
       {/* 设计稿 1440×800 舞台：--su = 1 设计像素，随视口等比缩放；贴左对齐使档案图片始终靠视口最左 */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-start">
+      <div className="pointer-events-none absolute inset-0 hidden items-center justify-start md:flex">
         <div className="relative aspect-[1440/800] h-full max-h-full w-auto max-w-full [--su:calc(min(100vw,180vh)/1440)]">
           {/* 透明底活页夹图（1050×800）锚定于舞台左上角，叠加在全屏背景图上 */}
           <div className="absolute left-0 top-0 h-full w-[72.917%]">
@@ -231,7 +257,7 @@ export function ArchiveIndex({
       <p
         ref={closeLabelRef}
         aria-hidden="true"
-        className={`pointer-events-none absolute left-0 top-0 z-[61] text-20 leading-normal text-grey-400 opacity-0 ${
+        className={`pointer-events-none absolute left-0 top-0 z-[61] hidden text-20 leading-normal text-grey-400 opacity-0 md:block ${
           locale === "zh"
             ? "font-serif-sc font-medium"
             : "font-bodoni font-normal uppercase"
@@ -243,24 +269,169 @@ export function ArchiveIndex({
   );
 }
 
+function MobileArchiveIndex({
+  activeScreenKey,
+  onClose,
+  onSelect,
+}: Pick<ArchiveIndexProps, "activeScreenKey" | "onClose" | "onSelect">) {
+  const { t } = useLocale();
+
+  return (
+    <div className="absolute inset-0 bg-black/30 backdrop-blur-[16px] md:hidden">
+      <div
+        className="absolute inset-x-0 bottom-0 h-[calc(100%-30px)] bg-white/90"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          aria-label={t("nav.closeIndex")}
+          onClick={onClose}
+          className="absolute right-3 top-[49px] flex size-4 items-center justify-center focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
+        >
+          <span
+            aria-hidden="true"
+            className="absolute h-px w-5 rotate-45 bg-grey-400"
+          />
+          <span
+            aria-hidden="true"
+            className="absolute h-px w-5 -rotate-45 bg-grey-400"
+          />
+        </button>
+
+        <div className="absolute left-3 top-[105px] w-[calc(100%-24px)]">
+          <div className="flex items-start justify-between">
+            <p className="font-bodoni text-24 font-normal uppercase leading-normal text-grey-400">
+              Archive
+              <br />
+              Index
+            </p>
+            <div className="flex items-center gap-1">
+              <span aria-hidden="true" className="h-px w-[37px] bg-grey-200" />
+              <p className="font-bodoni text-12 font-normal leading-normal text-grey-400">
+                39.9042° N
+                <br />
+                116.4074° E
+              </p>
+            </div>
+          </div>
+          <span
+            aria-hidden="true"
+            className="absolute left-0 right-0 top-[96px] h-px bg-grey-100"
+          />
+        </div>
+
+        <nav
+          aria-label={t("index.nav")}
+          className="absolute left-3 right-3 top-[250px]"
+        >
+          <ul className="flex flex-col gap-9">
+            {ARCHIVE_INDEX_ITEMS.map((item) => (
+              <li key={item.code}>
+                <MobileIndexMenuItem
+                  item={item}
+                  active={item.screenKey === activeScreenKey}
+                  onSelect={onSelect}
+                />
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  );
+}
+
+function MobileIndexMenuItem({
+  item,
+  active,
+  onSelect,
+}: IndexMenuItemProps) {
+  const { t } = useLocale();
+  const title = t(item.titleKey);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(item.screenKey!)}
+      aria-current={active ? "page" : undefined}
+      className={`flex min-h-7 w-full items-center justify-between px-0 py-1.5 text-14 leading-normal ${
+        active ? "bg-grey-400 text-white" : "text-grey-300"
+      } focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2`}
+    >
+      <span className="flex items-baseline gap-4">
+        <span className="font-bodoni font-normal capitalize">
+          ( {item.code} )
+        </span>
+        <span className="font-serif-sc font-normal">{title}</span>
+      </span>
+      {active && (
+        <Image
+          src="/archive-index/arrow.svg"
+          alt=""
+          width={15}
+          height={15}
+          className="size-4 shrink-0 brightness-0 invert"
+        />
+      )}
+    </button>
+  );
+}
+
 type IndexMenuItemProps = {
   item: ArchiveIndexItem;
   active: boolean;
   onSelect: (screenKey: string) => void;
 };
 
+function useIndexTabWipeFill() {
+  const fillRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
+
+  const animate = useCallback(
+    (entering: boolean) => {
+      const fill = fillRef.current;
+      if (!fill) return;
+
+      gsap.killTweensOf(fill);
+      if (reducedMotion) {
+        gsap.set(fill, { scaleX: entering ? 1 : 0 });
+        return;
+      }
+
+      gsap.to(fill, {
+        scaleX: entering ? 1 : 0,
+        duration: INDEX_TAB_WIPE_DURATION,
+        ease: "power2.out",
+        transformOrigin: "left center",
+      });
+    },
+    [reducedMotion],
+  );
+
+  return {
+    fillRef,
+    onEnter: () => animate(true),
+    onLeave: () => animate(false),
+  };
+}
+
 function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
   const available = item.screenKey !== null;
   const { t } = useLocale();
+  const {
+    fillRef,
+    onEnter: onDissolveEnter,
+    onLeave: onDissolveLeave,
+  } = useIndexTabWipeFill();
   const title = t(item.titleKey);
 
   const rowText =
-    "text-[length:calc(var(--su)*14)] leading-normal gap-[calc(var(--su)*16)]";
+    "text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*20)] gap-[calc(var(--su)*16)]";
 
   if (!available) {
     return (
       <div
-        className={`flex items-center rounded-rs-4 text-grey-300 ${rowText}`}
+        className={`flex items-baseline rounded-rs-4 text-grey-300 ${rowText}`}
         aria-disabled="true"
       >
         <span className="shrink-0 font-bodoni font-normal capitalize">
@@ -278,13 +449,38 @@ function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
       type="button"
       onClick={() => onSelect(item.screenKey!)}
       aria-current={active ? "page" : undefined}
-      className={`group relative flex w-max items-center rounded-rs-4 focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${rowText} ${
+      onMouseEnter={() => {
+        if (!active) onDissolveEnter();
+      }}
+      onMouseLeave={() => {
+        if (!active) onDissolveLeave();
+      }}
+      onFocus={() => {
+        if (!active) onDissolveEnter();
+      }}
+      onBlur={() => {
+        if (!active) onDissolveLeave();
+      }}
+      className={`group relative flex w-full items-center justify-between focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${rowText} ${
         active
-          ? "bg-grey-400 text-white"
-          : "text-grey-300 transition-colors duration-[600ms] hover:text-grey-400 focus-visible:text-grey-400 motion-reduce:transition-none"
+          ? "text-white"
+          : "text-grey-300 transition-colors duration-[600ms] hover:text-white focus-visible:text-white motion-reduce:transition-none"
       }`}
     >
-      <span className="flex items-center gap-[calc(var(--su)*16)]">
+      {active ? (
+        <div
+          data-index-active-fill
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 origin-left scale-x-0 bg-grey-400"
+        />
+      ) : (
+        <div
+          ref={fillRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 origin-left scale-x-0 bg-grey-400"
+        />
+      )}
+      <span className="relative z-10 flex items-baseline gap-[calc(var(--su)*16)]">
         <span className="shrink-0 font-bodoni font-normal capitalize">
           ( {item.code} )
         </span>
@@ -294,19 +490,18 @@ function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
       </span>
       <span
         aria-hidden="true"
-        className={`inline-flex size-[calc(var(--su)*24)] shrink-0 items-center justify-center transition-opacity duration-[600ms] motion-reduce:transition-none ${
+        className={`relative z-10 inline-flex size-[calc(var(--su)*24)] shrink-0 items-center justify-center transition-opacity duration-[600ms] motion-reduce:transition-none ${
           active
             ? "opacity-100"
             : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
         }`}
       >
-        {/* 素材是白色箭头：非选中行反相成黑色，与 hover 后的黑色文字一致 */}
         <Image
-          src="/archive-index/arrow.webp"
+          src="/archive-index/arrow.svg"
           alt=""
-          width={48}
-          height={48}
-          className={`size-full shrink-0 object-contain ${active ? "" : "invert"}`}
+          width={15}
+          height={15}
+          className="h-[calc(var(--su)*14.8)] w-[calc(var(--su)*15.4)] shrink-0 -rotate-45 brightness-0 invert"
         />
       </span>
     </button>

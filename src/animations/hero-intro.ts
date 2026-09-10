@@ -4,7 +4,7 @@ import {
   setSondavenHidden,
 } from "@/animations/sondaven-reveal";
 
-/** 加载屏最短时长：资源更快也要铺满 2s */
+/** 加载屏最短时长：资源更快也要铺满 2s，资源较慢则等待实际加载完成 */
 export const LOADER_MIN_DURATION_MS = 2000;
 /** 到 100% 后短停再退场 */
 export const LOADER_HOLD_MS = 700;
@@ -110,11 +110,13 @@ export function createLoaderProgress(
 
 export type LoaderMaterialCycle = {
   reset: () => void;
+  /** 停止后续循环，等待当前渐变自然完成 */
+  complete: (onComplete?: () => void) => void;
   kill: () => void;
 };
 
 /**
- * 居中材质图自下而上蒙层循环替换（clip-path，不驱动布局）。
+ * 居中材质图使用透明度交叉渐隐渐现，不驱动布局。
  */
 export function createLoaderMaterialCycle(
   root: HTMLElement,
@@ -123,42 +125,54 @@ export function createLoaderMaterialCycle(
     root.querySelectorAll<HTMLElement>("[data-loader-mat]"),
   );
   let index = 0;
-  let tween: gsap.core.Tween | null = null;
+  let tween: gsap.core.Timeline | null = null;
   let hold: gsap.core.Tween | null = null;
+  let activeTargetIndex: number | null = null;
+  let pendingComplete: (() => void) | null = null;
   let stopped = false;
 
   const showBase = () => {
     layers.forEach((layer, layerIndex) => {
       gsap.set(layer, {
         zIndex: layerIndex === 0 ? 1 : 0,
-        clipPath: layerIndex === 0 ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)",
+        autoAlpha: layerIndex === 0 ? 1 : 0,
       });
     });
     index = 0;
+    activeTargetIndex = null;
   };
 
   const cycle = () => {
     if (stopped || layers.length < 2) return;
+    const nextIndex = (index + 1) % layers.length;
     const current = layers[index];
-    const next = layers[(index + 1) % layers.length];
+    const next = layers[nextIndex];
     if (!current || !next) return;
 
-    gsap.set(next, { zIndex: 2, clipPath: "inset(100% 0% 0% 0%)" });
+    activeTargetIndex = nextIndex;
+    gsap.set(next, { zIndex: 2, autoAlpha: 0 });
     gsap.set(current, { zIndex: 1 });
-    tween = gsap.to(next, {
-      clipPath: "inset(0% 0% 0% 0%)",
-      duration: 0.85,
-      ease: "power2.in",
-      onComplete: () => {
-        gsap.set(current, {
-          zIndex: 0,
-          clipPath: "inset(100% 0% 0% 0%)",
-        });
-        gsap.set(next, { zIndex: 1 });
-        index = (index + 1) % layers.length;
-        hold = gsap.delayedCall(0.15, cycle);
-      },
-    });
+    tween = gsap
+      .timeline({
+        onComplete: () => {
+          gsap.set(current, {
+            zIndex: 0,
+            autoAlpha: 0,
+          });
+          gsap.set(next, { zIndex: 1, autoAlpha: 1 });
+          index = nextIndex;
+          activeTargetIndex = null;
+          if (stopped) {
+            tween = null;
+            pendingComplete?.();
+            pendingComplete = null;
+            return;
+          }
+          hold = gsap.delayedCall(0.15, cycle);
+        },
+      })
+      .to(current, { autoAlpha: 0, duration: 0.65, ease: "power2.inOut" }, 0)
+      .to(next, { autoAlpha: 1, duration: 0.65, ease: "power2.inOut" }, 0);
   };
 
   showBase();
@@ -168,20 +182,33 @@ export function createLoaderMaterialCycle(
     reset() {
       tween?.kill();
       hold?.kill();
+      pendingComplete = null;
       stopped = false;
       showBase();
       hold = gsap.delayedCall(0.35, cycle);
+    },
+    complete(onComplete) {
+      stopped = true;
+      hold?.kill();
+      hold = null;
+      if (activeTargetIndex !== null && tween?.isActive()) {
+        pendingComplete = onComplete ?? null;
+        return;
+      }
+      onComplete?.();
     },
     kill() {
       stopped = true;
       tween?.kill();
       hold?.kill();
+      pendingComplete = null;
     },
   };
 }
 
 /**
- * 加载层淡出，停在 01首屏-1 档案盒页；标题与尾帧先藏住。
+ * 加载到 100% 后做双层错位上裁：
+ * 加载层先向上揭开 grey-400，深灰层稍后跟随向上揭开首屏静帧。
  */
 export function revealArchiveHold({
   loader,
@@ -198,13 +225,64 @@ export function revealArchiveHold({
   const titles = root.querySelector<HTMLElement>("[data-hero-titles]");
   if (titles) gsap.set(titles, { autoAlpha: 0 });
   if (lastFrame) gsap.set(lastFrame, { autoAlpha: 0 });
-  if (firstFrame) gsap.set(firstFrame, { autoAlpha: 1 });
-
-  return gsap.timeline().to(loader, {
-    autoAlpha: 0,
-    duration: 0.8,
-    ease: "power2.inOut",
+  const curtain = root.querySelector<HTMLElement>("[data-loader-curtain]");
+  if (firstFrame) {
+    gsap.set(firstFrame, { autoAlpha: 0, scale: 1 });
+  }
+  if (curtain) {
+    gsap.set(curtain, {
+      autoAlpha: 1,
+      clipPath: "inset(0% 0% 0% 0%)",
+      willChange: "clip-path",
+    });
+  }
+  gsap.set(loader, {
+    autoAlpha: 1,
+    clipPath: "inset(0% 0% 0% 0%)",
+    willChange: "clip-path",
   });
+
+  const timeline = gsap.timeline();
+  if (firstFrame) {
+    timeline.to(
+      firstFrame,
+      {
+        autoAlpha: 1,
+        duration: 0.7,
+        ease: "power2.out",
+      },
+      0.1,
+    );
+  }
+  timeline.to(
+    loader,
+    {
+      clipPath: "inset(0% 0% 100% 0%)",
+      duration: 0.85,
+      ease: "power2.inOut",
+    },
+    0,
+  );
+  if (curtain) {
+    timeline.to(
+      curtain,
+      {
+        clipPath: "inset(0% 0% 100% 0%)",
+        duration: 0.85,
+        ease: "power2.inOut",
+      },
+      0.14,
+    );
+  }
+  timeline.set(loader, { autoAlpha: 0, clearProps: "willChange" }, 0.85);
+  if (curtain) {
+    timeline.set(
+      curtain,
+      { autoAlpha: 0, clearProps: "willChange" },
+      0.99,
+    );
+  }
+  return timeline;
 }
 
 /**
@@ -245,6 +323,7 @@ type HeroVideoSequenceOptions = {
   firstFrame: HTMLElement | null;
   root: HTMLElement;
   objectUrl: string;
+  useVideoStills?: boolean;
   onPlaying?: () => void;
   onRevealStart?: () => void;
   onComplete: () => void;
@@ -260,18 +339,21 @@ export function createHeroVideoSequence({
   firstFrame,
   root,
   objectUrl,
+  useVideoStills = false,
   onPlaying,
   onRevealStart,
   onComplete,
   onFallback,
 }: HeroVideoSequenceOptions): {
   prepare: () => void;
+  showFirstFrame: (onReady: () => void) => void;
   start: () => void;
   skip: () => void;
   kill: () => void;
 } {
   let killed = false;
   let phase: "pre" | "playing" | "done" = "pre";
+  let startFrame = 0;
   const lastFrame = document.querySelector<HTMLElement>(
     '[data-shared-bg="studio"]',
   );
@@ -282,19 +364,36 @@ export function createHeroVideoSequence({
     if (titles) gsap.set(titles, { autoAlpha: 0 });
   };
 
-  const finishToTitles = () => {
+  const finishToTitles = (seekToEnd = false) => {
     if (phase === "done") return;
     phase = "done";
     video.pause();
     if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
-    if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
-    gsap.to(videoLayer, { autoAlpha: 0, duration: 0.45, ease: "power2.out" });
-    hideTitles();
-    if (titles) gsap.set(titles, { autoAlpha: 1 });
-    onRevealStart?.();
-    playSondavenReveal(root).eventCallback("onComplete", () => {
-      if (!killed) onComplete();
-    });
+    const revealTitles = () => {
+      if (killed) return;
+      if (useVideoStills) {
+        gsap.set(videoLayer, { autoAlpha: 1 });
+      } else {
+        if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
+        gsap.to(videoLayer, {
+          autoAlpha: 0,
+          duration: 0.45,
+          ease: "power2.out",
+        });
+      }
+      hideTitles();
+      if (titles) gsap.set(titles, { autoAlpha: 1 });
+      onRevealStart?.();
+      playSondavenReveal(root).eventCallback("onComplete", () => {
+        if (!killed) onComplete();
+      });
+    };
+    if (useVideoStills && seekToEnd && Number.isFinite(video.duration)) {
+      video.addEventListener("seeked", revealTitles, { once: true });
+      video.currentTime = Math.max(0, video.duration - 1 / 30);
+      return;
+    }
+    revealTitles();
   };
 
   const onEnded = () => {
@@ -312,36 +411,50 @@ export function createHeroVideoSequence({
     if (killed || phase !== "pre") return;
     phase = "playing";
     hideTitles();
-    // 静帧与视频首帧已像素级对齐：等浏览器真正呈现出视频第一帧后瞬间切层。
-    // 若用交叉渐隐，视频在淡出期间已开始运动，会与静帧叠出重影闪烁；
-    // 若在绘制首帧前就显示视频层，seek 空档会露出白底闪一下。
-    const swapToVideo = () => {
-      if (killed || phase !== "playing") return;
-      gsap.set(videoLayer, { autoAlpha: 1 });
-      if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
-      onPlaying?.();
-    };
+    // Safari 的 requestVideoFrameCallback 可能在播放已前进数帧后才触发，
+    // 导致静帧直接跳到视频内已经缩放的画面。先把暂停的第 0 帧放到静帧
+    // 下方并留出一帧完成合成，再切层开播。
+    video.pause();
     if (video.currentTime > 0.001) video.currentTime = 0;
-    video
-      .play()
-      .then(() => {
-        const withFrameCallback = video as HTMLVideoElement & {
-          requestVideoFrameCallback?: (callback: () => void) => number;
-        };
-        if (withFrameCallback.requestVideoFrameCallback) {
-          withFrameCallback.requestVideoFrameCallback(swapToVideo);
-        } else {
-          swapToVideo();
-        }
-      })
-      .catch(() => {
-        if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
-        onFallback();
+    gsap.set(videoLayer, { autoAlpha: 1 });
+    startFrame = window.requestAnimationFrame(() => {
+      startFrame = window.requestAnimationFrame(() => {
+        startFrame = 0;
+        if (killed || phase !== "playing") return;
+        if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
+        onPlaying?.();
+        video.play().catch(() => {
+          if (killed) return;
+          gsap.set(videoLayer, { autoAlpha: 0 });
+          if (firstFrame) gsap.set(firstFrame, { autoAlpha: 1 });
+          if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
+          onFallback();
+        });
       });
+    });
   };
 
   return {
     prepare() {
+      if (video.src !== objectUrl) {
+        video.src = objectUrl;
+        video.load();
+      }
+    },
+    showFirstFrame(onReady) {
+      const revealFrame = () => {
+        if (killed || phase !== "pre") return;
+        video.pause();
+        if (video.currentTime > 0.001) video.currentTime = 0;
+        gsap.set(videoLayer, { autoAlpha: 1 });
+        if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
+        window.requestAnimationFrame(onReady);
+      };
+      if (video.readyState >= 2 && video.src) {
+        revealFrame();
+        return;
+      }
+      video.addEventListener("loadeddata", revealFrame, { once: true });
       if (video.src !== objectUrl) {
         video.src = objectUrl;
         video.load();
@@ -364,10 +477,11 @@ export function createHeroVideoSequence({
     },
     skip() {
       if (killed || phase !== "playing") return;
-      finishToTitles();
+      finishToTitles(true);
     },
     kill() {
       killed = true;
+      if (startFrame) window.cancelAnimationFrame(startFrame);
       video.removeEventListener("loadeddata", playNow);
       video.removeEventListener("error", onError);
       video.removeEventListener("ended", onEnded);

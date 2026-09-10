@@ -74,6 +74,13 @@ type SectionPagerValue = {
   navVariant: NavVariant;
   /** 首屏序幕等场景是否锁定切屏（锁定时隐藏切屏提示） */
   navigationLocked: boolean;
+  /**
+   * 首屏加载序幕的遮罩是否还在场。
+   * 遮罩靠 z-index 压住导航并不可靠（一旦被设 clip-path 就会失效），
+   * 因此导航据此显式隐藏，等遮罩卸载后再淡入。
+   */
+  introOverlayActive: boolean;
+  setIntroOverlayActive: (active: boolean) => void;
   /** onCovered 在幕布铺满时执行，用于把关闭覆盖层等动作藏在幕布后面 */
   goToScreen: (index: number, onCovered?: () => void) => void;
   goToNextScreen: () => void;
@@ -133,6 +140,8 @@ export function SectionPagerProvider({
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<CurtainPhase>("idle");
   const [navigationLocked, setNavigationLockedState] = useState(true);
+  // 首屏序幕遮罩一开始就在场，由 Hero 在遮罩卸载时置 false
+  const [introOverlayActive, setIntroOverlayActive] = useState(true);
 
   const indexRef = useRef(index);
   const phaseRef = useRef(phase);
@@ -602,6 +611,8 @@ export function SectionPagerProvider({
       goToNextScreen,
       goToPrevScreen,
       setNavigationLocked,
+      introOverlayActive,
+      setIntroOverlayActive,
       runWithCurtain,
       registerTopOverscroll,
       registerScrollInterceptor,
@@ -616,6 +627,7 @@ export function SectionPagerProvider({
       goToNextScreen,
       goToPrevScreen,
       setNavigationLocked,
+      introOverlayActive,
       runWithCurtain,
       registerTopOverscroll,
       registerScrollInterceptor,

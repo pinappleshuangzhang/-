@@ -14,6 +14,10 @@ import {
   MEMBER_RECORD_REVEAL_DELAY,
   MEMBER_RECORD_REVEAL_DURATION,
 } from "@/animations/member-record-reveal";
+import {
+  playGravaStrokeLoad,
+  playMemberMarkSpin,
+} from "@/animations/member-record-logo-hover";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
 import {
@@ -218,26 +222,106 @@ export function MemberRecord() {
               directionClassName="left-[66.167%] top-[51.232%] w-[24.85%]"
               actionsClassName="left-[64.97%] top-[58.306%]"
             />
-            <div className="absolute left-[35.3%] top-[16.3%] h-[3.54%] w-[8.69%]">
-              <Image
-                src="/archive/member-record-grava.svg"
-                alt=""
-                fill
-                sizes="8.69vw"
-              />
-            </div>
-            <div className="absolute left-[52.5%] top-[40.6%] h-[3%] w-[2.32%]">
-              <Image
-                src="/archive/member-record-logo.svg"
-                alt=""
-                fill
-                sizes="2.32vw"
-              />
-            </div>
+            <DesktopGravaLogo />
+            <DesktopMemberMark />
           </div>
         </div>
       </div>
     </ScreenShell>
+  );
+}
+
+const GRAVA_STROKE_SEGMENTS = [
+  "polygon(0 0, 28% 0, 28% 32%, 0 32%)",
+  "polygon(0 20%, 11% 20%, 11% 82%, 0 82%)",
+  "polygon(0 68%, 28% 68%, 28% 100%, 0 100%)",
+  "polygon(13% 48%, 28% 48%, 28% 88%, 13% 88%)",
+  "polygon(31% 26%, 38% 26%, 38% 100%, 31% 100%)",
+  "polygon(35% 26%, 45% 26%, 45% 64%, 35% 64%)",
+  "polygon(45% 26%, 57% 26%, 57% 58%, 45% 58%)",
+  "polygon(45% 52%, 63% 52%, 63% 100%, 45% 100%)",
+  "polygon(56% 26%, 64% 26%, 64% 100%, 56% 100%)",
+  "polygon(63% 26%, 72% 26%, 79% 100%, 72% 100%)",
+  "polygon(75% 72%, 84% 26%, 75% 26%, 70% 72%)",
+  "polygon(83% 26%, 94% 26%, 94% 58%, 83% 58%)",
+  "polygon(83% 52%, 100% 52%, 100% 100%, 83% 100%)",
+  "polygon(94% 26%, 100% 26%, 100% 100%, 94% 100%)",
+] as const;
+
+function DesktopGravaLogo() {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
+
+  const handlePointerEnter = () => {
+    if (reducedMotion) return;
+
+    const root = rootRef.current;
+    const base = root?.querySelector<HTMLElement>("[data-grava-base]");
+    const strokes = root?.querySelectorAll<HTMLElement>("[data-grava-stroke]");
+    if (!base || !strokes?.length) return;
+
+    playGravaStrokeLoad(base, Array.from(strokes));
+  };
+
+  return (
+    <div
+      ref={rootRef}
+      aria-hidden="true"
+      className="pointer-events-auto absolute left-[35.3%] top-[16.3%] h-[3.54%] w-[8.69%] overflow-hidden"
+      onPointerEnter={handlePointerEnter}
+    >
+      <div data-grava-base className="absolute inset-0">
+        <Image
+          src="/archive/member-record-grava.svg"
+          alt=""
+          fill
+          sizes="8.69vw"
+        />
+      </div>
+      {GRAVA_STROKE_SEGMENTS.map((clipPath) => (
+        <span
+          key={clipPath}
+          data-grava-stroke
+          className="absolute inset-0 opacity-0"
+          style={{ clipPath }}
+        >
+          <Image
+            src="/archive/member-record-grava.svg"
+            alt=""
+            fill
+            sizes="8.69vw"
+          />
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function DesktopMemberMark() {
+  const markRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
+
+  const handlePointerEnter = () => {
+    if (reducedMotion || !markRef.current) return;
+
+    playMemberMarkSpin(markRef.current);
+  };
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-auto absolute left-[52.5%] top-[40.6%] h-[3%] w-[2.32%]"
+      onPointerEnter={handlePointerEnter}
+    >
+      <div ref={markRef} className="relative size-full transform-gpu">
+        <Image
+          src="/archive/member-record-logo.svg"
+          alt=""
+          fill
+          sizes="2.32vw"
+        />
+      </div>
+    </div>
   );
 }
 
@@ -265,36 +349,33 @@ function MemberProfile({
   actionsClassName,
 }: MemberProfileProps) {
   const fillRef = useRef<HTMLDivElement>(null);
-  const proxyRef = useRef({ frame: 0 });
+  const wipeRef = useRef<SVGRectElement>(null);
   const reducedMotion = useReducedMotion();
   const { t } = useLocale();
 
-  // hover 白底沿用入场的斑块溶解：进入时逐帧翻页遮罩显现，离开时倒放。
+  // 白底通过 SVG 裁切矩形横向揭示，路径本身不缩放，模拟擦去玻璃雾气。
   const animateFill = (entering: boolean) => {
     const fill = fillRef.current;
-    if (!fill) return;
-    const sprite = getDissolveSprite();
-    if (reducedMotion || !sprite) {
+    const wipe = wipeRef.current;
+    if (!fill || !wipe) return;
+
+    gsap.killTweensOf(wipe);
+    if (reducedMotion) {
+      gsap.set(wipe, { scaleX: entering ? 1 : 0 });
       fill.style.opacity = entering ? "1" : "0";
-      clearElementMask(fill);
       return;
     }
-    const proxy = proxyRef.current;
-    gsap.killTweensOf(proxy);
+
     fill.style.opacity = "1";
-    gsap.to(proxy, {
-      frame: entering ? sprite.frameCount - 1 : 0,
+    gsap.to(wipe, {
+      scaleX: entering ? 1 : 0,
       duration: MEMBER_RECORD_HOVER_REVEAL_DURATION,
-      ease: "none",
-      onUpdate: () => {
-        setSpriteMaskFrame(fill, sprite, Math.round(proxy.frame));
-      },
+      ease: "power2.inOut",
+      transformBox: "fill-box",
+      transformOrigin: "left center",
       onComplete: () => {
-        if (entering) {
-          clearElementMask(fill);
-        } else {
+        if (!entering) {
           fill.style.opacity = "0";
-          clearElementMask(fill);
         }
       },
     });
@@ -316,9 +397,26 @@ function MemberProfile({
           viewBox={MEMBER_CELL_VIEW_BOX}
           preserveAspectRatio="none"
         >
+          <defs>
+            <clipPath id={`member-wipe-${identifier}`}>
+              <rect
+                ref={wipeRef}
+                x="52"
+                y="0"
+                width="1335"
+                height="933"
+                style={{
+                  transform: "scaleX(0)",
+                  transformBox: "fill-box",
+                  transformOrigin: "left center",
+                }}
+              />
+            </clipPath>
+          </defs>
           <path
             d={MEMBER_CELL_PATHS[identifier]}
             strokeWidth={3}
+            clipPath={`url(#member-wipe-${identifier})`}
             className="fill-white stroke-white"
           />
         </svg>
@@ -397,7 +495,7 @@ function MemberProfile({
 
 function ProfileAction({ label }: { label: string }) {
   return (
-    <span className="profile-action pointer-events-auto flex items-center gap-0.5 font-serif-sc text-16 font-normal">
+    <span className="profile-action pointer-events-auto flex cursor-pointer items-center gap-0.5 font-serif-sc text-16 font-normal">
       <SplitWords text={label} />
       <span aria-hidden="true" className="relative block size-4 overflow-hidden">
         <Image

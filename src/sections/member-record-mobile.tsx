@@ -33,22 +33,23 @@ export function MemberRecordMobile() {
         <div
           data-member-overlay
           aria-hidden="true"
-            className="absolute inset-0 rounded-t-rl-32 rounded-b-rm-16 backdrop-blur-[4px]"
+            className="absolute inset-0 rounded-t-rl-32 rounded-b-none backdrop-blur-[4px]"
         />
         <div
           data-member-mask
-          className="absolute inset-0 overflow-hidden rounded-t-rl-32 rounded-b-rm-16"
+          className="absolute inset-0 overflow-hidden rounded-t-rl-32 rounded-b-none"
         >
           <Image
             src="/archive/member-record-grid-mobile.svg"
             alt=""
             fill
             sizes="84.87vw"
-            className="object-fill [clip-path:inset(1px)]"
+            unoptimized
+            className="h-full w-full object-fill [clip-path:inset(1px)]"
           />
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-t-rl-32 rounded-b-rm-16 border border-white"
+            className="pointer-events-none absolute inset-0 rounded-t-rl-32 rounded-b-none border border-white"
           />
           <MobileMemberProfile
             identifier="01"

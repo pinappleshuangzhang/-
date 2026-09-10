@@ -21,16 +21,18 @@ import {
 } from "@/components/providers/section-pager-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import archiveFolderImg from "../../public/archive/archive-folder-cool-alpha.webp";
+import archiveFolderImg from "../../public/archive/archive-folder-yellow-alpha.webp";
 
 gsap.registerPlugin(useGSAP);
 
 // 桌面版全关键帧编码（滚动任意跳帧擦拭）；手机只顺序自动播放，
 // 用普通帧间压缩的小文件（约为桌面版体积的 1/20）。
-const FOLDER_VIDEO_WEBM = "/archive/archive-folder-cool-alpha.webm";
-const FOLDER_VIDEO_HEVC = "/archive/archive-folder-cool-alpha-hevc.mp4";
-const FOLDER_VIDEO_MOBILE_WEBM = "/archive/archive-folder-cool-alpha-mobile.webm";
-const FOLDER_VIDEO_MOBILE_HEVC = "/archive/archive-folder-cool-alpha-mobile-hevc.mp4";
+const FOLDER_VIDEO_WEBM = "/archive/archive-folder-yellow-alpha.webm?v=in1";
+const FOLDER_VIDEO_HEVC = "/archive/archive-folder-yellow-alpha-hevc.mp4?v=in1";
+const FOLDER_VIDEO_MOBILE_WEBM =
+  "/archive/archive-folder-yellow-alpha-mobile.webm?v=mw2";
+const FOLDER_VIDEO_MOBILE_HEVC =
+  "/archive/archive-folder-yellow-alpha-mobile-hevc.mp4?v=mw2";
 /** 每像素滚动推进的进度量：两段文字 + 间隔 + 切换全程约需 6700px 滚动 */
 const SCRUB_PER_PX = 0.00015;
 /** 进度追踪的阻尼系数（数值越大跟手越紧，越小拖拽感越强） */
@@ -185,7 +187,10 @@ export function ArchiveIntro() {
       hasPlayedFirstCopyEntranceRef.current = true;
       playSondavenReveal(primaryCopy);
     },
-    { dependencies: [isActive, reducedMotion, locale], scope: container },
+    {
+      dependencies: [isActive, isMobileViewport, reducedMotion, locale],
+      scope: container,
+    },
   );
 
   // 页面角标大字与第六屏 DESIGN / WORKS 共用横穿后回位的出场节奏。
@@ -247,9 +252,9 @@ export function ArchiveIntro() {
       // 主时间轴（进度由滚动擦拭驱动，单位为“进度百分点”）：
       //   0 ~ 38   第一段文字逐字由灰变黑
       //  38 ~ 50   第一段逐词缩小、下沉、淡出（第三屏入场动画的反向）
-      //  50 ~ 60   两段之间的短暂停顿
-      //  60 ~ 75   第二段逐词上浮入场
-      //  80 ~ 114  第二段文字逐字由灰变黑
+      //  50 ~ 53   两段之间的短暂停顿
+      //  53 ~ 68   第二段逐词上浮入场
+      //  73 ~ 107  第二段文字逐字由灰变黑
       // 124 ~ 132  收尾留白：视频最后才织合完毕（两段文字完成之后）
       const charsA = gsap.utils.toArray<HTMLElement>(
         "[data-swap-a] [data-scrub-char]",
@@ -275,10 +280,14 @@ export function ArchiveIntro() {
       gsap.set(wordsB, { opacity: 0, yPercent: 75, scale: 0 });
       if (swapB) gsap.set(swapB, { autoAlpha: 0 });
       if (swapA) gsap.set(swapA, { autoAlpha: 1 });
+      // 手机不逐字点亮（不要「加载」变色），进屏/换段仍走逐词冒出。
+      if (isMobileViewport) {
+        gsap.set([charsA, charsB], { color: "var(--color-grey-400)" });
+      }
 
       const timeline = gsap.timeline({ paused: true });
-      timeline
-        .to(
+      if (!isMobileViewport) {
+        timeline.to(
           charsA,
           {
             color: "var(--color-grey-400)",
@@ -287,7 +296,11 @@ export function ArchiveIntro() {
             stagger: { amount: 30 },
           },
           0,
-        )
+        );
+      }
+      // 手机换段不要空档硬切：第一段退场结束的同一拍第二段开始逐词冒出。
+      const secondCopyAt = isMobileViewport ? 50 : 53;
+      timeline
         .to(
           shuffledWordsA,
           {
@@ -301,7 +314,7 @@ export function ArchiveIntro() {
           38,
         )
         .to(swapA, { autoAlpha: 0, duration: 0.01 }, 50)
-        .to(swapB, { autoAlpha: 1, duration: 0.01 }, 59)
+        .to(swapB, { autoAlpha: 1, duration: 0.01 }, isMobileViewport ? 50 : 52)
         .to(
           shuffledWordsB,
           {
@@ -312,9 +325,10 @@ export function ArchiveIntro() {
             ease: "power2.out",
             stagger: 0.4,
           },
-          60,
-        )
-        .to(
+          secondCopyAt,
+        );
+      if (!isMobileViewport) {
+        timeline.to(
           charsB,
           {
             color: "var(--color-grey-400)",
@@ -322,10 +336,11 @@ export function ArchiveIntro() {
             ease: "none",
             stagger: { amount: 26 },
           },
-          80,
-        )
-        // 空拍占位，把时间轴总长撑到 132：文字在 124 处完成，视频擦拭到最末才结束
-        .to(root, { duration: 8 }, 124);
+          73,
+        );
+      }
+      // 空拍占位，把时间轴总长撑到 132：文字完成后视频才擦到最末
+      timeline.to(root, { duration: 8 }, 124);
       textTimelineRef.current = timeline;
       // locale 切换会重建文案节点；立即同步当前擦拭进度，避免新节点停在初始隐藏态。
       timeline.progress(displayRef.current);
@@ -334,7 +349,7 @@ export function ArchiveIntro() {
         textTimelineRef.current = null;
       };
     },
-    { dependencies: [locale], scope: container },
+    { dependencies: [isMobileViewport, locale], scope: container },
   );
 
   // 仅本屏激活且进度还在追随时才挂 ticker，离屏立即停视频。
@@ -458,34 +473,47 @@ export function ArchiveIntro() {
             <Image src="/archive/folder-shadow.svg" alt="" fill sizes="60vw" />
           </span>
 
-          {/* 静态占位（视频首帧就绪前 / 降级时显示） */}
-          {showPoster && (
-            <Image
-              src={archiveFolderImg}
-              alt={t("intro.folderAlt")}
-              fill
-              placeholder="blur"
-              sizes="(min-width: 768px) 563px, 80vw"
-              className="object-contain"
-            />
-          )}
+          {/* 桌面向内收 1px 去黑边；手机不用矩形裁切，避免顶/底露出浅底 */}
+          <div className="absolute inset-0 overflow-hidden max-md:overflow-visible">
+            <div className="absolute -inset-px max-md:inset-0">
+              {/* 静态占位（视频首帧就绪前 / 降级时显示） */}
+              {showPoster && (
+                <Image
+                  src={archiveFolderImg}
+                  alt={t("intro.folderAlt")}
+                  fill
+                  placeholder="blur"
+                  sizes="(min-width: 768px) 563px, 80vw"
+                  className="object-contain"
+                />
+              )}
 
-          {/* 擦拭视频（自带 alpha 通道）：画布比卡片外扩，使视频中的档案夹与卡片对齐
-              （偏移按视频 1112x834 中透明内容包围盒 x22..1094 / y8..834 计算） */}
-          {showVideo && (
-            <AlphaScrubVideo
-              ref={videoHandleRef}
-              srcWebm={
-                isMobileViewport ? FOLDER_VIDEO_MOBILE_WEBM : FOLDER_VIDEO_WEBM
-              }
-              srcHevc={
-                isMobileViewport ? FOLDER_VIDEO_MOBILE_HEVC : FOLDER_VIDEO_HEVC
-              }
-              onFirstFrame={() => setVideoReady(true)}
-              onError={() => setVideoFailed(true)}
-              className="absolute left-[-2.05%] top-[-0.97%] h-[100.97%] w-[103.73%]"
-            />
-          )}
+              {/* 擦拭视频：桌面按 1112x834 / x31..1096,y8..829；
+                  手机按 1080x810 / x32..1064,y10..805 */}
+              {showVideo && (
+                <AlphaScrubVideo
+                  ref={videoHandleRef}
+                  srcWebm={
+                    isMobileViewport
+                      ? FOLDER_VIDEO_MOBILE_WEBM
+                      : FOLDER_VIDEO_WEBM
+                  }
+                  srcHevc={
+                    isMobileViewport
+                      ? FOLDER_VIDEO_MOBILE_HEVC
+                      : FOLDER_VIDEO_HEVC
+                  }
+                  onFirstFrame={() => setVideoReady(true)}
+                  onError={() => setVideoFailed(true)}
+                  className={
+                    isMobileViewport
+                      ? "absolute left-[-3.10%] top-[-1.26%] h-[101.89%] w-[104.65%]"
+                      : "absolute left-[-2.91%] top-[-0.97%] h-[101.58%] w-[104.41%]"
+                  }
+                />
+              )}
+            </div>
+          </div>
 
           {/* 卡片内文字：移动端 Figma 701:201/202 = 14px、左 67、顶 368 */}
           <div

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "lenis/dist/lenis.css";
+@source not "../../.next-desktop";
+@source not "../../.next-mobile";
+@source not "../../.next-mobile-webpack";
 
 /* 设计令牌来源：design/tokens/*.tokens.json（Figma 变量导出） */
 @theme inline {

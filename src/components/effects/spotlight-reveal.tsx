@@ -317,8 +317,8 @@ export function SpotlightReveal({
             alt=""
             fill
             sizes="(max-width: 767px) 100vw, 0px"
-            quality={95}
-            className="object-cover md:hidden"
+            unoptimized
+            className="object-fill md:hidden"
           />
         )}
         <Image

@@ -59,7 +59,8 @@ export function SiteNav({
 }: SiteNavProps) {
   const isIndex = variant === "index";
   const { locale, setLocale, t } = useLocale();
-  const { runWithCurtain, navigationLocked } = useSectionPager();
+  const { runWithCurtain, navigationLocked, introOverlayActive } =
+    useSectionPager();
   const isEn = locale === "en";
   const indexLabel = isIndex ? t("nav.close") : t("nav.index");
   const contactLabel = t("nav.contact");
@@ -123,7 +124,8 @@ export function SiteNav({
     const next = locale === "zh" ? "en" : "zh";
     runWithCurtain(() => setLocale(next));
   };
-  const hideNav = navigationLocked && !isIndex;
+  // 序幕遮罩在场期间一律隐藏：遮罩卸载后才淡入，避免与加载屏顶部信息行重合
+  const hideNav = (navigationLocked || introOverlayActive) && !isIndex;
 
   return (
     <>
@@ -140,11 +142,12 @@ export function SiteNav({
         languageAriaLabel={t("nav.language")}
         onLanguageClick={handleLanguageClick}
         closeRef={mobileCloseRef}
-        className={`${hideNav ? "invisible pointer-events-none" : ""} ${className ?? ""}`}
+        concealed={hideNav}
+        className={className}
       />
 
       <header
-        className={`fixed inset-x-0 top-[20px] hidden mix-blend-difference md:block ${isIndex ? "z-[70]" : "z-50"} ${hideNav ? "invisible pointer-events-none" : ""} ${className ?? ""}`}
+        className={`fixed inset-x-0 top-[20px] hidden mix-blend-difference transition-opacity duration-500 ease-out md:block motion-reduce:transition-none ${isIndex ? "z-[70]" : "z-50"} ${hideNav ? "pointer-events-none opacity-0" : "opacity-100"} ${className ?? ""}`}
         aria-hidden={hideNav}
         {...(hideNav ? { inert: true } : {})}
       >

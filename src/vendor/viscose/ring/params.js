@@ -102,7 +102,8 @@ export function defaultParams() {
     backgroundInTime: 5,
     backgroundOutTime: 1.1,
     holdSpinSpeed: 0.08, // 第二阶段顺时针慢转，约 79 秒一圈
-    layer2SpinDelay: 0.5, // 第二层比圆环与其他背景层晚 0.5 秒启动
+    // 各背景环依次错位启动：圆环 0s → 第二层 → 第三层 → 第四层，每层晚 1.4 秒
+    backgroundSpinStagger: 1.4,
     // Where the ring goes once formed. stageAt is a fraction of the spread, so
     // 0.5 starts the move midway through the ring drawing.
     stageAt: 0.7,

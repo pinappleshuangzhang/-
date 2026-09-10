@@ -23,6 +23,7 @@ import { useHeroPreloader } from "@/hooks/use-hero-preloader";
 import { HeroLoader, LOADER_ASSET_PATHS } from "@/sections/hero-loader";
 import archiveBoxImg from "../../public/hero/hero-loader-bg.webp";
 import mobileFinalBgImg from "../../public/hero/hero-mobile-final-bg.webp";
+import mobileFirstFrameImg from "../../public/hero/hero-mobile-first.webp";
 
 gsap.registerPlugin(useGSAP);
 
@@ -72,13 +73,15 @@ export function Hero() {
   const preloadRef = useRef(preload);
   const { locale, t } = useLocale();
   // 分页器默认锁定；停在档案盒页后解锁，由滚动拦截器决定是否起播视频
-  const { setNavigationLocked, registerScrollInterceptor } = useSectionPager();
+  const { setNavigationLocked, setIntroOverlayActive, registerScrollInterceptor } =
+    useSectionPager();
   const firstFrameRef = useRef<HTMLDivElement>(null);
   const introPhaseRef = useRef<"loading" | "holding" | "playing" | "done">(
     "loading",
   );
   const startIntroVideoRef = useRef<(() => void) | null>(null);
   const skipIntroVideoRef = useRef<(() => void) | null>(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
   const [showSkip, setShowSkip] = useState(false);
   // 加载序幕只出现一次：退场动画结束后整体卸载，释放其 DOM 与图片内存
   const [loaderDismissed, setLoaderDismissed] = useState(false);
@@ -88,6 +91,11 @@ export function Hero() {
   useEffect(() => {
     preloadRef.current = preload;
   }, [preload]);
+
+  // 导航不靠加载层遮挡，改由此信号显式隐藏，遮罩卸载后才淡入
+  useEffect(() => {
+    setIntroOverlayActive(!loaderDismissed);
+  }, [loaderDismissed, setIntroOverlayActive]);
 
   const doneRef = useRef(false);
   const revealStartedRef = useRef(false);
@@ -204,6 +212,7 @@ export function Hero() {
       if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
       setSondavenVisible(container.current);
       introPhaseRef.current = "done";
+      setShowScrollHint(false);
       doneRef.current = true;
       setNavigationLocked(false);
       setLoaderDismissed(true);
@@ -220,6 +229,13 @@ export function Hero() {
       const videoLayer = videoLayerRef.current;
       const video = videoRef.current;
       if (!root || !loader || !videoLayer || !video) return;
+      const isSafari =
+        /safari/i.test(navigator.userAgent) &&
+        !/chrome|chromium|crios|edg|android/i.test(navigator.userAgent);
+      // Safari 提前呈现暂停的视频首帧，起播时复用同一合成层，避免解码器
+      // 冷启动丢掉前几帧后从 WebP 静帧跳到已经缩小的画面。
+      const useVideoStills =
+        isSafari || window.matchMedia("(max-width: 767px)").matches;
 
       const materials = loader.querySelector<HTMLElement>(
         "[data-loader-materials]",
@@ -242,19 +258,23 @@ export function Hero() {
 
       const finish = () => {
         introPhaseRef.current = "done";
+        setShowScrollHint(false);
         setShowSkip(false);
         setSondavenVisible(root);
         doneRef.current = true;
         setNavigationLocked(false);
-        // 开场视频与档案盒首帧不再复用：卸载对应层并释放视频 blob
-        setIntroDone(true);
-        const objectUrl = preloadRef.current.objectUrl;
-        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        // 手机端继续保留暂停的视频尾帧；桌面端切到静态尾帧后释放视频层。
+        if (!useVideoStills) {
+          setIntroDone(true);
+          const objectUrl = preloadRef.current.objectUrl;
+          if (objectUrl) URL.revokeObjectURL(objectUrl);
+        }
       };
 
       const playStillFinale = contextSafe!(() => {
         if (introPhaseRef.current === "done") return;
         introPhaseRef.current = "done";
+        setShowScrollHint(false);
         setShowSkip(false);
         video.pause();
         gsap.set(videoLayer, { autoAlpha: 0 });
@@ -270,21 +290,24 @@ export function Hero() {
         if (revealStartedRef.current) return;
         revealStartedRef.current = true;
         introPhaseRef.current = "holding";
+        setShowScrollHint(true);
         doneRef.current = true;
         gsap.set(videoLayer, { autoAlpha: 0 });
-        // 档案盒静帧亮起的同时解锁：导航自此常驻（视频播放期间也不再加锁）。
-        // 视频期间的切屏由滚动拦截器（playing 阶段吞掉滚动）兜住。
+        // 导航先在加载层下方就位，由双层上裁自然揭开，避免退场后再挂载造成闪现。
         setNavigationLocked(false);
         revealArchiveHold({
           loader,
           firstFrame: firstFrameRef.current,
           lastFrame,
           root,
-        }).eventCallback("onComplete", () => setLoaderDismissed(true));
+        }).eventCallback("onComplete", () => {
+          setLoaderDismissed(true);
+        });
       });
 
       let activeVideo: {
         prepare: () => void;
+        showFirstFrame: (onReady: () => void) => void;
         start: () => void;
         skip: () => void;
         kill: () => void;
@@ -300,6 +323,7 @@ export function Hero() {
             firstFrame: firstFrameRef.current,
             root,
             objectUrl: state.objectUrl,
+            useVideoStills,
             onPlaying: () => setShowSkip(true),
             onRevealStart: () => setShowSkip(false),
             onComplete: finish,
@@ -318,6 +342,7 @@ export function Hero() {
           return;
         }
         introPhaseRef.current = "playing";
+        setShowScrollHint(false);
         sequence.start();
       });
 
@@ -354,7 +379,9 @@ export function Hero() {
         const releaseLoader = (next: () => void) => {
           window.clearInterval(gate);
           loaderProgress.update(100);
-          window.setTimeout(next, LOADER_HOLD_MS);
+          materialCycle.complete(() => {
+            window.setTimeout(next, LOADER_HOLD_MS);
+          });
         };
 
         const startSequence = () => {
@@ -433,7 +460,7 @@ export function Hero() {
           {/* 档案盒静帧：加载层退场后停在此页，下滑再播视频 */}
           <div
             ref={firstFrameRef}
-            className="invisible absolute inset-0 z-[25] hidden opacity-0 md:block motion-reduce:hidden"
+            className="invisible absolute inset-0 z-[25] opacity-0 motion-reduce:hidden"
           >
             <Image
               src={archiveBoxImg}
@@ -443,7 +470,17 @@ export function Hero() {
               unoptimized
               placeholder="blur"
               sizes="100vw"
-              className="object-cover"
+              className="hidden object-cover md:block"
+            />
+            <Image
+              src={mobileFirstFrameImg}
+              alt=""
+              fill
+              priority
+              unoptimized
+              placeholder="blur"
+              sizes="(max-width: 767px) 100vw, 1px"
+              className="object-cover md:hidden"
             />
           </div>
 
@@ -459,7 +496,7 @@ export function Hero() {
               playsInline
               preload="none"
               aria-hidden="true"
-              className="size-full object-cover [transform:translateZ(0)]"
+              className="size-full origin-center object-cover [transform:translateZ(0)_scale(0.7)] md:[transform:translateZ(0)_scale(1)]"
             />
           </div>
         </>
@@ -590,6 +627,19 @@ export function Hero() {
       </div>
 
       {/* 不用 mix-blend-difference：混合模式会阻止视频进入硬件叠加层，引发亮度闪烁 */}
+      {showScrollHint ? (
+        <div className="absolute right-5 bottom-5 z-[35]">
+          <p
+            aria-hidden="true"
+            className={`shrink-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-grey-400 ${
+              locale === "en" ? "font-bodoni" : "font-serif-sc"
+            }`}
+          >
+            {t("hero.scrollDown")}
+          </p>
+        </div>
+      ) : null}
+
       {showSkip ? (
         <div className="absolute right-5 bottom-5 z-[35]">
           <FlipHoverButton
@@ -603,21 +653,29 @@ export function Hero() {
         </div>
       ) : null}
 
-      {/* 加载序幕：材质铭牌循环替换，底部进度条跟真实加载；退场后整体卸载 */}
+      {/* 加载序幕：材质铭牌渐隐切换，顶部进度条跟真实加载；退场后整体卸载 */}
       {loaderDismissed ? null : (
-        <div
-          ref={loaderRef}
-          className="absolute inset-0 z-40 bg-white motion-reduce:hidden"
-        >
-          <HeroLoader
-            roleLabel={t("loader.role")}
-            idLabel={t("loader.id")}
-            applyLabel={t("loader.apply")}
-            reviewLabel={t("loader.review")}
-            approvedLabel={t("loader.approved")}
-            cardAlt={t("loader.cardAlt")}
+        <>
+          {/* 加载层与首屏之间的错位跟随层：参考黄色层并替换为 grey-400 */}
+          <div
+            data-loader-curtain
+            aria-hidden="true"
+            className="invisible absolute inset-0 z-[55] bg-grey-400 opacity-0 motion-reduce:hidden"
           />
-        </div>
+          <div
+            ref={loaderRef}
+            className="absolute inset-0 z-[60] bg-white motion-reduce:hidden"
+          >
+            <HeroLoader
+              roleLabel={t("loader.role")}
+              idLabel={t("loader.id")}
+              applyLabel={t("loader.apply")}
+              reviewLabel={t("loader.review")}
+              approvedLabel={t("loader.approved")}
+              cardAlt={t("loader.cardAlt")}
+            />
+          </div>
+        </>
       )}
     </ScreenShell>
   );

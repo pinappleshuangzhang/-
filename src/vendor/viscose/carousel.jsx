@@ -4,7 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import * as THREE from "three";
 import gsap from "gsap";
+import { GalleryDragHint } from "@/components/ui/gallery-drag-hint";
 import { ViscoseMobileStage } from "@/components/ui/viscose-mobile-stage";
+import {
+  hideGalleryDragHint,
+  playGalleryDragHint,
+} from "@/animations/gallery-drag-hint";
 
 import { FlipHoverButton } from "@/components/ui/flip-hover-button";
 import {
@@ -55,6 +60,7 @@ export default function Carousel({
   onSelect,
   scrollHandlerRef,
   cursorLabel,
+  dragHintLabel = "",
   categoryLabels,
   categoryFontClass,
   nameFont,
@@ -66,10 +72,14 @@ export default function Carousel({
   const pausedRef = useRef(paused);
   const kickLoopRef = useRef(() => {});
   const hideCursorTagRef = useRef(() => {});
+  const abortDragHintRef = useRef(() => {});
+  const dragHintRef = useRef(null);
   useEffect(() => {
     pausedRef.current = paused;
-    if (paused) hideCursorTagRef.current();
-    else kickLoopRef.current();
+    if (paused) {
+      hideCursorTagRef.current();
+      abortDragHintRef.current();
+    } else kickLoopRef.current();
   }, [paused]);
   const containerRef = useRef(null);
   const mobileStageRef = useRef(null);
@@ -110,16 +120,14 @@ export default function Carousel({
     const loaderEl = loaderRef.current;
     const stageBackground = stageBackgroundRef.current;
     // Hold-stage backdrop: layer 1 (top) stays put; layers 2 and 4 turn
-    // counter-clockwise against the ring (layer 2 on a short delay), layer 3
-    // turns clockwise with the ring.
-    const stageLayer2 = stageLayer2Ref.current;
-    const stageLayer3 = stageLayer3Ref.current;
-    const immediateBackgroundLayers = [stageLayer4Ref.current].filter(Boolean);
-    const rotatingBackgroundLayers = [
-      stageLayer2,
-      stageLayer3,
-      ...immediateBackgroundLayers,
-    ].filter(Boolean);
+    // counter-clockwise against the ring, layer 3 turns clockwise with it.
+    // Each layer starts one stagger step after the previous one (ring first).
+    const spinningLayers = [
+      { el: stageLayer2Ref.current, dir: -1, order: 1, spin: 0 },
+      { el: stageLayer3Ref.current, dir: 1, order: 2, spin: 0 },
+      { el: stageLayer4Ref.current, dir: -1, order: 3, spin: 0 },
+    ].filter((layer) => layer.el);
+    const rotatingBackgroundLayers = spinningLayers.map((layer) => layer.el);
     const finalShadow = finalShadowRef.current;
     const finalShadowPin = finalShadowPinRef.current;
     const hoverClose = hoverCloseRef.current;
@@ -143,8 +151,6 @@ export default function Carousel({
     const state = { progress: 0, launch: 0, spread: 0, spin: 0, shift: 0 };
     let stagePhase = "entry";
     let ringAutoRotating = false;
-    let backgroundSpin = 0;
-    let layer2Spin = 0;
     let ringAutoRotateElapsed = 0;
     // Read-only panel readouts, so an invalid ring is visible rather than
     // silent and the reference window can be matched to the live one.
@@ -473,6 +479,7 @@ export default function Carousel({
 
       spinVel = 0;
       settling = false;
+      abortHint(false);
       picking = true;
       gsap.killTweensOf(state);
       gsap.to(state, {
@@ -504,6 +511,31 @@ export default function Carousel({
           gsap.to(mobileSwap, { t: 1, duration: 0.4, ease: "power2.out" });
         },
       });
+    };
+
+    const spinForCell = (cell) => {
+      const count = Math.round(params.count);
+      const slot = TAU / count;
+      const imageOffset = Math.round(params.imageOffset);
+      let nearest = state.spin;
+      let nearestDistance = Number.POSITIVE_INFINITY;
+      for (let i = 0; i < count; i++) {
+        const signedIndex = signedOffset(i);
+        const planeCell =
+          ((imageOffset - signedIndex) % imageCount + imageCount) %
+          imageCount;
+        if (planeCell !== cell) continue;
+        const base =
+          frontAngle - params.seed * DEG - signedIndex * slot;
+        const target =
+          base + Math.round((state.spin - base) / TAU) * TAU;
+        const distance = Math.abs(target - state.spin);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearest = target;
+        }
+      }
+      return nearest;
     };
 
     const pickCategory = (cell) => {
@@ -627,6 +659,7 @@ export default function Carousel({
     };
 
     const onPointerDown = (e) => {
+      abortHint(false);
       ensureLoop();
       pointerTravel = 0;
       travelX = e.clientX;
@@ -822,6 +855,7 @@ export default function Carousel({
     let shown = -1;
     let announced = -1;
     let over = -1;
+    const frontCard = { x: 0, y: 0, hw: 0, hh: 0, rot: 0 };
     let colorPlane = -1;
     let tagUp = false;
 
@@ -1150,6 +1184,16 @@ export default function Carousel({
       }
 
       // 投影钉在当前正面卡片上，随圆环转动/悬停位移，而不是钉死在视口。
+      if (frontI >= 0) {
+        const pos = uniforms.uPos.value[frontI];
+        const sc = uniforms.uScale.value[frontI];
+        frontCard.x = pos.x;
+        frontCard.y = pos.y;
+        frontCard.hw = W * 0.5 * sc.x;
+        frontCard.hh = H * 0.5 * sc.y;
+        frontCard.rot = uniforms.uRot.value[frontI];
+      }
+
       if (finalShadowPin && frontI >= 0) {
         const pos = uniforms.uPos.value[frontI];
         const sc = uniforms.uScale.value[frontI];
@@ -1271,8 +1315,7 @@ export default function Carousel({
       interactive = false;
       announced = -1;
       spinVel = 0;
-      backgroundSpin = 0;
-      layer2Spin = 0;
+      for (const layer of spinningLayers) layer.spin = 0;
       ringAutoRotateElapsed = 0;
       dragging = false;
       settling = false;
@@ -1487,6 +1530,136 @@ export default function Carousel({
 
     let tl = null;
     let finalTl = null;
+    let hintTl = null;
+    let hintDelay = null;
+    let hintPlayed = false;
+
+    const hideHint = () => {
+      hideGalleryDragHint(dragHintRef.current);
+    };
+
+    const cancelHintSchedule = () => {
+      hintDelay?.kill();
+      hintDelay = null;
+    };
+
+    const abortHint = (restore) => {
+      const hadSchedule = Boolean(hintDelay);
+      const active = hintTl;
+      cancelHintSchedule();
+      if (active) {
+        const startSpin = active.hintStartSpin;
+        active.kill();
+        hintTl = null;
+        hideHint();
+        if (restore && typeof startSpin === "number") {
+          gsap.to(state, {
+            spin: startSpin,
+            duration: 0.4,
+            ease: "power2.out",
+            overwrite: "auto",
+            onUpdate: () => ensureLoop(),
+          });
+        }
+      }
+      if (hadSchedule || active) picking = false;
+    };
+    abortDragHintRef.current = () => abortHint(true);
+
+    const parkOnFirstCategory = () => {
+      const parked = spinForCell(0);
+      state.spin = parked;
+      spinVel = 0;
+      settling = false;
+      ensureLoop();
+      return parked;
+    };
+
+    const hintAnchor = () => {
+      // 正面卡片的轴对齐包围盒（屏幕像素），提示动线绕着它的右上角走。
+      const hw = frontCard.hw > 1 ? frontCard.hw : viewW * 0.13;
+      const hh = frontCard.hh > 1 ? frontCard.hh : viewH * 0.15;
+      const cr = Math.abs(Math.cos(frontCard.rot));
+      const sr = Math.abs(Math.sin(frontCard.rot));
+      const halfW = hw * cr + hh * sr;
+      const halfH = hw * sr + hh * cr;
+      const cx = viewW * 0.5 + frontCard.x;
+      const cy = viewH * 0.5 - frontCard.y;
+      return {
+        right: cx + halfW,
+        top: cy - halfH,
+        bottom: cy + halfH,
+        scale: viewW / 1440,
+      };
+    };
+
+    const startDragHint = (retried = false) => {
+      if (disposed || mobileNow || pausedRef.current) return;
+      if (stagePhase !== "final") return;
+      if (dragging) return;
+      const root = dragHintRef.current;
+      const square = root?.querySelector("[data-drag-hint-square]");
+      const label = root?.querySelector("[data-drag-hint-label]");
+      const blobs = Array.from(
+        root?.querySelectorAll("[data-drag-hint-blob]") ?? [],
+      );
+      if (!root || !square || !label || blobs.length === 0) {
+        if (!retried) requestAnimationFrame(() => startDragHint(true));
+        return;
+      }
+      if (hintPlayed) return;
+      parkOnFirstCategory();
+      const targets = { root, square, label, blobs };
+      const startSpin = state.spin;
+      picking = true;
+      hintPlayed = true;
+      hintTl = playGalleryDragHint({
+        targets,
+        state,
+        anchor: hintAnchor(),
+        slot: TAU / Math.round(params.count),
+        onFrame: () => ensureLoop(),
+        onComplete: () => {
+          picking = false;
+          hintTl = null;
+        },
+      });
+      hintTl.hintStartSpin = startSpin;
+    };
+
+    const scheduleDragHint = () => {
+      cancelHintSchedule();
+      let tries = 0;
+      const waitUntilStill = () => {
+        hintDelay = null;
+        if (disposed || pausedRef.current || stagePhase !== "final") return;
+        if (dragging) return;
+        const still =
+          Math.abs(state.shift - 1) < 0.001 &&
+          Math.abs(spinVel) < 0.001 &&
+          !settling &&
+          !finalTl?.isActive() &&
+          frontCard.hw > 1;
+        if (!still) {
+          parkOnFirstCategory();
+          tries += 1;
+          if (tries < 24) {
+            hintDelay = gsap.delayedCall(0.1, waitUntilStill);
+            return;
+          }
+        }
+        // 圆环与列表都停稳后再留一拍，避免放大刚结束就播提示。
+        hintDelay = gsap.delayedCall(0.9, () => {
+          hintDelay = null;
+          if (disposed || pausedRef.current || stagePhase !== "final") return;
+          if (dragging) return;
+          startDragHint();
+        });
+      };
+      picking = true;
+      parkOnFirstCategory();
+      hintDelay = gsap.delayedCall(0.2, waitUntilStill);
+    };
 
     let pendingGoFinal = false;
 
@@ -1501,15 +1674,25 @@ export default function Carousel({
         tl?.killTweensOf(stageBackground);
         gsap.killTweensOf(stageBackground);
       }
-      const finalSpin = state.spin - params.spinTurns * TAU;
+      // 落到 001：在原有整圈旋转方向上对齐品牌格，停稳后再播拖拽提示。
+      const align = spinForCell(0);
+      let finalSpin = align;
+      const minTravel = params.spinTurns * TAU;
+      while (state.spin - finalSpin < minTravel - 1e-4) {
+        finalSpin -= TAU;
+      }
       finalTl = gsap.timeline({
         onComplete: () => {
           if (disposed) return;
           stagePhase = "final";
           announced = -1;
+          spinVel = 0;
+          settling = false;
+          state.spin = finalSpin;
           interactive = true;
           if (listEl) listEl.style.pointerEvents = "auto";
           if (stageBackground) gsap.set(stageBackground, { opacity: 0 });
+          scheduleDragHint();
         },
       });
 
@@ -1604,8 +1787,8 @@ export default function Carousel({
         transitionToFinal();
         return true;
       }
-      // 圆环已在转、hold 回调还没落到：记下这次下滑，落地后立刻进第三阶段
-      if (ringAutoRotating) pendingGoFinal = true;
+      // 入场未到 hold：记下这次下滑，圆环落地后立刻进第三阶段
+      pendingGoFinal = true;
       return true;
     };
 
@@ -1615,6 +1798,8 @@ export default function Carousel({
 
     const replay = () => {
       pendingGoFinal = false;
+      cancelHintSchedule();
+      abortHint(false);
       finalTl?.kill();
       tl?.kill();
       tl = build();
@@ -1663,19 +1848,11 @@ export default function Carousel({
         state.spin -= params.holdSpinSpeed * dt;
         ringAutoRotateElapsed += dt;
         // Negative CSS rotation = counter-clockwise, opposite to the ring.
-        backgroundSpin -= params.holdSpinSpeed * dt;
-        for (const layer of immediateBackgroundLayers) {
-          layer.style.transform = `rotate(${backgroundSpin}rad)`;
-        }
-        if (stageLayer3) {
-          stageLayer3.style.transform = `rotate(${-backgroundSpin}rad)`;
-        }
-        if (
-          stageLayer2 &&
-          ringAutoRotateElapsed >= params.layer2SpinDelay
-        ) {
-          layer2Spin -= params.holdSpinSpeed * dt;
-          stageLayer2.style.transform = `rotate(${layer2Spin}rad)`;
+        for (const layer of spinningLayers) {
+          const startAt = layer.order * params.backgroundSpinStagger;
+          if (ringAutoRotateElapsed < startAt) continue;
+          layer.spin += layer.dir * params.holdSpinSpeed * dt;
+          layer.el.style.transform = `rotate(${layer.spin}rad)`;
         }
       }
 
@@ -1775,7 +1952,9 @@ export default function Carousel({
         hoverBusy ||
         Math.abs(spinVel) > 0.0015 ||
         Boolean(tl?.isActive()) ||
-        Boolean(finalTl?.isActive());
+        Boolean(finalTl?.isActive()) ||
+        Boolean(hintTl?.isActive()) ||
+        Boolean(hintDelay?.isActive());
       if (!busy) {
         loopOn = false;
         renderer.setAnimationLoop(null);
@@ -1816,6 +1995,9 @@ export default function Carousel({
       disposed = true;
       kickLoopRef.current = () => {};
       hideCursorTagRef.current = () => {};
+      abortDragHintRef.current = () => {};
+      cancelHintSchedule();
+      abortHint(false);
       clearTimeout(holdTimer);
       clearTimeout(fontFallback);
       renderer.setAnimationLoop(null);
@@ -1994,6 +2176,16 @@ export default function Carousel({
         className="absolute inset-0 z-[2] touch-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-grey-400"
       />
 
+      <GalleryDragHint
+        ref={dragHintRef}
+        label={dragHintLabel}
+        fontClassName={
+          categoryFontClass.includes("font-serif-sc")
+            ? "font-serif-sc font-medium"
+            : "font-bodoni font-normal uppercase"
+        }
+      />
+
       <p
         ref={hoverCloseRef}
         aria-hidden="true"
@@ -2060,10 +2252,10 @@ export default function Carousel({
         aria-label="Projects"
         style={{
           right: "20px",
-          top: "calc(50% - 114px)",
+          top: "calc(50% - 122px)",
           width: "507px",
         }}
-        className={`absolute z-10 flex flex-col items-start gap-8 leading-5 text-grey-300 opacity-0 [--viscose-su:calc(100vw/1440)] max-md:hidden ${categoryFontClass}`}
+        className={`absolute z-10 flex flex-col items-start gap-9 leading-5 text-grey-300 opacity-0 [--viscose-su:calc(100vw/1440)] max-md:hidden ${categoryFontClass}`}
       >
         {PROJECTS.slice(0, IMAGE_FILES.length).map((p, i) => (
           <li

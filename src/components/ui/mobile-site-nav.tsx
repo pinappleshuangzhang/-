@@ -17,6 +17,8 @@ type MobileSiteNavProps = {
   languageAriaLabel: string;
   onLanguageClick: () => void;
   closeRef?: Ref<HTMLButtonElement>;
+  /** 首屏序幕期间隐藏：淡出并让出键盘与指针 */
+  concealed?: boolean;
   className?: string;
 };
 
@@ -36,6 +38,7 @@ export function MobileSiteNav({
   languageAriaLabel,
   onLanguageClick,
   closeRef,
+  concealed = false,
   className,
 }: MobileSiteNavProps) {
   const navFont = isEnglish ? "font-bodoni" : "font-serif-sc";
@@ -48,7 +51,9 @@ export function MobileSiteNav({
 
   return (
     <header
-      className={`fixed inset-x-0 top-[calc(env(safe-area-inset-top)+12px)] md:hidden ${blend} ${elevated ? "z-[70]" : "z-50"} ${className ?? ""}`}
+      className={`fixed inset-x-0 top-[calc(env(safe-area-inset-top)+12px)] transition-opacity duration-500 ease-out md:hidden motion-reduce:transition-none ${blend} ${elevated ? "z-[70]" : "z-50"} ${concealed ? "pointer-events-none opacity-0" : "opacity-100"} ${className ?? ""}`}
+      aria-hidden={concealed}
+      {...(concealed ? { inert: true } : {})}
     >
       <nav
         aria-label="Site"

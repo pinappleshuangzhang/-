@@ -65,6 +65,7 @@ export function PageChrome() {
         onCloseIndex={() => setIndexOpen(false)}
         contactHref="mailto:shuangzhang@fintopia.tech"
         closeRef={closeRef}
+        className={indexOpen ? "max-md:hidden" : undefined}
       />
       <ArchiveIndex
         open={indexOpen}

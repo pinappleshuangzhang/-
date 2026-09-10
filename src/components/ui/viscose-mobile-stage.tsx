@@ -148,8 +148,9 @@ export const ViscoseMobileStage = forwardRef<
         onPick={onPickCategory}
       />
 
-      {/* 大图槽位：与画板同宽（365.5/390），投影挂在卡片底边 */}
-      <div className="relative mt-[clamp(12px,3.318dvh,28px)] w-full shrink-0">
+      {/* 大图槽位：与画板同宽（365.5/390），最高 1.6:1；空间不足时只压缩此槽位高度，
+          图片保持原比例、贴底裁上方。投影挂在卡片底边 */}
+      <div className="relative mt-[clamp(12px,3.318dvh,28px)] min-h-0 w-full flex-1 max-h-[calc((100vw-24px)/1.6)]">
         {/* Safari 会把 filter 裁在元素框内，模糊放在带外扩的透明壳上 */}
         <span
           data-mobile-block=""
@@ -173,11 +174,11 @@ export const ViscoseMobileStage = forwardRef<
             }}
           />
         </span>
-        <div className="relative aspect-[1.6/1] w-full">{media}</div>
+        <div className="relative size-full">{media}</div>
       </div>
 
       {/* 标题与详情整段上浮（外层裁切，内层从下方滑入），切换分类时重播 */}
-      <div className="mx-auto mt-[clamp(20px,4.976dvh,42px)] flex w-[312px] max-w-full flex-col gap-3">
+      <div className="mx-auto mt-[clamp(20px,4.976dvh,42px)] flex w-[312px] max-w-full shrink-0 flex-col gap-3">
         <div className="overflow-hidden">
           <p
             key={`title-${active}`}

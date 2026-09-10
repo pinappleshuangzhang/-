@@ -33,6 +33,7 @@ export type MessageKey =
   | "index.ga006"
   | "hero.title"
   | "hero.subtitle"
+  | "hero.scrollDown"
   | "hero.skipVideo"
   | "loader.role"
   | "loader.id"
@@ -84,6 +85,7 @@ export type MessageKey =
   | "gallery.category.website"
   | "gallery.category.visual"
   | "gallery.category.motion"
+  | "gallery.dragHint"
   | "gallery.view"
   | "gallery.detail"
   | "gallery.cursorDetail"
@@ -153,6 +155,7 @@ const zh: Messages = {
   "index.ga006": "《开启一份新调查》",
   "hero.title": "万有引力设计档案室",
   "hero.subtitle": '跟随设计调查记录，我们一起完成本次关于"引力"的探索',
+  "hero.scrollDown": "向下滑动",
   "hero.skipVideo": "跳过视频",
   "loader.role": "临时调查员",
   "loader.id": "0_41",
@@ -205,6 +208,7 @@ const zh: Messages = {
   "gallery.category.website": "网站设计",
   "gallery.category.visual": "视觉设计",
   "gallery.category.motion": "动态设计",
+  "gallery.dragHint": "拖拽",
   "gallery.view": "查看",
   "gallery.detail": "查看作品详情",
   "gallery.cursorDetail": "点击查看详情",
@@ -281,8 +285,10 @@ const en: Messages = {
   "index.ga006": "Start A New Survey",
   "hero.title": "Grava Design Archive",
   "hero.subtitle": "Follow The Design Log As We Explore Gravity Together",
+  "hero.scrollDown": "Scroll Down",
   "hero.skipVideo": "Skip Video",
-  "loader.role": "Temporary Investigator ",
+  // 尾随普通空格会被行内折叠掉，用不换行空格才能与编号隔开
+  "loader.role": "Temporary Investigator\u00A0",
   "loader.id": "0_41",
   "loader.apply": "Requesting Temporary Access",
   "loader.review": "Connecting Archive",
@@ -291,7 +297,7 @@ const en: Messages = {
   "intro.line1": "One Pattern Repeats",
   "intro.line2a": "Some Brands Stick",
   "intro.line2b": "Some Products Win",
-  "intro.line2c": "Some Designs Earn\u00A0Trust",
+  "intro.line2c": "Some Designs Win\u00A0Trust",
   "intro.bridge":
     "An Unseen Bond Links\nPeople To Brands\nProducts To Experiences\nWe Call It—",
   "intro.gravity": "Gravity",
@@ -336,6 +342,7 @@ const en: Messages = {
   "gallery.category.website": "Website Interface",
   "gallery.category.visual": "Visual Design",
   "gallery.category.motion": "Motion Graphics",
+  "gallery.dragHint": "Drag",
   "gallery.view": "View",
   "gallery.detail": "View Work Details",
   "gallery.cursorDetail": "Click For Details",
