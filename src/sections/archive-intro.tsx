@@ -519,7 +519,7 @@ export function ArchiveIntro() {
           <div
             className={`absolute left-[8.6538%] top-[35.2%] w-[49.4%] ${
               isEnglish
-                ? "md:left-[52px] md:top-[calc(35.7%-36px)] md:w-[308px]"
+                ? "-translate-y-4 md:left-[52px] md:top-[calc(35.7%-36px)] md:w-[308px]"
                 : "md:left-[52px] md:top-[35.7%] md:w-[55%]"
             }`}
           >

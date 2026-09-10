@@ -63,6 +63,7 @@ export type MessageKey =
   | "orgFounding.foundedHighlight"
   | "orgFounding.foundedHighlightMobile"
   | "orgFounding.detail1"
+  | "orgFounding.detail1Mobile"
   | "orgFounding.detail2"
   | "member.aria"
   | "member.imageAlt"
@@ -186,6 +187,7 @@ const zh: Messages = {
   "orgFounding.foundedHighlight": "万有引力设计工作室",
   "orgFounding.foundedHighlightMobile": "万有引力工作室",
   "orgFounding.detail1": "我们进入不同的品牌、产品、空间与数字体验",
+  "orgFounding.detail1Mobile": "我们进入不同的品牌、产品、空间与数字体验",
   "orgFounding.detail2": "每一次设计都会形成一份“调查档案”",
   "member.aria": "档案 GA_003 成员记录",
   "member.imageAlt": "摆放白色书籍与雕塑半身像的成员档案展柜",
@@ -319,6 +321,8 @@ const en: Messages = {
   "orgFounding.foundedHighlightMobile": "Universal Grava Design Studio",
   "orgFounding.detail1":
     "We Enter Different Brands, Products, Spaces, And Digital Experiences",
+  "orgFounding.detail1Mobile":
+    "We Enter Different Brands, Products, Spaces, And Digital Experiences.",
   "orgFounding.detail2": "Every Design Becomes A Survey Archive",
   "member.aria": "Archive GA_003 Member Record",
   "member.imageAlt":

@@ -102,12 +102,12 @@ export const ViscoseMobileStage = forwardRef<
     [mediaRef],
   );
 
-  // 切换分类：编号逐词、文案整段重新上浮
+  // 切换分类：大图、编号、文案按入场同样的方式重播
   useEffect(() => {
     const root = rootRef.current;
     if (!root || !revealedRef.current) return;
-    return playViscoseMobileSwap(root);
-  }, [active]);
+    return playViscoseMobileSwap(root, mediaRef?.current);
+  }, [active, mediaRef]);
 
   const shadowPad = SHADOW.blur * 3;
 
@@ -118,7 +118,12 @@ export const ViscoseMobileStage = forwardRef<
       ref={rootRef}
       className="pointer-events-auto absolute inset-0 z-10 flex flex-col md:hidden"
     >
-      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 pb-9 pt-[109px]">
+      {/* data-lenis-prevent：分页模式下 Lenis 处于 stop 态会对 touchmove 一律 preventDefault，
+          没有该标记的嵌套滚动容器在 iOS Safari 上完全无法原生滚动 */}
+      <div
+        data-lenis-prevent=""
+        className="min-h-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-scroll overscroll-y-contain px-3 pb-9 pt-[109px]"
+      >
         <div className="flex h-[46px] shrink-0 items-center justify-between text-grey-400">
           <p className="font-serif-sc text-32 leading-[46px]">
             <MobileWords text={heading} />

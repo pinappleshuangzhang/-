@@ -149,7 +149,7 @@ export function OrgFoundingMobile() {
   const foundedLabel = `${t("orgFounding.foundedPrefix")}${t(
     "orgFounding.foundedHighlightMobile",
   )}`;
-  const detailLabel = `${t("orgFounding.detail1")} ${t("orgFounding.detail2")}`;
+  const detailLabel = `${t("orgFounding.detail1Mobile")} ${t("orgFounding.detail2")}`;
   const titleBar = TITLE_BAR_BY_LOCALE[locale];
   const foundedBar = { inset: 0, top: titleBar.top, height: titleBar.height };
 
@@ -226,11 +226,13 @@ export function OrgFoundingMobile() {
               data-sd-lines
               data-sd-delay="0.6"
               aria-label={detailLabel}
-              className="font-serif-sc text-12 leading-[18px] text-grey-300"
+              className={`font-serif-sc leading-[18px] text-grey-300 ${
+                locale === "en" ? "text-10 whitespace-nowrap" : "text-12"
+              }`}
             >
               <span aria-hidden="true" className="block overflow-hidden">
                 <span className="sd-line block opacity-0">
-                  {t("orgFounding.detail1")}
+                  {t("orgFounding.detail1Mobile")}
                 </span>
               </span>
               <span aria-hidden="true" className="block overflow-hidden">

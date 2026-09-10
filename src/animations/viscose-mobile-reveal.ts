@@ -131,32 +131,56 @@ export function setViscoseMobileHidden(
   }
 }
 
-/** 切换分类：编号等 swap 词逐词重播，标题/详情整段重新上浮；返回清理函数 */
-export function playViscoseMobileSwap(root: HTMLElement): () => void {
+/**
+ * 切换分类：大图重新自下方滑入、编号等 swap 词逐词重播、标题/详情整段重新上浮，
+ * 时长与起播时刻沿用整屏入场；返回清理函数
+ */
+export function playViscoseMobileSwap(
+  root: HTMLElement,
+  media: HTMLElement | null | undefined,
+): () => void {
+  const mediaTargets = media ? [media] : [];
   const words = collect(root, "[data-mobile-swap]");
   const copy = collect(root, "[data-mobile-copy]");
-  const all = [...words, ...copy];
+  const all = [...mediaTargets, ...words, ...copy];
   gsap.killTweensOf(all);
   if (reducedMotion()) {
+    if (mediaTargets.length) gsap.set(mediaTargets, MEDIA_SHOWN);
     if (words.length) gsap.set(words, WORD_SHOWN);
     if (copy.length) gsap.set(copy, BLOCK_SHOWN);
-  } else {
-    if (words.length) {
-      gsap.fromTo(words, WORD_HIDDEN, {
-        ...WORD_SHOWN,
-        duration: 0.6,
-        ease: EASE,
-        stagger: { amount: 0.4, from: "random" },
-      });
-    }
-    if (copy.length) {
-      gsap.fromTo(copy, BLOCK_HIDDEN, {
-        ...BLOCK_SHOWN,
-        duration: DUR_M,
-        ease: EASE,
-        stagger: 0.05,
-      });
-    }
+    return () => gsap.killTweensOf(all);
   }
-  return () => gsap.killTweensOf(all);
+  const tl = gsap.timeline({ defaults: { ease: EASE } });
+  if (mediaTargets.length) {
+    tl.fromTo(
+      mediaTargets,
+      MEDIA_HIDDEN,
+      { ...MEDIA_SHOWN, duration: DUR_L },
+      0,
+    );
+  }
+  if (words.length) {
+    tl.fromTo(
+      words,
+      WORD_HIDDEN,
+      {
+        ...WORD_SHOWN,
+        duration: DUR_M,
+        stagger: { amount: 0.4, from: "random" },
+      },
+      0.2,
+    );
+  }
+  if (copy.length) {
+    tl.fromTo(
+      copy,
+      BLOCK_HIDDEN,
+      { ...BLOCK_SHOWN, duration: DUR_L, stagger: 0.05 },
+      0.55,
+    );
+  }
+  return () => {
+    tl.kill();
+    gsap.killTweensOf(all);
+  };
 }
