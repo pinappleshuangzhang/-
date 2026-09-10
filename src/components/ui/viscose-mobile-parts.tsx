@@ -81,8 +81,8 @@ export function MobileCategoryChips({
             type="button"
             aria-pressed={isActive}
             onClick={() => onPick(index)}
-            className={`relative flex h-[21px] gap-1 px-2 py-0.5 text-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${
-              isActive ? "items-center text-white" : "items-end text-grey-300"
+            className={`relative flex h-[21px] items-end gap-1 px-2 py-0.5 text-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${
+              isActive ? "text-white" : "text-grey-300"
             }`}
           >
             <span
@@ -97,7 +97,7 @@ export function MobileCategoryChips({
                 data-mobile-word=""
                 data-mobile-swap=""
                 aria-hidden="true"
-                className="relative size-2.5 shrink-0 bg-white opacity-0"
+                className="relative size-2.5 shrink-0 self-center bg-white opacity-0"
               />
             ) : null}
             <span

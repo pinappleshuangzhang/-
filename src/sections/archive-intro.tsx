@@ -30,9 +30,9 @@ gsap.registerPlugin(useGSAP);
 const FOLDER_VIDEO_WEBM = "/archive/archive-folder-yellow-alpha.webm?v=in1";
 const FOLDER_VIDEO_HEVC = "/archive/archive-folder-yellow-alpha-hevc.mp4?v=in1";
 const FOLDER_VIDEO_MOBILE_WEBM =
-  "/archive/archive-folder-yellow-alpha-mobile.webm?v=mw2";
+  "/archive/archive-folder-yellow-alpha-mobile.webm?v=raw1";
 const FOLDER_VIDEO_MOBILE_HEVC =
-  "/archive/archive-folder-yellow-alpha-mobile-hevc.mp4?v=mw2";
+  "/archive/archive-folder-yellow-alpha-mobile-hevc.mp4?v=raw1";
 /** 每像素滚动推进的进度量：两段文字 + 间隔 + 切换全程约需 6700px 滚动 */
 const SCRUB_PER_PX = 0.00015;
 /** 进度追踪的阻尼系数（数值越大跟手越紧，越小拖拽感越强） */
@@ -473,7 +473,7 @@ export function ArchiveIntro() {
             <Image src="/archive/folder-shadow.svg" alt="" fill sizes="60vw" />
           </span>
 
-          {/* 桌面向内收 1px 去黑边；手机不用矩形裁切，避免顶/底露出浅底 */}
+          {/* 桌面向内收 1px 去黑边；手机不用矩形裁切，避免顶/底切到标签 */}
           <div className="absolute inset-0 overflow-hidden max-md:overflow-visible">
             <div className="absolute -inset-px max-md:inset-0">
               {/* 静态占位（视频首帧就绪前 / 降级时显示） */}
@@ -489,7 +489,7 @@ export function ArchiveIntro() {
               )}
 
               {/* 擦拭视频：桌面按 1112x834 / x31..1096,y8..829；
-                  手机按 1080x810 / x32..1064,y10..805 */}
+                  手机按 1080x810 / x24..1065,y6..804 */}
               {showVideo && (
                 <AlphaScrubVideo
                   ref={videoHandleRef}
@@ -507,7 +507,7 @@ export function ArchiveIntro() {
                   onError={() => setVideoFailed(true)}
                   className={
                     isMobileViewport
-                      ? "absolute left-[-3.10%] top-[-1.26%] h-[101.89%] w-[104.65%]"
+                      ? "absolute left-[-2.31%] top-[-0.75%] h-[101.50%] w-[103.75%]"
                       : "absolute left-[-2.91%] top-[-0.97%] h-[101.58%] w-[104.41%]"
                   }
                 />
