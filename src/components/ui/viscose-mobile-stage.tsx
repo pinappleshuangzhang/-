@@ -199,8 +199,8 @@ export const ViscoseMobileStage = forwardRef<
         </div>
       </div>
 
-      {/* 底部工具条：上 16 / 下 28 / 左右 36，背景与手机端页面底色一致，盖住滚动到底下的正文 */}
-      <div className="shrink-0 bg-[var(--mobile-browser-bottom)] px-9 pb-7 pt-4">
+      {/* 底部工具条：上下 16 / 左右 36，背景与手机端页面底色一致，盖住滚动到底下的正文 */}
+      <div className="shrink-0 bg-[var(--mobile-browser-bottom)] px-9 py-4">
         <button
           type="button"
           data-mobile-block=""
