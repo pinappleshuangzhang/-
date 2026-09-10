@@ -79,11 +79,12 @@ function collectTracks(
       stagger: 0.05,
     },
     {
+      // 标题/简介与大图同时起步
       targets: collect(root, "[data-mobile-copy]"),
       hidden: BLOCK_HIDDEN,
       shown: BLOCK_SHOWN,
       duration: DUR_L,
-      at: 0.55,
+      at: 0,
       stagger: 0.05,
     },
     {
@@ -176,7 +177,7 @@ export function playViscoseMobileSwap(
       copy,
       BLOCK_HIDDEN,
       { ...BLOCK_SHOWN, duration: DUR_L, stagger: 0.05 },
-      0.55,
+      0,
     );
   }
   return () => {

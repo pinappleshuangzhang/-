@@ -183,7 +183,7 @@ export const ViscoseMobileStage = forwardRef<
         </div>
 
         {/* 标题与详情作为一个整体上浮（外层裁切，内层从下方滑入），切换分类时重播 */}
-        <div className="mx-auto mt-[42px] w-[312px] max-w-full overflow-hidden">
+        <div className="mx-auto mt-[26px] w-[312px] max-w-full overflow-hidden">
           <div
             key={`copy-${active}`}
             data-mobile-copy=""
