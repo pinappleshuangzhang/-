@@ -17,9 +17,6 @@ import type { ViscoseCarouselItem } from "@/lib/viscose-carousel-items";
 
 /** 与桌面入场种子一致：Website Interface */
 const INITIAL_INDEX = 2;
-/** Figma 947-3937：365.5 宽 / 390 画板，顶边 305px */
-const CARD_WIDTH = "calc(100vw * 365.5 / 390)";
-const CARD_TOP = 305;
 
 type ViscoseMobileGalleryProps = {
   items: ViscoseCarouselItem[];
@@ -55,6 +52,7 @@ export function ViscoseMobileGallery({
 }: ViscoseMobileGalleryProps) {
   const { t } = useLocale();
   const stageRef = useRef<ViscoseMobileStageHandle>(null);
+  const mediaRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(INITIAL_INDEX);
   const works = useMobileWorks(items);
   const item = items[index];
@@ -79,24 +77,29 @@ export function ViscoseMobileGallery({
 
   return (
     <div className="absolute inset-0 isolate overflow-hidden md:hidden">
-      <button
-        type="button"
-        onClick={() => onSelect(index)}
-        className="absolute left-1/2 z-10 -translate-x-1/2 overflow-hidden rounded-rs-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
-        style={{ top: CARD_TOP, width: CARD_WIDTH, aspectRatio: "1.6 / 1" }}
-        aria-label={item.alt}
-      >
-        <Image
-          src={item.src}
-          alt={item.alt}
-          fill
-          sizes="94vw"
-          className="object-cover"
-        />
-      </button>
       <ViscoseMobileStage
         ref={stageRef}
         active={index}
+        media={
+          <button
+            type="button"
+            onClick={() => onSelect(index)}
+            className="pointer-events-auto absolute inset-0 overflow-hidden rounded-rs-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
+            aria-label={item.alt}
+          >
+            {/* 内层从下方滑入，按钮本身裁切，与第三屏图片入场一致 */}
+            <div ref={mediaRef} className="absolute inset-0 translate-y-[105%]">
+              <Image
+                src={item.src}
+                alt={item.alt}
+                fill
+                sizes="94vw"
+                className="object-cover"
+              />
+            </div>
+          </button>
+        }
+        mediaRef={mediaRef}
         heading={t("gallery.mobile.heading")}
         categoryLabels={categoryLabels}
         works={works}
