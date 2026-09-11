@@ -23,13 +23,29 @@ export function playGravaStrokeLoad(
     .set(strokeSegments, { opacity: 0 });
 }
 
-export function playMemberMarkSpin(mark: HTMLElement) {
-  gsap.killTweensOf(mark);
+/** 四块菱形从右上起顺时针依次渐隐，再以同顺序缓慢渐现。 */
+export function playMemberMarkReveal(diamonds: HTMLElement[]) {
+  gsap.killTweensOf(diamonds);
 
   return gsap
     .timeline()
-    .to(mark, { rotate: 28, duration: 0.16, ease: "power2.out" })
-    .to(mark, { rotate: -18, duration: 0.18, ease: "power2.inOut" })
-    .to(mark, { rotate: 360, duration: 0.64, ease: "power3.inOut" })
-    .set(mark, { rotate: 0 });
+    .to(
+      diamonds,
+      {
+        opacity: 0,
+        duration: 0.32,
+        stagger: 0.12,
+        ease: "power2.inOut",
+      },
+    )
+    .to(
+      diamonds,
+      {
+        opacity: 1,
+        duration: 0.42,
+        stagger: 0.12,
+        ease: "power2.inOut",
+      },
+      "-=0.12",
+    );
 }

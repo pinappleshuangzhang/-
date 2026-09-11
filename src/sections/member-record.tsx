@@ -16,14 +16,16 @@ import {
 } from "@/animations/member-record-reveal";
 import {
   playGravaStrokeLoad,
-  playMemberMarkSpin,
+  playMemberMarkReveal,
 } from "@/animations/member-record-logo-hover";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
 import {
   MEMBER_CELL_PATHS,
   MEMBER_CELL_VIEW_BOX,
+  MEMBER_PROFILE_ACTIONS_VISIBLE,
 } from "@/lib/member-record-cells";
+import { memberTextLayout } from "@/lib/member-record-profile-layout";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { SplitWords } from "@/components/ui/split-words";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
@@ -183,44 +185,88 @@ export function MemberRecord() {
               name="Pineapple"
               role={t("member.role01")}
               direction={t("member.direction01")}
-              headerClassName="left-[2.472%] top-[5.573%] w-[24.85%]"
-              dividerClassName="left-[2.472%] top-[10.611%]"
-              nameClassName="left-[2.472%] top-[13.183%] w-[24.85%]"
-              directionClassName="left-[2.472%] top-[17.578%] w-[24.85%]"
-              actionsClassName="left-[2.472%] top-[23.902%]"
+              {...memberTextLayout(
+                {
+                  headerClassName: "left-[2.472%] top-[5.573%] w-[24.85%]",
+                  dividerClassName: "left-[2.472%] top-[10.611%]",
+                  nameClassName: "left-[2.472%] top-[13.183%] w-[24.85%]",
+                  directionClassName: "left-[2.472%] top-[17.578%] w-[24.85%]",
+                  actionsClassName: "left-[2.472%] top-[23.902%]",
+                },
+                {
+                  headerClassName: "left-[2.472%] top-[9.861%] w-[24.85%]",
+                  dividerClassName: "left-[2.472%] top-[14.898%]",
+                  nameClassName: "left-[2.472%] top-[17.47%] w-[24.85%]",
+                  directionClassName: "left-[2.472%] top-[21.972%] w-[24.85%]",
+                  actionsClassName: "left-[2.472%] top-[23.902%]",
+                },
+              )}
             />
             <MemberProfile
               identifier="02"
               name="South"
               role={t("member.role02")}
               direction={t("member.direction02")}
-              headerClassName="left-[66.142%] top-[5.573%] w-[24.85%]"
-              dividerClassName="left-[67.491%] top-[10.611%]"
-              nameClassName="left-[68.614%] top-[13.183%] w-[24.85%]"
-              directionClassName="left-[70.187%] top-[17.578%] w-[24.85%]"
-              actionsClassName="left-[71.985%] top-[23.902%]"
+              {...memberTextLayout(
+                {
+                  headerClassName: "left-[66.142%] top-[5.573%] w-[24.85%]",
+                  dividerClassName: "left-[67.491%] top-[10.611%]",
+                  nameClassName: "left-[68.614%] top-[13.183%] w-[24.85%]",
+                  directionClassName: "left-[70.187%] top-[17.578%] w-[24.85%]",
+                  actionsClassName: "left-[71.985%] top-[23.902%]",
+                },
+                {
+                  headerClassName: "left-[68.115%] top-[7.824%] w-[24.85%]",
+                  dividerClassName: "left-[68.714%] top-[12.862%]",
+                  nameClassName: "left-[70.061%] top-[15.434%] w-[24.85%]",
+                  directionClassName: "left-[70.884%] top-[19.936%] w-[24.85%]",
+                  actionsClassName: "left-[71.985%] top-[23.902%]",
+                },
+              )}
             />
             <MemberProfile
               identifier="03"
               name="Sheep"
               role={t("member.role03")}
               direction={t("member.direction03")}
-              headerClassName="left-[28.367%] top-[39.228%] w-[19.69%]"
-              dividerClassName="left-[28.367%] top-[44.266%]"
-              nameClassName="left-[28.367%] top-[46.838%] w-[19.69%]"
-              directionClassName="left-[28.367%] top-[51.232%] w-[19.69%]"
-              actionsClassName="left-[28.367%] top-[58.306%]"
+              {...memberTextLayout(
+                {
+                  headerClassName: "left-[28.367%] top-[39.228%] w-[19.69%]",
+                  dividerClassName: "left-[28.367%] top-[44.266%]",
+                  nameClassName: "left-[28.367%] top-[46.838%] w-[19.69%]",
+                  directionClassName: "left-[28.367%] top-[51.232%] w-[19.69%]",
+                  actionsClassName: "left-[28.367%] top-[58.306%]",
+                },
+                {
+                  headerClassName: "left-[28.368%] top-[43.623%] w-[19.69%]",
+                  dividerClassName: "left-[28.368%] top-[48.66%]",
+                  nameClassName: "left-[28.368%] top-[51.233%] w-[19.69%]",
+                  directionClassName: "left-[28.368%] top-[55.734%] w-[19.69%]",
+                  actionsClassName: "left-[28.367%] top-[58.306%]",
+                },
+              )}
             />
             <MemberProfile
               identifier="04"
               name="Joe"
               role={t("member.role04")}
               direction={t("member.direction04")}
-              headerClassName="left-[68.263%] top-[39.228%] w-[24.85%]"
-              dividerClassName="left-[67.514%] top-[44.266%]"
-              nameClassName="left-[67.065%] top-[46.838%] w-[24.85%]"
-              directionClassName="left-[66.167%] top-[51.232%] w-[24.85%]"
-              actionsClassName="left-[64.97%] top-[58.306%]"
+              {...memberTextLayout(
+                {
+                  headerClassName: "left-[68.263%] top-[39.228%] w-[24.85%]",
+                  dividerClassName: "left-[67.514%] top-[44.266%]",
+                  nameClassName: "left-[67.065%] top-[46.838%] w-[24.85%]",
+                  directionClassName: "left-[66.167%] top-[51.232%] w-[24.85%]",
+                  actionsClassName: "left-[64.97%] top-[58.306%]",
+                },
+                {
+                  headerClassName: "left-[69.237%] top-[40.836%] w-[24.85%]",
+                  dividerClassName: "left-[68.638%] top-[45.874%]",
+                  nameClassName: "left-[67.964%] top-[48.446%] w-[24.85%]",
+                  directionClassName: "left-[67.066%] top-[52.947%] w-[24.85%]",
+                  actionsClassName: "left-[64.97%] top-[58.306%]",
+                },
+              )}
             />
             <DesktopGravaLogo />
             <DesktopMemberMark />
@@ -297,30 +343,57 @@ function DesktopGravaLogo() {
   );
 }
 
+/** 右上起顺时针：2 右上 → 4 右下 → 3 左下 → 1 左上 */
+const MEMBER_MARK_DIAMONDS = [
+  {
+    src: "/archive/member-record-mark-2.svg",
+    className: "right-0 top-0",
+  },
+  {
+    src: "/archive/member-record-mark-4.svg",
+    className: "bottom-0 right-0",
+  },
+  {
+    src: "/archive/member-record-mark-3.svg",
+    className: "bottom-0 left-0",
+  },
+  {
+    src: "/archive/member-record-mark-1.svg",
+    className: "left-0 top-0",
+  },
+] as const;
+
 function DesktopMemberMark() {
-  const markRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
 
   const handlePointerEnter = () => {
-    if (reducedMotion || !markRef.current) return;
+    if (reducedMotion) return;
 
-    playMemberMarkSpin(markRef.current);
+    const diamonds = rootRef.current?.querySelectorAll<HTMLElement>(
+      "[data-member-mark-diamond]",
+    );
+    if (!diamonds?.length) return;
+
+    playMemberMarkReveal(Array.from(diamonds));
   };
 
   return (
     <div
+      ref={rootRef}
       aria-hidden="true"
-      className="pointer-events-auto absolute left-[52.5%] top-[40.6%] h-[3%] w-[2.32%]"
+      className="pointer-events-auto absolute left-[52.5%] top-[40.6%] aspect-[26/23] h-[3%]"
       onPointerEnter={handlePointerEnter}
     >
-      <div ref={markRef} className="relative size-full transform-gpu">
-        <Image
-          src="/archive/member-record-logo.svg"
-          alt=""
-          fill
-          sizes="2.32vw"
-        />
-      </div>
+      {MEMBER_MARK_DIAMONDS.map(({ src, className }) => (
+        <span
+          key={src}
+          data-member-mark-diamond
+          className={`absolute h-1/2 w-1/2 ${className}`}
+        >
+          <Image src={src} alt="" fill sizes="1.16vw" unoptimized />
+        </span>
+      ))}
     </div>
   );
 }
@@ -484,7 +557,7 @@ function MemberProfile({
       <div
         data-sd-words
         data-sd-delay="0.5"
-        className={`absolute z-10 flex items-center gap-4 text-white transition-colors duration-[600ms] group-hover:text-grey-400 ${actionsClassName}`}
+        className={`absolute z-10 flex items-center gap-4 text-white transition-colors duration-[600ms] group-hover:text-grey-400 ${actionsClassName} ${MEMBER_PROFILE_ACTIONS_VISIBLE ? "" : "hidden"}`}
       >
         <ProfileAction label={t("member.portfolio")} />
         <ProfileAction label={t("member.contactMe")} />

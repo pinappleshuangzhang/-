@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useLocale } from "@/components/providers/locale-provider";
+import { MEMBER_PROFILE_ACTIONS_VISIBLE } from "@/lib/member-record-cells";
+import { memberTextLayout } from "@/lib/member-record-profile-layout";
 
 type MobileMemberProfileProps = {
   identifier: string;
@@ -56,11 +58,22 @@ export function MemberRecordMobile() {
             name="Pineapple"
             role={t("member.role01")}
             direction={t("member.direction01")}
-            headerClassName="left-[4.834%] top-[3.748%]"
-            dividerClassName="left-[4.834%] top-[8.166%]"
-            nameClassName="left-[4.834%] top-[10.308%]"
-            directionClassName="left-[4.834%] top-[14.19%]"
-            actionsClassName="left-[4.834%] top-[21.82%]"
+            {...memberTextLayout(
+              {
+                headerClassName: "left-[4.834%] top-[3.748%]",
+                dividerClassName: "left-[4.834%] top-[8.166%]",
+                nameClassName: "left-[4.834%] top-[10.308%]",
+                directionClassName: "left-[4.834%] top-[14.19%]",
+                actionsClassName: "left-[4.834%] top-[21.82%]",
+              },
+              {
+                headerClassName: "left-[4.834%] top-[6.827%]",
+                dividerClassName: "left-[4.834%] top-[11.245%]",
+                nameClassName: "left-[4.834%] top-[13.387%]",
+                directionClassName: "left-[4.834%] top-[17.269%]",
+                actionsClassName: "left-[4.834%] top-[21.82%]",
+              },
+            )}
             fillClassName="left-[0.604%] top-[0.268%] h-[34.404%] w-[76.888%]"
           />
           <MobileMemberProfile
@@ -68,11 +81,22 @@ export function MemberRecordMobile() {
             name="South"
             role={t("member.role02")}
             direction={t("member.direction02")}
-            headerClassName="left-[4.834%] top-[32.129%]"
-            dividerClassName="left-[4.834%] top-[36.546%]"
-            nameClassName="left-[4.834%] top-[38.688%]"
-            directionClassName="left-[4.834%] top-[42.57%]"
-            actionsClassName="left-[4.834%] top-[47.523%]"
+            {...memberTextLayout(
+              {
+                headerClassName: "left-[4.834%] top-[32.129%]",
+                dividerClassName: "left-[4.834%] top-[36.546%]",
+                nameClassName: "left-[4.834%] top-[38.688%]",
+                directionClassName: "left-[4.834%] top-[42.57%]",
+                actionsClassName: "left-[4.834%] top-[47.523%]",
+              },
+              {
+                headerClassName: "left-[4.834%] top-[33.735%]",
+                dividerClassName: "left-[4.834%] top-[38.153%]",
+                nameClassName: "left-[4.834%] top-[40.294%]",
+                directionClassName: "left-[4.834%] top-[44.177%]",
+                actionsClassName: "left-[4.834%] top-[47.523%]",
+              },
+            )}
             fillClassName="left-[0.604%] top-[26.506%] h-[29.251%] w-[101.662%]"
           />
           <MobileMemberProfile
@@ -80,11 +104,22 @@ export function MemberRecordMobile() {
             name="Sheep"
             role={t("member.role03")}
             direction={t("member.direction03")}
-            headerClassName="left-[27.493%] top-[57.831%]"
-            dividerClassName="left-[27.493%] top-[62.249%]"
-            nameClassName="left-[27.493%] top-[64.391%]"
-            directionClassName="left-[27.493%] top-[68.273%]"
-            actionsClassName="left-[27.493%] top-[73.226%]"
+            {...memberTextLayout(
+              {
+                headerClassName: "left-[27.493%] top-[57.831%]",
+                dividerClassName: "left-[27.493%] top-[62.249%]",
+                nameClassName: "left-[27.493%] top-[64.391%]",
+                directionClassName: "left-[27.493%] top-[68.273%]",
+                actionsClassName: "left-[27.493%] top-[73.226%]",
+              },
+              {
+                headerClassName: "left-[27.493%] top-[59.973%]",
+                dividerClassName: "left-[27.493%] top-[64.391%]",
+                nameClassName: "left-[27.493%] top-[66.533%]",
+                directionClassName: "left-[27.493%] top-[70.415%]",
+                actionsClassName: "left-[27.493%] top-[73.226%]",
+              },
+            )}
             fillClassName="left-[17.825%] top-[52.878%] h-[26.506%] w-[81.571%]"
           />
           <MobileMemberProfile
@@ -92,11 +127,22 @@ export function MemberRecordMobile() {
             name="Joe"
             role={t("member.role04")}
             direction={t("member.direction04")}
-            headerClassName="left-[4.834%] top-[80.455%]"
-            dividerClassName="left-[4.834%] top-[84.873%]"
-            nameClassName="left-[4.834%] top-[87.015%]"
-            directionClassName="left-[4.834%] top-[90.897%]"
-            actionsClassName="left-[4.834%] top-[95.85%]"
+            {...memberTextLayout(
+              {
+                headerClassName: "left-[4.834%] top-[80.455%]",
+                dividerClassName: "left-[4.834%] top-[84.873%]",
+                nameClassName: "left-[4.834%] top-[87.015%]",
+                directionClassName: "left-[4.834%] top-[90.897%]",
+                actionsClassName: "left-[4.834%] top-[95.85%]",
+              },
+              {
+                headerClassName: "left-[4.834%] top-[82.999%]",
+                dividerClassName: "left-[4.834%] top-[87.416%]",
+                nameClassName: "left-[4.834%] top-[89.558%]",
+                directionClassName: "left-[4.834%] top-[93.441%]",
+                actionsClassName: "left-[4.834%] top-[95.85%]",
+              },
+            )}
             fillClassName="left-[0.302%] top-[77.175%] h-[22.557%] w-[99.094%]"
           />
         </div>
@@ -155,7 +201,7 @@ function MobileMemberProfile({
         {direction}
       </p>
       <div
-        className={`absolute z-10 flex items-center gap-4 whitespace-nowrap ${actionsClassName}`}
+        className={`absolute z-10 flex items-center gap-4 whitespace-nowrap ${actionsClassName} ${MEMBER_PROFILE_ACTIONS_VISIBLE ? "" : "hidden"}`}
       >
         <MobileProfileAction label={t("member.portfolio")} />
         <MobileProfileAction label={t("member.contactMe")} />
