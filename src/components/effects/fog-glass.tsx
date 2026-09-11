@@ -19,9 +19,21 @@ const subscribeNoop = () => () => {};
 
 type FogGlassProps = {
   className: string;
+  /** 指针热区形状（CSS polygon） */
   clipPath?: string;
+  /** 格子真实形状（SVG path + 定位盒），烘进 mask，圆角与网格对齐 */
+  maskShape?: {
+    path: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
   onReveal?: () => void;
   revealThreshold?: number;
+  /** 屏幕激活后雾层淡入的延迟与时长（秒），与网格入场时间轴对齐 */
+  appearDelay?: number;
+  appearDuration?: number;
 };
 
 /**
@@ -33,8 +45,11 @@ type FogGlassProps = {
 export function FogGlass({
   className,
   clipPath,
+  maskShape,
   onReveal,
   revealThreshold,
+  appearDelay = 0,
+  appearDuration = 0,
 }: FogGlassProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const frostRef = useRef<HTMLDivElement>(null);
@@ -70,7 +85,7 @@ export function FogGlass({
       revealThreshold,
       frostElement: frost,
       anchorElement: anchor,
-      maskClip: clipPath,
+      maskShape,
       onReveal: () => onRevealRef.current?.(),
     });
     engineRef.current = engine;
@@ -82,7 +97,7 @@ export function FogGlass({
       engineRef.current = null;
       setEngineFailed(false);
     };
-  }, [mounted, isDesktop, reducedMotion, revealThreshold, clipPath]);
+  }, [mounted, isDesktop, reducedMotion, revealThreshold, maskShape]);
 
   useEffect(() => {
     const engine = engineRef.current;
@@ -109,6 +124,13 @@ export function FogGlass({
   if (!isDesktop || reducedMotion) return null;
 
   const clipStyle = clipPath ? { clipPath } : undefined;
+  /* 激活后按网格入场节奏淡入；离开立即隐藏 */
+  const appearStyle = isActive
+    ? {
+        opacity: 1,
+        transition: `opacity ${appearDuration}s linear ${appearDelay}s`,
+      }
+    : { opacity: 0, transition: "none" };
 
   return (
     <>
@@ -136,20 +158,19 @@ export function FogGlass({
       />
       {mounted &&
         createPortal(
-          <div
-            aria-hidden="true"
-            data-fog-layers=""
-            className={isActive ? undefined : "invisible"}
-          >
-            {/* 霜层不写 clip-path：形状烘进 mask（clip-path+mask+backdrop-filter 同元素会让 mask 失效） */}
+          <div aria-hidden="true" data-fog-layers="">
+            {/* 霜层不写 clip-path：形状烘进 mask（clip-path+mask+backdrop-filter 同元素会让 mask 失效）。
+                淡入写在元素自身：祖先 opacity<1 会成为 backdrop root，淡入期间 blur 将失效 */}
             <div
               ref={frostRef}
               className="pointer-events-none fixed left-0 top-0 z-[30] bg-[#2B2B2B]/[0.14] backdrop-blur-[14px]"
+              style={appearStyle}
             />
+            {/* 水珠绘制在引擎内按真实格子路径裁剪，无需 CSS clip-path */}
             <canvas
               ref={canvasRef}
               className="pointer-events-none fixed left-0 top-0 z-[31] block"
-              style={clipStyle}
+              style={appearStyle}
             />
           </div>,
           document.body,

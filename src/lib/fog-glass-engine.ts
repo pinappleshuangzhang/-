@@ -1,4 +1,5 @@
 import type { FogController, FogEngineOptions } from "@/lib/fog-glass-types";
+import { addFrameTick, removeFrameTick } from "@/lib/frame-scheduler";
 
 const CONFIG = {
   /** 擦拭笔刷半径（CSS px） */
@@ -9,8 +10,8 @@ const CONFIG = {
   refogTime: 2.8,
   /** 停手多久后开始回雾（秒） */
   refogDelay: 2.4,
-  /** mask 画布相对 CSS 尺寸的缩放（省内存、edge 更柔） */
-  maskScale: 0.5,
+  /** 大颗流挂的出现概率 */
+  bigRunnerChance: 0.3,
   /** mask 应用到霜层的节流间隔（秒） */
   maskApplyInterval: 0.1,
   /** 擦除进度采样间隔（秒） */
@@ -21,27 +22,22 @@ const CONFIG = {
   dropSpawnChance: 0.05,
   dropKillRadius: 60,
   /** 流挂水珠 */
-  runnerMax: 6,
-  runnerChance: 0.06,
-  runnerTrailWidth: 2.6,
+  runnerMax: 8,
+  runnerChance: 0.12,
+  /** 静止时自发流挂的频率（次/秒） */
+  idleRunnerRate: 0.45,
 } as const;
 
 type Bead = { x: number; y: number; r: number; vy: number; seed: number };
-type Runner = { x: number; y: number; vy: number; seed: number };
+type Runner = {
+  x: number;
+  y: number;
+  vy: number;
+  seed: number;
+  /** 珠体半径（CSS px），水痕宽度与滑速随它缩放；下滑中缓慢耗损 */
+  r: number;
+};
 type Point = { x: number; y: number };
-
-/** 解析 CSS polygon(x% y%, ...) 为 0~1 归一化顶点 */
-function parsePolygon(clip: string): Point[] | null {
-  const match = clip.match(/polygon\((.+)\)/);
-  if (!match) return null;
-  const points: Point[] = [];
-  for (const pair of match[1].split(",")) {
-    const [x, y] = pair.trim().split(/\s+/).map((v) => parseFloat(v) / 100);
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-    points.push({ x, y });
-  }
-  return points.length >= 3 ? points : null;
-}
 
 /**
  * 雾玻璃 2D 引擎：在离屏 mask 画布上用 destination-out 真挖孔，
@@ -67,25 +63,28 @@ export function createFogGlassEngine(
   const { frostElement, anchorElement, onReveal } = options;
   const revealThreshold = options.revealThreshold ?? CONFIG.revealThreshold;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const polygon = options.maskClip ? parsePolygon(options.maskClip) : null;
+  const shapeSource = options.maskShape
+    ? new Path2D(options.maskShape.path)
+    : null;
 
-  /** 格子形状路径（mask 画布坐标系），随尺寸重建 */
+  /** 格子形状路径：mask 画布坐标系 / 水珠画布（dpr）坐标系，随尺寸重建 */
   let shapePath: Path2D | null = null;
+  let canvasShapePath: Path2D | null = null;
+
+  function scaledShape(targetW: number, targetH: number): Path2D | null {
+    const shape = options.maskShape;
+    if (!shape || !shapeSource) return null;
+    const matrix = new DOMMatrix()
+      .scale(targetW / shape.width, targetH / shape.height)
+      .translate(-shape.x, -shape.y);
+    const path = new Path2D();
+    path.addPath(shapeSource, matrix);
+    return path;
+  }
 
   function buildShapePath() {
-    if (!polygon) {
-      shapePath = null;
-      return;
-    }
-    const path = new Path2D();
-    polygon.forEach((point, index) => {
-      const x = point.x * mask.width;
-      const y = point.y * mask.height;
-      if (index === 0) path.moveTo(x, y);
-      else path.lineTo(x, y);
-    });
-    path.closePath();
-    shapePath = path;
+    shapePath = scaledShape(mask.width, mask.height);
+    canvasShapePath = scaledShape(canvas.width, canvas.height);
   }
 
   function fillFogBase() {
@@ -107,7 +106,6 @@ export function createFogGlassEngine(
   let revealed = false;
   /** 满雾状态的平均 alpha（多边形覆盖率），进度按它归一化 */
   let baselineAlpha = 0;
-  let rafId = 0;
   let running = false;
   let lastFrame = 0;
 
@@ -120,8 +118,9 @@ export function createFogGlassEngine(
     canvas.style.height = `${h}px`;
     canvas.width = Math.max(1, Math.round(w * dpr));
     canvas.height = Math.max(1, Math.round(h * dpr));
-    mask.width = Math.max(1, Math.round(w * CONFIG.maskScale));
-    mask.height = Math.max(1, Math.round(h * CONFIG.maskScale));
+    // mask 与设备像素等分辨率，Retina 下边缘才无锯齿
+    mask.width = Math.max(1, Math.round(w * dpr));
+    mask.height = Math.max(1, Math.round(h * dpr));
     buildShapePath();
     fillFogBase();
     baselineAlpha = measureFogAlpha();
@@ -152,7 +151,7 @@ export function createFogGlassEngine(
   }
 
   function stampHole(x: number, y: number) {
-    const s = CONFIG.maskScale;
+    const s = dpr;
     const r = CONFIG.brushSize * s;
     const gradient = maskCtx.createRadialGradient(
       x * s,
@@ -181,50 +180,101 @@ export function createFogGlassEngine(
       }
     }
     if (runners.length < CONFIG.runnerMax && Math.random() < CONFIG.runnerChance) {
-      runners.push({
-        x: x + (Math.random() - 0.5) * 30,
-        y: y + 20,
-        vy: 0.3,
-        seed: Math.random(),
-      });
+      spawnRunner(x + (Math.random() - 0.5) * 30, y + 20);
     }
   }
 
-  function stepRunners() {
-    const s = CONFIG.maskScale;
+  /** 生成流挂水珠：多为小颗，偶尔一颗大的（水痕更宽、滑得更快） */
+  function spawnRunner(x: number, y: number) {
+    const big = Math.random() < CONFIG.bigRunnerChance;
+    runners.push({
+      x,
+      y,
+      vy: 0.3,
+      seed: Math.random(),
+      r: big ? 6.5 + Math.random() * 2.5 : 3.5 + Math.random() * 1.5,
+    });
+  }
+
+  function stepRunners(dt: number) {
+    const s = dpr;
     for (let i = runners.length - 1; i >= 0; i -= 1) {
       const runner = runners[i];
-      runner.vy = Math.min(runner.vy + 0.03 + runner.seed * 0.02, 2.2);
+
+      runner.vy = Math.min(
+        runner.vy + 0.02 + runner.r * 0.004 + runner.seed * 0.015,
+        1.6 + runner.r * 0.15,
+      );
+
+      const prevX = runner.x;
       const prevY = runner.y;
       runner.y += runner.vy;
       runner.x += Math.sin(runner.y * 0.05 + runner.seed * 9) * 0.35;
-      maskCtx.globalCompositeOperation = "destination-out";
-      maskCtx.strokeStyle = "rgba(0,0,0,0.85)";
-      maskCtx.lineWidth = CONFIG.runnerTrailWidth * s;
-      maskCtx.lineCap = "round";
-      maskCtx.beginPath();
-      maskCtx.moveTo(runner.x * s, prevY * s);
-      maskCtx.lineTo(runner.x * s, runner.y * s);
-      maskCtx.stroke();
-      maskCtx.globalCompositeOperation = "source-over";
-      if (runner.y > boxH + 8) runners.splice(i, 1);
+
+      // 吞并沿途凝珠：珠体微增、短暂提速
+      for (let j = beads.length - 1; j >= 0; j -= 1) {
+        const bead = beads[j];
+        if (
+          Math.hypot(bead.x - runner.x, bead.y - runner.y) <
+          runner.r + bead.r + 2
+        ) {
+          beads.splice(j, 1);
+          runner.r = Math.min(runner.r + bead.r * 0.25, 10);
+          runner.vy += 0.25;
+        }
+      }
+
+      // 质量耗损：越滑越小，水痕随之收窄成锥形
+      runner.r -= dt * 0.35;
+
+      if (runner.vy > 0.02) {
+        maskCtx.globalCompositeOperation = "destination-out";
+        maskCtx.strokeStyle = "rgba(0,0,0,0.85)";
+        maskCtx.lineWidth = Math.max(runner.r * 0.8 * s, 1);
+        maskCtx.lineCap = "round";
+        maskCtx.beginPath();
+        maskCtx.moveTo(prevX * s, prevY * s);
+        maskCtx.lineTo(runner.x * s, runner.y * s);
+        maskCtx.stroke();
+        maskCtx.globalCompositeOperation = "source-over";
+      }
+
+      if (runner.y > boxH + 8) {
+        runners.splice(i, 1);
+      } else if (runner.r < 2.2) {
+        // 耗尽：停在原地变成一颗普通凝珠
+        if (beads.length < CONFIG.dropMax) {
+          runners.splice(i, 1);
+          beads.push({
+            x: runner.x,
+            y: runner.y,
+            r: 2.4 + Math.random() * 1.2,
+            vy: 0,
+            seed: Math.random(),
+          });
+        } else {
+          runners.splice(i, 1);
+        }
+      }
     }
     if (runners.length) maskDirty = true;
   }
 
   function drawBeads() {
     drawCtx.clearRect(0, 0, canvas.width, canvas.height);
+    drawCtx.save();
+    if (canvasShapePath) drawCtx.clip(canvasShapePath);
     if (beads.length < CONFIG.dropMax && Math.random() < CONFIG.dropSpawnChance) {
       beads.push({
         x: Math.random() * boxW,
         y: Math.random() * boxH * 0.6,
-        r: 1.6 + Math.random() * 2.6,
+        r: 2.4 + Math.random() * 3.8,
         vy: 0,
         seed: Math.random(),
       });
     }
     for (const bead of beads) {
-      if (bead.r > 3.4) {
+      if (bead.r > 5) {
         bead.vy = Math.min(bead.vy + 0.02, 0.5 + bead.seed);
       }
       bead.y += bead.vy;
@@ -232,7 +282,7 @@ export function createFogGlassEngine(
       if (bead.y > boxH + 10) {
         bead.y = -6;
         bead.vy = 0;
-        bead.r = 1.6 + Math.random() * 2.6;
+        bead.r = 2.4 + Math.random() * 3.8;
       }
       const x = bead.x * dpr;
       const y = bead.y * dpr;
@@ -253,19 +303,24 @@ export function createFogGlassEngine(
     for (const runner of runners) {
       const x = runner.x * dpr;
       const y = runner.y * dpr;
-      const r = 3 * dpr;
+      const r = runner.r * dpr;
+      // 随速度变形：加速时纵向拉长、横向收窄，停顿时回弹近圆
+      const speedNorm = Math.min(runner.vy / 1.6, 1);
+      const rx = r * (0.95 - speedNorm * 0.2);
+      const ry = r * (1.05 + speedNorm * 0.6);
       const body = drawCtx.createRadialGradient(x, y, r * 0.2, x, y, r);
       body.addColorStop(0, "rgba(43,43,43,0.35)");
       body.addColorStop(1, "rgba(43,43,43,0)");
       drawCtx.fillStyle = body;
       drawCtx.beginPath();
-      drawCtx.ellipse(x, y, r * 0.8, r * 1.5, 0, 0, Math.PI * 2);
+      drawCtx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
       drawCtx.fill();
       drawCtx.fillStyle = "rgba(255,255,255,0.55)";
       drawCtx.beginPath();
       drawCtx.arc(x - r * 0.25, y - r * 0.4, r * 0.25, 0, Math.PI * 2);
       drawCtx.fill();
     }
+    drawCtx.restore();
   }
 
   function refog(now: number, dt: number) {
@@ -304,14 +359,23 @@ export function createFogGlassEngine(
   }
 
   function tick(nowMs: number) {
-    rafId = requestAnimationFrame(tick);
     const now = nowMs / 1000;
     const dt = Math.min(lastFrame ? now - lastFrame : 1 / 60, 1 / 20);
     lastFrame = now;
     syncGeometry();
     if (boxW < 2) return;
     refog(now, dt);
-    stepRunners();
+    // 静止时自发流挂：不依赖擦拭，偶尔一颗从雾面上方滑下
+    if (
+      runners.length < CONFIG.runnerMax &&
+      Math.random() < CONFIG.idleRunnerRate * dt
+    ) {
+      spawnRunner(
+        (0.08 + Math.random() * 0.84) * boxW,
+        Math.random() * boxH * 0.35,
+      );
+    }
+    stepRunners(dt);
     drawBeads();
     checkProgress(now);
     if (maskDirty && now - lastMaskApply >= CONFIG.maskApplyInterval) {
@@ -327,15 +391,15 @@ export function createFogGlassEngine(
       if (running) return;
       running = true;
       lastFrame = 0;
-      rafId = requestAnimationFrame(tick);
+      addFrameTick(tick);
     },
     pause() {
       running = false;
-      cancelAnimationFrame(rafId);
+      removeFrameTick(tick);
     },
     destroy() {
       running = false;
-      cancelAnimationFrame(rafId);
+      removeFrameTick(tick);
       beads.length = 0;
       runners.length = 0;
     },

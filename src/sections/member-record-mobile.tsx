@@ -55,7 +55,7 @@ export function MemberRecordMobile() {
           />
           <MobileMemberProfile
             identifier="01"
-            name="Pineapple"
+            name="South"
             role={t("member.role01")}
             direction={t("member.direction01")}
             {...memberTextLayout(
@@ -78,7 +78,7 @@ export function MemberRecordMobile() {
           />
           <MobileMemberProfile
             identifier="02"
-            name="South"
+            name="Pineapple"
             role={t("member.role02")}
             direction={t("member.direction02")}
             {...memberTextLayout(

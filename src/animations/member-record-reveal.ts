@@ -8,9 +8,6 @@ export const MEMBER_RECORD_REVEAL_DELAY = 1.5;
 /** 入场时长与切屏幕布单程一致 */
 export const MEMBER_RECORD_REVEAL_DURATION = CURTAIN_DURATION_MS / 1000;
 
-/** hover 白底溶解时长 */
-export const MEMBER_RECORD_HOVER_REVEAL_DURATION = 0.6;
-
 /**
  * 溶解遮罩的网格与帧数：格子约 5×8px（对应 1335×933 的浮层坐标系）。
  */

@@ -7,7 +7,6 @@ import gsap from "gsap";
 import {
   MEMBER_RECORD_GRID_HIDDEN,
   MEMBER_RECORD_GRID_VISIBLE,
-  MEMBER_RECORD_HOVER_REVEAL_DURATION,
   MEMBER_RECORD_MASK_COLS,
   MEMBER_RECORD_MASK_FRAME_COUNT,
   MEMBER_RECORD_MASK_ROWS,
@@ -25,8 +24,12 @@ import { useScreenActive } from "@/components/providers/section-pager-provider";
 import {
   MEMBER_CELL_PATHS,
   MEMBER_CELL_VIEW_BOX,
+  MEMBER_GRAVA_CELL_SHAPE,
   MEMBER_GRAVA_FOG_BOX_CLASS,
   MEMBER_GRAVA_FOG_CLIP,
+  MEMBER_MARK_CELL_SHAPE,
+  MEMBER_MARK_FOG_BOX_CLASS,
+  MEMBER_MARK_FOG_CLIP,
   MEMBER_GRAVA_LOGO_IN_FOG_CLASS,
   MEMBER_PROFILE_ACTIONS_VISIBLE,
 } from "@/lib/member-record-cells";
@@ -175,12 +178,12 @@ export function MemberRecord() {
           <div
             data-member-overlay
             aria-hidden="true"
-            className="absolute inset-x-0 top-0 bottom-[-1px] rounded-[7.5%_/_10.7%] bg-[#2B2B2B]/[0.55] backdrop-blur-[4px]"
+            className="absolute inset-x-0 top-0 bottom-[-1px] rounded-[7.5%_/_10.7%] bg-[#2B2B2B]/[0.45] backdrop-blur-[4px]"
           />
           <div data-member-mask className="absolute inset-0">
             <MemberProfile
               identifier="01"
-              name="Pineapple"
+              name="South"
               role={t("member.role01")}
               direction={t("member.direction01")}
               {...memberTextLayout(
@@ -202,9 +205,15 @@ export function MemberRecord() {
             />
             <MemberProfile
               identifier="02"
-              name="South"
+              name="Pineapple"
               role={t("member.role02")}
               direction={t("member.direction02")}
+              ipImage={{
+                src: "/archive/member-ip-02-lineart.webp",
+                className: "left-[85.81%] top-[0.214%] w-[14%]",
+                width: 428,
+                height: 350,
+              }}
               {...memberTextLayout(
                 {
                   headerClassName: "left-[66.142%] top-[5.573%] w-[24.85%]",
@@ -323,7 +332,10 @@ function DesktopGravaCell() {
       <FogGlass
         className="absolute inset-0"
         clipPath={MEMBER_GRAVA_FOG_CLIP}
+        maskShape={MEMBER_GRAVA_CELL_SHAPE}
         revealThreshold={MEMBER_FOG_REVEAL_THRESHOLD}
+        appearDelay={MEMBER_RECORD_REVEAL_DELAY}
+        appearDuration={MEMBER_RECORD_REVEAL_DURATION}
         onReveal={playReveal}
       />
     </div>
@@ -388,7 +400,8 @@ function DesktopMemberMark() {
   const rootRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
 
-  const handlePointerEnter = () => {
+  /** 擦拭达阈值后播放菱形入场（雾面指针热区盖住了 Logo 本体的 hover） */
+  const playReveal = () => {
     if (reducedMotion) return;
 
     const diamonds = rootRef.current?.querySelectorAll<HTMLElement>(
@@ -400,22 +413,34 @@ function DesktopMemberMark() {
   };
 
   return (
-    <div
-      ref={rootRef}
-      aria-hidden="true"
-      className="pointer-events-auto absolute left-[52.5%] top-[40.6%] aspect-[26/23] h-[3%]"
-      onPointerEnter={handlePointerEnter}
-    >
-      {MEMBER_MARK_DIAMONDS.map(({ src, className }) => (
-        <span
-          key={src}
-          data-member-mark-diamond
-          className={`absolute h-1/2 w-1/2 ${className}`}
-        >
-          <Image src={src} alt="" fill sizes="1.16vw" unoptimized />
-        </span>
-      ))}
-    </div>
+    <>
+      <div
+        ref={rootRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute left-[52.5%] top-[40.6%] aspect-[26/23] h-[3%]"
+      >
+        {MEMBER_MARK_DIAMONDS.map(({ src, className }) => (
+          <span
+            key={src}
+            data-member-mark-diamond
+            className={`absolute h-1/2 w-1/2 ${className}`}
+          >
+            <Image src={src} alt="" fill sizes="1.16vw" unoptimized />
+          </span>
+        ))}
+      </div>
+      <div className={MEMBER_MARK_FOG_BOX_CLASS}>
+        <FogGlass
+          className="absolute inset-0"
+          clipPath={MEMBER_MARK_FOG_CLIP}
+          maskShape={MEMBER_MARK_CELL_SHAPE}
+          revealThreshold={MEMBER_FOG_REVEAL_THRESHOLD}
+          appearDelay={MEMBER_RECORD_REVEAL_DELAY}
+          appearDuration={MEMBER_RECORD_REVEAL_DURATION}
+          onReveal={playReveal}
+        />
+      </div>
+    </>
   );
 }
 
@@ -429,6 +454,8 @@ type MemberProfileProps = {
   nameClassName: string;
   directionClassName: string;
   actionsClassName: string;
+  /** 成员 IP 形象：放在擦拭显影层里，擦到才出现，默认不可见 */
+  ipImage?: { src: string; className: string; width: number; height: number };
 };
 
 function MemberProfile({
@@ -441,79 +468,42 @@ function MemberProfile({
   nameClassName,
   directionClassName,
   actionsClassName,
+  ipImage,
 }: MemberProfileProps) {
-  const fillRef = useRef<HTMLDivElement>(null);
-  const wipeRef = useRef<SVGRectElement>(null);
-  const reducedMotion = useReducedMotion();
   const { t } = useLocale();
-
-  // 白底通过 SVG 裁切矩形横向揭示，路径本身不缩放，模拟擦去玻璃雾气。
-  const animateFill = (entering: boolean) => {
-    const fill = fillRef.current;
-    const wipe = wipeRef.current;
-    if (!fill || !wipe) return;
-
-    gsap.killTweensOf(wipe);
-    if (reducedMotion) {
-      gsap.set(wipe, { scaleX: entering ? 1 : 0 });
-      fill.style.opacity = entering ? "1" : "0";
-      return;
-    }
-
-    fill.style.opacity = "1";
-    gsap.to(wipe, {
-      scaleX: entering ? 1 : 0,
-      duration: MEMBER_RECORD_HOVER_REVEAL_DURATION,
-      ease: "power2.inOut",
-      transformBox: "fill-box",
-      transformOrigin: "left center",
-      onComplete: () => {
-        if (!entering) {
-          fill.style.opacity = "0";
-        }
-      },
-    });
-  };
+  // hover 时白底（含 IP 形象）渐显、文字渐变为深色；motion-reduce 下直接切换
+  const fade =
+    "transition-opacity duration-[600ms] ease-out motion-reduce:transition-none";
+  const recolor =
+    "transition-colors duration-[600ms] ease-out motion-reduce:transition-none";
+  const textColor = `text-white group-hover:text-grey-400 ${recolor}`;
 
   return (
-    <div
-      className="group pointer-events-none absolute inset-0"
-      onMouseEnter={() => animateFill(true)}
-      onMouseLeave={() => animateFill(false)}
-    >
+    <div className="group pointer-events-none absolute inset-0">
       <div
-        ref={fillRef}
         aria-hidden="true"
-        className="absolute inset-0 opacity-0"
+        className={`absolute inset-0 opacity-0 group-hover:opacity-100 ${fade}`}
       >
         <svg
           className="absolute inset-0 h-full w-full"
           viewBox={MEMBER_CELL_VIEW_BOX}
           preserveAspectRatio="none"
         >
-          <defs>
-            <clipPath id={`member-wipe-${identifier}`}>
-              <rect
-                ref={wipeRef}
-                x="52"
-                y="0"
-                width="1335"
-                height="933"
-                style={{
-                  transform: "scaleX(0)",
-                  transformBox: "fill-box",
-                  transformOrigin: "left center",
-                }}
-              />
-            </clipPath>
-          </defs>
           <path
             d={MEMBER_CELL_PATHS[identifier]}
             strokeWidth={3}
-            clipPath={`url(#member-wipe-${identifier})`}
             className="fill-white stroke-white"
           />
         </svg>
+        {ipImage ? (
+          <Image
+            src={ipImage.src}
+            alt=""
+            width={ipImage.width}
+            height={ipImage.height}
+            className={`absolute h-auto ${ipImage.className}`}
+          />
+        ) : null}
       </div>
       <svg
         aria-hidden="true"
@@ -530,7 +520,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.2"
         aria-label={`${t("member.investigator")}_${identifier}_${role}`}
-        className={`absolute z-10 text-16 text-white transition-colors duration-[600ms] group-hover:text-grey-400 ${headerClassName}`}
+        className={`absolute z-10 text-16 ${textColor} ${headerClassName}`}
       >
         <span className="font-serif-sc font-normal">
           <SplitWords text={t("member.investigator")} />
@@ -543,7 +533,9 @@ function MemberProfile({
         </span>
       </p>
       <span
-        className={`absolute z-10 border-t border-dashed border-white/30 transition-colors duration-[600ms] group-hover:border-grey-400/30 ${dividerClassName}`}
+        data-sd-bar
+        data-sd-delay="0.25"
+        className={`absolute z-10 origin-left scale-x-0 border-t border-dashed border-white/30 group-hover:border-grey-400/30 ${recolor} ${dividerClassName}`}
         aria-hidden="true"
       >
         <span className="invisible whitespace-nowrap text-16">
@@ -558,7 +550,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.3"
         aria-label={`${t("member.namePrefix")}${name}`}
-        className={`absolute z-10 whitespace-nowrap text-16 text-white transition-colors duration-[600ms] group-hover:text-grey-400 ${nameClassName}`}
+        className={`absolute z-10 whitespace-nowrap text-16 ${textColor} ${nameClassName}`}
       >
         <span className="font-serif-sc font-normal">
           <SplitWords text={t("member.namePrefix")} />
@@ -571,14 +563,14 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.4"
         aria-label={direction}
-        className={`absolute z-10 whitespace-nowrap font-serif-sc text-16 font-normal text-white transition-colors duration-[600ms] group-hover:text-grey-400 ${directionClassName}`}
+        className={`absolute z-10 whitespace-nowrap font-serif-sc text-16 font-normal ${textColor} ${directionClassName}`}
       >
         <SplitWords text={direction} />
       </p>
       <div
         data-sd-words
         data-sd-delay="0.5"
-        className={`absolute z-10 flex items-center gap-4 text-white transition-colors duration-[600ms] group-hover:text-grey-400 ${actionsClassName} ${MEMBER_PROFILE_ACTIONS_VISIBLE ? "" : "hidden"}`}
+        className={`absolute z-10 flex items-center gap-4 ${textColor} ${actionsClassName} ${MEMBER_PROFILE_ACTIONS_VISIBLE ? "" : "hidden"}`}
       >
         <ProfileAction label={t("member.portfolio")} />
         <ProfileAction label={t("member.contactMe")} />
@@ -588,6 +580,7 @@ function MemberProfile({
 }
 
 function ProfileAction({ label }: { label: string }) {
+  const invertClass = "group-hover:invert";
   return (
     <span className="profile-action pointer-events-auto flex cursor-pointer items-center gap-0.5 font-serif-sc text-16 font-normal">
       <SplitWords text={label} />
@@ -597,14 +590,14 @@ function ProfileAction({ label }: { label: string }) {
           alt=""
           fill
           sizes="16px"
-          className="profile-action-arrow profile-action-arrow-current object-contain group-hover:invert"
+          className={`profile-action-arrow profile-action-arrow-current object-contain ${invertClass}`}
         />
         <Image
           src="/archive/member-record-external-arrow.webp"
           alt=""
           fill
           sizes="16px"
-          className="profile-action-arrow profile-action-arrow-next object-contain group-hover:invert motion-reduce:hidden"
+          className={`profile-action-arrow profile-action-arrow-next object-contain motion-reduce:hidden ${invertClass}`}
         />
       </span>
     </span>

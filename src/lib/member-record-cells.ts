@@ -18,9 +18,39 @@ export const MEMBER_GRAVA_FOG_BOX_CLASS =
 export const MEMBER_GRAVA_LOGO_IN_FOG_CLASS =
   "pointer-events-none absolute left-[24.95%] top-[43.98%] h-[9.61%] w-[27.45%] overflow-hidden";
 
-/** 与 member-record-grid.svg 中上格路径对齐的裁切 */
+/** 与 member-record-grid.svg 中上格路径对齐的裁切（指针热区用，形状取直角近似） */
 export const MEMBER_GRAVA_FOG_CLIP =
   "polygon(21.83% 0%, 11.09% 11.22%, 0% 94.38%, 2.47% 98.09%, 42.09% 100%, 46.54% 97.29%, 98.34% 6.88%, 95.44% 0%)";
+
+/**
+ * 中上格（Grava）真实单元格路径，取自 member-record-grid.svg（1335×933），
+ * 含四角圆角（左上 46 / 左下 15 等），雾玻璃 mask 用它填底以对齐网格圆角。
+ * rect 为雾盒在同一坐标系下的定位（与 MEMBER_GRAVA_FOG_BOX_CLASS 百分比一致）。
+ */
+export const MEMBER_GRAVA_CELL_SHAPE = {
+  path: "M458.026 1C435.495 1 416.28 17.3198 412.633 39.5537L365.773 325.214C364.703 331.739 369.591 337.728 376.198 337.986L543.666 344.533C551.118 344.824 558.209 341.321 562.506 335.226L781.455 24.6426C788.46 14.7056 781.353 1.00022 769.195 1H458.026Z",
+  x: 365.79,
+  y: 0.998,
+  width: 422.688,
+  height: 343.531,
+} as const;
+
+/** 中部菱形 Logo 格雾玻璃定位盒，相对 1335×933 网格 */
+export const MEMBER_MARK_FOG_BOX_CLASS =
+  "absolute left-[42.067%] top-[24.903%] z-[1] h-[39.363%] w-[23.326%]";
+
+/** 菱形 Logo 格指针热区（直角近似，防止盖住相邻成员文字的 hover） */
+export const MEMBER_MARK_FOG_CLIP =
+  "polygon(32.33% 2.19%, 22.1% 3.38%, 1.98% 27.51%, 2.76% 35.2%, 75.21% 96.71%, 87.06% 93.93%, 99.58% 51.54%, 98.06% 47.66%)";
+
+/** 菱形 Logo 格真实单元格路径（member-record-grid.svg，1335×933），mask 用 */
+export const MEMBER_MARK_CELL_SHAPE = {
+  path: "M662.281 240.402C652.404 232.344 637.766 234.341 630.408 244.751L567.777 333.367C561.597 342.111 562.611 354.035 570.178 361.611L795.793 587.501C807.879 599.602 828.546 593.889 832.7 577.299L871.685 421.627C873.003 416.362 871.16 410.809 866.954 407.378L662.281 240.402Z",
+  x: 561.597,
+  y: 232.344,
+  width: 311.406,
+  height: 367.258,
+} as const;
 
 export const MEMBER_CELL_PATHS: Record<string, string> = {
   "01":

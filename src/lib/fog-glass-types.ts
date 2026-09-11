@@ -18,9 +18,15 @@ export type FogEngineOptions = {
   /** 流内格子锚点：每帧读取它的 rect 来同步 fixed 层几何 */
   anchorElement: HTMLElement;
   /**
-   * 格子形状（CSS polygon，百分比坐标），烘进 mask 底图。
-   * 不能写成霜层的 clip-path：clip-path + mask + backdrop-filter
-   * 同置一元素时 Chromium 会忽略 mask。
+   * 格子形状（SVG path 及其坐标系内的定位盒），烘进 mask 底图，
+   * 圆角与网格线完全一致。不能写成霜层的 clip-path：
+   * clip-path + mask + backdrop-filter 同置一元素时 Chromium 会忽略 mask。
    */
-  maskClip?: string;
+  maskShape?: {
+    path: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 };
