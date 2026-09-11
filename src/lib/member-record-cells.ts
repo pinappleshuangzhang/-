@@ -7,6 +7,21 @@ export const MEMBER_CELL_VIEW_BOX = "0 0 1335 933";
 /** 个人作品站 / 联系我：链接未就绪，桌面与移动端四个模块暂时关闭 */
 export const MEMBER_PROFILE_ACTIONS_VISIBLE = false;
 
+/** 中上格（Grava）雾玻璃定位盒，相对 1335×933 网格 */
+export const MEMBER_GRAVA_FOG_BOX_CLASS =
+  "absolute left-[27.4%] top-[0.107%] z-[1] h-[36.82%] w-[31.662%]";
+
+/**
+ * Grava 字标相对雾盒的位置。
+ * 由网格坐标 35.3% / 16.3% / 8.69% / 3.54% 换算到雾盒内。
+ */
+export const MEMBER_GRAVA_LOGO_IN_FOG_CLASS =
+  "pointer-events-none absolute left-[24.95%] top-[43.98%] h-[9.61%] w-[27.45%] overflow-hidden";
+
+/** 与 member-record-grid.svg 中上格路径对齐的裁切 */
+export const MEMBER_GRAVA_FOG_CLIP =
+  "polygon(21.83% 0%, 11.09% 11.22%, 0% 94.38%, 2.47% 98.09%, 42.09% 100%, 46.54% 97.29%, 98.34% 6.88%, 95.44% 0%)";
+
 export const MEMBER_CELL_PATHS: Record<string, string> = {
   "01":
     "M106.998 2C49.0082 2 1.99805 49.0101 1.99805 107V303.146C1.99805 312.309 9.67785 319.6 18.8281 319.125L357.937 301.501C363.565 301.208 368.232 297.038 369.152 291.478L414.193 19.4502C415.706 10.312 408.657 2 399.395 2H106.998Z",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type RefObject } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -14,15 +14,20 @@ import {
   MEMBER_RECORD_REVEAL_DELAY,
   MEMBER_RECORD_REVEAL_DURATION,
 } from "@/animations/member-record-reveal";
+import { MEMBER_FOG_REVEAL_THRESHOLD } from "@/animations/member-record-fog-reveal";
 import {
   playGravaStrokeLoad,
   playMemberMarkReveal,
 } from "@/animations/member-record-logo-hover";
+import { FogGlass } from "@/components/effects/fog-glass";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
 import {
   MEMBER_CELL_PATHS,
   MEMBER_CELL_VIEW_BOX,
+  MEMBER_GRAVA_FOG_BOX_CLASS,
+  MEMBER_GRAVA_FOG_CLIP,
+  MEMBER_GRAVA_LOGO_IN_FOG_CLASS,
   MEMBER_PROFILE_ACTIONS_VISIBLE,
 } from "@/lib/member-record-cells";
 import { memberTextLayout } from "@/lib/member-record-profile-layout";
@@ -173,13 +178,6 @@ export function MemberRecord() {
             className="absolute inset-x-0 top-0 bottom-[-1px] rounded-[7.5%_/_10.7%] bg-[#2B2B2B]/[0.55] backdrop-blur-[4px]"
           />
           <div data-member-mask className="absolute inset-0">
-            <Image
-              src="/archive/member-record-grid.svg"
-              alt=""
-              fill
-              sizes="92.71vw"
-              className="object-fill"
-            />
             <MemberProfile
               identifier="01"
               name="Pineapple"
@@ -268,8 +266,17 @@ export function MemberRecord() {
                 },
               )}
             />
-            <DesktopGravaLogo />
+            <DesktopGravaCell />
             <DesktopMemberMark />
+            <div className="pointer-events-none absolute inset-0 z-[2]">
+              <Image
+                src="/archive/member-record-grid.svg"
+                alt=""
+                fill
+                sizes="92.71vw"
+                className="object-fill"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -294,14 +301,14 @@ const GRAVA_STROKE_SEGMENTS = [
   "polygon(94% 26%, 100% 26%, 100% 100%, 94% 100%)",
 ] as const;
 
-function DesktopGravaLogo() {
-  const rootRef = useRef<HTMLDivElement>(null);
+function DesktopGravaCell() {
+  const logoRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
 
-  const handlePointerEnter = () => {
+  const playReveal = () => {
     if (reducedMotion) return;
 
-    const root = rootRef.current;
+    const root = logoRef.current;
     const base = root?.querySelector<HTMLElement>("[data-grava-base]");
     const strokes = root?.querySelectorAll<HTMLElement>("[data-grava-stroke]");
     if (!base || !strokes?.length) return;
@@ -310,12 +317,26 @@ function DesktopGravaLogo() {
   };
 
   return (
-    <div
-      ref={rootRef}
-      aria-hidden="true"
-      className="pointer-events-auto absolute left-[35.3%] top-[16.3%] h-[3.54%] w-[8.69%] overflow-hidden"
-      onPointerEnter={handlePointerEnter}
-    >
+    <div className={MEMBER_GRAVA_FOG_BOX_CLASS}>
+      {/* 霜下字标：隔霜模糊，擦开处清晰；达阈值后播放描边动画 */}
+      <DesktopGravaLogo logoRef={logoRef} />
+      <FogGlass
+        className="absolute inset-0"
+        clipPath={MEMBER_GRAVA_FOG_CLIP}
+        revealThreshold={MEMBER_FOG_REVEAL_THRESHOLD}
+        onReveal={playReveal}
+      />
+    </div>
+  );
+}
+
+function DesktopGravaLogo({
+  logoRef,
+}: {
+  logoRef: RefObject<HTMLDivElement | null>;
+}) {
+  return (
+    <div ref={logoRef} aria-hidden="true" className={MEMBER_GRAVA_LOGO_IN_FOG_CLASS}>
       <div data-grava-base className="absolute inset-0">
         <Image
           src="/archive/member-record-grava.svg"
