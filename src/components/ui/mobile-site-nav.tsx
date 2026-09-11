@@ -7,6 +7,8 @@ type MobileSiteNavProps = {
   elevated: boolean;
   title: ReactNode;
   showBrand: boolean;
+  /** 目录展开时，左侧品牌入口返回首页 */
+  onTitleClick?: () => void;
   isEnglish: boolean;
   /** 浅色底用实色字，避免 mix-blend 在滚动时每帧重采样 */
   tone?: "light" | "dark";
@@ -29,6 +31,7 @@ export function MobileSiteNav({
   elevated,
   title,
   showBrand,
+  onTitleClick,
   isEnglish,
   tone = "dark",
   indexLabel,
@@ -59,15 +62,29 @@ export function MobileSiteNav({
         aria-label="Site"
         className="relative mx-auto flex w-[calc(100%-24px)] items-center"
       >
-        <p
-          className={
-            showBrand
-              ? `whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
-              : `max-w-[calc(100%-98px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
-          }
-        >
-          {title}
-        </p>
+        {onTitleClick ? (
+          <button
+            type="button"
+            onClick={onTitleClick}
+            className={`border-0 bg-transparent p-0 text-left ${
+              showBrand
+                ? `whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
+                : `max-w-[calc(100%-98px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
+            } ${focusRing}`}
+          >
+            {title}
+          </button>
+        ) : (
+          <p
+            className={
+              showBrand
+                ? `whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
+                : `max-w-[calc(100%-98px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
+            }
+          >
+            {title}
+          </p>
+        )}
 
         <div className="absolute right-0 top-1/2 flex w-[86px] -translate-y-1/2 items-center justify-between">
           <FlipHoverButton

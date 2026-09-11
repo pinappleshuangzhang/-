@@ -56,6 +56,14 @@ export function PageChrome() {
     [goToScreen, index],
   );
 
+  const handleHome = useCallback(() => {
+    if (index === SCREEN_INDEX_BY_KEY.studio) {
+      setIndexOpen(false);
+      return;
+    }
+    goToScreen(SCREEN_INDEX_BY_KEY.studio, () => setIndexOpen(false));
+  }, [goToScreen, index]);
+
   return (
     <>
       <SiteNav
@@ -63,9 +71,9 @@ export function PageChrome() {
         navVariant={navVariant}
         onOpenIndex={handleOpenIndex}
         onCloseIndex={() => setIndexOpen(false)}
+        onHome={handleHome}
         contactHref="mailto:shuangzhang@fintopia.tech"
         closeRef={closeRef}
-        className={indexOpen ? "max-md:hidden" : undefined}
       />
       <ArchiveIndex
         open={indexOpen}

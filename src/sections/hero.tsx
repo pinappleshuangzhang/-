@@ -19,6 +19,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { FlipHoverButton } from "@/components/ui/flip-hover-button";
 import { ScreenShell } from "@/components/ui/screen-shell";
+import { useDesktopMedia } from "@/hooks/use-desktop-media";
 import { useHeroPreloader } from "@/hooks/use-hero-preloader";
 import { HeroLoader, LOADER_ASSET_PATHS } from "@/sections/hero-loader";
 import archiveBoxImg from "../../public/hero/hero-loader-bg.webp";
@@ -27,7 +28,8 @@ import mobileFirstFrameImg from "../../public/hero/hero-mobile-first.webp";
 
 gsap.registerPlugin(useGSAP);
 
-const VIDEO_SRC = "/hero/hero-intro.mp4";
+const DESKTOP_VIDEO_SRC = "/hero/hero-intro.mp4?v=202609102032";
+const MOBILE_VIDEO_SRC = "/hero/hero-mobile-intro.mp4?v=202609111006";
 /** 是否播放开场视频；true 时视频下载进度计入加载屏 */
 const SHOW_INTRO_VIDEO = true;
 
@@ -65,8 +67,10 @@ export function Hero() {
   const loaderRef = useRef<HTMLDivElement>(null);
   const videoLayerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const isDesktop = useDesktopMedia();
+  const videoSrc = isDesktop ? DESKTOP_VIDEO_SRC : MOBILE_VIDEO_SRC;
 
-  const preload = useHeroPreloader(VIDEO_SRC, LOADER_ASSET_PATHS, {
+  const preload = useHeroPreloader(videoSrc, LOADER_ASSET_PATHS, {
     videoEnabled: SHOW_INTRO_VIDEO,
     timeoutMs: 45000,
   });
@@ -496,7 +500,7 @@ export function Hero() {
               playsInline
               preload="none"
               aria-hidden="true"
-              className="size-full origin-center object-cover [transform:translateZ(0)_scale(0.7)] md:[transform:translateZ(0)_scale(1)]"
+              className="size-full origin-center object-cover [transform:translateZ(0)]"
             />
           </div>
         </>

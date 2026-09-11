@@ -17,6 +17,8 @@ type SiteNavProps = {
   navVariant?: NavVariant;
   onOpenIndex?: () => void;
   onCloseIndex?: () => void;
+  /** 目录展开时，左侧品牌入口返回首页 */
+  onHome?: () => void;
   contactHref?: string;
   closeRef?: Ref<HTMLButtonElement>;
   className?: string;
@@ -53,6 +55,7 @@ export function SiteNav({
   navVariant = "studio",
   onOpenIndex,
   onCloseIndex,
+  onHome,
   contactHref,
   closeRef,
   className,
@@ -133,6 +136,7 @@ export function SiteNav({
         elevated={isIndex}
         title={title}
         showBrand={showBrand}
+        onTitleClick={isIndex ? onHome : undefined}
         isEnglish={isEn}
         tone={navVariant === "studio" ? "dark" : "light"}
         indexLabel={indexLabel}
@@ -155,15 +159,25 @@ export function SiteNav({
           aria-label="Site"
           className="relative mx-auto flex w-[calc(100%-40px)] items-center"
         >
-          <p
-            className={
-              showBrand
-                ? "whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-white"
-                : "max-w-[calc(100%-527px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-white"
-            }
-          >
-            {title}
-          </p>
+          {isIndex && onHome ? (
+            <button
+              type="button"
+              onClick={onHome}
+              className="whitespace-nowrap border-0 bg-transparent p-0 text-left font-bodoni text-12 font-normal uppercase leading-none text-white focus-visible:outline-none"
+            >
+              {title}
+            </button>
+          ) : (
+            <p
+              className={
+                showBrand
+                  ? "whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-white"
+                  : "max-w-[calc(100%-527px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-white"
+              }
+            >
+              {title}
+            </p>
+          )}
 
           {/* 与屏内 right-5 + w-[507px] 图同缘：贴版心右、宽 507；目录在区左缘 */}
           <div className="absolute right-0 top-1/2 flex w-[507px] -translate-y-1/2 items-center justify-between">

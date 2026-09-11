@@ -279,26 +279,26 @@ function MobileArchiveIndex({
   return (
     <div className="absolute inset-0 bg-black/30 backdrop-blur-[16px] md:hidden">
       <div
-        className="absolute inset-x-0 bottom-0 h-[calc(100%-30px)] bg-white/90"
+        className="absolute inset-x-0 bottom-0 top-[67px] bg-white/90"
         onClick={(event) => event.stopPropagation()}
       >
         <button
           type="button"
           aria-label={t("nav.closeIndex")}
           onClick={onClose}
-          className="absolute right-3 top-[49px] flex size-4 items-center justify-center focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
+          className="absolute right-1 top-1 flex size-8 items-center justify-center focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
         >
           <span
             aria-hidden="true"
-            className="absolute h-px w-5 rotate-45 bg-grey-400"
+            className="absolute h-px w-4 rotate-45 bg-grey-400"
           />
           <span
             aria-hidden="true"
-            className="absolute h-px w-5 -rotate-45 bg-grey-400"
+            className="absolute h-px w-4 -rotate-45 bg-grey-400"
           />
         </button>
 
-        <div className="absolute left-3 top-[105px] w-[calc(100%-24px)]">
+        <div className="absolute left-3 top-[68px] w-[calc(100%-24px)]">
           <div className="flex items-start justify-between">
             <p className="font-bodoni text-24 font-normal uppercase leading-normal text-grey-400">
               Archive
@@ -322,7 +322,7 @@ function MobileArchiveIndex({
 
         <nav
           aria-label={t("index.nav")}
-          className="absolute left-3 right-3 top-[250px]"
+          className="absolute left-3 right-3 top-[213px]"
         >
           <ul className="flex flex-col gap-9">
             {ARCHIVE_INDEX_ITEMS.map((item) => (
