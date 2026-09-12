@@ -40,7 +40,7 @@ const SCRUB_DAMPING = 3;
 /** 第一段开始退场的主时间轴节点（总时长 132） */
 const FIRST_COPY_EXIT_PROGRESS = 38 / 132;
 /** 移动端文字与书本视频的完整自动播放时长。 */
-const MOBILE_AUTO_DURATION = 12;
+const MOBILE_AUTO_DURATION = 9;
 const MOBILE_QUERY = "(max-width: 767px)";
 
 function subscribeMobileViewport(callback: () => void) {
@@ -527,7 +527,7 @@ export function ArchiveIntro() {
               <div
                 data-swap-a
                 data-sd-global-ignore
-                className={`flex flex-col gap-3 md:gap-[1em] ${
+                className={`flex flex-col gap-3 md:gap-[1em] md:translate-y-5 ${
                   isEnglish ? "md:relative md:top-[26px]" : ""
                 }`}
               >
@@ -555,7 +555,7 @@ export function ArchiveIntro() {
               <div
                 data-swap-b
                 data-sd-global-ignore
-                className={`absolute left-0 top-[-11px] flex w-[124.6%] flex-col gap-3 md:inset-x-0 ${
+                className={`absolute left-0 top-[-11px] flex w-[124.6%] flex-col gap-3 md:inset-x-0 md:translate-y-2.5 ${
                   isEnglish
                     ? "md:top-0 md:w-[308px] md:gap-2"
                     : "md:top-[-10px] md:w-auto md:gap-[1em]"

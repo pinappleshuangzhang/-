@@ -17,18 +17,15 @@ import {
 import { setSondavenVisible } from "@/animations/sondaven-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
-import { FlipHoverButton } from "@/components/ui/flip-hover-button";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { useDesktopMedia } from "@/hooks/use-desktop-media";
 import { useHeroPreloader } from "@/hooks/use-hero-preloader";
 import { HeroLoader, LOADER_ASSET_PATHS } from "@/sections/hero-loader";
 import archiveBoxImg from "../../public/hero/hero-loader-bg.webp";
-import mobileFinalBgImg from "../../public/hero/hero-mobile-final-bg.webp";
-import mobileFirstFrameImg from "../../public/hero/hero-mobile-first.webp";
 
 gsap.registerPlugin(useGSAP);
 
-const DESKTOP_VIDEO_SRC = "/hero/hero-intro.mp4?v=202609102032";
+const DESKTOP_VIDEO_SRC = "/hero/hero-intro.mp4?v=202609111835";
 const MOBILE_VIDEO_SRC = "/hero/hero-mobile-intro.mp4?v=202609111006";
 /** 是否播放开场视频；true 时视频下载进度计入加载屏 */
 const SHOW_INTRO_VIDEO = true;
@@ -80,13 +77,13 @@ export function Hero() {
   const { setNavigationLocked, setIntroOverlayActive, registerScrollInterceptor } =
     useSectionPager();
   const firstFrameRef = useRef<HTMLDivElement>(null);
+  const scrollHintRef = useRef<HTMLParagraphElement>(null);
+  const skipRef = useRef<HTMLButtonElement>(null);
   const introPhaseRef = useRef<"loading" | "holding" | "playing" | "done">(
     "loading",
   );
   const startIntroVideoRef = useRef<(() => void) | null>(null);
   const skipIntroVideoRef = useRef<(() => void) | null>(null);
-  const [showScrollHint, setShowScrollHint] = useState(false);
-  const [showSkip, setShowSkip] = useState(false);
   // 加载序幕只出现一次：退场动画结束后整体卸载，释放其 DOM 与图片内存
   const [loaderDismissed, setLoaderDismissed] = useState(false);
   // 开场流程结束后档案盒首帧与视频层不再复用，一并卸载释放内存
@@ -210,17 +207,23 @@ export function Hero() {
       const lastFrame = document.querySelector<HTMLElement>(
         '[data-shared-bg="studio"]',
       );
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
       if (loader) gsap.set(loader, { autoAlpha: 0 });
-      if (videoLayer) gsap.set(videoLayer, { autoAlpha: 0 });
       if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
-      if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
+      // 手机保留视频层（首/尾帧定格）；桌面切到静态尾帧并卸载视频。
+      if (isMobile) {
+        if (videoLayer) gsap.set(videoLayer, { autoAlpha: 1 });
+      } else {
+        if (videoLayer) gsap.set(videoLayer, { autoAlpha: 0 });
+        if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
+        setIntroDone(true);
+      }
       setSondavenVisible(container.current);
       introPhaseRef.current = "done";
-      setShowScrollHint(false);
+      gsap.set([scrollHintRef.current, skipRef.current], { autoAlpha: 0 });
       doneRef.current = true;
       setNavigationLocked(false);
       setLoaderDismissed(true);
-      setIntroDone(true);
     }, LOADER_FAILSAFE_MS);
 
     return () => window.clearTimeout(timeout);
@@ -233,13 +236,7 @@ export function Hero() {
       const videoLayer = videoLayerRef.current;
       const video = videoRef.current;
       if (!root || !loader || !videoLayer || !video) return;
-      const isSafari =
-        /safari/i.test(navigator.userAgent) &&
-        !/chrome|chromium|crios|edg|android/i.test(navigator.userAgent);
-      // Safari 提前呈现暂停的视频首帧，起播时复用同一合成层，避免解码器
-      // 冷启动丢掉前几帧后从 WebP 静帧跳到已经缩小的画面。
-      const useVideoStills =
-        isSafari || window.matchMedia("(max-width: 767px)").matches;
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
       const materials = loader.querySelector<HTMLElement>(
         "[data-loader-materials]",
@@ -260,15 +257,41 @@ export function Hero() {
         '[data-shared-bg="studio"]',
       );
 
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      const fadeCornerAction = (
+        target: HTMLElement | null,
+        show: boolean,
+        duration = 0.4,
+      ) => {
+        if (!target) return;
+        if (reducedMotion) {
+          gsap.set(target, { autoAlpha: show ? 1 : 0 });
+          return;
+        }
+        gsap.to(target, {
+          autoAlpha: show ? 1 : 0,
+          duration,
+          ease: "power2.inOut",
+          overwrite: true,
+        });
+      };
+
+      const hideCornerActions = (duration = 0.35) => {
+        fadeCornerAction(scrollHintRef.current, false, duration);
+        fadeCornerAction(skipRef.current, false, duration);
+      };
+
       const finish = () => {
         introPhaseRef.current = "done";
-        setShowScrollHint(false);
-        setShowSkip(false);
+        hideCornerActions(0.3);
         setSondavenVisible(root);
         doneRef.current = true;
         setNavigationLocked(false);
-        // 手机端继续保留暂停的视频尾帧；桌面端切到静态尾帧后释放视频层。
-        if (!useVideoStills) {
+        // 桌面静态尾帧已就位后卸载视频；手机继续保留视频尾帧定格。
+        if (window.matchMedia("(min-width: 768px)").matches) {
           setIntroDone(true);
           const objectUrl = preloadRef.current.objectUrl;
           if (objectUrl) URL.revokeObjectURL(objectUrl);
@@ -278,8 +301,7 @@ export function Hero() {
       const playStillFinale = contextSafe!(() => {
         if (introPhaseRef.current === "done") return;
         introPhaseRef.current = "done";
-        setShowScrollHint(false);
-        setShowSkip(false);
+        hideCornerActions(0.3);
         video.pause();
         gsap.set(videoLayer, { autoAlpha: 0 });
         revealHeroFinale({
@@ -294,14 +316,20 @@ export function Hero() {
         if (revealStartedRef.current) return;
         revealStartedRef.current = true;
         introPhaseRef.current = "holding";
-        setShowScrollHint(true);
+        fadeCornerAction(scrollHintRef.current, true, 0.5);
         doneRef.current = true;
-        gsap.set(videoLayer, { autoAlpha: 0 });
+        // 手机：加载退场后直接停在视频首帧；桌面：停在档案盒静帧。
+        if (isMobile) {
+          gsap.set(videoLayer, { autoAlpha: 1 });
+          gsap.set(firstFrameRef.current, { autoAlpha: 0 });
+        } else {
+          gsap.set(videoLayer, { autoAlpha: 0 });
+        }
         // 导航先在加载层下方就位，由双层上裁自然揭开，避免退场后再挂载造成闪现。
         setNavigationLocked(false);
         revealArchiveHold({
           loader,
-          firstFrame: firstFrameRef.current,
+          firstFrame: isMobile ? null : firstFrameRef.current,
           lastFrame,
           root,
         }).eventCallback("onComplete", () => {
@@ -324,12 +352,12 @@ export function Hero() {
           activeVideo = createHeroVideoSequence({
             video,
             videoLayer,
-            firstFrame: firstFrameRef.current,
+            // 手机已定格在视频首帧，起播时不再做静帧渐隐等待。
+            firstFrame: isMobile ? null : firstFrameRef.current,
             root,
             objectUrl: state.objectUrl,
-            useVideoStills,
-            onPlaying: () => setShowSkip(true),
-            onRevealStart: () => setShowSkip(false),
+            onPlaying: () => fadeCornerAction(skipRef.current, true, 0.45),
+            onRevealStart: () => fadeCornerAction(skipRef.current, false, 0.4),
             onComplete: finish,
             onFallback: playStillFinale,
           });
@@ -346,7 +374,8 @@ export function Hero() {
           return;
         }
         introPhaseRef.current = "playing";
-        setShowScrollHint(false);
+        // 先让「向下滑动」渐出，起播后再渐入「跳过视频」，避免硬切。
+        fadeCornerAction(scrollHintRef.current, false, 0.4);
         sequence.start();
       });
 
@@ -410,8 +439,12 @@ export function Hero() {
             loaderProgress.update(Math.min(state.progress, timeProgress) * 100);
             if (state.status === "ready" && timeProgress >= 1) {
               releaseLoader(() => {
-                if (SHOW_INTRO_VIDEO) ensureVideo();
-                holdOnArchive();
+                const sequence = SHOW_INTRO_VIDEO ? ensureVideo() : null;
+                if (isMobile && sequence) {
+                  sequence.showFirstFrame(holdOnArchive);
+                } else {
+                  holdOnArchive();
+                }
               });
             }
           }, 50);
@@ -444,27 +477,13 @@ export function Hero() {
 
   return (
     <ScreenShell ref={container}>
-      {/* Figma 949:4141：移动端加载完成后的 390×844 终态，使用 3× 无损导出。 */}
-      <div className="absolute inset-0 z-10 md:hidden">
-        <Image
-          src={mobileFinalBgImg}
-          alt=""
-          fill
-          priority
-          unoptimized
-          placeholder="blur"
-          sizes="100vw"
-          className="object-cover object-bottom"
-        />
-      </div>
-
       {/* 01首屏-1 档案盒与视频层：开场流程结束后不再复用，整体卸载 */}
       {introDone ? null : (
         <>
           {/* 档案盒静帧：加载层退场后停在此页，下滑再播视频 */}
           <div
             ref={firstFrameRef}
-            className="invisible absolute inset-0 z-[25] opacity-0 motion-reduce:hidden"
+            className="invisible absolute inset-0 z-[25] hidden opacity-0 md:block motion-reduce:hidden"
           >
             <Image
               src={archiveBoxImg}
@@ -474,21 +493,11 @@ export function Hero() {
               unoptimized
               placeholder="blur"
               sizes="100vw"
-              className="hidden object-cover md:block"
-            />
-            <Image
-              src={mobileFirstFrameImg}
-              alt=""
-              fill
-              priority
-              unoptimized
-              placeholder="blur"
-              sizes="(max-width: 767px) 100vw, 1px"
-              className="object-cover md:hidden"
+              className="object-cover"
             />
           </div>
 
-          {/* 全屏视频层：盖住共享尾帧底图，避免播片时静帧露出来闪一下 */}
+          {/* 全屏视频层：手机播完定格尾帧；桌面再渐入静态尾帧 */}
           <div
             ref={videoLayerRef}
             className="invisible absolute inset-0 z-20 bg-white opacity-0"
@@ -630,32 +639,29 @@ export function Hero() {
         </div>
       </div>
 
-      {/* 不用 mix-blend-difference：混合模式会阻止视频进入硬件叠加层，引发亮度闪烁 */}
-      {showScrollHint ? (
-        <div className="absolute right-5 bottom-5 z-[35]">
-          <p
-            aria-hidden="true"
-            className={`shrink-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-grey-400 ${
-              locale === "en" ? "font-bodoni" : "font-serif-sc"
-            }`}
-          >
-            {t("hero.scrollDown")}
-          </p>
-        </div>
-      ) : null}
+      {/* 右下角提示：同一锚点 + 同级文字节点，保证右/下间距与字号一致 */}
+      <div className="pointer-events-none absolute right-5 bottom-5 z-[35]">
+        <p
+          ref={scrollHintRef}
+          aria-hidden="true"
+          className={`invisible absolute right-0 bottom-0 m-0 opacity-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-grey-400 ${
+            locale === "en" ? "font-bodoni" : "font-serif-sc"
+          }`}
+        >
+          {t("hero.scrollDown")}
+        </p>
 
-      {showSkip ? (
-        <div className="absolute right-5 bottom-5 z-[35]">
-          <FlipHoverButton
-            label={t("hero.skipVideo")}
-            onClick={() => skipIntroVideoRef.current?.()}
-            markOffsetY={locale === "en" ? -1 : 0}
-            className={`shrink-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-grey-400 focus-visible:outline-none ${
-              locale === "en" ? "font-bodoni" : "font-serif-sc"
-            }`}
-          />
-        </div>
-      ) : null}
+        <button
+          ref={skipRef}
+          type="button"
+          onClick={() => skipIntroVideoRef.current?.()}
+          className={`pointer-events-auto invisible absolute right-0 bottom-0 m-0 border-0 bg-transparent p-0 opacity-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${
+            locale === "en" ? "font-bodoni" : "font-serif-sc"
+          }`}
+        >
+          {t("hero.skipVideo")}
+        </button>
+      </div>
 
       {/* 加载序幕：材质铭牌渐隐切换，顶部进度条跟真实加载；退场后整体卸载 */}
       {loaderDismissed ? null : (

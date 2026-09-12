@@ -1,7 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Libre_Bodoni, Noto_Serif_SC } from "next/font/google";
+import { cookies } from "next/headers";
 import { LocaleProvider } from "@/components/providers/locale-provider";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
+import {
+  LOCALE_STORAGE_KEY,
+  parseLocale,
+} from "@/lib/i18n/locale-storage";
 import "./globals.css";
 
 const notoSerifSC = Noto_Serif_SC({
@@ -36,16 +41,21 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const initialLocale = parseLocale(
+    cookieStore.get(LOCALE_STORAGE_KEY)?.value,
+  );
+
   return (
-    <html lang="zh-CN">
+    <html lang={initialLocale === "zh" ? "zh-CN" : "en"}>
       <body className={`${notoSerifSC.variable} ${libreBodoni.variable}`}>
         <SmoothScrollProvider>
-          <LocaleProvider>{children}</LocaleProvider>
+          <LocaleProvider initialLocale={initialLocale}>{children}</LocaleProvider>
         </SmoothScrollProvider>
       </body>
     </html>

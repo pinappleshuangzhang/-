@@ -308,7 +308,12 @@ export function revealHeroFinale({
     timeline.to(firstFrame, { autoAlpha: 0, duration: 0.8, ease: "power2.inOut" }, 0);
   }
   if (lastFrame) {
-    timeline.set(lastFrame, { autoAlpha: 1 }, 0);
+    timeline.fromTo(
+      lastFrame,
+      { autoAlpha: 0 },
+      { autoAlpha: 1, duration: 2.3, ease: "power2.inOut" },
+      0,
+    );
   }
   timeline.call(() => {
     if (titles) gsap.set(titles, { autoAlpha: 1 });
@@ -323,7 +328,6 @@ type HeroVideoSequenceOptions = {
   firstFrame: HTMLElement | null;
   root: HTMLElement;
   objectUrl: string;
-  useVideoStills?: boolean;
   onPlaying?: () => void;
   onRevealStart?: () => void;
   onComplete: () => void;
@@ -339,7 +343,6 @@ export function createHeroVideoSequence({
   firstFrame,
   root,
   objectUrl,
-  useVideoStills = false,
   onPlaying,
   onRevealStart,
   onComplete,
@@ -354,6 +357,7 @@ export function createHeroVideoSequence({
   let killed = false;
   let phase: "pre" | "playing" | "done" = "pre";
   let startFrame = 0;
+  let firstFrameFade: gsap.core.Tween | null = null;
   const lastFrame = document.querySelector<HTMLElement>(
     '[data-shared-bg="studio"]',
   );
@@ -371,14 +375,22 @@ export function createHeroVideoSequence({
     if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
     const revealTitles = () => {
       if (killed) return;
-      if (useVideoStills) {
-        gsap.set(videoLayer, { autoAlpha: 1 });
-      } else {
-        if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
+      const useStaticLastFrame =
+        Boolean(lastFrame) &&
+        window.matchMedia("(min-width: 768px)").matches;
+      // 桌面：定格视频尾帧后，静态尾帧 0→1 渐入，视频层同步淡出。
+      // 手机：无桌面静帧底图，继续定格在视频尾帧。
+      gsap.set(videoLayer, { autoAlpha: 1 });
+      if (useStaticLastFrame && lastFrame) {
+        gsap.fromTo(
+          lastFrame,
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: 2.3, ease: "power2.inOut" },
+        );
         gsap.to(videoLayer, {
           autoAlpha: 0,
-          duration: 0.45,
-          ease: "power2.out",
+          duration: 2.3,
+          ease: "power2.inOut",
         });
       }
       hideTitles();
@@ -388,7 +400,7 @@ export function createHeroVideoSequence({
         if (!killed) onComplete();
       });
     };
-    if (useVideoStills && seekToEnd && Number.isFinite(video.duration)) {
+    if (seekToEnd && Number.isFinite(video.duration)) {
       video.addEventListener("seeked", revealTitles, { once: true });
       video.currentTime = Math.max(0, video.duration - 1 / 30);
       return;
@@ -398,6 +410,10 @@ export function createHeroVideoSequence({
 
   const onEnded = () => {
     if (killed || phase !== "playing") return;
+    // 部分移动端 ended 时会清空画面，强制停在最后一帧再进入收尾。
+    if (Number.isFinite(video.duration) && video.duration > 0) {
+      video.currentTime = Math.max(0, video.duration - 1 / 30);
+    }
     finishToTitles();
   };
 
@@ -411,9 +427,7 @@ export function createHeroVideoSequence({
     if (killed || phase !== "pre") return;
     phase = "playing";
     hideTitles();
-    // Safari 的 requestVideoFrameCallback 可能在播放已前进数帧后才触发，
-    // 导致静帧直接跳到视频内已经缩放的画面。先把暂停的第 0 帧放到静帧
-    // 下方并留出一帧完成合成，再切层开播。
+    // 先让暂停的视频首帧在静帧下方完成合成；静帧完全渐隐后才正式播放。
     video.pause();
     if (video.currentTime > 0.001) video.currentTime = 0;
     gsap.set(videoLayer, { autoAlpha: 1 });
@@ -421,15 +435,31 @@ export function createHeroVideoSequence({
       startFrame = window.requestAnimationFrame(() => {
         startFrame = 0;
         if (killed || phase !== "playing") return;
-        if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
-        onPlaying?.();
-        video.play().catch(() => {
-          if (killed) return;
-          gsap.set(videoLayer, { autoAlpha: 0 });
-          if (firstFrame) gsap.set(firstFrame, { autoAlpha: 1 });
-          if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
-          onFallback();
-        });
+        const startPlayback = () => {
+          if (killed || phase !== "playing") return;
+          video
+            .play()
+            .then(() => {
+              if (!killed) onPlaying?.();
+            })
+            .catch(() => {
+              if (killed) return;
+              gsap.set(videoLayer, { autoAlpha: 0 });
+              if (firstFrame) gsap.set(firstFrame, { autoAlpha: 1 });
+              if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
+              onFallback();
+            });
+        };
+        if (firstFrame) {
+          firstFrameFade = gsap.to(firstFrame, {
+            autoAlpha: 0,
+            duration: 0.65,
+            ease: "power2.inOut",
+            onComplete: startPlayback,
+          });
+        } else {
+          startPlayback();
+        }
       });
     });
   };
@@ -482,6 +512,7 @@ export function createHeroVideoSequence({
     kill() {
       killed = true;
       if (startFrame) window.cancelAnimationFrame(startFrame);
+      firstFrameFade?.kill();
       video.removeEventListener("loadeddata", playNow);
       video.removeEventListener("error", onError);
       video.removeEventListener("ended", onEnded);

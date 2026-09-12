@@ -1648,13 +1648,7 @@ export default function Carousel({
             return;
           }
         }
-        // 圆环与列表都停稳后再留一拍，避免放大刚结束就播提示。
-        hintDelay = gsap.delayedCall(0.9, () => {
-          hintDelay = null;
-          if (disposed || pausedRef.current || stagePhase !== "final") return;
-          if (dragging) return;
-          startDragHint();
-        });
+        startDragHint();
       };
       picking = true;
       parkOnFirstCategory();

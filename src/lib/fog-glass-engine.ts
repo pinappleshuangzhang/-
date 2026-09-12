@@ -190,7 +190,7 @@ export function createFogGlassEngine(
     runners.push({
       x,
       y,
-      vy: 0.3,
+      vy: 0.15,
       seed: Math.random(),
       r: big ? 6.5 + Math.random() * 2.5 : 3.5 + Math.random() * 1.5,
     });
@@ -202,8 +202,8 @@ export function createFogGlassEngine(
       const runner = runners[i];
 
       runner.vy = Math.min(
-        runner.vy + 0.02 + runner.r * 0.004 + runner.seed * 0.015,
-        1.6 + runner.r * 0.15,
+        runner.vy + 0.01 + runner.r * 0.002 + runner.seed * 0.008,
+        0.85 + runner.r * 0.08,
       );
 
       const prevX = runner.x;
@@ -220,7 +220,7 @@ export function createFogGlassEngine(
         ) {
           beads.splice(j, 1);
           runner.r = Math.min(runner.r + bead.r * 0.25, 10);
-          runner.vy += 0.25;
+          runner.vy += 0.12;
         }
       }
 

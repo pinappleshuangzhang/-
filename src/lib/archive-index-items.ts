@@ -34,7 +34,7 @@ export const ARCHIVE_INDEX_ITEMS: ArchiveIndexItem[] = [
   {
     code: "GA_005",
     titleKey: "index.ga005",
-    screenKey: "archive-ga-005",
+    screenKey: null,
   },
   {
     code: "GA_006",

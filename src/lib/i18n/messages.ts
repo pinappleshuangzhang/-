@@ -159,7 +159,7 @@ const zh: Messages = {
   "hero.scrollDown": "向下滑动",
   "hero.skipVideo": "跳过视频",
   "loader.role": "临时调查员",
-  "loader.id": "0_41",
+  "loader.id": "G_U0412",
   "loader.apply": "申请临时访问权限",
   "loader.review": "档案连接中",
   "loader.approved": "已批准你的临时申请",
@@ -291,7 +291,7 @@ const en: Messages = {
   "hero.skipVideo": "Skip Video",
   // 尾随普通空格会被行内折叠掉，用不换行空格才能与编号隔开
   "loader.role": "Temporary Investigator\u00A0",
-  "loader.id": "0_41",
+  "loader.id": "G_U0412",
   "loader.apply": "Requesting Temporary Access",
   "loader.review": "Connecting Archive",
   "loader.approved": "Temporary Application Approved",

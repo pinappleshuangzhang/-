@@ -15,8 +15,10 @@ import bgImg from "../../../public/archive-index/bg.webp";
 
 gsap.registerPlugin(useGSAP);
 
-/** 与工作室简介的高亮条一致：黑底由左向右擦入。 */
+/** 与工作室简介的高亮条一致：黑底由左向右擦入，白字随裁切同步露出。 */
 const INDEX_TAB_WIPE_DURATION = 1.2;
+const INDEX_TAB_CLIP_HIDDEN = "inset(0 100% 0 0)";
+const INDEX_TAB_CLIP_VISIBLE = "inset(0 0% 0 0)";
 
 type ArchiveIndexProps = {
   open: boolean;
@@ -128,14 +130,13 @@ export function ArchiveIndex({
       const activeTabFill = panel.querySelector<HTMLElement>(
         "[data-index-active-fill]",
       );
-      // 在首帧直接设为零宽，确保黑底只会随擦入动画出现，不会提前闪现。
+      // 首帧裁到右侧全隐，黑底与白字同步随 clip-path 擦入。
       gsap.set(activeTabFill, {
-        scaleX: 0,
-        transformOrigin: "left center",
+        clipPath: INDEX_TAB_CLIP_HIDDEN,
       });
       if (reducedMotion) {
         gsap.set(panel, { autoAlpha: 1 });
-        gsap.set(activeTabFill, { scaleX: 1 });
+        gsap.set(activeTabFill, { clipPath: INDEX_TAB_CLIP_VISIBLE });
         return;
       }
       gsap.fromTo(
@@ -145,10 +146,9 @@ export function ArchiveIndex({
       );
       if (activeTabFill) {
         gsap.to(activeTabFill, {
-          scaleX: 1,
+          clipPath: INDEX_TAB_CLIP_VISIBLE,
           duration: INDEX_TAB_WIPE_DURATION,
           ease: "power2.out",
-          transformOrigin: "left center",
         });
       }
     },
@@ -394,15 +394,20 @@ function useIndexTabWipeFill() {
 
       gsap.killTweensOf(fill);
       if (reducedMotion) {
-        gsap.set(fill, { scaleX: entering ? 1 : 0 });
+        gsap.set(fill, {
+          clipPath: entering
+            ? INDEX_TAB_CLIP_VISIBLE
+            : INDEX_TAB_CLIP_HIDDEN,
+        });
         return;
       }
 
       gsap.to(fill, {
-        scaleX: entering ? 1 : 0,
+        clipPath: entering
+          ? INDEX_TAB_CLIP_VISIBLE
+          : INDEX_TAB_CLIP_HIDDEN,
         duration: INDEX_TAB_WIPE_DURATION,
         ease: "power2.out",
-        transformOrigin: "left center",
       });
     },
     [reducedMotion],
@@ -413,6 +418,43 @@ function useIndexTabWipeFill() {
     onEnter: () => animate(true),
     onLeave: () => animate(false),
   };
+}
+
+function IndexMenuRow({
+  code,
+  title,
+  showArrow,
+}: {
+  code: string;
+  title: string;
+  showArrow: boolean;
+}) {
+  return (
+    <>
+      <span className="flex items-baseline gap-[calc(var(--su)*16)]">
+        <span className="shrink-0 font-bodoni font-normal capitalize">
+          ( {code} )
+        </span>
+        <span className="whitespace-nowrap font-serif-sc font-light">
+          {title}
+        </span>
+      </span>
+      <span
+        aria-hidden="true"
+        className={`inline-flex size-[calc(var(--su)*24)] shrink-0 items-center justify-center ${
+          showArrow ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <Image
+          src="/archive-index/arrow.svg"
+          alt=""
+          width={15}
+          height={15}
+          className="h-[calc(var(--su)*14.8)] w-[calc(var(--su)*15.4)] shrink-0 -rotate-45 brightness-0 invert"
+        />
+      </span>
+    </>
+  );
 }
 
 function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
@@ -431,7 +473,7 @@ function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
   if (!available) {
     return (
       <div
-        className={`flex items-baseline rounded-rs-4 text-grey-300 ${rowText}`}
+        className={`flex items-baseline text-grey-300 ${rowText}`}
         aria-disabled="true"
       >
         <span className="shrink-0 font-bodoni font-normal capitalize">
@@ -461,49 +503,19 @@ function IndexMenuItem({ item, active, onSelect }: IndexMenuItemProps) {
       onBlur={() => {
         if (!active) onDissolveLeave();
       }}
-      className={`group relative flex w-full items-center justify-between focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${rowText} ${
-        active
-          ? "text-white"
-          : "text-grey-300 transition-colors duration-[600ms] hover:text-white focus-visible:text-white motion-reduce:transition-none"
-      }`}
+      className={`group relative flex w-full items-center justify-between text-grey-300 focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${rowText}`}
     >
-      {active ? (
-        <div
-          data-index-active-fill
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 origin-left scale-x-0 bg-grey-400"
-        />
-      ) : (
-        <div
-          ref={fillRef}
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 origin-left scale-x-0 bg-grey-400"
-        />
-      )}
-      <span className="relative z-10 flex items-baseline gap-[calc(var(--su)*16)]">
-        <span className="shrink-0 font-bodoni font-normal capitalize">
-          ( {item.code} )
-        </span>
-        <span className="whitespace-nowrap font-serif-sc font-light">
-          {title}
-        </span>
-      </span>
-      <span
+      <IndexMenuRow code={item.code} title={title} showArrow={false} />
+      {/* 黑底 + 白字副本：clip-path 从左擦入，擦到哪露到哪 */}
+      <div
+        ref={active ? undefined : fillRef}
+        data-index-active-fill={active ? "" : undefined}
         aria-hidden="true"
-        className={`relative z-10 inline-flex size-[calc(var(--su)*24)] shrink-0 items-center justify-center transition-opacity duration-[600ms] motion-reduce:transition-none ${
-          active
-            ? "opacity-100"
-            : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
-        }`}
+        className="pointer-events-none absolute inset-0 flex items-center justify-between bg-grey-400 text-white"
+        style={{ clipPath: INDEX_TAB_CLIP_HIDDEN }}
       >
-        <Image
-          src="/archive-index/arrow.svg"
-          alt=""
-          width={15}
-          height={15}
-          className="h-[calc(var(--su)*14.8)] w-[calc(var(--su)*15.4)] shrink-0 -rotate-45 brightness-0 invert"
-        />
-      </span>
+        <IndexMenuRow code={item.code} title={title} showArrow />
+      </div>
     </button>
   );
 }

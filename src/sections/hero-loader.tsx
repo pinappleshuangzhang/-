@@ -21,7 +21,6 @@ export const LOADER_ASSET_PATHS = [
   "/hero/loader-box-shadow.svg",
   archiveBackground.src.src,
   "/hero/hero-loader-bg.webp",
-  "/hero/hero-mobile-first.webp",
 ] as const;
 
 /** 六张 Grava 材质图渐隐循环 */
@@ -128,15 +127,15 @@ export function HeroLoader({
 
       <div
         data-loader-chrome
-        className="absolute left-3 right-3 top-3 flex items-start justify-between md:left-5 md:right-5"
+        className="absolute left-3 right-3 top-3 flex items-center justify-between md:left-5 md:right-5"
       >
         <p
           data-loader-status
           aria-hidden="true"
-          className="flex items-end font-serif-sc text-10 font-normal leading-[14px] text-grey-400 md:text-14 md:leading-5"
+          className="flex items-center font-serif-sc text-10 font-normal leading-[14px] text-grey-400 md:text-14 md:leading-5"
         >
           <span className="whitespace-nowrap">{roleLabel}</span>
-          <span className="relative top-0 font-bodoni md:top-0.5">
+          <span className="relative top-px font-bodoni md:top-0">
             {idLabel}
           </span>
           <span className="ml-1 inline-block h-[14px] overflow-hidden md:h-5">
