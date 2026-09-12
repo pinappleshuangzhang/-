@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { IMAGE_FILES } from "./projects";
 
 // Cell aspect matches the Figma seed card's 120 : 75 ratio.
-// 1413 = 作品源图宽度（5x 导出）；再低会在图集阶段就丢细节，再高只是空放大。
+// 1413 = 作品源图宽度（5x 导出）；第三阶段放大后按设备像素取样，不得再缩小。
 const CELL_W = 1413;
 const CELL_H = Math.round(CELL_W / 1.6);
 
@@ -21,15 +21,19 @@ const load = (src, priority) =>
  * per plane because ESSL 1.00 cannot index an array of samplers with a
  * non-constant index.
  *
- * Returns synchronously with the sheet blank and filling in as images arrive:
- * the caller needs something to bind on frame one, and the entry shows cell 0
- * while the rest are still coming.
+ * Returns synchronously with the sheet blank and filling in as images arrive.
+ * The seed cell is requested first and uploaded as soon as it is painted, so
+ * the entry card can wear its art while the rest are still coming.
  *
- * `first` settles once cell 0 is on the texture, `ready` once all of them are.
- * Neither rejects — a missing file leaves its cell blank and still counts as
- * settled, so one bad path cannot strand the entry.
+ * `first` settles once the seed cell is on the GPU, `ready` once all of them
+ * are. Neither rejects — a missing file leaves its cell blank and still
+ * counts as settled, so one bad path cannot strand the entry.
  */
-export function buildAtlas(files = IMAGE_FILES, onProgress) {
+export function buildAtlas(files = IMAGE_FILES, onProgress, options = {}) {
+  const seedIndex = Math.min(
+    files.length - 1,
+    Math.max(0, Math.round(options.seedIndex ?? 0)),
+  );
   const cols = Math.ceil(Math.sqrt(files.length));
   const rows = Math.ceil(files.length / cols);
 
@@ -80,17 +84,19 @@ export function buildAtlas(files = IMAGE_FILES, onProgress) {
         tick();
       });
 
-  // Cell 0 is requested first, but the GPU upload waits for the complete
-  // sheet. Uploading this partly transparent canvas first can leave Safari
-  // sampling black intermediate mip levels while the ring unfolds.
-  const first = fetchInto(0, "high");
+  // Seed first so the birth card can texture before the other four arrive.
+  // Two GPU uploads only: once the seed is painted, once the sheet is full.
+  // Per-image uploads would resend the whole canvas and rebuild every mip.
+  const first = fetchInto(seedIndex, "high").then(() => {
+    texture.needsUpdate = true;
+  });
 
-  // Upload the completed sheet exactly once. Marking dirty per image would
-  // repeatedly resend the whole canvas and regenerate every mip level.
-  const ready = Promise.all([
-    first,
-    ...files.slice(1).map((_, k) => fetchInto(k + 1, "low")),
-  ]).then(() => {
+  const rest = files
+    .map((_, index) => index)
+    .filter((index) => index !== seedIndex)
+    .map((index) => fetchInto(index, "low"));
+
+  const ready = Promise.all([first, ...rest]).then(() => {
     texture.needsUpdate = true;
   });
 

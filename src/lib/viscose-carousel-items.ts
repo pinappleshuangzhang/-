@@ -7,6 +7,12 @@ export type ViscoseCarouselItem = {
   year: string;
 };
 
+/**
+ * 入场种子与第三阶段初始正面：Website Interface。
+ * 与 carousel `imageOffset` / `INITIAL_CELL` 保持同一格。
+ */
+export const VISCOSE_SEED_INDEX = 2;
+
 /** 新第五屏作品环：只使用本站已有作品素材，不引用开源仓库示例图片。 */
 export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
   {

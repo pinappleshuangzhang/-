@@ -106,6 +106,7 @@ export type MessageKey =
   | "survey.description"
   | "survey.heroAlt"
   | "survey.heroPreview"
+  | "survey.videoExpand"
   | "survey.media2Alt"
   | "survey.media3Alt"
   | "survey.media4Alt"
@@ -234,6 +235,7 @@ const zh: Messages = {
   "survey.heroAlt":
     "Design AI Ops 网站首屏：Brand Creativity、Website Design、Material Collection，中央为 Design AI Ops The Apple Moment，底部为作品缩略图",
   "survey.heroPreview": "悬停或聚焦时播放预览视频",
+  "survey.videoExpand": "点击查看视频",
   "survey.media2Alt":
     "亚当与上帝指尖之间悬浮青苹果，左上角为 The Apple Moment",
   "survey.media3Alt":
@@ -371,6 +373,7 @@ const en: Messages = {
   "survey.heroAlt":
     "Design AI Ops Website Hero With Brand Creativity, Website Design, Material Collection, The Title The Apple Moment, And Work Thumbnails Below",
   "survey.heroPreview": "Hover Or Focus To Play A Preview Video",
+  "survey.videoExpand": "Tap To Watch",
   "survey.media2Alt":
     "Adam And God Reach Toward A Green Apple Between Their Fingertips, Titled The Apple Moment",
   "survey.media3Alt":

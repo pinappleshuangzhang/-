@@ -4,9 +4,13 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useEffect, useState, type MutableRefObject } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { ViscoseMobileGallery } from "@/components/ui/viscose-mobile-gallery";
 import { useDesktopMedia } from "@/hooks/use-desktop-media";
-import type { ViscoseCarouselItem } from "@/lib/viscose-carousel-items";
+import {
+  VISCOSE_SEED_INDEX,
+  type ViscoseCarouselItem,
+} from "@/lib/viscose-carousel-items";
 
 const ViscoseDesktopCarousel = dynamic(
   () =>
@@ -37,6 +41,7 @@ export function ViscoseCarousel({
   className,
 }: ViscoseCarouselProps) {
   const { locale, t } = useLocale();
+  const { index: screenIndex } = useSectionPager();
   const isDesktop = useDesktopMedia();
   const [hasActivated, setHasActivated] = useState(false);
 
@@ -44,6 +49,17 @@ export function ViscoseCarousel({
     if (!isDesktop) return;
     void import("@/components/ui/viscose-desktop-carousel");
   }, [isDesktop]);
+
+  // 工作室简介屏起预取种子图（Website Interface），避开首屏 Hero 带宽；
+  // 与图集同一 URL，进入第五屏时 Image() 走缓存。
+  useEffect(() => {
+    if (screenIndex < 2) return;
+    const src = items[VISCOSE_SEED_INDEX]?.src;
+    if (!src) return;
+    const img = new window.Image();
+    img.fetchPriority = "high";
+    img.src = src;
+  }, [items, screenIndex]);
 
   // 首次激活后保持挂载（渲染期守卫式 setState，避免级联渲染）
   if (active && !hasActivated) setHasActivated(true);

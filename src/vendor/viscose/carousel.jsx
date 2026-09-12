@@ -50,6 +50,10 @@ function su(value) {
 /** 入场种子所穿的贴图格，也是移动端第三阶段最初展示的分类 */
 const INITIAL_CELL = Math.round(defaultParams().imageOffset);
 
+function isZhCategoryFont(fontClass) {
+  return String(fontClass ?? "").includes("font-serif-sc");
+}
+
 const blankTexture = () => {
   const t = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
   t.needsUpdate = true;
@@ -74,6 +78,12 @@ export default function Carousel({
   const hideCursorTagRef = useRef(() => {});
   const abortDragHintRef = useRef(() => {});
   const dragHintRef = useRef(null);
+  const nameFontRef = useRef(nameFont);
+  const applyLocaleRef = useRef(() => {});
+  const prevNameFontRef = useRef(nameFont);
+  useEffect(() => {
+    nameFontRef.current = nameFont;
+  }, [nameFont]);
   useEffect(() => {
     pausedRef.current = paused;
     if (paused) {
@@ -142,7 +152,7 @@ export default function Carousel({
     let ensureLoop = () => {};
 
     const params = defaultParams();
-    params.nameFont = nameFont;
+    params.nameFont = nameFontRef.current;
     // progress: the seed is born at screen centre
     // launch:   the seed travels out to its place on the ring
     // spread:   the rest peel off it and the ring draws
@@ -287,12 +297,16 @@ export default function Carousel({
     const readyWaiters = [];
     const whenReady = (fn) => (launchReady ? fn() : readyWaiters.push(fn));
 
-    const atlas = buildAtlas(IMAGE_FILES, (p) => {
-      if (disposed) return;
-      loadProg = p;
-      // 图集回调不在 RAF 里；空闲停环后必须叫醒，否则百分比停在个位数。
-      ensureLoop();
-    });
+    const atlas = buildAtlas(
+      IMAGE_FILES,
+      (p) => {
+        if (disposed) return;
+        loadProg = p;
+        // 图集回调不在 RAF 里；空闲停环后必须叫醒，否则百分比停在个位数。
+        ensureLoop();
+      },
+      { seedIndex: INITIAL_CELL },
+    );
 
     uniforms.uAtlas.value.dispose();
     if (isSafari) {
@@ -311,11 +325,17 @@ export default function Carousel({
     // this and has to be right from the first frame, blank cells or not.
     const imageCount = atlas.count;
 
+    // 种子格先上 GPU 即可给入场小图上色；其余格仍等 ready，展开圆环才不会空卡。
+    atlas.first.then(() => {
+      if (disposed) return;
+      firstIn = true;
+      ensureLoop();
+    });
     atlas.ready.then(() => {
-      if (!disposed) {
-        firstIn = true;
-        loadProg = 1;
-      }
+      if (disposed) return;
+      firstIn = true;
+      loadProg = 1;
+      ensureLoop();
     });
 
     /* --------------------------------------------------------------- size */
@@ -901,9 +921,10 @@ export default function Carousel({
       const mobileFinalCy =
         viewH * 0.5 - (params.mobileFinalCardTop + mobileFinalW / 1.6 / 2);
       const cx = mobileNow ? 0 : stageCx + params.ringOffsetX * fit * spread;
+      // 第三阶段（shift→1）去掉圆环的纵向偏移，正面大图与右侧类型列表一起落在视口垂直中线
       const cy = mobileNow
         ? mobileFinalCy * shift
-        : stageCy - params.ringOffsetY * fit * spread;
+        : stageCy - params.ringOffsetY * fit * spread * (1 - shift);
 
       // Screen-space centre, for pointer maths. World Y is up, page Y is down.
       ringCentre.x = viewW * 0.5 + cx;
@@ -1799,6 +1820,16 @@ export default function Carousel({
       tl = build();
     };
 
+    // 语言切换：第一阶段重跑入场；第二/三阶段只换字体，停在当前阶段。
+    applyLocaleRef.current = () => {
+      params.nameFont = nameFontRef.current;
+      if (stagePhase === "entry") {
+        replay();
+        return;
+      }
+      styleMeta();
+    };
+
     // The entry is built once, and not until the faces are in. Every glyph
     // mask is sized by the glyph inside it, and the timeline holds direct
     // references to the uniforms those masks own — so rebuilding the text
@@ -2011,6 +2042,7 @@ export default function Carousel({
       if (categorySelectRef.current === pickCategory) {
         categorySelectRef.current = null;
       }
+      applyLocaleRef.current = () => {};
       finalTl?.kill();
       tl?.kill();
       gsap.killTweensOf(splitText.chars);
@@ -2034,7 +2066,13 @@ export default function Carousel({
       renderer.forceContextLoss();
       renderer.domElement.remove();
     };
-  }, [nameFont, onSelect, scrollHandlerRef]);
+  }, [onSelect, scrollHandlerRef]);
+
+  useEffect(() => {
+    if (prevNameFontRef.current === nameFont) return;
+    prevNameFontRef.current = nameFont;
+    applyLocaleRef.current();
+  }, [nameFont]);
 
   return (
     <>
@@ -2246,7 +2284,8 @@ export default function Carousel({
         aria-label="Projects"
         style={{
           right: "20px",
-          top: "calc(50% - 122px)",
+          top: "50%",
+          transform: "translateY(-50%)",
           width: "507px",
         }}
         className={`absolute z-10 flex flex-col items-start gap-9 leading-5 text-grey-300 opacity-0 [--viscose-su:calc(100vw/1440)] max-md:hidden ${categoryFontClass}`}
@@ -2261,7 +2300,10 @@ export default function Carousel({
           >
             <span
               className="pointer-events-none absolute right-full top-1/2 mr-1 flex -translate-y-1/2 items-center"
-              style={{ marginTop: "1px" }}
+              style={{
+                // 中文方块下移 2、英文方块上移 2（相对原 1px）
+                marginTop: isZhCategoryFont(categoryFontClass) ? "3px" : "-1px",
+              }}
             >
               <span className="block size-3 bg-grey-400 opacity-0 group-aria-[current=true]:opacity-100" />
             </span>
@@ -2269,8 +2311,12 @@ export default function Carousel({
               label={`${String(i + 1).padStart(3, "0")}  ${categoryLabels[i] ?? p.listLabel}`}
               showHoverMark
               groupEntryWords
-              firstTokenClassName="relative top-0.5 font-bodoni"
-              markOffsetY={1}
+              firstTokenClassName={
+                isZhCategoryFont(categoryFontClass)
+                  ? "relative top-0.5 font-bodoni"
+                  : "relative font-bodoni"
+              }
+              markOffsetY={isZhCategoryFont(categoryFontClass) ? 3 : -1}
               aria-label={categoryLabels[i] ?? p.listLabel}
               onClick={() => categorySelectRef.current?.(i)}
               className="h-5 transition-colors group-hover:text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"

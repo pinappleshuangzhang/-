@@ -468,7 +468,7 @@ export function ArchiveIntro() {
           {/* 投影：设计稿手绘投影图形 1:1 还原（SVG 画布含模糊出血，按设计坐标定位） */}
           <span
             aria-hidden="true"
-            className="absolute left-[-2.57%] top-[1.76%] block h-[119.8%] w-[111.64%]"
+            className="absolute left-[-2.57%] top-[1.76%] block h-[119.8%] w-[111.64%] md:left-[calc(-2.57%-16px)]"
           >
             <Image src="/archive/folder-shadow.svg" alt="" fill sizes="60vw" />
           </span>
@@ -527,8 +527,8 @@ export function ArchiveIntro() {
               <div
                 data-swap-a
                 data-sd-global-ignore
-                className={`flex flex-col gap-3 md:gap-[1em] md:translate-y-5 ${
-                  isEnglish ? "md:relative md:top-[26px]" : ""
+                className={`flex flex-col gap-3 md:gap-[1em] ${
+                  isEnglish ? "md:relative md:top-[26px] md:translate-y-5" : ""
                 }`}
               >
                 <div
@@ -555,9 +555,9 @@ export function ArchiveIntro() {
               <div
                 data-swap-b
                 data-sd-global-ignore
-                className={`absolute left-0 top-[-11px] flex w-[124.6%] flex-col gap-3 md:inset-x-0 md:translate-y-2.5 ${
+                className={`absolute left-0 top-[-11px] flex w-[124.6%] flex-col gap-3 md:inset-x-0 ${
                   isEnglish
-                    ? "md:top-0 md:w-[308px] md:gap-2"
+                    ? "md:top-0 md:w-[308px] md:gap-2 md:translate-y-2.5"
                     : "md:top-[-10px] md:w-auto md:gap-[1em]"
                 }`}
               >

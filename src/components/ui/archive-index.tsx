@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -19,6 +27,10 @@ gsap.registerPlugin(useGSAP);
 const INDEX_TAB_WIPE_DURATION = 1.2;
 const INDEX_TAB_CLIP_HIDDEN = "inset(0 100% 0 0)";
 const INDEX_TAB_CLIP_VISIBLE = "inset(0 0% 0 0)";
+/** 与站点 md 断点、作品抽屉一致 */
+const MOBILE_QUERY = "(max-width: 767px)";
+const DRAWER_DURATION = 0.7;
+const OVERLAY_DURATION = 0.6;
 
 type ArchiveIndexProps = {
   open: boolean;
@@ -45,8 +57,32 @@ export function ArchiveIndex({
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const closeLabelRef = useRef<HTMLParagraphElement>(null);
+  const mobileOverlayRef = useRef<HTMLDivElement>(null);
+  const mobileDrawerRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
   const { locale, t } = useLocale();
+  const [mounted, setMounted] = useState(open);
+  if (open && !mounted) {
+    setMounted(true);
+  }
+
+  // 目录关闭时组件仍挂载：空闲预热活页夹与背景，避免首次展开才请求解码。
+  useEffect(() => {
+    const sources = [binderImg.src, bgImg.src];
+    const warm = () => {
+      for (const src of sources) {
+        const img = new window.Image();
+        img.decoding = "async";
+        img.src = src;
+      }
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      const idleId = window.requestIdleCallback(warm, { timeout: 2000 });
+      return () => window.cancelIdleCallback(idleId);
+    }
+    const timer = window.setTimeout(warm, 800);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -123,6 +159,64 @@ export function ArchiveIndex({
     };
   }, [open, reducedMotion]);
 
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || !mounted) return;
+
+    const isMobile = window.matchMedia(MOBILE_QUERY).matches;
+    const overlay = mobileOverlayRef.current;
+    const drawer = mobileDrawerRef.current;
+    const hidden = { yPercent: 100 };
+    const shown = { yPercent: 0 };
+
+    if (reducedMotion) {
+      gsap.set(panel, { autoAlpha: open ? 1 : 0 });
+      if (overlay) gsap.set(overlay, { opacity: open ? 1 : 0 });
+      if (drawer) gsap.set(drawer, open ? shown : hidden);
+      if (open) return;
+      const frame = window.requestAnimationFrame(() => setMounted(false));
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        if (!open) setMounted(false);
+      },
+    });
+
+    if (isMobile && overlay && drawer) {
+      gsap.set(panel, { autoAlpha: 1 });
+      if (open) {
+        gsap.set(overlay, { opacity: 0 });
+        gsap.set(drawer, hidden);
+        tl.to(overlay, { opacity: 1, duration: OVERLAY_DURATION, ease: "none" }, 0);
+        tl.to(drawer, { ...shown, duration: DRAWER_DURATION, ease: "expo.out" }, 0);
+      } else {
+        tl.to(overlay, { opacity: 0, duration: OVERLAY_DURATION, ease: "none" }, 0);
+        tl.to(drawer, { ...hidden, duration: DRAWER_DURATION, ease: "expo.out" }, 0);
+      }
+      return () => {
+        tl.kill();
+        if (open) {
+          gsap.set(overlay, { opacity: 1 });
+          gsap.set(drawer, shown);
+        }
+      };
+    } else if (open) {
+      tl.fromTo(
+        panel,
+        { autoAlpha: 0 },
+        { autoAlpha: 1, duration: 0.45, ease: "power2.out" },
+      );
+    } else {
+      tl.to(panel, { autoAlpha: 0, duration: 0.3, ease: "power2.out" });
+    }
+
+    return () => {
+      tl.kill();
+    };
+  }, [open, mounted, reducedMotion]);
+
   useGSAP(
     () => {
       const panel = panelRef.current;
@@ -135,15 +229,9 @@ export function ArchiveIndex({
         clipPath: INDEX_TAB_CLIP_HIDDEN,
       });
       if (reducedMotion) {
-        gsap.set(panel, { autoAlpha: 1 });
         gsap.set(activeTabFill, { clipPath: INDEX_TAB_CLIP_VISIBLE });
         return;
       }
-      gsap.fromTo(
-        panel,
-        { autoAlpha: 0 },
-        { autoAlpha: 1, duration: 0.45, ease: "power2.out" },
-      );
       if (activeTabFill) {
         gsap.to(activeTabFill, {
           clipPath: INDEX_TAB_CLIP_VISIBLE,
@@ -155,7 +243,7 @@ export function ArchiveIndex({
     { dependencies: [open, reducedMotion] },
   );
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return (
     <div
@@ -163,7 +251,7 @@ export function ArchiveIndex({
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      className="fixed inset-0 z-[60] opacity-0"
+      className={`fixed inset-0 z-[60] md:opacity-0 ${open ? "" : "pointer-events-none"}`}
       onClick={onClose}
     >
       <Image
@@ -171,6 +259,7 @@ export function ArchiveIndex({
         alt=""
         fill
         priority
+        unoptimized
         sizes="100vw"
         className="hidden object-cover md:block"
       />
@@ -183,6 +272,8 @@ export function ArchiveIndex({
         activeScreenKey={activeScreenKey}
         onClose={onClose}
         onSelect={onSelect}
+        overlayRef={mobileOverlayRef}
+        drawerRef={mobileDrawerRef}
       />
 
       {/* 设计稿 1440×800 舞台：--su = 1 设计像素，随视口等比缩放；贴左对齐使档案图片始终靠视口最左 */}
@@ -195,6 +286,7 @@ export function ArchiveIndex({
               alt=""
               fill
               priority
+              unoptimized
               sizes="(min-width: 1440px) 1050px, 73vw"
               className="object-contain"
             />
@@ -273,12 +365,22 @@ function MobileArchiveIndex({
   activeScreenKey,
   onClose,
   onSelect,
-}: Pick<ArchiveIndexProps, "activeScreenKey" | "onClose" | "onSelect">) {
+  overlayRef,
+  drawerRef,
+}: Pick<ArchiveIndexProps, "activeScreenKey" | "onClose" | "onSelect"> & {
+  overlayRef: RefObject<HTMLDivElement | null>;
+  drawerRef: RefObject<HTMLDivElement | null>;
+}) {
   const { t } = useLocale();
 
   return (
-    <div className="absolute inset-0 bg-black/30 backdrop-blur-[16px] md:hidden">
+    <div className="absolute inset-0 md:hidden">
       <div
+        ref={overlayRef}
+        className="absolute inset-0 bg-black/30 opacity-0 backdrop-blur-[16px]"
+      />
+      <div
+        ref={drawerRef}
         className="absolute inset-x-0 bottom-0 top-[67px] bg-white/90"
         onClick={(event) => event.stopPropagation()}
       >

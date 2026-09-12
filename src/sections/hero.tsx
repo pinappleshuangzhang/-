@@ -77,7 +77,7 @@ export function Hero() {
   const { setNavigationLocked, setIntroOverlayActive, registerScrollInterceptor } =
     useSectionPager();
   const firstFrameRef = useRef<HTMLDivElement>(null);
-  const scrollHintRef = useRef<HTMLParagraphElement>(null);
+  const scrollHintRef = useRef<HTMLButtonElement>(null);
   const skipRef = useRef<HTMLButtonElement>(null);
   const introPhaseRef = useRef<"loading" | "holding" | "playing" | "done">(
     "loading",
@@ -641,15 +641,16 @@ export function Hero() {
 
       {/* 右下角提示：同一锚点 + 同级文字节点，保证右/下间距与字号一致 */}
       <div className="pointer-events-none absolute right-5 bottom-5 z-[35]">
-        <p
+        <button
           ref={scrollHintRef}
-          aria-hidden="true"
-          className={`invisible absolute right-0 bottom-0 m-0 opacity-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-grey-400 ${
+          type="button"
+          onClick={() => startIntroVideoRef.current?.()}
+          className={`pointer-events-auto invisible absolute right-0 bottom-0 m-0 border-0 bg-transparent p-0 opacity-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${
             locale === "en" ? "font-bodoni" : "font-serif-sc"
           }`}
         >
           {t("hero.scrollDown")}
-        </p>
+        </button>
 
         <button
           ref={skipRef}

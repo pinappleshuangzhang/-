@@ -208,12 +208,6 @@ export function MemberRecord() {
               name="Pineapple"
               role={t("member.role02")}
               direction={t("member.direction02")}
-              ipImage={{
-                src: "/archive/member-ip-02-lineart.webp",
-                className: "left-[85.81%] top-[0.214%] w-[14%]",
-                width: 428,
-                height: 350,
-              }}
               {...memberTextLayout(
                 {
                   headerClassName: "left-[66.142%] top-[5.573%] w-[24.85%]",

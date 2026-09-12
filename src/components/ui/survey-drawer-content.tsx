@@ -134,33 +134,61 @@ function WorkContent({ work }: { work: SurveyWork }) {
       {first ? (
         <div className="flex flex-col gap-6">
           <WorkMedia item={first} revealDelay="0.28" />
-          <div
-            data-survey-keep=""
-            data-sd-media
-            data-sd-delay="0.28"
-            className="overflow-hidden"
-          >
-            <div
-              data-sd-media-inner
-              className="flex translate-y-[105%] flex-col gap-3"
-            >
-              <p className="whitespace-nowrap font-serif-sc text-20 font-medium capitalize leading-normal text-grey-400 max-md:font-bodoni max-md:text-18 max-md:leading-6">
-                {work.projectTitle}
-              </p>
-              <p className="font-serif-sc text-14 font-normal leading-5 text-grey-300 max-md:text-12 max-md:leading-6">
-                {description}
-              </p>
-            </div>
-          </div>
+          <WorkCaption
+            title={work.projectTitle}
+            description={description}
+            revealDelay="0.28"
+          />
         </div>
       ) : null}
       {rest.map((item, index) => (
-        <WorkMedia
-          key={item.src}
-          item={item}
-          revealDelay={laterDelays[index] ?? "0.65"}
-        />
+        <div key={item.src} className="flex flex-col gap-6">
+          <WorkMedia
+            item={item}
+            revealDelay={laterDelays[index] ?? "0.65"}
+            preloadVideo={index === 0}
+          />
+          <WorkCaption
+            title={work.projectTitle}
+            description={description}
+            revealDelay={laterDelays[index] ?? "0.65"}
+            className="md:hidden"
+          />
+        </div>
       ))}
+    </div>
+  );
+}
+
+function WorkCaption({
+  title,
+  description,
+  revealDelay,
+  className,
+}: {
+  title: string;
+  description: string;
+  revealDelay: string;
+  className?: string;
+}) {
+  return (
+    <div
+      data-survey-keep=""
+      data-sd-media
+      data-sd-delay={revealDelay}
+      className={`overflow-hidden ${className ?? ""}`}
+    >
+      <div
+        data-sd-media-inner
+        className="flex translate-y-[105%] flex-col gap-3"
+      >
+        <p className="whitespace-nowrap font-serif-sc text-20 font-medium capitalize leading-normal text-grey-400 max-md:font-bodoni max-md:text-18 max-md:leading-6">
+          {title}
+        </p>
+        <p className="font-serif-sc text-14 font-normal leading-5 text-grey-300 max-md:text-12 max-md:leading-6">
+          {description}
+        </p>
+      </div>
     </div>
   );
 }
@@ -168,9 +196,11 @@ function WorkContent({ work }: { work: SurveyWork }) {
 function WorkMedia({
   item,
   revealDelay,
+  preloadVideo = false,
 }: {
   item: SurveyMediaItem;
   revealDelay: string;
+  preloadVideo?: boolean;
 }) {
   const { t } = useLocale();
   const alt = t(item.altKey);
@@ -186,6 +216,9 @@ function WorkMedia({
         innerClassName={item.innerClassName}
         videoSrc={item.videoSrc}
         previewLabel={`${alt}。${t("survey.heroPreview")}`}
+        expandLabel={t("survey.videoExpand")}
+        closeLabel={t("nav.close")}
+        preload={preloadVideo ? "auto" : "none"}
       />
     );
   }

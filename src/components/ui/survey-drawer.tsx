@@ -107,8 +107,11 @@ export function SurveyDrawer({
           ease: "expo.out",
           overwrite: "auto",
           onComplete: () => {
-            // 入场结束后清掉 transform，否则内部 overflow 无法走 GPU 原生滚动
-            gsap.set(panel, { clearProps: "transform" });
+            // 桌面端入场后清掉 transform，否则内部 overflow 无法走 GPU 原生滚动。
+            // 手机端保留 y，方便从上往下收起时接着滑走。
+            if (!window.matchMedia(MOBILE_QUERY).matches) {
+              gsap.set(panel, { clearProps: "transform" });
+            }
           },
         },
         0,
@@ -129,6 +132,10 @@ export function SurveyDrawer({
     }
     return () => {
       tl.kill();
+      if (open) {
+        gsap.set(overlay, { opacity: 1, force3D: false });
+        gsap.set(panel, shown);
+      }
     };
   }, [open, mounted, reducedMotion]);
 
@@ -160,6 +167,7 @@ export function SurveyDrawer({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (event.key === "Escape") {
+        if (document.querySelector("[data-survey-video-lightbox]")) return;
         event.preventDefault();
         onClose();
         return;
@@ -200,7 +208,7 @@ export function SurveyDrawer({
       aria-labelledby={titleId}
       data-survey-drawer=""
       data-lenis-prevent=""
-      className={`absolute inset-0 z-40 cursor-none ${open ? "" : "pointer-events-none"}`}
+      className={`absolute inset-0 z-40 cursor-none overflow-hidden ${open ? "" : "pointer-events-none"}`}
     >
       <button
         ref={overlayRef}

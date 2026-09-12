@@ -121,6 +121,17 @@ export function playViscoseMobileReveal(
   return tl;
 }
 
+/** 已入场后的语言切换：新节点带着 CSS 隐藏态，直接落到终态，不重播入场 */
+export function setViscoseMobileShown(
+  root: HTMLElement,
+  media: HTMLElement | null | undefined,
+) {
+  for (const track of collectTracks(root, media)) {
+    gsap.killTweensOf(track.targets);
+    gsap.set(track.targets, track.shown);
+  }
+}
+
 /** 复位到入场前的隐藏态 */
 export function setViscoseMobileHidden(
   root: HTMLElement,

@@ -53,15 +53,19 @@ export function ViscoseMobileGallery({
   const { t } = useLocale();
   const stageRef = useRef<ViscoseMobileStageHandle>(null);
   const mediaRef = useRef<HTMLDivElement>(null);
+  const settledRef = useRef(false);
   const [index, setIndex] = useState(INITIAL_INDEX);
   const works = useMobileWorks(items);
   const item = items[index];
 
   useEffect(() => {
     if (!active) {
-      stageRef.current?.hide();
+      // 入场完成后离开本屏不再藏内容，回切时幕布揭开即是终态
+      if (!settledRef.current) stageRef.current?.hide();
       return;
     }
+    if (settledRef.current) return;
+    settledRef.current = true;
     stageRef.current?.reveal();
   }, [active]);
 

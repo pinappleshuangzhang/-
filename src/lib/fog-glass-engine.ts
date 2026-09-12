@@ -18,14 +18,14 @@ const CONFIG = {
   progressInterval: 0.5,
   revealThreshold: 0.35,
   /** 静态小水珠 */
-  dropMax: 26,
-  dropSpawnChance: 0.05,
+  dropMax: 12,
+  dropSpawnChance: 0.02,
   dropKillRadius: 60,
   /** 流挂水珠 */
-  runnerMax: 8,
-  runnerChance: 0.12,
+  runnerMax: 4,
+  runnerChance: 0.06,
   /** 静止时自发流挂的频率（次/秒） */
-  idleRunnerRate: 0.45,
+  idleRunnerRate: 0.18,
 } as const;
 
 type Bead = { x: number; y: number; r: number; vy: number; seed: number };

@@ -5,6 +5,7 @@ import {
   forwardRef,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   type ReactNode,
   type RefObject,
@@ -13,6 +14,7 @@ import {
   playViscoseMobileReveal,
   playViscoseMobileSwap,
   setViscoseMobileHidden,
+  setViscoseMobileShown,
 } from "@/animations/viscose-mobile-reveal";
 import {
   MobileArrowIcon,
@@ -108,6 +110,14 @@ export const ViscoseMobileStage = forwardRef<
     if (!root || !revealedRef.current) return;
     return playViscoseMobileSwap(root, mediaRef?.current);
   }, [active, mediaRef]);
+
+  // 语言切换会换掉带 opacity-0 的词节点；已入场则落到终态，不重跑第一阶段
+  const localeCopy = `${heading}\0${viewDetailsLabel}\0${categoryLabels.join("\0")}`;
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root || !revealedRef.current) return;
+    setViscoseMobileShown(root, mediaRef?.current);
+  }, [localeCopy, mediaRef]);
 
   const shadowPad = SHADOW.blur * 3;
 

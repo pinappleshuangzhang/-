@@ -5,6 +5,12 @@ import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { ArchiveIndex } from "@/components/ui/archive-index";
 import { SiteNav } from "@/components/ui/site-nav";
 
+const MOBILE_QUERY = "(max-width: 767px)";
+
+function isMobileViewport() {
+  return window.matchMedia(MOBILE_QUERY).matches;
+}
+
 /** 与 page.tsx 分屏顺序一致，供目录跳转 */
 const SCREEN_INDEX_BY_KEY: Record<string, number> = {
   studio: 0,
@@ -36,16 +42,26 @@ export function PageChrome() {
     return registerScrollInterceptor(() => true);
   }, [indexOpen, registerScrollInterceptor]);
 
-  // 目录展开走一次幕布；幕布正忙时直接展开，避免点击落空
+  // 桌面目录展开走幕布；手机抽屉自己上下滑，不再套切屏幕布。
   const handleOpenIndex = useCallback(() => {
+    if (isMobileViewport()) {
+      setIndexOpen(true);
+      return;
+    }
     const open = () => setIndexOpen(true);
     if (!runWithCurtain(open)) open();
   }, [runWithCurtain]);
 
-  // 目录收起延到幕布铺满时执行，避免列表先凭空消失再走过场
+  // 桌面：目录收起延到幕布铺满；手机：先收抽屉，再切屏。
   const handleSelect = useCallback(
     (screenKey: string) => {
       const target = SCREEN_INDEX_BY_KEY[screenKey];
+      if (isMobileViewport()) {
+        setIndexOpen(false);
+        if (target === undefined || target === index) return;
+        goToScreen(target);
+        return;
+      }
       if (target === undefined || target === index) {
         setIndexOpen(false);
         return;
@@ -58,6 +74,11 @@ export function PageChrome() {
   const handleHome = useCallback(() => {
     if (index === SCREEN_INDEX_BY_KEY.studio) {
       setIndexOpen(false);
+      return;
+    }
+    if (isMobileViewport()) {
+      setIndexOpen(false);
+      goToScreen(SCREEN_INDEX_BY_KEY.studio);
       return;
     }
     goToScreen(SCREEN_INDEX_BY_KEY.studio, () => setIndexOpen(false));

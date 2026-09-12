@@ -3,6 +3,8 @@
 import { useCallback, useLayoutEffect, useRef, type ReactNode } from "react";
 import Image from "next/image";
 import gsap from "gsap";
+import { SurveyStackedVideo } from "@/components/ui/survey-stacked-video";
+import { useDesktopMedia } from "@/hooks/use-desktop-media";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 /** 与 sondaven 媒体入场一致：1.2s、power2.out、自 105% 上滑 */
@@ -31,6 +33,10 @@ export type KeepHoverMediaProps =
       hover: "video";
       videoSrc: string;
       previewLabel: string;
+      expandLabel: string;
+      closeLabel: string;
+      /** 默认 none；抽屉打开后第一段 hover 用 auto，避免悬停才开始拉流 */
+      preload?: "none" | "metadata" | "auto";
     })
   | (KeepHoverMediaBase & {
       hover: "none";
@@ -44,7 +50,24 @@ const frameClass =
  * hover="video" 出黑色遮罩，视频与图片相同上滑出现；hover="none" 画面不变。
  */
 export function KeepHoverMedia(props: KeepHoverMediaProps) {
+  const isDesktop = useDesktopMedia();
   if (props.hover === "video") {
+    if (!isDesktop) {
+      return (
+        <SurveyStackedVideo
+          src={props.src}
+          alt={props.alt}
+          width={props.width}
+          height={props.height}
+          sizes={props.sizes}
+          revealDelay={props.revealDelay}
+          innerClassName={props.innerClassName}
+          videoSrc={props.videoSrc}
+          expandLabel={props.expandLabel}
+          closeLabel={props.closeLabel}
+        />
+      );
+    }
     return <VideoKeepMedia {...props} />;
   }
   return <StaticKeepMedia {...props} />;
@@ -134,10 +157,12 @@ function VideoKeepMedia({
   innerClassName,
   videoSrc,
   previewLabel,
+  preload = "none",
 }: KeepHoverMediaBase & {
   hover: "video";
   videoSrc: string;
   previewLabel: string;
+  preload?: "none" | "metadata" | "auto";
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverInnerRef = useRef<HTMLDivElement>(null);
@@ -261,7 +286,7 @@ function VideoKeepMedia({
             muted
             loop
             playsInline
-            preload="none"
+            preload={preload}
             className="absolute left-[6.027%] top-[5.964%] h-[88.072%] w-[87.835%] object-cover motion-reduce:hidden"
           />
         </div>

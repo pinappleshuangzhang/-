@@ -20,6 +20,12 @@ export function ArchiveGa004Viscose() {
   const isActive = useScreenActive();
   const reducedMotion = useReducedMotion();
   const { phase, registerScrollInterceptor } = useSectionPager();
+  // 首次 idle 后记住：回切时幕布揭开阶段就要露出终态，不能再等 idle 或重播入场
+  const [introSettled, setIntroSettled] = useState(false);
+  if (isActive && phase === "idle" && !introSettled) {
+    setIntroSettled(true);
+  }
+  const carouselActive = isActive && (introSettled || phase === "idle");
   const detailsScrollRef = useRef<((deltaY: number) => boolean) | null>(null);
   const carouselScrollRef = useRef<CarouselScrollHandler | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -63,7 +69,7 @@ export function ArchiveGa004Viscose() {
       {/* 抽屉打开时不再模糊长廊（blur 全屏合成太重），由抽屉遮罩压暗背景 */}
       <ViscoseCarousel
         items={VISCOSE_CAROUSEL_ITEMS}
-        active={isActive && phase === "idle"}
+        active={carouselActive}
         paused={coverPresent}
         reducedMotion={reducedMotion}
         onSelect={openDetails}
