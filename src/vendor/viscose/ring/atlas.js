@@ -84,21 +84,24 @@ export function buildAtlas(files = IMAGE_FILES, onProgress, options = {}) {
         tick();
       });
 
-  // Seed first so the birth card can texture before the other four arrive.
+  // Seed first and only then the rest — otherwise four low-priority fetches
+  // still steal the same pipe the birth card needs.
   // Two GPU uploads only: once the seed is painted, once the sheet is full.
-  // Per-image uploads would resend the whole canvas and rebuild every mip.
   const first = fetchInto(seedIndex, "high").then(() => {
     texture.needsUpdate = true;
   });
 
-  const rest = files
+  const restIndexes = files
     .map((_, index) => index)
-    .filter((index) => index !== seedIndex)
-    .map((index) => fetchInto(index, "low"));
+    .filter((index) => index !== seedIndex);
 
-  const ready = Promise.all([first, ...rest]).then(() => {
-    texture.needsUpdate = true;
-  });
+  const ready = first
+    .then(() =>
+      Promise.all(restIndexes.map((index) => fetchInto(index, "low"))),
+    )
+    .then(() => {
+      texture.needsUpdate = true;
+    });
 
   tick();
   return { texture, grid: [cols, rows], count: files.length, first, ready };

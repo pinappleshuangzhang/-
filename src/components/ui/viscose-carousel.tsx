@@ -7,6 +7,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { ViscoseMobileGallery } from "@/components/ui/viscose-mobile-gallery";
 import { useDesktopMedia } from "@/hooks/use-desktop-media";
+import { useViscosePrefetch } from "@/hooks/use-viscose-prefetch";
 import {
   VISCOSE_SEED_INDEX,
   type ViscoseCarouselItem,
@@ -50,16 +51,12 @@ export function ViscoseCarousel({
     void import("@/components/ui/viscose-desktop-carousel");
   }, [isDesktop]);
 
-  // 工作室简介屏起预取种子图（Website Interface），避开首屏 Hero 带宽；
-  // 与图集同一 URL，进入第五屏时 Image() 走缓存。
-  useEffect(() => {
-    if (screenIndex < 2) return;
-    const src = items[VISCOSE_SEED_INDEX]?.src;
-    if (!src) return;
-    const img = new window.Image();
-    img.fetchPriority = "high";
-    img.src = src;
-  }, [items, screenIndex]);
+  useViscosePrefetch({
+    seedSrc: items[VISCOSE_SEED_INDEX]?.src,
+    screenIndex,
+    fifthActive: active,
+    isDesktop,
+  });
 
   // 首次激活后保持挂载（渲染期守卫式 setState，避免级联渲染）
   if (active && !hasActivated) setHasActivated(true);

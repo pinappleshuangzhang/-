@@ -99,6 +99,7 @@ export function ViscoseMobileGallery({
                 alt={item.alt}
                 fill
                 sizes="94vw"
+                priority={index === INITIAL_INDEX}
                 className="object-cover"
               />
             </div>

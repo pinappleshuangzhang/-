@@ -96,6 +96,8 @@ export default function Carousel({
   // Which cell the single phone card is wearing; drives the chips and copy.
   // Updated only when the front cell changes, never per frame.
   const [mobileShown, setMobileShown] = useState(INITIAL_CELL);
+  /** 种子上 GPU 后再挂背景层，避免 1.6MB 背景和入场小图抢带宽 */
+  const [stageBgReady, setStageBgReady] = useState(false);
   const stageBackgroundRef = useRef(null);
   const stageLayer2Ref = useRef(null);
   const stageLayer3Ref = useRef(null);
@@ -330,6 +332,7 @@ export default function Carousel({
       if (disposed) return;
       firstIn = true;
       ensureLoop();
+      setStageBgReady(true);
     });
     atlas.ready.then(() => {
       if (disposed) return;
@@ -2098,14 +2101,16 @@ export default function Carousel({
               height: "43.149628%",
             }}
           >
-            <Image
-              src="/archive-ga-004/background-layers/layer-04.webp"
-              alt=""
-              fill
-              unoptimized
-              sizes="40vw"
-              className="object-fill"
-            />
+            {stageBgReady ? (
+              <Image
+                src="/archive-ga-004/background-layers/layer-04.webp"
+                alt=""
+                fill
+                unoptimized
+                sizes="40vw"
+                className="object-fill"
+              />
+            ) : null}
           </div>
           <div
             ref={stageLayer3Ref}
@@ -2117,14 +2122,16 @@ export default function Carousel({
               height: "73.495682%",
             }}
           >
-            <Image
-              src="/archive-ga-004/background-layers/layer-03.webp"
-              alt=""
-              fill
-              unoptimized
-              sizes="75vw"
-              className="object-fill"
-            />
+            {stageBgReady ? (
+              <Image
+                src="/archive-ga-004/background-layers/layer-03.webp"
+                alt=""
+                fill
+                unoptimized
+                sizes="75vw"
+                className="object-fill"
+              />
+            ) : null}
           </div>
           <div
             ref={stageLayer2Ref}
@@ -2136,23 +2143,27 @@ export default function Carousel({
               height: "72.521091%",
             }}
           >
+            {stageBgReady ? (
+              <Image
+                src="/archive-ga-004/background-layers/layer-02.webp"
+                alt=""
+                fill
+                unoptimized
+                sizes="67vw"
+                className="object-fill"
+              />
+            ) : null}
+          </div>
+          {stageBgReady ? (
             <Image
-              src="/archive-ga-004/background-layers/layer-02.webp"
+              src="/archive-ga-004/background-layers/layer-01.webp"
               alt=""
               fill
               unoptimized
-              sizes="67vw"
+              sizes="100vw"
               className="object-fill"
             />
-          </div>
-          <Image
-            src="/archive-ga-004/background-layers/layer-01.webp"
-            alt=""
-            fill
-            unoptimized
-            sizes="100vw"
-            className="object-fill"
-          />
+          ) : null}
         </div>
       </div>
 

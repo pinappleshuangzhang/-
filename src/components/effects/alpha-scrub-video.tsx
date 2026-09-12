@@ -19,7 +19,7 @@ export type AlphaScrubVideoHandle = {
 type AlphaScrubVideoProps = {
   /** VP9 WebM（Chrome / Firefox / Edge，带 alpha） */
   srcWebm: string;
-  /** HEVC + alpha MP4（Safari） */
+  /** HEVC + alpha MP4（Safari / iOS WebKit，含 iPhone Chrome） */
   srcHevc: string;
   className?: string;
   /** 首帧就绪（可隐藏静态占位图） */
@@ -28,12 +28,16 @@ type AlphaScrubVideoProps = {
   onError?: () => void;
 };
 
-/** Safari 不支持 VP9 alpha，需走 HEVC + alpha；其余浏览器走 WebM */
+/** WebKit（Safari 与所有 iOS 浏览器）不支持 VP9 alpha，走 HEVC；其余走 WebM */
 function pickSource(srcWebm: string, srcHevc: string): string {
   if (typeof navigator === "undefined") return srcWebm;
   const ua = navigator.userAgent;
-  const isSafari = /safari/i.test(ua) && !/chrome|chromium|crios|edg|android/i.test(ua);
-  return isSafari ? srcHevc : srcWebm;
+  const isIos =
+    /iphone|ipad|ipod/i.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isSafari =
+    /safari/i.test(ua) && !/chrome|chromium|crios|edg|android/i.test(ua);
+  return isIos || isSafari ? srcHevc : srcWebm;
 }
 
 /**
