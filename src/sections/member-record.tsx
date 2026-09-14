@@ -19,6 +19,7 @@ import {
   playGravaStrokeLoad,
   playMemberMarkReveal,
 } from "@/animations/member-record-logo-hover";
+import { playIconBloom } from "@/animations/member-record-icon-fx";
 import { FogGlass } from "@/components/effects/fog-glass";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
@@ -284,7 +285,8 @@ export function MemberRecord() {
               maskShape={MEMBER_LEFT_MID_CELL_SHAPE}
               icon={{
                 src: "/archive/member-record-icon-flower.svg",
-                className: "left-[33.03%] top-[31.42%] w-[33.93%]",
+                className: "left-[41.51%] top-[40.71%] w-[16.96%]",
+                bloom: true,
               }}
             />
             <DesktopEmptyFogCell
@@ -293,7 +295,7 @@ export function MemberRecord() {
               maskShape={MEMBER_TOP_RIGHT_CELL_SHAPE}
               icon={{
                 src: "/archive/member-record-icon-mail.svg",
-                className: "left-[26.88%] top-[35.06%] w-[46.24%]",
+                className: "left-[38.44%] top-[42.53%] w-[23.12%]",
               }}
             />
             <div className="pointer-events-none absolute inset-0 z-[2]">
@@ -327,15 +329,28 @@ function DesktopEmptyFogCell({
     width: number;
     height: number;
   };
-  /** 霜下 icon：隔霜模糊，擦开处清晰 */
-  icon?: { src: string; className: string };
+  /** 霜下 icon：隔霜模糊，擦开处清晰；bloom 时擦开到阈值才自底部绽放 */
+  icon?: { src: string; className: string; bloom?: boolean };
 }) {
+  const iconRef = useRef<HTMLSpanElement>(null);
+  const reducedMotion = useReducedMotion();
+  const shouldBloom = Boolean(icon?.bloom) && !reducedMotion;
+
+  const playReveal = () => {
+    const el = iconRef.current;
+    if (!el || !shouldBloom) return;
+    playIconBloom(el);
+  };
+
   return (
     <div className={boxClassName}>
       {icon ? (
         <span
+          ref={iconRef}
           aria-hidden="true"
-          className={`pointer-events-none absolute block aspect-square ${icon.className}`}
+          className={`pointer-events-none absolute block aspect-square ${icon.className}${
+            shouldBloom ? " opacity-0" : ""
+          }`}
         >
           <Image src={icon.src} alt="" fill sizes="8.4vw" unoptimized />
         </span>
@@ -347,6 +362,7 @@ function DesktopEmptyFogCell({
         revealThreshold={MEMBER_FOG_REVEAL_THRESHOLD}
         appearDelay={MEMBER_RECORD_REVEAL_DELAY}
         appearDuration={MEMBER_RECORD_REVEAL_DURATION}
+        onReveal={shouldBloom ? playReveal : undefined}
       />
     </div>
   );
