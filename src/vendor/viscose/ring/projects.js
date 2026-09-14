@@ -8,23 +8,23 @@
 const PROJECT_SEQUENCE = [
   {
     file: "archive-ga-004/work-01-hover.webp",
-    name: "品牌档案",
+    name: "苹果时刻：AI 创造力实验计划",
     listLabel: "Brand Design",
     type: "品牌设计",
     year: "2026",
   },
   {
     file: "archive-ga-004/work-02-hover.webp",
-    name: "产品研究",
+    name: "未来创意 2026",
     listLabel: "Product Design",
     type: "产品设计",
     year: "2026",
   },
   {
     file: "archive-ga-004/work-03-hover.webp",
-    name: "界面时刻",
+    name: "Easycash 数字品牌视觉重塑",
     listLabel: "Website Interface",
-    type: "界面设计",
+    type: "网站设计",
     year: "2026",
   },
   {

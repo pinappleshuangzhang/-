@@ -17,6 +17,9 @@ export type SurveyMediaItem = {
   width: number;
   height: number;
   innerClassName?: string;
+  titleKey?: MessageKey;
+  captionKey?: MessageKey;
+  showCaption?: boolean;
 } & (
   | { hover: "none" }
   | { hover: "video"; videoSrc: string }
@@ -29,8 +32,10 @@ export type SurveyWork = {
   archivedLabel: string;
   activeCategory: SurveyCategoryCode;
   duration: string;
-  projectTitle: string;
-  description: string;
+  titleKey: MessageKey;
+  descriptionKey: MessageKey;
+  /** 作品类型标签（Figma 973:554 / 1266:1694） */
+  tagKeys: MessageKey[];
   media: SurveyMediaItem[];
 };
 
@@ -83,29 +88,36 @@ export const SURVEY_CATEGORIES: SurveyCategory[] = [
   SURVEY_CATEGORY_BY_CODE.E,
 ];
 
-/** 档案 GA_004 作品详情：对照 Figma「05视觉档案调查-调查详情-1」 */
+/** 001 品牌设计：The Apple Moment，对照作品提交模版 / 交付文件夹 */
 export const SURVEY_G_001: SurveyWork = {
   id: "g-001",
-  title: "Survey Details_003",
-  typeLabel: "( C Website)",
+  title: "Survey Details_001",
+  typeLabel: "( A Brand)",
   archivedLabel: "( 2026 Archived)",
-  activeCategory: "C",
+  activeCategory: "A",
   duration: "一个月",
-  projectTitle: "AI Ops - The Apple Moment",
-  description:
-    "Design AI Ops 是设计团队围绕 AI 能力建设与设计生产升级建立的长期知识体系，用于统一沉淀团队在 AI 方向上的规划、项目实践与能力资产。该体系以设计业务场景为核心，通过持续积累工具、方法与案例，使 AI 从零散工具使用逐步演进为稳定、可复用的设计生产能力。",
+  titleKey: "survey.title",
+  descriptionKey: "survey.description",
+  tagKeys: [
+    "survey.tag.event",
+    "survey.tag.brand",
+    "survey.tag.website",
+    "survey.tag.motion",
+  ],
   media: [
     {
       src: "/archive-ga-004/survey-1.webp",
       altKey: "survey.heroAlt",
-      width: 1792,
-      height: 1006,
+      width: 1920,
+      height: 1080,
       hover: "none",
       innerClassName: "bg-white",
     },
     {
       src: "/archive-ga-004/survey-2.webp",
       altKey: "survey.media2Alt",
+      titleKey: "survey.media2Title",
+      captionKey: "survey.media2Caption",
       width: 1920,
       height: 1080,
       hover: "video",
@@ -114,6 +126,8 @@ export const SURVEY_G_001: SurveyWork = {
     {
       src: "/archive-ga-004/survey-3.webp",
       altKey: "survey.media3Alt",
+      titleKey: "survey.media3Title",
+      captionKey: "survey.media3Caption",
       width: 1920,
       height: 1080,
       hover: "video",
@@ -122,6 +136,8 @@ export const SURVEY_G_001: SurveyWork = {
     {
       src: "/archive-ga-004/survey-4.webp",
       altKey: "survey.media4Alt",
+      titleKey: "survey.media4Title",
+      captionKey: "survey.media4Caption",
       width: 1920,
       height: 1080,
       hover: "video",
@@ -130,10 +146,200 @@ export const SURVEY_G_001: SurveyWork = {
     {
       src: "/archive-ga-004/survey-5.webp",
       altKey: "survey.media5Alt",
+      titleKey: "survey.media5Title",
+      captionKey: "survey.media5Caption",
       width: 1920,
       height: 1080,
       hover: "video",
       videoSrc: "/archive-ga-004/survey-5-hover.mp4",
+    },
+    {
+      src: "/archive-ga-004/survey-6.webp",
+      altKey: "survey.media6Alt",
+      titleKey: "survey.media6Title",
+      captionKey: "survey.media6Caption",
+      width: 1920,
+      height: 1080,
+      hover: "video",
+      videoSrc: "/archive-ga-004/survey-6-hover.mp4",
+    },
+    {
+      src: "/archive-ga-004/survey-7.webp",
+      altKey: "survey.media7Alt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+      showCaption: false,
+    },
+    {
+      src: "/archive-ga-004/survey-8-v2.webp",
+      altKey: "survey.media8Alt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+      showCaption: false,
+    },
+    {
+      src: "/archive-ga-004/survey-9-v2.webp",
+      altKey: "survey.media9Alt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+      showCaption: false,
+    },
+  ],
+};
+
+/** 002 产品设计：Future Creative 2026 */
+export const SURVEY_G_002: SurveyWork = {
+  id: "g-002",
+  title: "Survey Details_002",
+  typeLabel: "( B Product)",
+  archivedLabel: "( 2026 Archived)",
+  activeCategory: "B",
+  duration: "一个月",
+  titleKey: "survey.future.title",
+  descriptionKey: "survey.future.description",
+  tagKeys: ["survey.tag.visual", "survey.tag.motion"],
+  media: [
+    {
+      src: "/archive-ga-004/future-hero.webp",
+      altKey: "survey.future.heroAlt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+    {
+      src: "/archive-ga-004/future-gallery-01.webp",
+      altKey: "survey.future.media1Alt",
+      titleKey: "survey.future.media1Title",
+      captionKey: "survey.future.media1Caption",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+    {
+      src: "/archive-ga-004/future-gallery-02.webp",
+      altKey: "survey.future.media2Alt",
+      titleKey: "survey.future.media2Title",
+      captionKey: "survey.future.media2Caption",
+      width: 1024,
+      height: 576,
+      hover: "none",
+    },
+    {
+      src: "/archive-ga-004/future-gallery-03.webp",
+      altKey: "survey.future.media3Alt",
+      titleKey: "survey.future.media3Title",
+      captionKey: "survey.future.media3Caption",
+      width: 1920,
+      height: 1080,
+      hover: "video",
+      videoSrc: "/archive-ga-004/future-gallery-03.mp4",
+    },
+    {
+      src: "/archive-ga-004/future-gallery-04.webp",
+      altKey: "survey.future.media4Alt",
+      titleKey: "survey.future.media4Title",
+      captionKey: "survey.future.media4Caption",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+    {
+      src: "/archive-ga-004/future-gallery-05.webp",
+      altKey: "survey.future.media5Alt",
+      titleKey: "survey.future.media5Title",
+      captionKey: "survey.future.media5Caption",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+    {
+      src: "/archive-ga-004/future-gallery-06.webp",
+      altKey: "survey.future.media6Alt",
+      titleKey: "survey.future.media6Title",
+      captionKey: "survey.future.media6Caption",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+  ],
+};
+
+/** 003 网站设计：Easycash 数字品牌视觉重塑 */
+export const SURVEY_G_003: SurveyWork = {
+  id: "g-003",
+  title: "Survey Details_003",
+  typeLabel: "( C Website)",
+  archivedLabel: "( 2026 Archived)",
+  activeCategory: "C",
+  duration: "一个月",
+  titleKey: "survey.easycash.title",
+  descriptionKey: "survey.easycash.description",
+  tagKeys: ["survey.tag.website", "survey.tag.visual", "survey.tag.brand"],
+  media: [
+    {
+      src: "/archive-ga-004/easycash-hero.webp",
+      altKey: "survey.easycash.heroAlt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+    {
+      src: "/archive-ga-004/easycash-gallery-01.webp",
+      altKey: "survey.easycash.media1Alt",
+      titleKey: "survey.easycash.media1Title",
+      captionKey: "survey.easycash.media1Caption",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+    {
+      src: "/archive-ga-004/easycash-gallery-02.webp",
+      altKey: "survey.easycash.media2Alt",
+      titleKey: "survey.easycash.media2Title",
+      captionKey: "survey.easycash.media2Caption",
+      width: 1920,
+      height: 1080,
+      hover: "video",
+      videoSrc: "/archive-ga-004/easycash-gallery-02.mp4",
+    },
+    {
+      src: "/archive-ga-004/easycash-gallery-03.webp",
+      altKey: "survey.easycash.media3Alt",
+      titleKey: "survey.easycash.media3Title",
+      captionKey: "survey.easycash.media3Caption",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+    {
+      src: "/archive-ga-004/easycash-gallery-04.webp",
+      altKey: "survey.easycash.media4Alt",
+      titleKey: "survey.easycash.media4Title",
+      captionKey: "survey.easycash.media4Caption",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+    {
+      src: "/archive-ga-004/easycash-gallery-05.webp",
+      altKey: "survey.easycash.media5Alt",
+      titleKey: "survey.easycash.media5Title",
+      captionKey: "survey.easycash.media5Caption",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+    {
+      src: "/archive-ga-004/easycash-gallery-06.webp",
+      altKey: "survey.easycash.media6Alt",
+      titleKey: "survey.easycash.media6Title",
+      captionKey: "survey.easycash.media6Caption",
+      width: 1920,
+      height: 1080,
+      hover: "none",
     },
   ],
 };
@@ -143,9 +349,9 @@ export const SURVEY_WORK_BY_CATEGORY: Record<
   SurveyCategoryCode,
   SurveyWork | null
 > = {
-  A: null,
-  B: null,
-  C: SURVEY_G_001,
+  A: SURVEY_G_001,
+  B: SURVEY_G_002,
+  C: SURVEY_G_003,
   D: null,
   E: null,
 };
