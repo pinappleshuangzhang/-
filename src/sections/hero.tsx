@@ -347,7 +347,8 @@ export function Hero() {
 
       const ensureVideo = () => {
         const state = preloadRef.current;
-        if (state.status !== "ready" || !state.objectUrl) return null;
+        if (state.status !== "ready") return null;
+        const playbackUrl = state.objectUrl ?? videoSrc;
         if (!activeVideo) {
           activeVideo = createHeroVideoSequence({
             video,
@@ -355,7 +356,7 @@ export function Hero() {
             // 手机已定格在视频首帧，起播时不再做静帧渐隐等待。
             firstFrame: isMobile ? null : firstFrameRef.current,
             root,
-            objectUrl: state.objectUrl,
+            objectUrl: playbackUrl,
             onPlaying: () => fadeCornerAction(skipRef.current, true, 0.45),
             onRevealStart: () => fadeCornerAction(skipRef.current, false, 0.4),
             onComplete: finish,
@@ -382,9 +383,8 @@ export function Hero() {
       startIntroVideoRef.current = startVideo;
       skipIntroVideoRef.current = () => activeVideo?.skip();
 
-      const media = gsap.matchMedia();
-
-      media.add("(prefers-reduced-motion: reduce)", () => {
+      // 不用 gsap.matchMedia：Safari 上 no-preference 回调经常不进，加载条会永远停在 0%。
+      if (reducedMotion) {
         revealStartedRef.current = true;
         gsap.set(loader, { autoAlpha: 0 });
         setLoaderDismissed(true);
@@ -395,73 +395,68 @@ export function Hero() {
         if (titles) gsap.set(titles, { autoAlpha: 1 });
         setSondavenVisible(root);
         finish();
-      });
+        return;
+      }
 
-      media.add("(prefers-reduced-motion: no-preference)", () => {
-        const loaderProgress = createLoaderProgress({
-          bar,
-          progressbar,
-          phaseTrack,
-          percent,
-          live,
+      const loaderProgress = createLoaderProgress({
+        bar,
+        progressbar,
+        phaseTrack,
+        percent,
+        live,
+      });
+      const materialCycle = createLoaderMaterialCycle(materials);
+      let gate = 0;
+      let startedAt = 0;
+
+      const releaseLoader = (next: () => void) => {
+        window.clearInterval(gate);
+        loaderProgress.update(100);
+        materialCycle.complete(() => {
+          window.setTimeout(next, LOADER_HOLD_MS);
         });
-        const materialCycle = createLoaderMaterialCycle(materials);
-        let gate = 0;
-        let startedAt = 0;
+      };
 
-        const releaseLoader = (next: () => void) => {
-          window.clearInterval(gate);
-          loaderProgress.update(100);
-          materialCycle.complete(() => {
-            window.setTimeout(next, LOADER_HOLD_MS);
-          });
-        };
+      const startSequence = () => {
+        window.clearInterval(gate);
+        loaderProgress.reset();
+        materialCycle.reset();
+        startedAt = performance.now();
 
-        const startSequence = () => {
-          window.clearInterval(gate);
-          loaderProgress.reset();
-          materialCycle.reset();
-          startedAt = performance.now();
+        gate = window.setInterval(() => {
+          const state = preloadRef.current;
+          const timeProgress = Math.min(
+            (performance.now() - startedAt) / LOADER_MIN_DURATION_MS,
+            1,
+          );
 
-          gate = window.setInterval(() => {
-            const state = preloadRef.current;
-            const timeProgress = Math.min(
-              (performance.now() - startedAt) / LOADER_MIN_DURATION_MS,
-              1,
-            );
+          if (state.status === "error") {
+            loaderProgress.update(timeProgress * 100);
+            if (timeProgress >= 1) releaseLoader(holdOnArchive);
+            return;
+          }
 
-            if (state.status === "error") {
-              loaderProgress.update(timeProgress * 100);
-              if (timeProgress >= 1) releaseLoader(holdOnArchive);
-              return;
-            }
+          loaderProgress.update(Math.min(state.progress, timeProgress) * 100);
+          if (state.status === "ready" && timeProgress >= 1) {
+            releaseLoader(() => {
+              const sequence = SHOW_INTRO_VIDEO ? ensureVideo() : null;
+              if (isMobile && sequence) {
+                sequence.showFirstFrame(holdOnArchive);
+              } else {
+                holdOnArchive();
+              }
+            });
+          }
+        }, 50);
+      };
 
-            loaderProgress.update(Math.min(state.progress, timeProgress) * 100);
-            if (state.status === "ready" && timeProgress >= 1) {
-              releaseLoader(() => {
-                const sequence = SHOW_INTRO_VIDEO ? ensureVideo() : null;
-                if (isMobile && sequence) {
-                  sequence.showFirstFrame(holdOnArchive);
-                } else {
-                  holdOnArchive();
-                }
-              });
-            }
-          }, 50);
-        };
-
-        startSequence();
-
-        return () => {
-          window.clearInterval(gate);
-          loaderProgress.kill();
-          materialCycle.kill();
-          activeVideo?.kill();
-        };
-      });
+      startSequence();
 
       return () => {
-        media.revert();
+        window.clearInterval(gate);
+        loaderProgress.kill();
+        materialCycle.kill();
+        activeVideo?.kill();
       };
     },
     { scope: container },
