@@ -135,7 +135,7 @@ export function HeroLoader({
           className="flex items-center font-serif-sc text-10 font-normal leading-[14px] text-grey-400 md:text-[length:calc(var(--su)*14)] md:leading-[calc(var(--su)*20)]"
         >
           <span className="whitespace-nowrap">{roleLabel}</span>
-          <span className="relative top-px font-bodoni md:top-1">
+          <span className="relative top-px font-bodoni md:top-[3px]">
             {idLabel}
           </span>
           <span className="ml-1 block h-[14px] overflow-hidden md:ml-[calc(var(--su)*4)] md:h-[calc(var(--su)*20)]">
