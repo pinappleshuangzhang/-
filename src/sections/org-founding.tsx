@@ -80,8 +80,8 @@ export function OrgFounding() {
     if (isMobileViewport) return;
     const bar = TITLE_BAR_BY_LOCALE[locale];
     const apply = () => {
-      // 与 CSS --su 同步：1600 封顶
-      const su = Math.min(window.innerWidth, 1600) / 1440;
+      // 与 CSS --su 同步：1680 封顶
+      const su = Math.min(window.innerWidth, 1680) / 1440;
       const line2 = titleLine2Ref.current;
       const blackBar = blackBarRef.current;
       if (line2 && blackBar) {

@@ -1607,7 +1607,7 @@ export default function Carousel({
         right: cx + halfW,
         top: cy - halfH,
         bottom: cy + halfH,
-        scale: Math.min(viewW, 1600) / 1440,
+        scale: Math.min(viewW, 1680) / 1440,
       };
     };
 
@@ -2153,7 +2153,7 @@ export default function Carousel({
       >
         <div
           ref={finalShadowPinRef}
-          className="absolute left-1/2 top-1/2 box-border overflow-visible [--viscose-su:calc(min(100vw,1600px)/1440)]"
+          className="absolute left-1/2 top-1/2 box-border overflow-visible [--viscose-su:calc(min(100vw,1680px)/1440)]"
           style={{
             width: su(FINAL_SHADOW_BOX.width + FINAL_SHADOW_BLEED * 2),
             height: su(FINAL_SHADOW_BOX.height + FINAL_SHADOW_BLEED * 2),
@@ -2223,7 +2223,7 @@ export default function Carousel({
       <div
         ref={brandStageRef}
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-10 opacity-0 [--viscose-su:calc(min(100vw,1600px)/1440)] [--brand-anchor:50%] [--brand-text-dx:-104] [--brand-text-dy:-11] [--brand-font:18] [--brand-line:24] [--brand-bar-dx:-172] [--brand-bar-dy:-23] [--brand-bar-w:235] [--brand-bar-h:43] max-md:[--viscose-su:calc(100vw/390)] max-md:[--brand-anchor:0%] max-md:[--brand-text-dx:54] max-md:[--brand-text-dy:-10] max-md:[--brand-font:16] max-md:[--brand-line:20] max-md:[--brand-bar-dx:0] max-md:[--brand-bar-dy:-22] max-md:[--brand-bar-w:201]"
+        className="pointer-events-none absolute inset-0 z-10 opacity-0 [--viscose-su:calc(min(100vw,1680px)/1440)] [--brand-anchor:50%] [--brand-text-dx:-104] [--brand-text-dy:-11] [--brand-font:18] [--brand-line:24] [--brand-bar-dx:-172] [--brand-bar-dy:-23] [--brand-bar-w:235] [--brand-bar-h:43] max-md:[--viscose-su:calc(100vw/390)] max-md:[--brand-anchor:0%] max-md:[--brand-text-dx:54] max-md:[--brand-text-dy:-10] max-md:[--brand-font:16] max-md:[--brand-line:20] max-md:[--brand-bar-dx:0] max-md:[--brand-bar-dy:-22] max-md:[--brand-bar-w:201]"
       >
         <div
           className="absolute font-bodoni uppercase"
