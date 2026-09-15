@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef, type Ref } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
+import { BrandLogo } from "@/components/ui/brand-logo";
 import { FlipHoverButton } from "@/components/ui/flip-hover-button";
 import { MobileSiteNav } from "@/components/ui/mobile-site-nav";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -60,7 +61,7 @@ export function SiteNav({
 }: SiteNavProps) {
   const isIndex = variant === "index";
   const { locale, setLocale, t } = useLocale();
-  const { runWithCurtain, navigationLocked, introOverlayActive } =
+  const { runWithCurtain, navigationLocked, introOverlayActive, goToScreen } =
     useSectionPager();
   const isEn = locale === "en";
   const indexLabel = isIndex ? t("nav.close") : t("nav.index");
@@ -120,6 +121,14 @@ export function SiteNav({
   );
   const indexAriaLabel = isIndex ? t("nav.closeIndex") : t("nav.openIndex");
   const handleIndexClick = isIndex ? onCloseIndex : onOpenIndex;
+  // 品牌 logo/标题点击：目录展开时沿用 onHome（先收目录），否则直接回档案首页
+  const handleHomeClick = () => {
+    if (isIndex && onHome) {
+      onHome();
+      return;
+    }
+    goToScreen(0);
+  };
   // 语言切换走一次完整幕布：铺满后再换文案，避免字面“跳变”
   const handleLanguageClick = () => {
     const next = locale === "zh" ? "en" : "zh";
@@ -157,25 +166,19 @@ export function SiteNav({
           aria-label="Site"
           className="relative mx-auto flex w-[calc(100%-40px)] items-center"
         >
-          {isIndex && onHome ? (
-            <button
-              type="button"
-              onClick={onHome}
-              className="whitespace-nowrap border-0 bg-transparent p-0 text-left font-bodoni text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white focus-visible:outline-none"
-            >
+          {/* logo + 标题（Figma 1320:10071）：20px logo、6px 间距、文字下移 2px，点击回档案首页 */}
+          <button
+            type="button"
+            onClick={handleHomeClick}
+            className={`flex items-center gap-[calc(var(--su)*6)] border-0 bg-transparent p-0 text-left font-bodoni text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white focus-visible:outline-none ${
+              showBrand ? "" : "max-w-[calc(100%-(var(--su)*507+20px))]"
+            }`}
+          >
+            <BrandLogo className="size-[calc(var(--su)*20)] shrink-0" />
+            <span className="whitespace-nowrap pt-[calc(var(--su)*2)]">
               {title}
-            </button>
-          ) : (
-            <p
-              className={
-                showBrand
-                  ? "whitespace-nowrap font-bodoni text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white"
-                  : "max-w-[calc(100%-(var(--su)*507+20px))] whitespace-nowrap font-bodoni text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white"
-              }
-            >
-              {title}
-            </p>
-          )}
+            </span>
+          </button>
 
           {/* 与屏内右边栏图同缘：贴版心右、宽随 --su 缩放；目录在区左缘 */}
           <div className="absolute right-0 top-1/2 flex w-[calc(var(--su)*507)] -translate-y-1/2 items-center justify-between">

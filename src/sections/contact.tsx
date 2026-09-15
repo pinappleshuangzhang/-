@@ -94,10 +94,11 @@ function ContactLayout({
           className="h-[47px] w-[277px] md:col-span-2 md:col-start-4 md:h-auto md:-translate-x-1"
           animated={animated}
         />
+        {/* 左缘对齐导航右区（目录）：版心右边向左 --su*507，脱离栅格绝对定位 */}
         <ContactFact
           label={t("contact.servicesLabel")}
           value={t("contact.services")}
-          className="w-[345px] md:col-span-2 md:col-start-6 md:translate-x-1.5"
+          className="w-[345px] md:absolute md:left-[calc(100%-var(--su)*507)] md:top-0 md:w-max"
           highlighted
           animated={animated}
         />
