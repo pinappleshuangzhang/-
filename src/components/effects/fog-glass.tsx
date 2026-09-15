@@ -11,7 +11,10 @@ import { createPortal } from "react-dom";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
 import { useDesktopMedia } from "@/hooks/use-desktop-media";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { createFogGlassEngine } from "@/lib/fog-glass-engine";
+import {
+  createFogGlassEngine,
+  isSafariFogClient,
+} from "@/lib/fog-glass-engine";
 import type { FogController } from "@/lib/fog-glass-types";
 
 /** 仅用于区分 SSR/客户端的空订阅（portal 需要 document.body） */
@@ -124,11 +127,14 @@ export function FogGlass({
   if (!isDesktop || reducedMotion) return null;
 
   const clipStyle = clipPath ? { clipPath } : undefined;
-  /* 激活后按网格入场节奏淡入；离开立即隐藏 */
+  /* 激活后按网格入场节奏淡入；离开立即隐藏。
+     Safari 不能对 backdrop-filter 插值 opacity，否则整层闪；到期后瞬间显现。 */
   const appearStyle = isActive
     ? {
         opacity: 1,
-        transition: `opacity ${appearDuration}s linear ${appearDelay}s`,
+        transition: isSafariFogClient()
+          ? `opacity 0s linear ${appearDelay}s`
+          : `opacity ${appearDuration}s linear ${appearDelay}s`,
       }
     : { opacity: 0, transition: "none" };
 

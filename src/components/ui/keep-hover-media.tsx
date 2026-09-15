@@ -280,6 +280,7 @@ function VideoKeepMedia({
           className="absolute inset-0 bg-grey-400/50 opacity-0"
         />
         <div ref={hoverInnerRef} className="absolute inset-0">
+          {/* 宽度固定、高度随视频比例自适应并垂直居中，避免 object-contain 产生黑边 */}
           <video
             ref={videoRef}
             src={videoSrc}
@@ -287,7 +288,7 @@ function VideoKeepMedia({
             loop
             playsInline
             preload={preload}
-            className="absolute left-[6.027%] top-[5.964%] h-[88.072%] w-[87.835%] bg-grey-400 object-contain motion-reduce:hidden"
+            className="absolute left-[6.027%] top-1/2 h-auto w-[87.835%] -translate-y-1/2 motion-reduce:hidden"
           />
         </div>
       </div>

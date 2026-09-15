@@ -99,7 +99,15 @@ export function useHeroPreloader(
   },
 ): HeroPreloadState {
   const video = useVideoPreloader(videoSrc, {
-    enabled: videoEnabled,
+    // Safari 的 fetch + ReadableStream 预载大视频常不吐进度甚至卡死主线程，
+    // 改为跳过内存预载，加载条跟静态资源走，视频直接用文件地址播放。
+    enabled:
+      videoEnabled &&
+      !(
+        typeof navigator !== "undefined" &&
+        /safari/i.test(navigator.userAgent) &&
+        !/chrome|chromium|crios|edg|android/i.test(navigator.userAgent)
+      ),
     timeoutMs,
   });
   const assets = useBytesPreloader(extraSrcs);

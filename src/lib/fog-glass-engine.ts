@@ -33,9 +33,14 @@ const IS_SAFARI =
   /safari/i.test(navigator.userAgent) &&
   !/chrome|chromium|crios|edg|android/i.test(navigator.userAgent);
 
-/** Safari 对 backdrop-filter + 频繁换 data:URL mask 会闪；拉长间隔并关掉空闲挖孔 */
-const MASK_APPLY_INTERVAL = IS_SAFARI ? 0.28 : CONFIG.maskApplyInterval;
+export function isSafariFogClient() {
+  return IS_SAFARI;
+}
+
+/** Safari 对 backdrop-filter + 换 mask / 改 transform 会整层重采样闪烁 */
+const MASK_APPLY_INTERVAL = IS_SAFARI ? 0.45 : CONFIG.maskApplyInterval;
 const IDLE_RUNNER_RATE = IS_SAFARI ? 0 : CONFIG.idleRunnerRate;
+const DROP_SPAWN_CHANCE = IS_SAFARI ? 0 : CONFIG.dropSpawnChance;
 
 type Bead = { x: number; y: number; r: number; vy: number; seed: number };
 type Runner = {
@@ -121,6 +126,8 @@ export function createFogGlassEngine(
   let baselineAlpha = 0;
   let running = false;
   let lastFrame = 0;
+  let currentMaskUrl: string | null = null;
+  let canvasCleared = false;
 
   function resizeSurfaces(w: number, h: number) {
     boxW = w;
@@ -148,33 +155,78 @@ export function createFogGlassEngine(
       if (w < 2 || h < 2) return;
       resizeSurfaces(w, h);
     }
-    // 位置未变时不写 transform：Safari 对 backdrop-filter 元素每帧改
-    // transform 会强制重采样模糊，表现为整层闪烁。
-    if (rect.left === lastLeft && rect.top === lastTop) return;
-    lastLeft = rect.left;
-    lastTop = rect.top;
-    const shift = `translate3d(${rect.left}px, ${rect.top}px, 0)`;
+    // 位置取整：亚像素抖动会每帧改几何，Safari 对 backdrop-filter 重采样即闪。
+    const left = Math.round(rect.left);
+    const top = Math.round(rect.top);
+    if (left === lastLeft && top === lastTop) return;
+    lastLeft = left;
+    lastTop = top;
+    // Safari：用 left/top 定位，避免 transform + backdrop-filter 同元素闪烁。
+    if (IS_SAFARI) {
+      frostElement.style.left = `${left}px`;
+      frostElement.style.top = `${top}px`;
+      frostElement.style.transform = "none";
+      canvas.style.left = `${left}px`;
+      canvas.style.top = `${top}px`;
+      canvas.style.transform = "none";
+      return;
+    }
+    const shift = `translate3d(${left}px, ${top}px, 0)`;
     frostElement.style.transform = shift;
     canvas.style.transform = shift;
+  }
+
+  function paintMaskOntoFrost(url: string) {
+    const value = `url("${url}")`;
+    if (IS_SAFARI) {
+      frostElement.style.webkitMaskImage = value;
+      frostElement.style.webkitMaskSize = "100% 100%";
+      frostElement.style.webkitMaskRepeat = "no-repeat";
+      return;
+    }
+    frostElement.style.maskImage = value;
+    frostElement.style.webkitMaskImage = value;
+    frostElement.style.maskSize = "100% 100%";
+    frostElement.style.webkitMaskSize = "100% 100%";
+  }
+
+  function revokeMaskUrl() {
+    if (!currentMaskUrl) return;
+    URL.revokeObjectURL(currentMaskUrl);
+    currentMaskUrl = null;
   }
 
   function applyMask(now: number) {
     lastMaskApply = now;
     maskDirty = false;
     const generation = ++maskGeneration;
-    const dataUrl = mask.toDataURL("image/png");
-    // Safari 异步解码 data:URL mask：若直接赋值，解码完成前霜层会空一帧。
-    // 先 decode，再替换，旧 mask 保持到新图就绪。
-    const image = new Image();
-    image.onload = () => {
-      if (destroyed || generation !== maskGeneration) return;
-      const url = `url("${dataUrl}")`;
-      frostElement.style.maskImage = url;
-      frostElement.style.webkitMaskImage = url;
-      frostElement.style.maskSize = "100% 100%";
-      frostElement.style.webkitMaskSize = "100% 100%";
+
+    const adopt = (url: string, revokeOnFail: boolean) => {
+      const image = new Image();
+      image.onload = () => {
+        if (destroyed || generation !== maskGeneration) {
+          if (revokeOnFail) URL.revokeObjectURL(url);
+          return;
+        }
+        paintMaskOntoFrost(url);
+        if (revokeOnFail) {
+          revokeMaskUrl();
+          currentMaskUrl = url;
+        }
+      };
+      image.src = url;
     };
-    image.src = dataUrl;
+
+    // Safari 用 blob URL，避免反复塞 data:URL 触发霜层空帧。
+    if (IS_SAFARI) {
+      mask.toBlob((blob) => {
+        if (!blob || destroyed || generation !== maskGeneration) return;
+        adopt(URL.createObjectURL(blob), true);
+      }, "image/png");
+      return;
+    }
+
+    adopt(mask.toDataURL("image/png"), false);
   }
 
   function stampHole(x: number, y: number) {
@@ -254,7 +306,7 @@ export function createFogGlassEngine(
       // 质量耗损放缓：单颗流挂走得更远、水痕更长
       runner.r -= dt * 0.22;
 
-      if (runner.vy > 0.02) {
+      if (runner.vy > 0.02 && !IS_SAFARI) {
         maskCtx.globalCompositeOperation = "destination-out";
         maskCtx.strokeStyle = "rgba(0,0,0,0.92)";
         maskCtx.lineWidth = Math.max(runner.r * 1.05 * s, 1.2);
@@ -284,14 +336,23 @@ export function createFogGlassEngine(
         }
       }
     }
-    if (runners.length) maskDirty = true;
+    if (runners.length && !IS_SAFARI) maskDirty = true;
   }
 
   function drawBeads() {
+    // Safari：空画布不再每帧 clear，避免隔壁 backdrop-filter 被逼着重采样。
+    if (IS_SAFARI && beads.length === 0 && runners.length === 0) {
+      if (!canvasCleared) {
+        drawCtx.clearRect(0, 0, canvas.width, canvas.height);
+        canvasCleared = true;
+      }
+      return;
+    }
+    canvasCleared = false;
     drawCtx.clearRect(0, 0, canvas.width, canvas.height);
     drawCtx.save();
     if (canvasShapePath) drawCtx.clip(canvasShapePath);
-    if (beads.length < CONFIG.dropMax && Math.random() < CONFIG.dropSpawnChance) {
+    if (beads.length < CONFIG.dropMax && Math.random() < DROP_SPAWN_CHANCE) {
       beads.push({
         x: Math.random() * boxW,
         y: Math.random() * boxH * 0.6,
@@ -352,6 +413,8 @@ export function createFogGlassEngine(
   }
 
   function refog(now: number, dt: number) {
+    // Safari：回雾会周期性换 mask，backdrop-filter 每次换都闪一层。
+    if (IS_SAFARI) return;
     if (now - lastWipeTime < CONFIG.refogDelay) return;
     const alpha = Math.min(0.05, dt / CONFIG.refogTime);
     maskCtx.fillStyle = `rgba(255,255,255,${alpha})`;
@@ -431,6 +494,7 @@ export function createFogGlassEngine(
       removeFrameTick(tick);
       beads.length = 0;
       runners.length = 0;
+      revokeMaskUrl();
     },
     wipeAt(x, y) {
       if (boxW < 2) return;
@@ -448,7 +512,12 @@ export function createFogGlassEngine(
         wipePoint(x, y);
       }
       lastWipe = { x, y };
-      applyMask(performance.now() / 1000);
+      const now = lastWipeTime;
+      if (IS_SAFARI && now - lastMaskApply < MASK_APPLY_INTERVAL) {
+        maskDirty = true;
+        return;
+      }
+      applyMask(now);
     },
     endStroke() {
       lastWipe = null;

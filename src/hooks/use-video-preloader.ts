@@ -55,11 +55,12 @@ export function useVideoPreloader(
           if (done) break;
           chunks.push(value);
           received += value.byteLength;
-          if (!cancelled && total > 0) {
-            setState((prev) => ({
-              ...prev,
-              progress: Math.min(received / total, 0.999),
-            }));
+          if (!cancelled) {
+            const progress =
+              total > 0
+                ? Math.min(received / total, 0.999)
+                : Math.min(received / (received + 250_000), 0.9);
+            setState((prev) => ({ ...prev, progress }));
           }
         }
 

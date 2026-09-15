@@ -9,7 +9,7 @@ export const LOADER_MIN_DURATION_MS = 2000;
 /** 到 100% 后短停再退场 */
 export const LOADER_HOLD_MS = 700;
 /** Safari matchMedia 未触发时的加载层保险上限 */
-export const LOADER_FAILSAFE_MS = 20000;
+export const LOADER_FAILSAFE_MS = 10000;
 /** 文案阶段：0–35% 申请 / 35–65% 连接 / 65–100% 已批准 */
 export const LOADER_PHASE_REVIEW = 0.35;
 export const LOADER_PHASE_APPROVED = 0.65;

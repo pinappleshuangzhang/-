@@ -138,7 +138,7 @@ export function HeroLoader({
           <span className="relative top-px font-bodoni md:top-0.5">
             {idLabel}
           </span>
-          <span className="ml-1 inline-block h-[14px] overflow-hidden md:h-5">
+          <span className="ml-1 block h-[14px] overflow-hidden md:h-5">
             <span
               data-loader-phase-track
               className="flex flex-col items-start will-change-transform"
