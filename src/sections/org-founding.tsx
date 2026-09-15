@@ -80,35 +80,38 @@ export function OrgFounding() {
     if (isMobileViewport) return;
     const bar = TITLE_BAR_BY_LOCALE[locale];
     const apply = () => {
+      const su = window.innerWidth / 1440;
       const line2 = titleLine2Ref.current;
       const blackBar = blackBarRef.current;
       if (line2 && blackBar) {
-        blackBar.style.left = `${bar.inset}px`;
-        blackBar.style.top = `${bar.top}px`;
-        blackBar.style.height = `${bar.height}px`;
+        blackBar.style.left = `${bar.inset * su}px`;
+        blackBar.style.top = `${bar.top * su}px`;
+        blackBar.style.height = `${bar.height * su}px`;
         blackBar.style.width = `${
-          Math.max(line2.offsetWidth - bar.inset, 0) + bar.extend
+          Math.max(line2.offsetWidth - bar.inset * su, 0) + bar.extend * su
         }px`;
         const copy = blackBar.querySelector<HTMLElement>("[data-sd-title-copy]");
         if (copy) {
-          copy.style.left = `${-bar.inset}px`;
-          copy.style.top = `${-bar.top}px`;
+          copy.style.left = `${-bar.inset * su}px`;
+          copy.style.top = `${-bar.top * su}px`;
         }
       }
       const highlight = foundedHighlightRef.current;
       const greenBar = greenBarRef.current;
       const greenCopy = greenCopyRef.current;
       if (highlight && greenBar && greenCopy) {
-        const left = highlight.offsetLeft - GREEN_BAR_SHIFT;
+        const left = highlight.offsetLeft - GREEN_BAR_SHIFT * su;
         greenBar.style.left = `${left}px`;
         greenBar.style.width = `${
-          highlight.offsetWidth + GREEN_BAR_SHIFT + GREEN_BAR_EXTEND
+          highlight.offsetWidth + (GREEN_BAR_SHIFT + GREEN_BAR_EXTEND) * su
         }px`;
         greenCopy.style.left = `${-left}px`;
       }
     };
     apply();
     document.fonts?.ready.then(apply);
+    window.addEventListener("resize", apply);
+    return () => window.removeEventListener("resize", apply);
   }, [locale, isMobileViewport]);
 
   // 鼠标视差：仅悬停型精准指针启用，触屏与减少动效场景不启用
@@ -166,11 +169,11 @@ export function OrgFounding() {
         data-sd-words
         data-sd-delay="0.2"
         aria-label={t("orgFounding.designers")}
-        className="absolute left-5 top-[30.5%] font-serif-sc text-12 text-grey-300"
+        className="absolute left-5 top-[30.5%] font-serif-sc text-12 text-grey-300 md:text-[length:calc(var(--su)*12)]"
       >
         <SplitWords text={t("orgFounding.designers")} />
       </p>
-      <div className="absolute left-5 top-[33.6%] whitespace-nowrap font-serif-sc text-32 leading-[46px] text-grey-400">
+      <div className="absolute left-5 top-[33.6%] whitespace-nowrap font-serif-sc text-32 leading-[46px] text-grey-400 md:text-[length:calc(var(--su)*32)] md:leading-[calc(var(--su)*46)]">
         <div className="relative">
           <div
             data-sd-words
@@ -191,7 +194,7 @@ export function OrgFounding() {
           <div
             ref={blackBarRef}
             aria-hidden="true"
-            className="absolute left-[76px] top-[46px] h-[43px] w-[249px] overflow-hidden"
+            className="absolute left-[76px] top-[46px] h-[43px] w-[249px] overflow-hidden md:left-[calc(var(--su)*76)] md:top-[calc(var(--su)*46)] md:h-[calc(var(--su)*43)]"
           >
             <span
               data-sd-bar
@@ -203,7 +206,7 @@ export function OrgFounding() {
               data-sd-sync="founding-title"
               data-sd-delay="0.35"
               data-sd-title-copy
-              className="absolute left-[-76px] top-[-46px] whitespace-nowrap text-white"
+              className="absolute left-[-76px] top-[-46px] whitespace-nowrap text-white md:left-[calc(var(--su)*-76)] md:top-[calc(var(--su)*-46)]"
             >
               <p>
                 <SplitWords text={t("org.line1a")} />
@@ -216,12 +219,44 @@ export function OrgFounding() {
         </div>
       </div>
 
+      {/* 右侧铭牌：底边锚定到标题底（33.6% + 两行标题高 92 - 图高 305，均按 --su），
+          视口比例变化时仍与标题底对齐，且不脱离原 Figma 位置 */}
+      <div
+        data-sd-media
+        data-sd-delay="0.35"
+        className="absolute right-5 top-[calc(33.6%-var(--su)*213)] h-[calc(var(--su)*305)] w-[calc(var(--su)*507)] overflow-hidden"
+      >
+        <div
+          data-sd-media-inner
+          className="absolute inset-0 translate-y-[105%]"
+        >
+          <div ref={plateBgParallaxRef} className="absolute inset-0">
+            <Image
+              src={plateBgImg}
+              alt=""
+              fill
+              sizes="(min-width: 768px) calc(100vw * 507 / 1440), 507px"
+              className="object-cover"
+            />
+          </div>
+          <div ref={plateFgParallaxRef} className="absolute inset-0">
+            <Image
+              src={plateFgImg}
+              alt={t("orgFounding.plateAlt")}
+              fill
+              sizes="(min-width: 768px) calc(100vw * 507 / 1440), 507px"
+              className="object-cover"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* 左下：雕塑图与成立宣言同一底栏——页边距 20、图文间距 20、底对齐 */}
       <div className="absolute bottom-5 left-5 flex items-end gap-5">
       <div
         data-sd-media
         data-sd-delay="0.55"
-        className="relative size-[325px] shrink-0 overflow-hidden"
+        className="relative size-[calc(var(--su)*325)] shrink-0 overflow-hidden"
       >
         <div
           data-sd-media-inner
@@ -233,7 +268,7 @@ export function OrgFounding() {
               src={statuesBgImg}
               alt=""
               fill
-              sizes="325px"
+              sizes="(min-width: 768px) calc(100vw * 325 / 1440), 325px"
               className="object-cover"
             />
           </div>
@@ -242,7 +277,7 @@ export function OrgFounding() {
               src={statuesFgImg}
               alt={t("orgFounding.statuesAlt")}
               fill
-              sizes="325px"
+              sizes="(min-width: 768px) calc(100vw * 325 / 1440), 325px"
               className="object-cover"
             />
           </div>
@@ -250,7 +285,7 @@ export function OrgFounding() {
       </div>
 
       <div className="min-w-0 pb-0">
-        <div className="relative h-[38px] whitespace-nowrap font-serif-sc text-24 text-grey-400">
+        <div className="relative h-[38px] whitespace-nowrap font-serif-sc text-24 text-grey-400 md:h-[calc(var(--su)*38)] md:text-[length:calc(var(--su)*24)]">
           <p
             data-sd-words
             data-sd-sync="founding-founded"
@@ -269,7 +304,7 @@ export function OrgFounding() {
           <div
             ref={greenBarRef}
             aria-hidden="true"
-            className="absolute left-[119px] top-[-3px] h-[33px] w-[246px] overflow-hidden"
+            className="absolute left-[119px] top-[-3px] h-[33px] w-[246px] overflow-hidden md:h-[calc(var(--su)*33)]"
           >
             <span
               data-sd-bar
@@ -299,7 +334,7 @@ export function OrgFounding() {
           data-sd-lines
           data-sd-delay="0.75"
           aria-label={`${t("orgFounding.detail1")} ${t("orgFounding.detail2")}`}
-          className="mt-1 font-serif-sc text-12 text-grey-300"
+          className="mt-1 font-serif-sc text-12 text-grey-300 md:text-[length:calc(var(--su)*12)] md:leading-[calc(var(--su)*18)]"
         >
           <span aria-hidden="true" className="block overflow-hidden">
             <span className="sd-line block opacity-0">
@@ -313,37 +348,6 @@ export function OrgFounding() {
           </span>
         </div>
       </div>
-      </div>
-
-      {/* 右侧：金属铭牌装置，贴 20px 右边距；前后景分层视差与左下角相同 */}
-      <div
-        data-sd-media
-        data-sd-delay="0.35"
-        className="absolute right-5 top-[7.9%] h-[305px] w-[507px] overflow-hidden"
-      >
-        <div
-          data-sd-media-inner
-          className="absolute inset-0 translate-y-[105%]"
-        >
-          <div ref={plateBgParallaxRef} className="absolute inset-0">
-            <Image
-              src={plateBgImg}
-              alt=""
-              fill
-              sizes="507px"
-              className="object-cover"
-            />
-          </div>
-          <div ref={plateFgParallaxRef} className="absolute inset-0">
-            <Image
-              src={plateFgImg}
-              alt={t("orgFounding.plateAlt")}
-              fill
-              sizes="507px"
-              className="object-cover"
-            />
-          </div>
-        </div>
       </div>
       </div>
       )}

@@ -221,7 +221,7 @@ export function SurveyDrawer({
       <aside
         ref={panelRef}
         onClick={handlePanelClick}
-        className="absolute inset-y-0 right-0 z-10 flex w-[min(935px,calc(100%-80px))] flex-col bg-[#F7F7F9] max-md:inset-x-0 max-md:top-[67px] max-md:w-auto"
+        className="absolute inset-y-0 right-0 z-10 flex w-[min(calc(var(--su)*935),calc(100%-80px))] flex-col bg-[#F7F7F9] max-md:inset-x-0 max-md:top-[67px] max-md:w-auto"
       >
         {/* 桌面端靠跟随光标的「关闭」收起，按钮仅供读屏；手机上显示 16px 叉号（Figma 1008-561） */}
         <button
@@ -259,7 +259,7 @@ export function SurveyDrawer({
       <p
         ref={closeLabelRef}
         aria-hidden="true"
-        className={`pointer-events-none absolute left-0 top-0 z-20 mix-blend-difference text-20 leading-normal text-white opacity-0 ${
+        className={`pointer-events-none absolute left-0 top-0 z-20 mix-blend-difference text-20 leading-normal text-white opacity-0 md:text-[length:calc(var(--su)*20)] ${
           locale === "zh"
             ? "font-serif-sc font-medium"
             : "font-bodoni font-normal uppercase"

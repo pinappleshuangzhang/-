@@ -45,7 +45,7 @@ const NAV_CODE: Partial<Record<NavVariant, string>> = {
 /**
  * 全站公共导航入口。
  * 移动端委托 MobileSiteNav；桌面端右侧保留目录、联系我们、语言。
- * 右侧操作区绝对贴右、固定 507px（与各屏 right-5 + w-[507px] 图左缘对齐），
+ * 右侧操作区绝对贴右、宽随 --su 缩放（稿面 507，与各屏右边栏图左缘对齐），
  * 避免左侧长标题挤缩导致「目录」右移。
  */
 export function SiteNav({
@@ -68,7 +68,7 @@ export function SiteNav({
   // 中文态显示「英」；英文态显示「CN」
   const langLabel = isEn ? "CN" : "英";
   const navFont = isEn ? "font-bodoni" : "font-serif-sc";
-  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-12 font-normal uppercase leading-none text-white ${focusRing}`;
+  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white ${focusRing}`;
   // Bodoni 全大写的视觉中线比中文低，方块上提 1px 才与文字对齐
   const markOffsetY = isEn ? -1 : 0;
 
@@ -161,7 +161,7 @@ export function SiteNav({
             <button
               type="button"
               onClick={onHome}
-              className="whitespace-nowrap border-0 bg-transparent p-0 text-left font-bodoni text-12 font-normal uppercase leading-none text-white focus-visible:outline-none"
+              className="whitespace-nowrap border-0 bg-transparent p-0 text-left font-bodoni text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white focus-visible:outline-none"
             >
               {title}
             </button>
@@ -169,16 +169,16 @@ export function SiteNav({
             <p
               className={
                 showBrand
-                  ? "whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-white"
-                  : "max-w-[calc(100%-527px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-none text-white"
+                  ? "whitespace-nowrap font-bodoni text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white"
+                  : "max-w-[calc(100%-(var(--su)*507+20px))] whitespace-nowrap font-bodoni text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white"
               }
             >
               {title}
             </p>
           )}
 
-          {/* 与屏内 right-5 + w-[507px] 图同缘：贴版心右、宽 507；目录在区左缘 */}
-          <div className="absolute right-0 top-1/2 flex w-[507px] -translate-y-1/2 items-center justify-between">
+          {/* 与屏内右边栏图同缘：贴版心右、宽随 --su 缩放；目录在区左缘 */}
+          <div className="absolute right-0 top-1/2 flex w-[calc(var(--su)*507)] -translate-y-1/2 items-center justify-between">
             <div className="flex w-max min-w-[161px] shrink-0 items-center justify-between gap-8">
             <FlipHoverButton
               ref={desktopCloseRef}

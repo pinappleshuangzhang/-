@@ -349,7 +349,7 @@ export function ArchiveIndex({
       <p
         ref={closeLabelRef}
         aria-hidden="true"
-        className={`pointer-events-none absolute left-0 top-0 z-[61] hidden text-20 leading-normal text-grey-400 opacity-0 md:block ${
+        className={`pointer-events-none absolute left-0 top-0 z-[61] hidden text-[length:calc(var(--su)*20)] leading-normal text-grey-400 opacity-0 md:block ${
           locale === "zh"
             ? "font-serif-sc font-medium"
             : "font-bodoni font-normal uppercase"

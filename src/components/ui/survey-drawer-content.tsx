@@ -65,13 +65,13 @@ export function SurveyDrawerContent({
       ref={rootRef}
       className="relative px-5 pb-20 pt-[105px] max-md:px-3 max-md:pb-12 max-md:pt-[68px]"
     >
-      <div className="flex w-full max-w-[896px] flex-col gap-10">
+      <div className="flex w-full max-w-[896px] flex-col gap-10 md:max-w-[calc(var(--su)*896)]">
         <div className="flex flex-col gap-10 max-md:gap-9">
           <header className="flex items-center justify-between">
             <h1
               id={titleId}
               aria-label={heading}
-              className="whitespace-nowrap font-bodoni text-44 font-normal uppercase leading-[55px] text-grey-400 max-md:text-24 max-md:normal-case max-md:leading-[34px]"
+              className="whitespace-nowrap font-bodoni text-44 font-normal uppercase leading-[55px] text-grey-400 max-md:text-24 max-md:normal-case max-md:leading-[34px] md:text-[length:calc(var(--su)*44)] md:leading-[calc(var(--su)*55)]"
             >
               <span data-sd-words data-sd-delay="0.15" className="max-md:hidden">
                 <SplitWords text={heading} />
@@ -85,7 +85,7 @@ export function SurveyDrawerContent({
               </span>
             </h1>
             <div className="flex flex-col items-end justify-center gap-2 max-md:gap-1">
-              <div className="flex w-[180px] items-center justify-end gap-1 max-md:w-[104px]">
+              <div className="flex w-[180px] items-center justify-end gap-1 max-md:w-[104px] md:w-[calc(var(--su)*180)]">
                 <div
                   className="h-px min-w-px flex-1 bg-grey-400 max-md:bg-grey-300"
                   aria-hidden="true"
@@ -94,7 +94,7 @@ export function SurveyDrawerContent({
                   data-sd-words
                   data-sd-delay="0.2"
                   aria-label={activeCategory.typeLabel}
-                  className="whitespace-nowrap font-bodoni text-20 capitalize leading-normal text-grey-400 max-md:text-12 max-md:leading-[15px]"
+                  className="whitespace-nowrap font-bodoni text-20 capitalize leading-normal text-grey-400 max-md:text-12 max-md:leading-[15px] md:text-[length:calc(var(--su)*20)]"
                 >
                   <SplitWords text={activeCategory.typeLabel} />
                 </p>
@@ -103,7 +103,7 @@ export function SurveyDrawerContent({
                 data-sd-words
                 data-sd-delay="0.22"
                 aria-label={activeWork?.archivedLabel ?? SURVEY_G_001.archivedLabel}
-                className="whitespace-nowrap font-bodoni text-20 uppercase leading-normal text-grey-400 max-md:text-12 max-md:leading-[15px]"
+                className="whitespace-nowrap font-bodoni text-20 uppercase leading-normal text-grey-400 max-md:text-12 max-md:leading-[15px] md:text-[length:calc(var(--su)*20)]"
               >
                 <SplitWords
                   text={activeWork?.archivedLabel ?? SURVEY_G_001.archivedLabel}
@@ -193,10 +193,10 @@ function WorkCaption({
         data-sd-media-inner
         className="flex translate-y-[105%] flex-col gap-3"
       >
-        <p className="font-serif-sc text-20 font-medium leading-normal text-grey-400 max-md:font-bodoni max-md:text-18 max-md:leading-6">
+        <p className="font-serif-sc text-20 font-medium leading-normal text-grey-400 max-md:font-bodoni max-md:text-18 max-md:leading-6 md:text-[length:calc(var(--su)*20)]">
           {title}
         </p>
-        <p className="font-serif-sc text-14 font-normal leading-5 text-grey-300 max-md:text-12 max-md:leading-6">
+        <p className="font-serif-sc text-14 font-normal leading-5 text-grey-300 max-md:text-12 max-md:leading-6 md:text-[length:calc(var(--su)*14)] md:leading-[calc(var(--su)*20)]">
           {description}
         </p>
       </div>

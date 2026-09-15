@@ -67,6 +67,8 @@
   /* 布局基线 */
   --page-margin: 20px;
   --content-max: 1360px;
+  /* 桌面设计稿 1440 宽：导航右栏、组织记录图等与稿面像素同比缩放 */
+  --su: calc(100vw / 1440);
 
   --background: var(--color-grey-100);
   --foreground: var(--color-grey-400);

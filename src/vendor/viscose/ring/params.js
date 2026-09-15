@@ -37,7 +37,7 @@ export function defaultParams() {
     refHeight: 800,
     fitHeight: 1, // 与背景共用 cover 缩放，浏览器栏改变可视高度时仍保持圆环重合
     minScale: 0.5, // a phone is not a small desktop; bracket the extremes
-    maxScale: 1.75,
+    maxScale: 3,
 
     narrowAt: 1024, // inclusive
     narrowPlane: 1.25,

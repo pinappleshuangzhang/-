@@ -453,24 +453,24 @@ export function ArchiveIntro() {
         >
           <p
             data-title-what-is
-            className="absolute left-[3.0769%] top-[calc(47.69%-80vw*420/563/2-103px)] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[calc(50%-615px)] md:top-[calc(50%-244px)] md:text-100 md:leading-[125px]"
+            className="absolute left-[3.0769%] top-[calc(47.69%-80vw*420/563/2-103px)] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[calc(50%-var(--su)*615)] md:top-[calc(50%-var(--su)*244)] md:text-[length:calc(var(--su)*100)] md:leading-[calc(var(--su)*125)]"
           >
             WHAT IS
           </p>
           <p
             data-title-gravity
-            className="absolute left-[46.9231%] top-[calc(47.69%+80vw*420/563/2+58px)] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[calc(50%+193px)] md:top-[calc(50%+176px)] md:text-100 md:leading-[125px]"
+            className="absolute left-[46.9231%] top-[calc(47.69%+80vw*420/563/2+58px)] font-bodoni text-44 font-normal leading-[55px] text-grey-400 md:left-[calc(50%+var(--su)*193)] md:top-[calc(50%+var(--su)*176)] md:text-[length:calc(var(--su)*100)] md:leading-[calc(var(--su)*125)]"
           >
             GRAVITY
           </p>
         </div>
 
         {/* 档案夹卡片：桌面 563×420；移动端 Figma 701:204 = 312×233 */}
-        <div className="absolute left-[calc(50%+1px)] top-[47.69%] aspect-[563/420] w-[80%] -translate-x-1/2 -translate-y-1/2 text-14 md:left-[calc(50%+4px)] md:top-[calc(50%+18px)] md:w-[min(563px,calc(100vw-40px))] md:text-[length:calc(min(563px,100vw-40px)/35.1875)]">
+        <div className="absolute left-[calc(50%+1px)] top-[47.69%] aspect-[563/420] w-[80%] -translate-x-1/2 -translate-y-1/2 text-14 md:left-[calc(50%+var(--su)*4)] md:top-[calc(50%+var(--su)*18)] md:w-[calc(var(--su)*563)] md:text-[length:calc(var(--su)*16)]">
           {/* 投影：设计稿手绘投影图形 1:1 还原（SVG 画布含模糊出血，按设计坐标定位） */}
           <span
             aria-hidden="true"
-            className="absolute left-[-2.57%] top-[1.76%] block h-[119.8%] w-[111.64%] md:left-[calc(-2.57%-16px)]"
+            className="absolute left-[-2.57%] top-[1.76%] block h-[119.8%] w-[111.64%] md:left-[calc(-2.57%-var(--su)*16)]"
           >
             <Image src="/archive/folder-shadow.svg" alt="" fill sizes="60vw" />
           </span>
@@ -485,7 +485,7 @@ export function ArchiveIntro() {
                   alt={t("intro.folderAlt")}
                   fill
                   placeholder="blur"
-                  sizes="(min-width: 768px) 563px, 80vw"
+                  sizes="(min-width: 768px) calc(100vw * 563 / 1440), 80vw"
                   className="object-contain"
                 />
               )}
@@ -521,23 +521,25 @@ export function ArchiveIntro() {
           <div
             className={`absolute left-[8.6538%] top-[35.2%] w-[49.4%] ${
               isEnglish
-                ? "-translate-y-4 md:left-[52px] md:top-[calc(35.7%-36px)] md:w-[308px]"
-                : "md:left-[52px] md:top-[35.7%] md:w-[55%]"
+                ? "-translate-y-4 md:left-[calc(var(--su)*52)] md:top-[calc(35.7%-var(--su)*36)] md:w-[calc(var(--su)*308)]"
+                : "md:left-[calc(var(--su)*52)] md:top-[35.7%] md:w-[55%]"
             }`}
           >
             <div className="relative">
               <div
                 data-swap-a
                 data-sd-global-ignore
-                className={`flex flex-col gap-3 md:gap-[1em] ${
-                  isEnglish ? "md:relative md:top-[26px] md:translate-y-5" : ""
+                className={`flex flex-col gap-3 md:gap-[calc(var(--su)*24)] ${
+                  isEnglish
+                    ? "md:relative md:top-[calc(var(--su)*26)] md:translate-y-5"
+                    : ""
                 }`}
               >
                 <div
                   className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200/40 ${
                     isEnglish
-                      ? "md:text-24 md:leading-[30px]"
-                      : "md:text-[1.5em] md:leading-normal"
+                      ? "md:text-[length:calc(var(--su)*24)] md:leading-[calc(var(--su)*30)]"
+                      : "md:text-[length:calc(var(--su)*24)] md:leading-normal"
                   }`}
                 >
                   <ScrubText text={t("intro.line1")} revealDelay={0.4} />
@@ -545,8 +547,8 @@ export function ArchiveIntro() {
                 <div
                   className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200/40 ${
                     isEnglish
-                      ? "md:w-[308px] md:text-24 md:leading-[36px]"
-                      : "md:text-[1.5em] md:leading-normal"
+                      ? "md:w-[calc(var(--su)*308)] md:text-[length:calc(var(--su)*24)] md:leading-[calc(var(--su)*36)]"
+                      : "md:text-[length:calc(var(--su)*24)] md:leading-normal"
                   }`}
                 >
                   <ScrubText text={t("intro.line2a")} revealDelay={0.5} />
@@ -559,15 +561,15 @@ export function ArchiveIntro() {
                 data-sd-global-ignore
                 className={`absolute left-0 top-[-11px] flex w-[124.6%] flex-col gap-3 md:inset-x-0 ${
                   isEnglish
-                    ? "md:top-0 md:w-[308px] md:gap-2 md:translate-y-2.5"
-                    : "md:top-[-10px] md:w-auto md:gap-[1em]"
+                    ? "md:top-0 md:w-[calc(var(--su)*308)] md:gap-2 md:translate-y-2.5"
+                    : "md:top-[calc(var(--su)*-10)] md:w-auto md:gap-[calc(var(--su)*24)]"
                 }`}
               >
                 <div
                   className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200/40 ${
                     isEnglish
-                      ? "md:text-24 md:leading-[40px]"
-                      : "md:text-[1.5em] md:leading-normal"
+                      ? "md:text-[length:calc(var(--su)*24)] md:leading-[calc(var(--su)*40)]"
+                      : "md:text-[length:calc(var(--su)*24)] md:leading-normal"
                   }`}
                 >
                   {t("intro.bridge")
@@ -582,8 +584,8 @@ export function ArchiveIntro() {
                 <div
                   className={`font-serif-sc text-32 font-normal leading-[46px] text-grey-200/40 ${
                     isEnglish
-                      ? "md:relative md:-top-1 md:text-48 md:leading-[70px]"
-                      : "md:text-[3em] md:leading-normal"
+                      ? "md:relative md:-top-1 md:text-[length:calc(var(--su)*48)] md:leading-[calc(var(--su)*70)]"
+                      : "md:text-[length:calc(var(--su)*48)] md:leading-normal"
                   }`}
                 >
                   <ScrubText text={t("intro.gravity")} />

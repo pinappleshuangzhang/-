@@ -132,7 +132,7 @@ export function HeroLoader({
         <p
           data-loader-status
           aria-hidden="true"
-          className="flex items-center font-serif-sc text-10 font-normal leading-[14px] text-grey-400 md:text-14 md:leading-5"
+          className="flex items-center font-serif-sc text-10 font-normal leading-[14px] text-grey-400 md:text-[length:calc(var(--su)*14)] md:leading-[calc(var(--su)*20)]"
         >
           <span className="whitespace-nowrap">{roleLabel}</span>
           <span className="relative top-px font-bodoni md:top-0.5">
@@ -156,7 +156,7 @@ export function HeroLoader({
         </p>
         <span
           data-loader-percent
-          className="shrink-0 text-right font-bodoni text-12 leading-[14px] text-grey-400 md:text-14 md:leading-5"
+          className="shrink-0 text-right font-bodoni text-12 leading-[14px] text-grey-400 md:text-[length:calc(var(--su)*14)] md:leading-[calc(var(--su)*20)]"
         >
           0%
         </span>

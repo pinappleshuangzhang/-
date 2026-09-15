@@ -31,7 +31,7 @@ export function SurveyWorkTags({
         {tags.map((text) => (
           <li
             key={text}
-            className="flex h-[21px] items-end bg-white px-2 py-0.5 font-serif-sc text-12 font-normal leading-[17px] text-grey-400"
+            className="flex h-[21px] items-end bg-white px-2 py-0.5 font-serif-sc text-12 font-normal leading-[17px] text-grey-400 md:h-[calc(var(--su)*21)] md:text-[length:calc(var(--su)*12)] md:leading-[calc(var(--su)*17)]"
           >
             {text}
           </li>

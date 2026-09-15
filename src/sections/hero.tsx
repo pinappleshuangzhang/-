@@ -72,6 +72,9 @@ export function Hero() {
     timeoutMs: 45000,
   });
   const preloadRef = useRef(preload);
+  // GSAP 闭包只建一次；首次渲染 isDesktop 尚为服务端默认 false，
+  // 直接捕获 videoSrc 会让桌面 Safari 回退到手机竖版视频，必须走 ref 取最新值。
+  const videoSrcRef = useRef(videoSrc);
   const { locale, t } = useLocale();
   // 分页器默认锁定；停在档案盒页后解锁，由滚动拦截器决定是否起播视频
   const { setNavigationLocked, setIntroOverlayActive, registerScrollInterceptor } =
@@ -92,6 +95,10 @@ export function Hero() {
   useEffect(() => {
     preloadRef.current = preload;
   }, [preload]);
+
+  useEffect(() => {
+    videoSrcRef.current = videoSrc;
+  }, [videoSrc]);
 
   // 导航不靠加载层遮挡，改由此信号显式隐藏，遮罩卸载后才淡入
   useEffect(() => {
@@ -348,7 +355,7 @@ export function Hero() {
       const ensureVideo = () => {
         const state = preloadRef.current;
         if (state.status !== "ready") return null;
-        const playbackUrl = state.objectUrl ?? videoSrc;
+        const playbackUrl = state.objectUrl ?? videoSrcRef.current;
         if (!activeVideo) {
           activeVideo = createHeroVideoSequence({
             video,
@@ -576,10 +583,10 @@ export function Hero() {
         </div>
 
         <div
-          className={`absolute top-[126px] hidden items-start gap-2 text-left ${
+          className={`absolute top-[calc(var(--su)*126)] left-[calc(100%-(var(--su)*507+20px))] hidden items-start gap-[calc(var(--su)*8)] text-left ${
             locale === "zh"
-              ? "right-[92px] w-[432px] -translate-x-[2.6px] flex-col md:flex"
-              : "left-[calc(100%-527px)] w-max grid-cols-[max-content] md:grid"
+              ? "w-[calc(var(--su)*432)] flex-col md:flex"
+              : "w-max grid-cols-[max-content] md:grid"
           }`}
         >
           <h1
@@ -587,7 +594,9 @@ export function Hero() {
             data-sd-delay="0.15"
             aria-label={t("hero.title")}
             className={`whitespace-nowrap font-serif-sc font-medium uppercase text-grey-400 ${
-              locale === "zh" ? "text-48" : "text-40"
+              locale === "zh"
+                ? "text-[length:calc(var(--su)*48)] leading-none"
+                : "text-[length:calc(var(--su)*40)] leading-none"
             }`}
           >
             <SplitWords text={t("hero.title")} />
@@ -598,8 +607,8 @@ export function Hero() {
             aria-label={subtitle}
             className={`whitespace-nowrap font-serif-sc uppercase text-grey-400 ${
               locale === "zh"
-                ? "w-full text-left text-16"
-                : "flex w-full items-stretch text-left text-14"
+                ? "w-full text-left text-[length:calc(var(--su)*16)] leading-normal"
+                : "flex w-full items-stretch text-left text-[length:calc(var(--su)*14)] leading-normal"
             }`}
           >
             <span className={locale === "zh" ? undefined : "mr-1 shrink-0"}>
@@ -612,7 +621,7 @@ export function Hero() {
             {subtitleHighlight ? (
               <span
                 className={`relative inline-block text-white ${
-                  locale === "zh" ? "pr-9" : "min-w-0 flex-1"
+                  locale === "zh" ? "pr-[calc(var(--su)*36)]" : "min-w-0 flex-1"
                 }`}
               >
                 <span

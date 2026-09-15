@@ -596,7 +596,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.2"
         aria-label={`${t("member.investigator")}_${identifier}_${role}`}
-        className={`absolute z-10 text-16 ${textColor} ${headerClassName}`}
+        className={`absolute z-10 text-16 md:text-[length:calc(var(--su)*16)] ${textColor} ${headerClassName}`}
       >
         <span className="font-serif-sc font-normal">
           <SplitWords text={t("member.investigator")} />
@@ -614,7 +614,7 @@ function MemberProfile({
         className={`absolute z-10 origin-left scale-x-0 border-t border-dashed border-white/30 ${dividerClassName}`}
         aria-hidden="true"
       >
-        <span className="invisible whitespace-nowrap text-16">
+        <span className="invisible whitespace-nowrap text-16 md:text-[length:calc(var(--su)*16)]">
           <span className="font-serif-sc font-normal">
             {t("member.investigator")}
           </span>
@@ -626,7 +626,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.3"
         aria-label={`${t("member.namePrefix")}${name}`}
-        className={`absolute z-10 whitespace-nowrap text-16 ${textColor} ${nameClassName}`}
+        className={`absolute z-10 whitespace-nowrap text-16 md:text-[length:calc(var(--su)*16)] ${textColor} ${nameClassName}`}
       >
         <span className="font-serif-sc font-normal">
           <SplitWords text={t("member.namePrefix")} />
@@ -639,7 +639,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.4"
         aria-label={direction}
-        className={`absolute z-10 whitespace-nowrap font-serif-sc text-16 font-normal ${textColor} ${directionClassName}`}
+        className={`absolute z-10 whitespace-nowrap font-serif-sc text-16 font-normal md:text-[length:calc(var(--su)*16)] ${textColor} ${directionClassName}`}
       >
         <SplitWords text={direction} />
       </p>
@@ -657,7 +657,7 @@ function MemberProfile({
 
 function ProfileAction({ label }: { label: string }) {
   return (
-    <span className="profile-action pointer-events-auto flex cursor-pointer items-center gap-0.5 font-serif-sc text-16 font-normal">
+    <span className="profile-action pointer-events-auto flex cursor-pointer items-center gap-0.5 font-serif-sc text-16 font-normal md:text-[length:calc(var(--su)*16)]">
       <SplitWords text={label} />
       <span aria-hidden="true" className="relative block size-4 overflow-hidden">
         <Image

@@ -47,7 +47,7 @@ function ContactLayout({
         data-sd-words={animated ? "" : undefined}
         data-sd-delay={animated ? "0.2" : undefined}
         aria-label={t("contact.cta")}
-        className={`absolute left-3 top-[109px] whitespace-nowrap text-24 font-normal uppercase leading-[34px] text-grey-400 md:left-5 md:top-[133px] md:text-48 md:leading-[68px] ${titleFont}`}
+        className={`absolute left-3 top-[109px] whitespace-nowrap text-24 font-normal uppercase leading-[34px] text-grey-400 md:left-5 md:top-[calc(var(--su)*133)] md:text-[length:calc(var(--su)*48)] md:leading-[calc(var(--su)*68)] ${titleFont}`}
       >
         <SplitWords text={t("contact.cta")} animated={animated} />
       </Title>
@@ -55,10 +55,10 @@ function ContactLayout({
       <a
         href="mailto:shuangzhang@fintopia.tech"
         aria-label={`${t("contact.button")}：shuangzhang@fintopia.tech`}
-        className={`group absolute left-3 top-[150px] h-[34px] text-left focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:left-5 md:top-[204px] md:h-[69px] ${
+        className={`group absolute left-3 top-[150px] h-[34px] text-left focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:left-5 md:top-[calc(var(--su)*204)] md:h-[calc(var(--su)*69)] ${
           locale === "en"
-            ? "w-[205px] md:w-[410px]"
-            : "w-[177px] md:w-[325px]"
+            ? "w-[205px] md:w-[calc(var(--su)*410)]"
+            : "w-[177px] md:w-[calc(var(--su)*325)]"
         }`}
       >
         <span
@@ -67,8 +67,8 @@ function ContactLayout({
           aria-hidden="true"
           className={`pointer-events-none absolute left-0 w-full origin-left bg-grey-400 ${
             locale === "en"
-              ? "top-px h-[29px] md:bottom-3.5 md:top-auto md:h-[60px]"
-              : "top-px h-[29px] md:top-0.5 md:h-[66px] md:translate-y-px"
+              ? "top-px h-[29px] md:bottom-[calc(var(--su)*14)] md:top-auto md:h-[calc(var(--su)*60)]"
+              : "top-px h-[29px] md:top-0.5 md:h-[calc(var(--su)*66)] md:translate-y-px"
           } ${animated ? "scale-x-0" : ""}`}
         />
         <ContactButtonContent
@@ -80,12 +80,12 @@ function ContactLayout({
         />
       </a>
 
-      <dl className="absolute left-3 top-[240px] flex w-[345px] flex-col gap-[22px] md:left-5 md:right-5 md:top-[379px] md:grid md:w-auto md:grid-cols-8 md:gap-5">
+      <dl className="absolute left-3 top-[240px] flex w-[345px] flex-col gap-[22px] md:left-5 md:right-5 md:top-[calc(var(--su)*379)] md:grid md:w-auto md:grid-cols-8 md:gap-5">
         <ContactFact
           label={t("contact.addressLabel")}
           value={t("contact.address")}
-          className="h-[50px] w-[139px] md:col-start-1 md:h-auto md:w-[180px]"
-          valueClassName="whitespace-nowrap text-16 leading-6"
+          className="h-[50px] w-[139px] md:col-start-1 md:h-auto md:w-[calc(var(--su)*180)]"
+          valueClassName="whitespace-nowrap text-16 leading-6 md:text-[length:calc(var(--su)*16)] md:leading-[calc(var(--su)*24)]"
           animated={animated}
         />
         <ContactFact
@@ -128,7 +128,7 @@ function ContactButtonContent({
       data-sd-words={animated ? "" : undefined}
       data-sd-delay={animated ? "0.35" : undefined}
       aria-label={label}
-      className={`absolute flex h-[34px] items-center gap-1.5 whitespace-nowrap text-24 font-normal uppercase leading-[34px] md:h-[69px] md:text-48 md:leading-[68px] ${fontClassName} ${positionClassName} ${className}`}
+      className={`absolute flex h-[34px] items-center gap-1.5 whitespace-nowrap text-24 font-normal uppercase leading-[34px] md:h-[calc(var(--su)*69)] md:gap-[calc(var(--su)*6)] md:text-[length:calc(var(--su)*48)] md:leading-[calc(var(--su)*68)] ${fontClassName} ${positionClassName} ${className}`}
     >
       <span>
         <SplitWords text={label} animated={animated} />
@@ -151,7 +151,7 @@ function ContactArrow({
   return (
     <span
       aria-hidden="true"
-      className={`sd-word relative block size-6 shrink-0 overflow-hidden md:-top-0.5 md:size-[51px] ${
+      className={`sd-word relative block size-6 shrink-0 overflow-hidden md:-top-0.5 md:size-[calc(var(--su)*51)] ${
         animated ? "opacity-0" : ""
       }`}
     >
@@ -159,14 +159,14 @@ function ContactArrow({
         src={src}
         alt=""
         fill
-        sizes="(max-width: 767px) 24px, 51px"
+        sizes="(max-width: 767px) 24px, calc(100vw * 51 / 1440)"
         className={`object-contain group-hover:translate-x-full group-hover:-translate-y-full group-focus-visible:translate-x-full group-focus-visible:-translate-y-full ${motionClass}`}
       />
       <Image
         src={src}
         alt=""
         fill
-        sizes="(max-width: 767px) 24px, 51px"
+        sizes="(max-width: 767px) 24px, calc(100vw * 51 / 1440)"
         className={`-translate-x-full translate-y-full object-contain group-hover:translate-x-0 group-hover:translate-y-0 group-focus-visible:translate-x-0 group-focus-visible:translate-y-0 motion-reduce:hidden ${motionClass}`}
       />
     </span>
@@ -186,13 +186,13 @@ function ContactFact({
   label,
   value,
   className,
-  valueClassName = "text-14 leading-5",
+  valueClassName = "text-14 leading-5 md:text-[length:calc(var(--su)*14)] md:leading-[calc(var(--su)*20)]",
   highlighted = false,
   animated = false,
 }: ContactFactProps) {
   return (
     <div className={`flex flex-col gap-2.5 ${className}`}>
-      <dt className="font-serif-sc text-12 font-normal leading-[18px] text-grey-300">
+      <dt className="font-serif-sc text-12 font-normal leading-[18px] text-grey-300 md:text-[length:calc(var(--su)*12)] md:leading-[calc(var(--su)*18)]">
         <span
           data-sd-words={animated ? "" : undefined}
           data-sd-delay={animated ? "0.5" : undefined}
@@ -207,7 +207,7 @@ function ContactFact({
         aria-label={value}
         className={`relative font-serif-sc font-normal ${valueClassName} ${
           highlighted
-            ? "flex h-[26px] items-center text-white"
+            ? "flex h-[26px] items-center text-white md:h-[calc(var(--su)*26)]"
             : "text-grey-400"
         }`}
       >

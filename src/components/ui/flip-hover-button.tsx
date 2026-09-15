@@ -257,8 +257,8 @@ export const FlipHoverButton = forwardRef<
               data-flip-mark
               className={
                 flipEnabled
-                  ? "block size-2 origin-center bg-current will-change-transform md:size-3"
-                  : "block size-2 origin-center bg-current opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 md:size-3"
+                  ? "block size-2 origin-center bg-current will-change-transform md:size-[calc(var(--su)*12)]"
+                  : "block size-2 origin-center bg-current opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 md:size-[calc(var(--su)*12)]"
               }
             />
           </span>
