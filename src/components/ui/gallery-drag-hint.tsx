@@ -69,7 +69,7 @@ export const GalleryDragHint = forwardRef<HTMLDivElement, GalleryDragHintProps>(
         />
         <p
           data-drag-hint-label=""
-          className={`absolute left-0 top-0 flex size-12 items-center justify-center text-12 leading-none text-white ${fontClassName}`}
+          className={`absolute left-0 top-0 flex size-12 items-center justify-center text-[length:max(16px,calc(100vw/1440*16))] leading-none text-white ${fontClassName}`}
         >
           {label}
         </p>

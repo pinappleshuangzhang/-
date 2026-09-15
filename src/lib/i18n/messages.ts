@@ -226,7 +226,7 @@ const zh: Messages = {
   "loader.id": "G_U0412",
   "loader.apply": "申请临时访问权限",
   "loader.review": "档案连接中",
-  "loader.approved": "已批准你的临时申请",
+  "loader.approved": "Temporary Application Approved",
   "loader.cardAlt": "Grava 材质铭牌",
   "intro.line1": "我们不断看到同一种现象",
   "intro.line2a": "有些品牌会被记住",

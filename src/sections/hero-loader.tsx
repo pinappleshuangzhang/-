@@ -125,9 +125,11 @@ export function HeroLoader({
         />
       </div>
 
+      {/* 顶部信息行与导航同 y：移动端跟安全区 +12px；桌面导航行高随 logo 为 20su，
+          文字中心在 20px+10su，本行行高 18su，故 top = 20px+1su 时两者文字中心重合 */}
       <div
         data-loader-chrome
-        className="absolute left-3 right-3 top-3 flex items-center justify-between md:left-5 md:right-5"
+        className="absolute left-3 right-3 top-[calc(env(safe-area-inset-top)+12px)] flex items-center justify-between md:left-5 md:right-5 md:top-[calc(20px+var(--su))]"
       >
         <p
           data-loader-status
