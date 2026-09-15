@@ -84,8 +84,6 @@ export const SURVEY_CATEGORIES: SurveyCategory[] = [
   SURVEY_CATEGORY_BY_CODE.A,
   SURVEY_CATEGORY_BY_CODE.B,
   SURVEY_CATEGORY_BY_CODE.C,
-  SURVEY_CATEGORY_BY_CODE.D,
-  SURVEY_CATEGORY_BY_CODE.E,
 ];
 
 /** 001 品牌设计：The Apple Moment，对照作品提交模版 / 交付文件夹 */
@@ -280,7 +278,7 @@ export const SURVEY_G_003: SurveyWork = {
   tagKeys: ["survey.tag.website", "survey.tag.visual", "survey.tag.brand"],
   media: [
     {
-      src: "/archive-ga-004/easycash-hero.webp",
+      src: "/archive-ga-004/easycash-hero-v2.webp",
       altKey: "survey.easycash.heroAlt",
       width: 1920,
       height: 1080,
@@ -306,13 +304,14 @@ export const SURVEY_G_003: SurveyWork = {
       videoSrc: "/archive-ga-004/easycash-gallery-02.mp4",
     },
     {
-      src: "/archive-ga-004/easycash-gallery-03.webp",
+      src: "/archive-ga-004/easycash-gallery-03-v2.webp",
       altKey: "survey.easycash.media3Alt",
       titleKey: "survey.easycash.media3Title",
       captionKey: "survey.easycash.media3Caption",
       width: 1920,
       height: 1080,
-      hover: "none",
+      hover: "video",
+      videoSrc: "/archive-ga-004/easycash-gallery-03.mp4",
     },
     {
       src: "/archive-ga-004/easycash-gallery-04.webp",
@@ -324,13 +323,14 @@ export const SURVEY_G_003: SurveyWork = {
       hover: "none",
     },
     {
-      src: "/archive-ga-004/easycash-gallery-05.webp",
+      src: "/archive-ga-004/easycash-gallery-05-v2.webp",
       altKey: "survey.easycash.media5Alt",
       titleKey: "survey.easycash.media5Title",
       captionKey: "survey.easycash.media5Caption",
       width: 1920,
       height: 1080,
-      hover: "none",
+      hover: "video",
+      videoSrc: "/archive-ga-004/easycash-gallery-05.mp4",
     },
     {
       src: "/archive-ga-004/easycash-gallery-06.webp",
@@ -356,11 +356,11 @@ export const SURVEY_WORK_BY_CATEGORY: Record<
   E: null,
 };
 
-const SURVEY_CATEGORY_CODES: SurveyCategoryCode[] = ["A", "B", "C", "D", "E"];
+const SURVEY_CATEGORY_CODES: SurveyCategoryCode[] = ["A", "B", "C"];
 
-/** 第五屏卡片序号映射到调查类型；环上多圈时按 5 取模 */
+/** 第五屏卡片序号映射到调查类型；环上多圈时按 3 取模 */
 export function surveyCodeFromCarouselIndex(index: number): SurveyCategoryCode {
   const count = SURVEY_CATEGORY_CODES.length;
   const normalized = ((index % count) + count) % count;
-  return SURVEY_CATEGORY_CODES[normalized] ?? "C";
+  return SURVEY_CATEGORY_CODES[normalized] ?? "A";
 }

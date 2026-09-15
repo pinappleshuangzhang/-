@@ -7,14 +7,16 @@ import gsap from "gsap";
 import {
   MEMBER_RECORD_GRID_HIDDEN,
   MEMBER_RECORD_GRID_VISIBLE,
-  MEMBER_RECORD_HOVER_REVEAL_DURATION,
   MEMBER_RECORD_MASK_COLS,
   MEMBER_RECORD_MASK_FRAME_COUNT,
   MEMBER_RECORD_MASK_ROWS,
   MEMBER_RECORD_REVEAL_DELAY,
   MEMBER_RECORD_REVEAL_DURATION,
 } from "@/animations/member-record-reveal";
-import { MEMBER_FOG_REVEAL_THRESHOLD } from "@/animations/member-record-fog-reveal";
+import {
+  MEMBER_FLOWER_REVEAL_THRESHOLD,
+  MEMBER_FOG_REVEAL_THRESHOLD,
+} from "@/animations/member-record-fog-reveal";
 import {
   playGravaStrokeLoad,
   playMemberMarkReveal,
@@ -24,8 +26,6 @@ import { FogGlass } from "@/components/effects/fog-glass";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
 import {
-  MEMBER_CELL_PATHS,
-  MEMBER_CELL_VIEW_BOX,
   MEMBER_GRAVA_CELL_SHAPE,
   MEMBER_GRAVA_FOG_BOX_CLASS,
   MEMBER_GRAVA_FOG_CLIP,
@@ -293,8 +293,8 @@ export function MemberRecord() {
               clipPath={MEMBER_TOP_RIGHT_FOG_CLIP}
               maskShape={MEMBER_TOP_RIGHT_CELL_SHAPE}
               icon={{
-                src: "/archive/member-record-icon-mail.svg",
-                className: "left-[38.44%] top-[42.53%] w-[23.12%]",
+                flower: true,
+                className: "left-[41.52%] top-[45.61%] w-[16.96%]",
               }}
             />
             <div className="pointer-events-none absolute inset-0 z-[2]">
@@ -362,7 +362,11 @@ function DesktopEmptyFogCell({
         className="absolute inset-0"
         clipPath={clipPath}
         maskShape={maskShape}
-        revealThreshold={MEMBER_FOG_REVEAL_THRESHOLD}
+        revealThreshold={
+          shouldBloom
+            ? MEMBER_FLOWER_REVEAL_THRESHOLD
+            : MEMBER_FOG_REVEAL_THRESHOLD
+        }
         appearDelay={MEMBER_RECORD_REVEAL_DELAY}
         appearDuration={MEMBER_RECORD_REVEAL_DURATION}
         onReveal={shouldBloom ? playReveal : undefined}
@@ -570,8 +574,6 @@ type MemberProfileProps = {
   nameClassName: string;
   directionClassName: string;
   actionsClassName: string;
-  /** 成员 IP 形象：放在擦拭显影层里，擦到才出现，默认不可见 */
-  ipImage?: { src: string; className: string; width: number; height: number };
 };
 
 function MemberProfile({
@@ -584,84 +586,12 @@ function MemberProfile({
   nameClassName,
   directionClassName,
   actionsClassName,
-  ipImage,
 }: MemberProfileProps) {
-  const fillRef = useRef<HTMLDivElement>(null);
-  const proxyRef = useRef({ frame: 0 });
-  const reducedMotion = useReducedMotion();
   const { t } = useLocale();
-  // 文字仍用 CSS 跟手变色；白底（含 IP）走斑块溶解，与入场同一套遮罩语言
-  const recolor =
-    "transition-colors duration-[600ms] ease-out motion-reduce:transition-none";
-  const textColor = `text-white group-hover:text-grey-400 ${recolor}`;
-
-  const animateFill = (entering: boolean) => {
-    const fill = fillRef.current;
-    if (!fill) return;
-    const sprite = getDissolveSprite();
-    if (reducedMotion || !sprite) {
-      fill.style.opacity = entering ? "1" : "0";
-      clearElementMask(fill);
-      return;
-    }
-    const proxy = proxyRef.current;
-    gsap.killTweensOf(proxy);
-    fill.style.opacity = "1";
-    gsap.to(proxy, {
-      frame: entering ? sprite.frameCount - 1 : 0,
-      duration: MEMBER_RECORD_HOVER_REVEAL_DURATION,
-      ease: "none",
-      onUpdate: () => {
-        setSpriteMaskFrame(fill, sprite, Math.round(proxy.frame));
-      },
-      onComplete: () => {
-        if (entering) {
-          clearElementMask(fill);
-        } else {
-          fill.style.opacity = "0";
-          clearElementMask(fill);
-        }
-      },
-    });
-  };
+  const textColor = "text-white";
 
   return (
-    <div className="group pointer-events-none absolute inset-0">
-      <div ref={fillRef} aria-hidden="true" className="absolute inset-0 opacity-0">
-        <svg
-          className="absolute inset-0 h-full w-full"
-          viewBox={MEMBER_CELL_VIEW_BOX}
-          preserveAspectRatio="none"
-        >
-          <path
-            d={MEMBER_CELL_PATHS[identifier]}
-            strokeWidth={3}
-            className="fill-white stroke-white"
-          />
-        </svg>
-        {ipImage ? (
-          <Image
-            src={ipImage.src}
-            alt=""
-            width={ipImage.width}
-            height={ipImage.height}
-            className={`absolute h-auto ${ipImage.className}`}
-          />
-        ) : null}
-      </div>
-      <svg
-        aria-hidden="true"
-        className="absolute inset-0 h-full w-full"
-        viewBox={MEMBER_CELL_VIEW_BOX}
-        preserveAspectRatio="none"
-      >
-        <path
-          d={MEMBER_CELL_PATHS[identifier]}
-          className="pointer-events-auto fill-transparent"
-          onMouseEnter={() => animateFill(true)}
-          onMouseLeave={() => animateFill(false)}
-        />
-      </svg>
+    <div className="pointer-events-none absolute inset-0">
       <p
         data-sd-words
         data-sd-delay="0.2"
@@ -681,7 +611,7 @@ function MemberProfile({
       <span
         data-sd-bar
         data-sd-delay="0.25"
-        className={`absolute z-10 origin-left scale-x-0 border-t border-dashed border-white/30 group-hover:border-grey-400/30 ${recolor} ${dividerClassName}`}
+        className={`absolute z-10 origin-left scale-x-0 border-t border-dashed border-white/30 ${dividerClassName}`}
         aria-hidden="true"
       >
         <span className="invisible whitespace-nowrap text-16">
@@ -726,7 +656,6 @@ function MemberProfile({
 }
 
 function ProfileAction({ label }: { label: string }) {
-  const invertClass = "group-hover:invert";
   return (
     <span className="profile-action pointer-events-auto flex cursor-pointer items-center gap-0.5 font-serif-sc text-16 font-normal">
       <SplitWords text={label} />
@@ -736,14 +665,14 @@ function ProfileAction({ label }: { label: string }) {
           alt=""
           fill
           sizes="16px"
-          className={`profile-action-arrow profile-action-arrow-current object-contain ${invertClass}`}
+          className="profile-action-arrow profile-action-arrow-current object-contain"
         />
         <Image
           src="/archive/member-record-external-arrow.webp"
           alt=""
           fill
           sizes="16px"
-          className={`profile-action-arrow profile-action-arrow-next object-contain motion-reduce:hidden ${invertClass}`}
+          className="profile-action-arrow profile-action-arrow-next object-contain motion-reduce:hidden"
         />
       </span>
     </span>

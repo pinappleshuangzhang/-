@@ -18,15 +18,24 @@ const CONFIG = {
   progressInterval: 0.5,
   revealThreshold: 0.35,
   /** 静态小水珠 */
-  dropMax: 12,
-  dropSpawnChance: 0.02,
+  dropMax: 7,
+  dropSpawnChance: 0.01,
   dropKillRadius: 60,
-  /** 流挂水珠 */
+  /** 流挂水珠：上限不变，提高触发频率与拖尾留存 */
   runnerMax: 4,
-  runnerChance: 0.06,
+  runnerChance: 0.12,
   /** 静止时自发流挂的频率（次/秒） */
-  idleRunnerRate: 0.18,
+  idleRunnerRate: 0.36,
 } as const;
+
+const IS_SAFARI =
+  typeof navigator !== "undefined" &&
+  /safari/i.test(navigator.userAgent) &&
+  !/chrome|chromium|crios|edg|android/i.test(navigator.userAgent);
+
+/** Safari 对 backdrop-filter + 频繁换 data:URL mask 会闪；拉长间隔并关掉空闲挖孔 */
+const MASK_APPLY_INTERVAL = IS_SAFARI ? 0.28 : CONFIG.maskApplyInterval;
+const IDLE_RUNNER_RATE = IS_SAFARI ? 0 : CONFIG.idleRunnerRate;
 
 type Bead = { x: number; y: number; r: number; vy: number; seed: number };
 type Runner = {
@@ -96,6 +105,10 @@ export function createFogGlassEngine(
 
   let boxW = 0;
   let boxH = 0;
+  let lastLeft = Number.NaN;
+  let lastTop = Number.NaN;
+  let maskGeneration = 0;
+  let destroyed = false;
   const beads: Bead[] = [];
   const runners: Runner[] = [];
   let lastWipe: Point | null = null;
@@ -135,6 +148,11 @@ export function createFogGlassEngine(
       if (w < 2 || h < 2) return;
       resizeSurfaces(w, h);
     }
+    // 位置未变时不写 transform：Safari 对 backdrop-filter 元素每帧改
+    // transform 会强制重采样模糊，表现为整层闪烁。
+    if (rect.left === lastLeft && rect.top === lastTop) return;
+    lastLeft = rect.left;
+    lastTop = rect.top;
     const shift = `translate3d(${rect.left}px, ${rect.top}px, 0)`;
     frostElement.style.transform = shift;
     canvas.style.transform = shift;
@@ -143,11 +161,20 @@ export function createFogGlassEngine(
   function applyMask(now: number) {
     lastMaskApply = now;
     maskDirty = false;
-    const url = `url("${mask.toDataURL("image/png")}")`;
-    frostElement.style.maskImage = url;
-    frostElement.style.webkitMaskImage = url;
-    frostElement.style.maskSize = "100% 100%";
-    frostElement.style.webkitMaskSize = "100% 100%";
+    const generation = ++maskGeneration;
+    const dataUrl = mask.toDataURL("image/png");
+    // Safari 异步解码 data:URL mask：若直接赋值，解码完成前霜层会空一帧。
+    // 先 decode，再替换，旧 mask 保持到新图就绪。
+    const image = new Image();
+    image.onload = () => {
+      if (destroyed || generation !== maskGeneration) return;
+      const url = `url("${dataUrl}")`;
+      frostElement.style.maskImage = url;
+      frostElement.style.webkitMaskImage = url;
+      frostElement.style.maskSize = "100% 100%";
+      frostElement.style.webkitMaskSize = "100% 100%";
+    };
+    image.src = dataUrl;
   }
 
   function stampHole(x: number, y: number) {
@@ -224,13 +251,13 @@ export function createFogGlassEngine(
         }
       }
 
-      // 质量耗损：越滑越小，水痕随之收窄成锥形
-      runner.r -= dt * 0.35;
+      // 质量耗损放缓：单颗流挂走得更远、水痕更长
+      runner.r -= dt * 0.22;
 
       if (runner.vy > 0.02) {
         maskCtx.globalCompositeOperation = "destination-out";
-        maskCtx.strokeStyle = "rgba(0,0,0,0.85)";
-        maskCtx.lineWidth = Math.max(runner.r * 0.8 * s, 1);
+        maskCtx.strokeStyle = "rgba(0,0,0,0.92)";
+        maskCtx.lineWidth = Math.max(runner.r * 1.05 * s, 1.2);
         maskCtx.lineCap = "round";
         maskCtx.beginPath();
         maskCtx.moveTo(prevX * s, prevY * s);
@@ -274,8 +301,9 @@ export function createFogGlassEngine(
       });
     }
     for (const bead of beads) {
-      if (bead.r > 5) {
-        bead.vy = Math.min(bead.vy + 0.02, 0.5 + bead.seed);
+      // 现有凝珠更易开始下滑，不增加珠数
+      if (bead.r > 3.8) {
+        bead.vy = Math.min(bead.vy + 0.028, 0.55 + bead.seed);
       }
       bead.y += bead.vy;
       bead.r += 0.0015;
@@ -368,7 +396,7 @@ export function createFogGlassEngine(
     // 静止时自发流挂：不依赖擦拭，偶尔一颗从雾面上方滑下
     if (
       runners.length < CONFIG.runnerMax &&
-      Math.random() < CONFIG.idleRunnerRate * dt
+      Math.random() < IDLE_RUNNER_RATE * dt
     ) {
       spawnRunner(
         (0.08 + Math.random() * 0.84) * boxW,
@@ -378,7 +406,7 @@ export function createFogGlassEngine(
     stepRunners(dt);
     drawBeads();
     checkProgress(now);
-    if (maskDirty && now - lastMaskApply >= CONFIG.maskApplyInterval) {
+    if (maskDirty && now - lastMaskApply >= MASK_APPLY_INTERVAL) {
       applyMask(now);
     }
   }
@@ -398,6 +426,7 @@ export function createFogGlassEngine(
       removeFrameTick(tick);
     },
     destroy() {
+      destroyed = true;
       running = false;
       removeFrameTick(tick);
       beads.length = 0;

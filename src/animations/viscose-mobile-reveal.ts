@@ -43,13 +43,21 @@ function reducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+function collectMedia(
+  root: HTMLElement,
+  media: HTMLElement | null | undefined,
+): HTMLElement[] {
+  if (media) return [media];
+  return collect(root, "[data-mobile-media]");
+}
+
 function collectTracks(
   root: HTMLElement,
   media: HTMLElement | null | undefined,
 ): RevealTrack[] {
   return [
     {
-      targets: media ? [media] : [],
+      targets: collectMedia(root, media),
       hidden: MEDIA_HIDDEN,
       shown: MEDIA_SHOWN,
       duration: DUR_L,
@@ -151,7 +159,7 @@ export function playViscoseMobileSwap(
   root: HTMLElement,
   media: HTMLElement | null | undefined,
 ): () => void {
-  const mediaTargets = media ? [media] : [];
+  const mediaTargets = collectMedia(root, media);
   const words = collect(root, "[data-mobile-swap]");
   const copy = collect(root, "[data-mobile-copy]");
   const all = [...mediaTargets, ...words, ...copy];

@@ -13,11 +13,11 @@ export type ViscoseCarouselItem = {
  */
 export const VISCOSE_SEED_INDEX = 0;
 
-/** 新第五屏作品环：只使用本站已有作品素材，不引用开源仓库示例图片。 */
+/** 第五屏作品环：仅保留现有三张作品图。 */
 export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
   {
     id: "survey-a",
-    src: "/archive-ga-004/work-01-hover.webp",
+    src: "/archive-ga-004/work-01-hover-v5.webp",
     alt: "苹果时刻活动视觉，黑白古典图像与绿色苹果",
     title: "The Apple Moment",
     discipline: "Brand Design",
@@ -25,7 +25,7 @@ export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
   },
   {
     id: "survey-b",
-    src: "/archive-ga-004/work-02-hover.webp",
+    src: "/archive-ga-004/work-02-hover-v5.webp",
     alt: "未来创意 2026，蓝粉背景中的三维创意角色",
     title: "Future Creative 2026",
     discipline: "Product Design",
@@ -33,26 +33,10 @@ export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
   },
   {
     id: "survey-c",
-    src: "/archive-ga-004/work-03-hover.webp",
+    src: "/archive-ga-004/work-03-hover-v5.webp",
     alt: "Easycash 数字品牌视觉重塑，深色品牌空间中的金属标识与绿色立体装置",
     title: "Easycash Digital Visual Reframing",
     discipline: "Web Interface",
-    year: "2026",
-  },
-  {
-    id: "survey-d",
-    src: "/archive-ga-004/work-04-hover.webp",
-    alt: "视觉设计作品",
-    title: "Visual Field",
-    discipline: "Visual Design",
-    year: "2026",
-  },
-  {
-    id: "survey-e",
-    src: "/archive-ga-004/work-05-hover.webp",
-    alt: "动态视觉作品",
-    title: "Motion Trace",
-    discipline: "Motion Graphics",
     year: "2026",
   },
 ];

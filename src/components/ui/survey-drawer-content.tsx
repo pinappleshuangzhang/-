@@ -8,6 +8,10 @@ import {
 } from "@/animations/sondaven-reveal";
 import { KeepHoverMedia } from "@/components/ui/keep-hover-media";
 import { SplitWords } from "@/components/ui/split-words";
+import {
+  resolveWorkTags,
+  SurveyWorkTags,
+} from "@/components/ui/survey-work-tags";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import {
@@ -98,10 +102,12 @@ export function SurveyDrawerContent({
               <p
                 data-sd-words
                 data-sd-delay="0.22"
-                aria-label={SURVEY_G_001.archivedLabel}
+                aria-label={activeWork?.archivedLabel ?? SURVEY_G_001.archivedLabel}
                 className="whitespace-nowrap font-bodoni text-20 uppercase leading-normal text-grey-400 max-md:text-12 max-md:leading-[15px]"
               >
-                <SplitWords text={SURVEY_G_001.archivedLabel} />
+                <SplitWords
+                  text={activeWork?.archivedLabel ?? SURVEY_G_001.archivedLabel}
+                />
               </p>
             </div>
           </header>
@@ -109,7 +115,13 @@ export function SurveyDrawerContent({
         </div>
 
         {activeWork ? (
-          <WorkContent work={activeWork} />
+          <div className="flex flex-col gap-5">
+            <SurveyWorkTags
+              tags={resolveWorkTags(activeWork.tagKeys, t)}
+              label={t("survey.tagList")}
+            />
+            <WorkContent work={activeWork} />
+          </div>
         ) : (
           <div className="min-h-[503px]" aria-live="polite">
             <p className="sr-only">{t("survey.emptyWork")}</p>
@@ -122,12 +134,8 @@ export function SurveyDrawerContent({
 
 function WorkContent({ work }: { work: SurveyWork }) {
   const { t } = useLocale();
-  const description =
-    work.description === SURVEY_G_001.description
-      ? t("survey.description")
-      : work.description;
   const [first, ...rest] = work.media;
-  const laterDelays = ["0.5", "0.55", "0.6", "0.65"];
+  const laterDelays = ["0.5", "0.55", "0.6", "0.65", "0.7"];
 
   return (
     <div className="flex flex-col gap-20 max-md:gap-9">
@@ -135,8 +143,8 @@ function WorkContent({ work }: { work: SurveyWork }) {
         <div className="flex flex-col gap-6">
           <WorkMedia item={first} revealDelay="0.28" />
           <WorkCaption
-            title={work.projectTitle}
-            description={description}
+            title={t(work.titleKey)}
+            description={t(work.descriptionKey)}
             revealDelay="0.28"
           />
         </div>
@@ -145,15 +153,18 @@ function WorkContent({ work }: { work: SurveyWork }) {
         <div key={item.src} className="flex flex-col gap-6">
           <WorkMedia
             item={item}
-            revealDelay={laterDelays[index] ?? "0.65"}
+            revealDelay={laterDelays[index] ?? "0.7"}
             preloadVideo={index === 0}
           />
-          <WorkCaption
-            title={work.projectTitle}
-            description={description}
-            revealDelay={laterDelays[index] ?? "0.65"}
-            className="md:hidden"
-          />
+          {item.showCaption !== false ? (
+            <WorkCaption
+              title={item.titleKey ? t(item.titleKey) : t(work.titleKey)}
+              description={
+                item.captionKey ? t(item.captionKey) : t(work.descriptionKey)
+              }
+              revealDelay={laterDelays[index] ?? "0.7"}
+            />
+          ) : null}
         </div>
       ))}
     </div>
@@ -182,7 +193,7 @@ function WorkCaption({
         data-sd-media-inner
         className="flex translate-y-[105%] flex-col gap-3"
       >
-        <p className="whitespace-nowrap font-serif-sc text-20 font-medium capitalize leading-normal text-grey-400 max-md:font-bodoni max-md:text-18 max-md:leading-6">
+        <p className="font-serif-sc text-20 font-medium leading-normal text-grey-400 max-md:font-bodoni max-md:text-18 max-md:leading-6">
           {title}
         </p>
         <p className="font-serif-sc text-14 font-normal leading-5 text-grey-300 max-md:text-12 max-md:leading-6">

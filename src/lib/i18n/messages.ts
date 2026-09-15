@@ -14,22 +14,20 @@ export type MessageKey =
   | "nav.title.ga002"
   | "nav.title.ga003"
   | "nav.title.ga004"
-  | "nav.title.ga005"
   | "nav.title.contact"
   | "screen.studio"
   | "screen.ga001"
   | "screen.ga002"
   | "screen.ga003"
   | "screen.ga004"
-  | "screen.ga005"
   | "screen.contact"
   | "index.heading"
   | "index.nav"
+  | "index.ga000"
   | "index.ga001"
   | "index.ga002"
   | "index.ga003"
   | "index.ga004"
-  | "index.ga005"
   | "index.ga006"
   | "hero.title"
   | "hero.subtitle"
@@ -87,6 +85,11 @@ export type MessageKey =
   | "gallery.category.website"
   | "gallery.category.visual"
   | "gallery.category.motion"
+  | "gallery.mobile.category.all"
+  | "gallery.mobile.category.website"
+  | "gallery.mobile.category.brand"
+  | "gallery.mobile.category.creative"
+  | "gallery.mobile.category.motion"
   | "gallery.dragHint"
   | "gallery.view"
   | "gallery.detail"
@@ -176,8 +179,6 @@ export type MessageKey =
   | "survey.easycash.media6Caption"
   | "survey.easycash.media6Alt"
   | "survey.emptyWork"
-  | "ga005.aria"
-  | "ga005.imageAlt"
   | "contact.aria"
   | "contact.cta"
   | "contact.addressLabel"
@@ -202,22 +203,20 @@ const zh: Messages = {
   "nav.title.ga002": "《组织记录》",
   "nav.title.ga003": "《成员记录》",
   "nav.title.ga004": "《视觉调查档案》",
-  "nav.title.ga005": "《视觉探索记录》",
   "nav.title.contact": "《开启一份新调查》",
   "screen.studio": "万有引力设计档案室",
   "screen.ga001": "档案 GA_001 什么是引力？",
   "screen.ga002": "档案 GA_002 组织记录",
   "screen.ga003": "档案 GA_003 成员记录",
   "screen.ga004": "档案 GA_004 视觉调查档案",
-  "screen.ga005": "档案 GA_005 视觉探索记录",
   "screen.contact": "档案 GA_006 开启一份新调查",
   "index.heading": "档案目录 ARCHIVE INDEX",
   "index.nav": "档案目录",
+  "index.ga000": "《档案室首页》",
   "index.ga001": "《什么是引力？》",
   "index.ga002": "《组织记录》",
   "index.ga003": "《成员记录》",
   "index.ga004": "《视觉调查档案》",
-  "index.ga005": "《视觉探索记录》",
   "index.ga006": "《开启一份新调查》",
   "hero.title": "万有引力设计档案室",
   "hero.subtitle": '跟随设计调查记录，我们一起完成本次关于"引力"的探索',
@@ -273,9 +272,14 @@ const zh: Messages = {
   "gallery.category.all": "所有项目",
   "gallery.category.brand": "苹果时刻：AI 创造力实验计划",
   "gallery.category.product": "未来创意 2026",
-  "gallery.category.website": "网站设计",
+  "gallery.category.website": "Easycash 数字品牌视觉重塑",
   "gallery.category.visual": "视觉设计",
   "gallery.category.motion": "动态设计",
+  "gallery.mobile.category.all": "全部项目",
+  "gallery.mobile.category.website": "网站设计",
+  "gallery.mobile.category.brand": "品牌设计",
+  "gallery.mobile.category.creative": "创意设计",
+  "gallery.mobile.category.motion": "动态设计",
   "gallery.dragHint": "拖拽",
   "gallery.view": "查看",
   "gallery.detail": "查看作品详情",
@@ -376,7 +380,7 @@ const zh: Messages = {
     "橙色背景中，透明柜内陈列耳机、胶卷、相机和多种彩色创意物件",
   "survey.easycash.title": "Easycash 数字品牌视觉重塑",
   "survey.easycash.description":
-    "Easycash 数字品牌视觉重塑聚焦官网首页与核心产品页两大高频触点，重新建立品牌在数字环境中的视觉识别与产品表达方式。首页以 8 周年为契机构建统一的 Hero Visual System，通过数字“8”、材质、色彩与场景化道具形成可持续扩展的视觉母体；产品页则突破传统金融行业依赖图标、数字与理性信息排布的表达方式，将借款与出借的核心利益点转译为更具触感、情绪与记忆度的 3D 场景，在专业可信与年轻化体验之间建立新的平衡。",
+    "Easycash 数字品牌视觉重塑聚焦官网首页与核心产品页两大高频触点，重新建立品牌在数字环境中的视觉识别与产品表达方式。首页以 8 周年为契机构建统一的 Hero Visual System，通过数字“8”、材质、色彩与场景化道具形成可持续扩展的视觉母体；产品页则突破传统金融行业依赖图标、数字与理性信息排布的表达方式，将借款与理财的核心利益点转译为更具触感、情绪与记忆度的 3D 场景，在专业可信与年轻化体验之间建立新的平衡。",
   "survey.easycash.heroAlt":
     "Easycash 数字品牌视觉重塑项目主视觉，以深色品牌空间、金属标识、绿色绳索与立体装置构成视觉核心，呈现官网首页与产品页视觉语言的整体升级。",
   "survey.easycash.media1Title": "首页视觉系统",
@@ -399,19 +403,17 @@ const zh: Messages = {
     "以钱包、现金、银行卡、硬币与织物等日常金融物件为基础，我们重新组合出更具触觉感和个性的产品视觉单元。柔软材质、品牌贴纸与高饱和细节削弱传统金融视觉的距离感，让借贷服务从冷静、工具化的表达转向更具生活感和亲和力的品牌体验，同时保持对现金、额度和效率等核心信息的明确指向。",
   "survey.easycash.media4Alt":
     "绿色 Easycash 品牌背景中展示四组借款产品 3D 视觉，包括钱包、银行卡、硬币、现金与织物元素，用于表达申请、额度、放款速度和透明息费等产品特点。",
-  "survey.easycash.media5Title": "出借体验视觉重塑",
+  "survey.easycash.media5Title": "理财体验视觉重塑",
   "survey.easycash.media5Caption":
-    "针对出借业务，我们建立与借款端相互关联但具备独立识别的蓝紫色视觉体系。高回报、安全出借、优质服务与稳定资金支持等偏理性的业务价值，被转化为具象的物件组合与场景隐喻，使复杂的金融信息获得更明确的视觉层级，也帮助不同用户角色快速建立对产品价值的认知。",
+    "针对理财业务，我们建立与借款端相互关联但具备独立识别的蓝紫色视觉体系。高回报、安全理财、优质服务与稳定资金支持等偏理性的业务价值，被转化为具象的物件组合与场景隐喻，使复杂的金融信息获得更明确的视觉层级，也帮助不同用户角色快速建立对产品价值的认知。",
   "survey.easycash.media5Alt":
-    "Easycash 出借产品页以蓝紫色视觉体系展示高回报、安全出借、优质服务和稳定资金支持四项核心优势，并通过 3D 场景强化信息理解和产品识别。",
-  "survey.easycash.media6Title": "出借视觉语言",
+    "Easycash 理财产品页以蓝紫色视觉体系展示高回报、安全理财、优质服务和稳定资金支持四项核心优势，并通过 3D 场景强化信息理解和产品识别。",
+  "survey.easycash.media6Title": "理财视觉语言",
   "survey.easycash.media6Caption":
-    "出借端延续整体品牌的拼贴、软质材质、贴纸与立体构成，同时通过蓝紫色主色和更偏安全、收益、稳定语义的物件组合形成独立识别。两套产品视觉在统一品牌框架下保持差异，让 Borrow 与 Lend 不再只是功能不同，而拥有各自清晰的视觉性格与业务表达方式。",
+    "理财端延续整体品牌的拼贴、软质材质、贴纸与立体构成，同时通过蓝紫色主色和更偏安全、收益、稳定语义的物件组合形成独立识别。两套产品视觉在统一品牌框架下保持差异，让 Borrow 与 Wealth 不再只是功能不同，而拥有各自清晰的视觉性格与业务表达方式。",
   "survey.easycash.media6Alt":
-    "蓝紫色 Easycash 品牌背景中展示四组出借业务 3D 视觉，由布料、金币、锁、卡片和品牌贴纸组成，用于表达安全、收益、服务和稳定资金支持。",
+    "蓝紫色 Easycash 品牌背景中展示四组理财业务 3D 视觉，由布料、金币、锁、卡片和品牌贴纸组成，用于表达安全、收益、服务和稳定资金支持。",
   "survey.emptyWork": "该类型暂无作品",
-  "ga005.aria": "档案 GA_005 视觉探索记录",
-  "ga005.imageAlt": "三张铺在浅色桌面上的空白视觉探索卡片",
   "contact.aria": "与我们共同开启一份新调查",
   "contact.cta": "与我们共同开启一份新调查",
   "contact.addressLabel": "地址",
@@ -435,22 +437,20 @@ const en: Messages = {
   "nav.title.ga002": "Organization Record",
   "nav.title.ga003": "Member Record",
   "nav.title.ga004": "Visual Survey Archive",
-  "nav.title.ga005": "Visual Exploration Log",
   "nav.title.contact": "Start A New Survey",
   "screen.studio": "Universal Gravity Design Archive",
   "screen.ga001": "Archive GA_001 What Is Gravity?",
   "screen.ga002": "Archive GA_002 Organization Record",
   "screen.ga003": "Archive GA_003 Member Record",
   "screen.ga004": "Archive GA_004 Visual Survey Archive",
-  "screen.ga005": "Archive GA_005 Visual Exploration Log",
   "screen.contact": "Archive GA_006 Start A New Survey",
   "index.heading": "Archive Index",
   "index.nav": "Archive Index",
+  "index.ga000": "Archive Home",
   "index.ga001": "What Is Gravity?",
   "index.ga002": "Organization Record",
   "index.ga003": "Member Record",
   "index.ga004": "Visual Survey Archive",
-  "index.ga005": "Visual Exploration Log",
   "index.ga006": "Start A New Survey",
   "hero.title": "Grava Design Archive",
   "hero.subtitle": "Follow The Design Log As We Explore Gravity Together",
@@ -511,9 +511,14 @@ const en: Messages = {
   "gallery.category.all": "All",
   "gallery.category.brand": "The Apple Moment — AI Creativity Program",
   "gallery.category.product": "Future Creative 2026",
-  "gallery.category.website": "Website Interface",
+  "gallery.category.website": "Easycash Digital Visual Reframing",
   "gallery.category.visual": "Visual Design",
   "gallery.category.motion": "Motion Graphics",
+  "gallery.mobile.category.all": "All",
+  "gallery.mobile.category.website": "Website",
+  "gallery.mobile.category.brand": "Brand",
+  "gallery.mobile.category.creative": "Creative",
+  "gallery.mobile.category.motion": "Motion",
   "gallery.dragHint": "Drag",
   "gallery.view": "View",
   "gallery.detail": "View Work Details",
@@ -638,19 +643,17 @@ const en: Messages = {
     "Built from wallets, cash, cards, coins, and textiles, we recomposed tactile product visual units. Soft materials, brand stickers, and saturated details soften traditional finance distance while keeping cash, limits, and efficiency clearly directed.",
   "survey.easycash.media4Alt":
     "Four borrowing-product 3D visuals on a green Easycash brand background, including wallets, cards, coins, cash, and textile elements that express application, limits, payout speed, and transparent fees.",
-  "survey.easycash.media5Title": "Lending Experience Reframed",
+  "survey.easycash.media5Title": "Wealth Management Experience Reframed",
   "survey.easycash.media5Caption":
-    "For lending, we built a blue-purple system that relates to borrowing yet stays independently recognizable. Rational values such as high returns, secure lending, quality service, and stable funding become concrete object combinations and scene metaphors, clarifying hierarchy for different user roles.",
+    "For wealth management, we built a blue-purple system that relates to borrowing yet stays independently recognizable. Rational values such as high returns, secure investing, quality service, and stable funding become concrete object combinations and scene metaphors, clarifying hierarchy for different user roles.",
   "survey.easycash.media5Alt":
-    "Easycash lending product page in a blue-purple visual system presenting high returns, secure lending, quality service, and stable funding through 3D scenes that strengthen comprehension and product recognition.",
-  "survey.easycash.media6Title": "Lending Visual Language",
+    "Easycash wealth management product page in a blue-purple visual system presenting high returns, secure investing, quality service, and stable funding through 3D scenes that strengthen comprehension and product recognition.",
+  "survey.easycash.media6Title": "Wealth Management Visual Language",
   "survey.easycash.media6Caption":
-    "The lending side continues collage, soft materials, stickers, and dimensional composition, while a blue-purple palette and safety-, return-, and stability-oriented objects form a distinct identity. Borrow and Lend stay under one brand frame yet carry clear visual personalities.",
+    "The wealth management side continues collage, soft materials, stickers, and dimensional composition, while a blue-purple palette and safety-, return-, and stability-oriented objects form a distinct identity. Borrow and Wealth stay under one brand frame yet carry clear visual personalities.",
   "survey.easycash.media6Alt":
-    "Four lending-business 3D visuals on a blue-purple Easycash brand background, composed of fabric, coins, locks, cards, and brand stickers expressing safety, returns, service, and stable funding.",
+    "Four wealth-management 3D visuals on a blue-purple Easycash brand background, composed of fabric, coins, locks, cards, and brand stickers expressing safety, returns, service, and stable funding.",
   "survey.emptyWork": "No Work In This Category Yet",
-  "ga005.aria": "Archive GA_005 Visual Exploration Log",
-  "ga005.imageAlt": "Three Blank Visual Exploration Cards On A Light Desk",
   "contact.aria": "Start A New Survey With Us",
   "contact.cta": "Start A New Survey With Us",
   "contact.addressLabel": "Location",

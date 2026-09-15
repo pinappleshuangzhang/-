@@ -59,7 +59,7 @@ type MobileCategoryChipsProps = {
   onPick: (index: number) => void;
 };
 
-/** 五个调查类型 chip：底色独立成层，像第三屏高亮条一样从左向右擦入 */
+/** 调查类型 chip（含最前「所有项目」）：底色独立成层，像第三屏高亮条一样从左向右擦入 */
 export function MobileCategoryChips({
   label,
   categoryLabels,
@@ -77,7 +77,7 @@ export function MobileCategoryChips({
         const isActive = index === active;
         return (
           <button
-            key={text}
+            key={`${index}-${text}`}
             type="button"
             aria-pressed={isActive}
             onClick={() => onPick(index)}
@@ -104,7 +104,7 @@ export function MobileCategoryChips({
               data-mobile-word=""
               className="relative inline-block origin-center font-bodoni leading-[15px] opacity-0"
             >
-              {String(index + 1).padStart(3, "0")}
+              {String(index).padStart(3, "0")}
             </span>
             <span className="relative whitespace-nowrap font-serif-sc leading-[17px]">
               <MobileWords text={text} />

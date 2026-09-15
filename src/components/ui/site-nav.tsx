@@ -31,7 +31,6 @@ const NAV_TITLE_KEY: Partial<Record<NavVariant, MessageKey>> = {
   "archive-ga-002": "nav.title.ga002",
   "archive-ga-003": "nav.title.ga003",
   "archive-ga-004": "nav.title.ga004",
-  "archive-ga-005": "nav.title.ga005",
   contact: "nav.title.contact",
 };
 
@@ -40,7 +39,6 @@ const NAV_CODE: Partial<Record<NavVariant, string>> = {
   "archive-ga-002": "ARCHIVE_GA_002",
   "archive-ga-003": "ARCHIVE_GA_003",
   "archive-ga-004": "GA_ARCHIVE_004",
-  "archive-ga-005": "GA_ARCHIVE_005",
   contact: "GA_ARCHIVE_004",
 };
 

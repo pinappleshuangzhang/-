@@ -276,7 +276,8 @@ export function ArchiveIntro() {
       const shuffledWordsB = gsap.utils.shuffle([...wordsB]);
       const swapA = root.querySelector<HTMLElement>("[data-swap-a]");
       const swapB = root.querySelector<HTMLElement>("[data-swap-b]");
-      // 第二段整层隐藏，避免与下移后的第一段叠在同一位置。
+      // 新文案节点带 CSS opacity-0；时间轴只负责第一段退场，必须先落到可见态。
+      gsap.set(wordsA, { opacity: 1, yPercent: 0, scale: 1 });
       gsap.set(wordsB, { opacity: 0, yPercent: 75, scale: 0 });
       if (swapB) gsap.set(swapB, { autoAlpha: 0 });
       if (swapA) gsap.set(swapA, { autoAlpha: 1 });
@@ -381,8 +382,16 @@ export function ArchiveIntro() {
     mobileAutoTweenRef.current = null;
     videoHandleRef.current?.pause();
 
+    if (!isActive) {
+      // 仅离屏时复位；语言切换不得清进度，否则新文案会停在 CSS 隐藏态。
+      targetRef.current = 0;
+      displayRef.current = 0;
+      textTimelineRef.current?.progress(0);
+      videoHandleRef.current?.seekTo(0);
+      return;
+    }
+
     if (
-      !isActive ||
       !isMobileViewport ||
       !videoReady ||
       !videoHandleRef.current ||
@@ -427,13 +436,6 @@ export function ArchiveIntro() {
       mobileAutoTweenRef.current?.kill();
       mobileAutoTweenRef.current = null;
       videoHandle.pause();
-      // 中途切屏后复位；再次进入第二屏时从头自动播放。
-      if (playhead.progress < 0.999) {
-        targetRef.current = 0;
-        displayRef.current = 0;
-        textTimelineRef.current?.progress(0);
-        videoHandle.seekTo(0);
-      }
     };
   }, [isActive, isMobileViewport, locale, reducedMotion, videoReady]);
 

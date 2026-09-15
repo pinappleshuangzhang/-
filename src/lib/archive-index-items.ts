@@ -12,6 +12,11 @@ export type ArchiveIndexItem = {
 // screenKey 与 page.tsx 的分屏 key 对应；置 null 则渲染为不可点击态。
 export const ARCHIVE_INDEX_ITEMS: ArchiveIndexItem[] = [
   {
+    code: "GA_000",
+    titleKey: "index.ga000",
+    screenKey: "studio",
+  },
+  {
     code: "GA_001",
     titleKey: "index.ga001",
     screenKey: "archive-ga-001",
@@ -30,11 +35,6 @@ export const ARCHIVE_INDEX_ITEMS: ArchiveIndexItem[] = [
     code: "GA_004",
     titleKey: "index.ga004",
     screenKey: "archive-ga-004",
-  },
-  {
-    code: "GA_005",
-    titleKey: "index.ga005",
-    screenKey: null,
   },
   {
     code: "GA_006",

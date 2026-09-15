@@ -381,7 +381,7 @@ function MobileArchiveIndex({
       />
       <div
         ref={drawerRef}
-        className="absolute inset-x-0 bottom-0 top-[67px] bg-white/90"
+        className="absolute inset-x-0 bottom-0 top-[67px] flex flex-col bg-white/90 px-3 pb-5"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -400,9 +400,9 @@ function MobileArchiveIndex({
           />
         </button>
 
-        <div className="absolute left-3 top-[68px] w-[calc(100%-24px)]">
+        <div className="shrink-0 pt-[68px]">
           <div className="flex items-start justify-between">
-            <p className="font-bodoni text-24 font-normal uppercase leading-normal text-grey-400">
+            <p className="font-bodoni text-24 font-normal uppercase leading-[30px] text-grey-400">
               Archive
               <br />
               Index
@@ -416,17 +416,11 @@ function MobileArchiveIndex({
               </p>
             </div>
           </div>
-          <span
-            aria-hidden="true"
-            className="absolute left-0 right-0 top-[96px] h-px bg-grey-100"
-          />
+          <span aria-hidden="true" className="mt-9 block h-px bg-grey-100" />
         </div>
 
-        <nav
-          aria-label={t("index.nav")}
-          className="absolute left-3 right-3 top-[213px]"
-        >
-          <ul className="flex flex-col gap-9">
+        <nav aria-label={t("index.nav")} className="mt-9 min-h-0 flex-1">
+          <ul className="flex h-full flex-col justify-between gap-2">
             {ARCHIVE_INDEX_ITEMS.map((item) => (
               <li key={item.code}>
                 <MobileIndexMenuItem
@@ -456,7 +450,7 @@ function MobileIndexMenuItem({
       type="button"
       onClick={() => onSelect(item.screenKey!)}
       aria-current={active ? "page" : undefined}
-      className={`flex min-h-7 w-full items-center justify-between px-0 py-1.5 text-14 leading-normal ${
+      className={`flex min-h-7 w-full items-center justify-between px-0 text-14 leading-normal ${
         active ? "bg-grey-400 text-white" : "text-grey-300"
       } focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2`}
     >

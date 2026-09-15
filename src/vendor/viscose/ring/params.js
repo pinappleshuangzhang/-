@@ -82,7 +82,7 @@ export function defaultParams() {
     radius: 0, // Figma 卡片保持直角，不添加 shader 圆角
     textured: true, // off = flat silhouette, useful for reading the goo
     blend: 14, // px over which neighbouring art crossfades in the goo
-    imageOffset: 2, // 入场种子与最终正面均为 Figma 选中的 Website Interface
+    imageOffset: 0, // 入场种子与最终正面均为 001 The Apple Moment
 
     // -- loading ---------------------------------------------------------
     // The counter is the gate: the entry launches on the frame it reads 100.

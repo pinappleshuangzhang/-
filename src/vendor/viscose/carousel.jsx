@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import * as THREE from "three";
 import gsap from "gsap";
 import { GalleryDragHint } from "@/components/ui/gallery-drag-hint";
-import { ViscoseMobileStage } from "@/components/ui/viscose-mobile-stage";
 import {
   hideGalleryDragHint,
   playGalleryDragHint,
@@ -68,9 +67,6 @@ export default function Carousel({
   categoryLabels,
   categoryFontClass,
   nameFont,
-  mobileHeading,
-  mobileViewDetails,
-  mobileWorks,
   paused = false,
 }) {
   const pausedRef = useRef(paused);
@@ -92,12 +88,6 @@ export default function Carousel({
     } else kickLoopRef.current();
   }, [paused]);
   const containerRef = useRef(null);
-  const mobileStageRef = useRef(null);
-  // Which cell the single phone card is wearing; drives the chips and copy.
-  // Updated only when the front cell changes, never per frame.
-  const [mobileShown, setMobileShown] = useState(INITIAL_CELL);
-  /** 种子上 GPU 后再挂背景层，避免 1.6MB 背景和入场小图抢带宽 */
-  const [stageBgReady, setStageBgReady] = useState(false);
   const stageBackgroundRef = useRef(null);
   const stageLayer2Ref = useRef(null);
   const stageLayer3Ref = useRef(null);
@@ -146,7 +136,6 @@ export default function Carousel({
     const brandStage = brandStageRef.current;
     const brandBackground = brandBackgroundRef.current;
     const brandText = brandTextRef.current;
-    const mobileStage = mobileStageRef.current;
     // Async atlas decoding can land after cleanup under StrictMode's double
     // mount. Everything deferred checks this flag.
     let disposed = false;
@@ -326,13 +315,19 @@ export default function Carousel({
     // Up front, not on completion: the cell each plane wears is derived from
     // this and has to be right from the first frame, blank cells or not.
     const imageCount = atlas.count;
+    // 抽屉按作品类型 0–4 打开，不能传圆环槽位（12 格）。槽位 4 会被当成 005。
+    const cellFromPlane = (plane) => {
+      if (imageCount <= 0) return 0;
+      const imgOff = Math.round(params.imageOffset);
+      const slot = signedOffset(plane);
+      return (((imgOff - slot) % imageCount) + imageCount) % imageCount;
+    };
 
     // 种子格先上 GPU 即可给入场小图上色；其余格仍等 ready，展开圆环才不会空卡。
     atlas.first.then(() => {
       if (disposed) return;
       firstIn = true;
       ensureLoop();
-      setStageBgReady(true);
     });
     atlas.ready.then(() => {
       if (disposed) return;
@@ -496,7 +491,7 @@ export default function Carousel({
 
       const slots = Math.abs(target - state.spin) / slot;
       if (slots < 0.01) {
-        if (openWhenCurrent) onSelect?.(shown);
+        if (openWhenCurrent) onSelect?.(cellFromPlane(i));
         return;
       }
 
@@ -513,7 +508,7 @@ export default function Carousel({
         ease: params.pickEase,
         onComplete: () => {
           picking = false;
-          if (openWhenCurrent) onSelect?.(i);
+          if (openWhenCurrent) onSelect?.(cellFromPlane(i));
         },
       });
     };
@@ -591,6 +586,7 @@ export default function Carousel({
         }
       }
 
+      // 右侧类型列表仅转环切换，不打开抽屉详情（点击卡片才打开）。
       if (nearestPlane >= 0) pick(nearestPlane, false);
     };
     categorySelectRef.current = pickCategory;
@@ -891,7 +887,6 @@ export default function Carousel({
         if (on) el.setAttribute("aria-current", "true");
         else el.removeAttribute("aria-current");
       }
-      if (shown >= 0) setMobileShown(shown);
     };
 
     const layout = (dt) => {
@@ -1447,7 +1442,6 @@ export default function Carousel({
       if (mobileNow) {
         params.imageOffset = INITIAL_CELL;
         mobileSwap.t = 1;
-        mobileStage?.hide();
         const holdStart = tl.duration() + params.mobileHoldTime;
         if (brandStage) {
           tl.to(
@@ -1721,13 +1715,6 @@ export default function Carousel({
           state,
           { shift: 1, duration: params.moveTime, ease: params.moveEase },
           0,
-        );
-        finalTl.call(
-          () => {
-            if (!disposed) mobileStage?.reveal();
-          },
-          undefined,
-          params.moveTime * params.mobileRevealAt,
         );
         return;
       }
@@ -2101,16 +2088,14 @@ export default function Carousel({
               height: "43.149628%",
             }}
           >
-            {stageBgReady ? (
-              <Image
-                src="/archive-ga-004/background-layers/layer-04.webp"
-                alt=""
-                fill
-                unoptimized
-                sizes="40vw"
-                className="object-fill"
-              />
-            ) : null}
+            <Image
+              src="/archive-ga-004/background-layers/layer-04.webp"
+              alt=""
+              fill
+              unoptimized
+              sizes="40vw"
+              className="object-fill"
+            />
           </div>
           <div
             ref={stageLayer3Ref}
@@ -2122,16 +2107,14 @@ export default function Carousel({
               height: "73.495682%",
             }}
           >
-            {stageBgReady ? (
-              <Image
-                src="/archive-ga-004/background-layers/layer-03.webp"
-                alt=""
-                fill
-                unoptimized
-                sizes="75vw"
-                className="object-fill"
-              />
-            ) : null}
+            <Image
+              src="/archive-ga-004/background-layers/layer-03.webp"
+              alt=""
+              fill
+              unoptimized
+              sizes="75vw"
+              className="object-fill"
+            />
           </div>
           <div
             ref={stageLayer2Ref}
@@ -2143,27 +2126,23 @@ export default function Carousel({
               height: "72.521091%",
             }}
           >
-            {stageBgReady ? (
-              <Image
-                src="/archive-ga-004/background-layers/layer-02.webp"
-                alt=""
-                fill
-                unoptimized
-                sizes="67vw"
-                className="object-fill"
-              />
-            ) : null}
-          </div>
-          {stageBgReady ? (
             <Image
-              src="/archive-ga-004/background-layers/layer-01.webp"
+              src="/archive-ga-004/background-layers/layer-02.webp"
               alt=""
               fill
               unoptimized
-              sizes="100vw"
+              sizes="67vw"
               className="object-fill"
             />
-          ) : null}
+          </div>
+          <Image
+            src="/archive-ga-004/background-layers/layer-01.webp"
+            alt=""
+            fill
+            unoptimized
+            sizes="100vw"
+            className="object-fill"
+          />
         </div>
       </div>
 
@@ -2407,19 +2386,6 @@ export default function Carousel({
       />
 
       <div ref={liveRef} aria-live="polite" className="sr-only" />
-
-      {/* Phone third act (Figma 947-3937). The big picture is the WebGL seed
-          grown in place; this carries the heading, chips, copy and button. */}
-      <ViscoseMobileStage
-        ref={mobileStageRef}
-        active={mobileShown}
-        heading={mobileHeading ?? ""}
-        categoryLabels={categoryLabels ?? []}
-        works={mobileWorks ?? []}
-        viewDetailsLabel={mobileViewDetails ?? ""}
-        onPickCategory={(i) => categorySelectRef.current?.(i)}
-        onViewDetails={(i) => onSelect?.(i)}
-      />
 
       {/* Alpha multiplied up hard and biased down, so a pixel is either fully
           opaque or gone. That is what fuses two blurred words into one

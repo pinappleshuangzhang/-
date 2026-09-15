@@ -287,7 +287,7 @@ function VideoKeepMedia({
             loop
             playsInline
             preload={preload}
-            className="absolute left-[6.027%] top-[5.964%] h-[88.072%] w-[87.835%] object-cover motion-reduce:hidden"
+            className="absolute left-[6.027%] top-[5.964%] h-[88.072%] w-[87.835%] bg-grey-400 object-contain motion-reduce:hidden"
           />
         </div>
       </div>

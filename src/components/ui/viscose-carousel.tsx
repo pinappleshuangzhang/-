@@ -109,12 +109,7 @@ export function ViscoseCarousel({
           t("gallery.category.brand"),
           t("gallery.category.product"),
           t("gallery.category.website"),
-          t("gallery.category.visual"),
-          t("gallery.category.motion"),
         ]}
-        mobileHeading={t("gallery.mobile.heading")}
-        mobileViewDetails={t("gallery.mobile.viewDetails")}
-        mobileWorks={[]}
         categoryFontClass={locale === "zh" ? "font-serif-sc" : "font-bodoni"}
         nameFont={locale === "zh" ? "Noto Serif SC" : "Libre Bodoni"}
       />

@@ -30,7 +30,7 @@ function drawerWarmup() {
 }
 
 /**
- * 第三屏起预热第五屏种子（裸文件 + 手机 next/image）。
+ * 第三屏起预热第五屏种子（裸文件 + 手机 next/image），桌面另预热 layer-03。
  * 第五屏亮起后再空闲预热抽屉首图和第一段 hover 视频。
  */
 export function useViscosePrefetch({
@@ -42,7 +42,9 @@ export function useViscosePrefetch({
   useEffect(() => {
     if (screenIndex < 2 || !seedSrc) return;
     prefetchImage(seedSrc, "high");
-    if (!isDesktop) {
+    if (isDesktop) {
+      prefetchImage("/archive-ga-004/background-layers/layer-03.webp", "low");
+    } else {
       prefetchNextImage(seedSrc, 640, "low");
       prefetchNextImage(seedSrc, 828, "low");
     }

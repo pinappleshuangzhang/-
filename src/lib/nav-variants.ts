@@ -5,5 +5,4 @@ export type NavVariant =
   | "archive-ga-002"
   | "archive-ga-003"
   | "archive-ga-004"
-  | "archive-ga-005"
   | "contact";

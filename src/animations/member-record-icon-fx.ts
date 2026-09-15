@@ -24,7 +24,7 @@ export function playFlowerBloom(root: HTMLElement) {
     .fromTo(
       stem,
       { scale: 0, opacity: 0, svgOrigin: STEM_BOTTOM },
-      { scale: 1, opacity: 1, duration: 0.45, ease: "power2.out" },
+      { scale: 1, opacity: 1, duration: 0.35, ease: "power2.out" },
     )
     .fromTo(
       petals,
@@ -32,10 +32,10 @@ export function playFlowerBloom(root: HTMLElement) {
       {
         scale: 1,
         opacity: 1,
-        duration: 0.5,
-        ease: "back.out(2)",
-        stagger: 0.08,
+        duration: 0.32,
+        ease: "back.out(1.8)",
+        stagger: 0.04,
       },
-      "-=0.15",
+      "-=0.16",
     );
 }

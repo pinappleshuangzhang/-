@@ -453,7 +453,7 @@ export function createHeroVideoSequence({
         if (firstFrame) {
           firstFrameFade = gsap.to(firstFrame, {
             autoAlpha: 0,
-            duration: 0.65,
+            duration: 1.5,
             ease: "power2.inOut",
             onComplete: startPlayback,
           });
