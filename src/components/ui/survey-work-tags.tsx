@@ -26,12 +26,12 @@ export function SurveyWorkTags({
       <ul
         data-sd-media-inner
         aria-label={label}
-        className="flex translate-y-[105%] flex-wrap gap-3"
+        className="flex translate-y-[105%] flex-wrap gap-3 md:gap-[calc(var(--su)*12)]"
       >
         {tags.map((text) => (
           <li
             key={text}
-            className="flex h-[21px] items-end bg-white px-2 py-0.5 font-serif-sc text-12 font-normal leading-[17px] text-grey-400 md:h-[calc(var(--su)*21)] md:text-[length:calc(var(--su)*12)] md:leading-[calc(var(--su)*17)]"
+            className="flex h-[21px] items-center bg-white px-2 font-serif-sc text-12 font-normal leading-[17px] text-grey-400 md:h-[calc(var(--su)*21)] md:px-[calc(var(--su)*8)] md:text-[length:calc(var(--su)*12)] md:leading-[calc(var(--su)*17)]"
           >
             {text}
           </li>
