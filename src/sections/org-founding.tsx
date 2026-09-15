@@ -304,7 +304,7 @@ export function OrgFounding() {
           <div
             ref={greenBarRef}
             aria-hidden="true"
-            className="absolute left-[119px] top-[-3px] h-[33px] w-[246px] overflow-hidden md:h-[calc(var(--su)*33)]"
+            className="absolute left-[119px] top-0 h-[33px] w-[246px] overflow-hidden md:h-[calc(var(--su)*33)]"
           >
             <span
               data-sd-bar
@@ -316,7 +316,7 @@ export function OrgFounding() {
               data-sd-words
               data-sd-sync="founding-founded"
               data-sd-delay="0.5"
-              className="absolute left-[-119px] top-[3px] whitespace-nowrap text-white"
+              className="absolute left-[-119px] top-0 whitespace-nowrap text-white"
             >
               <p>
                 <span className="inline-block">

@@ -132,13 +132,13 @@ export function HeroLoader({
         <p
           data-loader-status
           aria-hidden="true"
-          className="flex items-center font-serif-sc text-10 font-normal leading-[14px] text-grey-400 md:text-[length:calc(var(--su)*14)] md:leading-[calc(var(--su)*20)]"
+          className="flex items-center font-serif-sc text-12 font-normal leading-[18px] text-grey-400 md:text-[length:calc(var(--su)*12)] md:leading-[calc(var(--su)*18)]"
         >
           <span className="whitespace-nowrap">{roleLabel}</span>
-          <span className="relative top-px font-bodoni md:top-[3px]">
+          <span className="relative top-px font-bodoni md:top-[2px]">
             {idLabel}
           </span>
-          <span className="ml-1 block h-[14px] overflow-hidden md:ml-[calc(var(--su)*4)] md:h-[calc(var(--su)*20)]">
+          <span className="ml-1 block h-[18px] overflow-hidden md:ml-[calc(var(--su)*4)] md:h-[calc(var(--su)*18)]">
             <span
               data-loader-phase-track
               className="flex flex-col items-start will-change-transform"
@@ -146,7 +146,7 @@ export function HeroLoader({
               {phases.map((label) => (
                 <span
                   key={label}
-                  className="flex h-[14px] items-end whitespace-nowrap md:h-[calc(var(--su)*20)]"
+                  className="flex h-[18px] items-end whitespace-nowrap md:h-[calc(var(--su)*18)]"
                 >
                   {label}
                 </span>
@@ -156,7 +156,7 @@ export function HeroLoader({
         </p>
         <span
           data-loader-percent
-          className="shrink-0 text-right font-bodoni text-12 leading-[14px] text-grey-400 md:text-[length:calc(var(--su)*14)] md:leading-[calc(var(--su)*20)]"
+          className="shrink-0 text-right font-bodoni text-12 leading-[18px] text-grey-400 md:text-[length:calc(var(--su)*12)] md:leading-[calc(var(--su)*18)]"
         >
           0%
         </span>

@@ -246,7 +246,7 @@ export function SurveyDrawer({
           ref={scrollerRef}
           data-survey-scroller=""
           tabIndex={-1}
-          className="h-full overflow-y-auto overscroll-contain touch-pan-y focus-visible:outline-none"
+          className="h-full overflow-y-auto overscroll-contain touch-pan-y focus-visible:outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-label={t("survey.detailAria")}
         >
           <SurveyDrawerContent

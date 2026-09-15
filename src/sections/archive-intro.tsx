@@ -25,22 +25,21 @@ import archiveFolderImg from "../../public/archive/archive-folder-yellow-alpha.w
 
 gsap.registerPlugin(useGSAP);
 
-// 桌面版全关键帧编码（滚动任意跳帧擦拭）；手机只顺序自动播放，
-// 用普通帧间压缩的小文件（约为桌面版体积的 1/20）。
+// 桌面版全关键帧；手机用普通帧间压缩的小文件（约为桌面版体积的 1/20）。
 const FOLDER_VIDEO_WEBM = "/archive/archive-folder-yellow-alpha.webm?v=in1";
 const FOLDER_VIDEO_HEVC = "/archive/archive-folder-yellow-alpha-hevc.mp4?v=in1";
 const FOLDER_VIDEO_MOBILE_WEBM =
   "/archive/archive-folder-yellow-alpha-mobile.webm?v=raw1";
 const FOLDER_VIDEO_MOBILE_HEVC =
   "/archive/archive-folder-yellow-alpha-mobile-hevc.mp4?v=raw1";
-/** 每像素滚动推进的进度量：两段文字 + 间隔 + 切换全程约需 6700px 滚动 */
-const SCRUB_PER_PX = 0.00015;
-/** 进度追踪的阻尼系数（数值越大跟手越紧，越小拖拽感越强） */
-const SCRUB_DAMPING = 3;
-/** 第一段开始退场的主时间轴节点（总时长 132） */
-const FIRST_COPY_EXIT_PROGRESS = 38 / 132;
-/** 移动端文字与书本视频的完整自动播放时长。 */
-const MOBILE_AUTO_DURATION = 9;
+/** 进屏后书本视频一次性播完的总时长（与文字无关）。 */
+const AUTO_DURATION = 9;
+/** 手机无分段滚轮：第一段停留此时长后自动换第二段。 */
+const MOBILE_TEXT_SWAP_DELAY = 5;
+/** 换段后至少吞掉这么久的向下滚动，抵消触控板惯性。 */
+const SWAP_ABSORB_MS = 900;
+/** 滚轮事件间隔小于此值视为同一次手势，继续吞掉；停顿后再滑才切屏。 */
+const GESTURE_GAP_MS = 400;
 const MOBILE_QUERY = "(max-width: 767px)";
 
 function subscribeMobileViewport(callback: () => void) {
@@ -125,8 +124,9 @@ function ScrubText({
 
 /**
  * 第二屏：档案 GA_001《什么是引力？》
- * 档案夹是一段"破洞织合"透明视频（自带 alpha 通道）：滚轮/触摸控制播放进度，
- * 旁边三行文字随进度由灰变黑；进度到头后继续滚动才切屏。
+ * 视频与文字解耦：进屏后书本视频自顾自播到结束；
+ * 桌面第一次向下滑换第二段文案，再向下滑才切屏，向上滑随时回上一屏；
+ * 手机无分段滚轮，第一段停留数秒后自动换段。
  */
 export function ArchiveIntro() {
   const container = useRef<HTMLElement>(null);
@@ -134,10 +134,12 @@ export function ArchiveIntro() {
   const videoHandleRef = useRef<AlphaScrubVideoHandle>(null);
   const textTimelineRef = useRef<gsap.core.Timeline | null>(null);
 
-  const targetRef = useRef(0);
-  const displayRef = useRef(0);
+  /** 0 = 第一段文案在屏，1 = 已换第二段 */
+  const copyStageRef = useRef<0 | 1>(0);
+  const swapAbsorbUntilRef = useRef(0);
+  const lastAbsorbedDownAtRef = useRef(0);
   const hasPlayedFirstCopyEntranceRef = useRef(false);
-  const mobileAutoTweenRef = useRef<gsap.core.Tween | null>(null);
+  const swapCallRef = useRef<gsap.core.Tween | null>(null);
 
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
@@ -178,7 +180,7 @@ export function ArchiveIntro() {
         return;
       }
       if (hasPlayedFirstCopyEntranceRef.current) {
-        if (displayRef.current < FIRST_COPY_EXIT_PROGRESS) {
+        if (copyStageRef.current === 0) {
           setSondavenVisible(primaryCopy);
         }
         return;
@@ -216,46 +218,42 @@ export function ArchiveIntro() {
     },
   );
 
-  // 屏内滚动拦截：先推进屏内进度（文字 + 切换 + 视频），两端到头才放行切屏
+  // 桌面滚动状态机：第一次向下滑换第二段文案，第二次才放行切屏；
+  // 向上滑始终直接回上一屏。只管文字，不碰视频。
   useEffect(() => {
-    if (
-      !isActive ||
-      isMobileViewport ||
-      reducedMotion ||
-      videoFailed
-    ) {
+    if (!isActive || isMobileViewport || reducedMotion) {
       return;
     }
     return registerScrollInterceptor((deltaY) => {
-      const target = targetRef.current;
-      if (deltaY > 0 && target >= 1) return false;
-      if (deltaY < 0 && target <= 0) return false;
-      targetRef.current = Math.min(
-        1,
-        Math.max(0, target + deltaY * SCRUB_PER_PX),
-      );
-      return true;
+      if (deltaY < 0) return false;
+      const now = performance.now();
+      if (copyStageRef.current === 0) {
+        copyStageRef.current = 1;
+        swapAbsorbUntilRef.current = now + SWAP_ABSORB_MS;
+        lastAbsorbedDownAtRef.current = now;
+        textTimelineRef.current?.play();
+        return true;
+      }
+      // 换段后：最小吞噬窗口内，或滚轮事件仍连续（同一次手势的惯性）都不放行
+      if (
+        now < swapAbsorbUntilRef.current ||
+        now - lastAbsorbedDownAtRef.current < GESTURE_GAP_MS
+      ) {
+        lastAbsorbedDownAtRef.current = now;
+        return true;
+      }
+      return false;
     });
-  }, [
-    isActive,
-    isMobileViewport,
-    reducedMotion,
-    videoFailed,
-    registerScrollInterceptor,
-  ]);
+  }, [isActive, isMobileViewport, reducedMotion, registerScrollInterceptor]);
 
   useGSAP(
     () => {
       const root = container.current;
       if (!root) return;
 
-      // 主时间轴（进度由滚动擦拭驱动，单位为“进度百分点”）：
-      //   0 ~ 38   第一段文字逐字由灰变黑
-      //  38 ~ 50   第一段逐词缩小、下沉、淡出（第三屏入场动画的反向）
-      //  50 ~ 53   两段之间的短暂停顿
-      //  53 ~ 68   第二段逐词上浮入场
-      //  73 ~ 107  第二段文字逐字由灰变黑
-      // 124 ~ 132  收尾留白：视频最后才织合完毕（两段文字完成之后）
+      // 换段时间轴（真实秒数，触发后一次性播完）：
+      //   0 ~ 0.7   第一段逐词退场
+      //   0.6 起    切到第二段并逐词入场
       const charsA = gsap.utils.toArray<HTMLElement>(
         "[data-swap-a] [data-scrub-char]",
         root,
@@ -276,31 +274,13 @@ export function ArchiveIntro() {
       const shuffledWordsB = gsap.utils.shuffle([...wordsB]);
       const swapA = root.querySelector<HTMLElement>("[data-swap-a]");
       const swapB = root.querySelector<HTMLElement>("[data-swap-b]");
-      // 新文案节点带 CSS opacity-0；时间轴只负责第一段退场，必须先落到可见态。
       gsap.set(wordsA, { opacity: 1, yPercent: 0, scale: 1 });
       gsap.set(wordsB, { opacity: 0, yPercent: 75, scale: 0 });
       if (swapB) gsap.set(swapB, { autoAlpha: 0 });
       if (swapA) gsap.set(swapA, { autoAlpha: 1 });
-      // 手机不逐字点亮（不要「加载」变色），进屏/换段仍走逐词冒出。
-      if (isMobileViewport) {
-        gsap.set([charsA, charsB], { color: "var(--color-grey-400)" });
-      }
+      gsap.set([charsA, charsB], { color: "var(--color-grey-400)" });
 
       const timeline = gsap.timeline({ paused: true });
-      if (!isMobileViewport) {
-        timeline.to(
-          charsA,
-          {
-            color: "var(--color-grey-400)",
-            duration: 8,
-            ease: "none",
-            stagger: { amount: 30 },
-          },
-          0,
-        );
-      }
-      // 手机换段不要空档硬切：第一段退场结束的同一拍第二段开始逐词冒出。
-      const secondCopyAt = isMobileViewport ? 50 : 53;
       timeline
         .to(
           shuffledWordsA,
@@ -308,136 +288,79 @@ export function ArchiveIntro() {
             opacity: 0,
             yPercent: 75,
             scale: 0,
-            duration: 8,
+            duration: 0.45,
             ease: "power2.in",
-            stagger: { amount: 4 },
+            stagger: { amount: 0.25 },
           },
-          38,
+          0,
         )
-        .to(swapA, { autoAlpha: 0, duration: 0.01 }, 50)
-        .to(swapB, { autoAlpha: 1, duration: 0.01 }, isMobileViewport ? 50 : 52)
+        .to(swapA, { autoAlpha: 0, duration: 0.01 }, 0.6)
+        .to(swapB, { autoAlpha: 1, duration: 0.01 }, 0.6)
         .to(
           shuffledWordsB,
           {
             opacity: 1,
             yPercent: 0,
             scale: 1,
-            duration: 8,
+            duration: 0.7,
             ease: "power2.out",
-            stagger: 0.4,
+            stagger: 0.04,
           },
-          secondCopyAt,
+          0.65,
         );
-      if (!isMobileViewport) {
-        timeline.to(
-          charsB,
-          {
-            color: "var(--color-grey-400)",
-            duration: 8,
-            ease: "none",
-            stagger: { amount: 26 },
-          },
-          73,
-        );
-      }
-      // 空拍占位，把时间轴总长撑到 132：文字完成后视频才擦到最末
-      timeline.to(root, { duration: 8 }, 124);
       textTimelineRef.current = timeline;
-      // locale 切换会重建文案节点；立即同步当前擦拭进度，避免新节点停在初始隐藏态。
-      timeline.progress(displayRef.current);
+      // locale 切换会重建文案节点；若已换到第二段，直接落到终态。
+      if (copyStageRef.current === 1) timeline.progress(1);
 
       return () => {
         textTimelineRef.current = null;
       };
     },
-    { dependencies: [isMobileViewport, locale], scope: container },
+    { dependencies: [locale], scope: container },
   );
 
-  // 仅本屏激活且进度还在追随时才挂 ticker，离屏立即停视频。
+  // 进屏后视频自顾自整段播完；手机额外挂定时换段。离屏复位。
   useEffect(() => {
-    if (!isActive) {
-      videoHandleRef.current?.pause();
-      return;
-    }
-    const tick = (_time: number, deltaTime: number) => {
-      const target = targetRef.current;
-      let display = displayRef.current;
-      if (display === target) return;
-      const blend = 1 - Math.exp((-SCRUB_DAMPING * deltaTime) / 1000);
-      display += (target - display) * blend;
-      if (Math.abs(target - display) < 0.0005) display = target;
-      displayRef.current = display;
-      videoHandleRef.current?.seekTo(display);
-      textTimelineRef.current?.progress(display);
-    };
-    gsap.ticker.add(tick);
-    return () => {
-      gsap.ticker.remove(tick);
-    };
-  }, [isActive]);
-
-  // 移动端进入第二屏后自动跑完整段落与视频，不再依赖屏内滑动擦拭。
-  useEffect(() => {
-    mobileAutoTweenRef.current?.kill();
-    mobileAutoTweenRef.current = null;
+    swapCallRef.current?.kill();
+    swapCallRef.current = null;
     videoHandleRef.current?.pause();
 
     if (!isActive) {
-      // 仅离屏时复位；语言切换不得清进度，否则新文案会停在 CSS 隐藏态。
-      targetRef.current = 0;
-      displayRef.current = 0;
-      textTimelineRef.current?.progress(0);
+      copyStageRef.current = 0;
+      swapAbsorbUntilRef.current = 0;
+      lastAbsorbedDownAtRef.current = 0;
+      hasPlayedFirstCopyEntranceRef.current = false;
+      textTimelineRef.current?.pause().progress(0);
       videoHandleRef.current?.seekTo(0);
       return;
     }
 
-    if (
-      !isMobileViewport ||
-      !videoReady ||
-      !videoHandleRef.current ||
-      !textTimelineRef.current
-    ) {
+    if (reducedMotion) {
+      copyStageRef.current = 1;
+      textTimelineRef.current?.progress(1);
+      videoHandleRef.current?.seekTo(1);
       return;
+    }
+
+    if (isMobileViewport && copyStageRef.current === 0) {
+      swapCallRef.current = gsap.delayedCall(MOBILE_TEXT_SWAP_DELAY, () => {
+        copyStageRef.current = 1;
+        textTimelineRef.current?.play();
+        swapCallRef.current = null;
+      });
     }
 
     const videoHandle = videoHandleRef.current;
-    const playhead = { progress: displayRef.current };
-    const applyTextProgress = (progress: number) => {
-      targetRef.current = progress;
-      displayRef.current = progress;
-      textTimelineRef.current?.progress(progress);
-    };
-
-    if (reducedMotion) {
-      applyTextProgress(1);
-      videoHandle.seekTo(1);
-      return;
+    if (videoReady) {
+      videoHandle?.playToEnd(AUTO_DURATION);
     }
 
-    // 原生播放由浏览器连续解码，避免 iPhone Safari 每帧 seek 导致页面卡死。
-    videoHandle.seekTo(playhead.progress);
-    videoHandle.playToEnd(MOBILE_AUTO_DURATION);
-    const remainingDuration =
-      MOBILE_AUTO_DURATION * (1 - playhead.progress);
-    mobileAutoTweenRef.current = gsap.to(playhead, {
-      progress: 1,
-      duration: remainingDuration,
-      ease: "none",
-      onUpdate: () => applyTextProgress(playhead.progress),
-      onComplete: () => {
-        applyTextProgress(1);
-        videoHandle.pause();
-        videoHandle.seekTo(1);
-        mobileAutoTweenRef.current = null;
-      },
-    });
-
     return () => {
-      mobileAutoTweenRef.current?.kill();
-      mobileAutoTweenRef.current = null;
-      videoHandle.pause();
+      swapCallRef.current?.kill();
+      swapCallRef.current = null;
+      videoHandle?.pause();
     };
-  }, [isActive, isMobileViewport, locale, reducedMotion, videoReady]);
+  }, [isActive, isMobileViewport, reducedMotion, videoReady]);
 
   const showVideo = videoAllowed && !reducedMotion && !videoFailed;
   const showPoster = !showVideo || !videoReady;
