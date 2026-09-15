@@ -207,7 +207,7 @@ function ContactFact({
         aria-label={value}
         className={`relative font-serif-sc font-normal ${valueClassName} ${
           highlighted
-            ? "flex h-[26px] items-center text-white md:h-[calc(var(--su)*26)]"
+            ? "flex h-[26px] w-max items-center whitespace-nowrap text-white md:h-[calc(var(--su)*26)]"
             : "text-grey-400"
         }`}
       >

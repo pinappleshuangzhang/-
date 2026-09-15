@@ -179,7 +179,7 @@ export function SiteNav({
 
           {/* 与屏内右边栏图同缘：贴版心右、宽随 --su 缩放；目录在区左缘 */}
           <div className="absolute right-0 top-1/2 flex w-[calc(var(--su)*507)] -translate-y-1/2 items-center justify-between">
-            <div className="flex w-max min-w-[161px] shrink-0 items-center justify-between gap-8">
+            <div className="flex w-max min-w-[calc(var(--su)*161)] shrink-0 items-center justify-between gap-[calc(var(--su)*32)]">
             <FlipHoverButton
               ref={desktopCloseRef}
               label={indexLabel}
