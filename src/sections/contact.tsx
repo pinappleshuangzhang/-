@@ -80,7 +80,8 @@ function ContactLayout({
         />
       </a>
 
-      <dl className="absolute left-3 top-[240px] flex w-[345px] flex-col gap-[22px] md:left-5 md:right-5 md:top-[calc(var(--su)*379)] md:grid md:w-auto md:grid-cols-8 md:gap-5">
+      {/* 信息行按视口高度百分比下沉（稿面 379/800），大屏与标题区拉开呼吸感 */}
+      <dl className="absolute left-3 top-[240px] flex w-[345px] flex-col gap-[22px] md:left-5 md:right-5 md:top-[47.375%] md:grid md:w-auto md:grid-cols-8 md:gap-5">
         <ContactFact
           label={t("contact.addressLabel")}
           value={t("contact.address")}
