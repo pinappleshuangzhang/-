@@ -595,7 +595,7 @@ export function Hero() {
             aria-label={t("hero.title")}
             className={`whitespace-nowrap font-serif-sc font-medium uppercase text-grey-400 ${
               locale === "zh"
-                ? "text-[length:calc(var(--su)*48)] leading-none"
+                ? "text-[length:calc(var(--su-hero)*48)] leading-none"
                 : "text-[length:calc(var(--su)*40)] leading-none"
             }`}
           >
