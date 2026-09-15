@@ -220,12 +220,11 @@ export function OrgFounding() {
         </div>
       </div>
 
-      {/* 右侧铭牌：底边锚定到标题底（33.6% + 两行标题高 92 - 图高 305，均按 --su），
-          视口比例变化时仍与标题底对齐，且不脱离原 Figma 位置 */}
+      {/* 右侧铭牌：底边锚定到标题底；超宽但低视口下，顶部至少留在导航底部 12px 之后 */}
       <div
         data-sd-media
         data-sd-delay="0.35"
-        className="absolute right-5 top-[calc(33.6%-var(--su)*213)] h-[calc(var(--su)*305)] w-[calc(var(--su)*507)] overflow-hidden"
+        className="absolute right-5 top-[max(calc(33.6%-var(--su)*213),calc(32px+var(--su)*20))] h-[calc(var(--su)*305)] w-[calc(var(--su)*507)] overflow-hidden"
       >
         <div
           data-sd-media-inner

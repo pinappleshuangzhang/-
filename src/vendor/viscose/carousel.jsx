@@ -2278,7 +2278,7 @@ export default function Carousel({
           transform: "translateY(-50%)",
           width: su(507),
         }}
-        className={`absolute z-10 flex flex-col items-start gap-[calc(var(--viscose-su)*36)] leading-5 text-grey-300 opacity-0 [--viscose-su:calc(100vw/1440)] max-md:hidden ${categoryFontClass}`}
+        className={`absolute z-10 flex flex-col items-start gap-[calc(var(--viscose-su)*48)] leading-5 text-grey-300 opacity-0 [--viscose-su:calc(100vw/1440)] max-md:hidden ${categoryFontClass}`}
       >
         {PROJECTS.slice(0, IMAGE_FILES.length).map((p, i) => (
           <li

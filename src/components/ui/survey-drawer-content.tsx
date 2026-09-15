@@ -65,7 +65,8 @@ export function SurveyDrawerContent({
       ref={rootRef}
       className="relative px-5 pb-20 pt-[105px] max-md:px-3 max-md:pb-12 max-md:pt-[68px]"
     >
-      <div className="flex w-full max-w-[896px] flex-col gap-10 md:max-w-[calc(var(--su)*896)]">
+      {/* 内容铺满内边距内宽度，右缘与导航 20px 页边距对齐 */}
+      <div className="flex w-full flex-col gap-10">
         <div className="flex flex-col gap-10 max-md:gap-9">
           <header className="flex items-center justify-between">
             <h1
