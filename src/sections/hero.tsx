@@ -649,7 +649,7 @@ export function Hero() {
           ref={scrollHintRef}
           type="button"
           onClick={() => startIntroVideoRef.current?.()}
-          className={`pointer-events-auto invisible absolute right-0 bottom-0 m-0 border-0 bg-transparent p-0 opacity-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${
+          className={`pointer-events-auto invisible absolute right-0 bottom-0 m-0 border-0 bg-transparent p-0 opacity-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:text-[length:calc(var(--su)*12)] ${
             locale === "en" ? "font-bodoni" : "font-serif-sc"
           }`}
         >
@@ -660,7 +660,7 @@ export function Hero() {
           ref={skipRef}
           type="button"
           onClick={() => skipIntroVideoRef.current?.()}
-          className={`pointer-events-auto invisible absolute right-0 bottom-0 m-0 border-0 bg-transparent p-0 opacity-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 ${
+          className={`pointer-events-auto invisible absolute right-0 bottom-0 m-0 border-0 bg-transparent p-0 opacity-0 whitespace-nowrap text-12 font-normal uppercase leading-none text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:text-[length:calc(var(--su)*12)] ${
             locale === "en" ? "font-bodoni" : "font-serif-sc"
           }`}
         >
