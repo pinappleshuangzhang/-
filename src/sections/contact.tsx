@@ -1,10 +1,15 @@
 "use client";
 
+import { useRef, type Ref } from "react";
 import Image from "next/image";
 import { SpotlightReveal } from "@/components/effects/spotlight-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
+import { FlipChars, type FlipCharsHandle } from "@/components/ui/flip-chars";
+import { shouldMarkFocus } from "@/components/ui/flip-hover-button";
 import { SplitWords } from "@/components/ui/split-words";
+import { CONTACT_RECIPIENT } from "@/lib/contact-form";
+import { useCopyContactEmail } from "@/lib/copy-contact-email";
 import contactEmbossedBgImg from "../../public/contact/contact-embossed-bg.webp";
 import contactEmbossedBgMobileImg from "../../public/contact/contact-embossed-bg-mobile.webp";
 
@@ -38,6 +43,8 @@ function ContactLayout({
   animated?: boolean;
 }) {
   const { locale, t } = useLocale();
+  const { copied, copy } = useCopyContactEmail();
+  const flipRef = useRef<FlipCharsHandle>(null);
   const Title = heading;
   const titleFont = locale === "en" ? "font-bodoni" : "font-serif-sc";
 
@@ -52,10 +59,24 @@ function ContactLayout({
         <SplitWords text={t("contact.cta")} animated={animated} />
       </Title>
 
-      <a
-        href="mailto:shuangzhang@fintopia.tech"
-        aria-label={`${t("contact.button")}：shuangzhang@fintopia.tech`}
-        className={`group absolute left-3 top-[150px] h-[34px] text-left focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:left-5 md:top-[calc(var(--su)*204)] md:h-[calc(var(--su)*69)] ${
+      <button
+        type="button"
+        onClick={() => {
+          void copy();
+        }}
+        onMouseEnter={() => flipRef.current?.play()}
+        onMouseLeave={() => flipRef.current?.reverse()}
+        onFocus={(event) => {
+          if (shouldMarkFocus(event.currentTarget)) flipRef.current?.play();
+        }}
+        onBlur={() => flipRef.current?.reverse()}
+        aria-live="polite"
+        aria-label={
+          copied
+            ? t("contact.copied")
+            : `${t("contact.copyAria")} ${CONTACT_RECIPIENT}`
+        }
+        className={`group absolute left-3 top-[150px] h-[34px] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:left-5 md:top-[calc(var(--su)*204)] md:h-[calc(var(--su)*69)] ${
           locale === "en"
             ? "w-[205px] md:w-[calc(var(--su)*410)]"
             : "w-[177px] md:w-[calc(var(--su)*325)]"
@@ -72,13 +93,14 @@ function ContactLayout({
           } ${animated ? "scale-x-0" : ""}`}
         />
         <ContactButtonContent
-          label={t("contact.button")}
+          flipRef={flipRef}
+          label={copied ? t("contact.copied") : t("contact.button")}
           arrowSrc="/contact/contact-arrow-white.webp"
           className="text-white"
           fontClassName={titleFont}
           animated={animated}
         />
-      </a>
+      </button>
 
       {/* 信息行按视口高度百分比下沉（稿面 379/800），大屏与标题区拉开呼吸感 */}
       <dl className="absolute left-3 top-[240px] flex w-[345px] flex-col gap-[22px] md:left-5 md:right-5 md:top-[47.375%] md:grid md:w-auto md:grid-cols-8 md:gap-5">
@@ -109,6 +131,7 @@ function ContactLayout({
 }
 
 type ContactButtonContentProps = {
+  flipRef: Ref<FlipCharsHandle>;
   label: string;
   arrowSrc: string;
   className: string;
@@ -118,6 +141,7 @@ type ContactButtonContentProps = {
 };
 
 function ContactButtonContent({
+  flipRef,
   label,
   arrowSrc,
   className,
@@ -132,10 +156,16 @@ function ContactButtonContent({
       aria-label={label}
       className={`absolute flex h-[34px] items-center gap-1.5 whitespace-nowrap text-24 font-normal uppercase leading-[34px] md:h-[calc(var(--su)*69)] md:gap-[calc(var(--su)*6)] md:text-[length:calc(var(--su)*48)] md:leading-[calc(var(--su)*68)] ${fontClassName} ${positionClassName} ${className}`}
     >
-      <span>
-        <SplitWords text={label} animated={animated} />
+      <span className={`sd-word inline-flex items-center ${animated ? "opacity-0" : ""}`}>
+        <FlipChars
+          ref={flipRef}
+          label={label}
+          flipOnChange
+          trailing={() => (
+            <ContactArrow src={arrowSrc} animated={false} />
+          )}
+        />
       </span>
-      <ContactArrow src={arrowSrc} animated={animated} />
     </span>
   );
 }
@@ -153,8 +183,8 @@ function ContactArrow({
   return (
     <span
       aria-hidden="true"
-      className={`sd-word relative block size-6 shrink-0 overflow-hidden md:-top-0.5 md:size-[calc(var(--su)*51)] ${
-        animated ? "opacity-0" : ""
+      className={`relative block size-6 shrink-0 overflow-hidden md:-top-0.5 md:size-[calc(var(--su)*51)] ${
+        animated ? "sd-word opacity-0" : ""
       }`}
     >
       <Image

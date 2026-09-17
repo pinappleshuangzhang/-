@@ -13,7 +13,7 @@ import statuesImg from "../../public/org-record/founding-statues-m.webp";
 
 /** 标题高亮条：中文取移动稿；英文按桌面 983:1425 比例换算到 24px 字号 */
 const TITLE_BAR_BY_LOCALE = {
-  zh: { inset: 60, extend: 95, top: 37, height: 28 },
+  zh: { inset: 48, extend: 95, top: 37, height: 28 },
   en: { inset: 34, extend: 165, top: 37, height: 32 },
 } as const;
 /** 成立宣言黑条：稿内 239 宽 − 7 字 × 24px，起点与文字齐 */

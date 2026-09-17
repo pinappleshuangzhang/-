@@ -38,8 +38,10 @@ const AUTO_DURATION = 9;
 const MOBILE_TEXT_SWAP_DELAY = 5;
 /** 换段后至少吞掉这么久的向下滚动，抵消触控板惯性。 */
 const SWAP_ABSORB_MS = 900;
-/** 滚轮事件间隔小于此值视为同一次手势，继续吞掉；停顿后再滑才切屏。 */
-const GESTURE_GAP_MS = 400;
+/** 滚轮事件间隔小于此值视为同一次手势的惯性，继续吞掉。 */
+const GESTURE_GAP_MS = 250;
+/** 换段后吞噬的硬上限：超过此时长后向下滚一律放行，避免连续滚动卡死。 */
+const SWAP_ABSORB_MAX_MS = 1600;
 const MOBILE_QUERY = "(max-width: 767px)";
 
 function subscribeMobileViewport(callback: () => void) {
@@ -136,7 +138,7 @@ export function ArchiveIntro() {
 
   /** 0 = 第一段文案在屏，1 = 已换第二段 */
   const copyStageRef = useRef<0 | 1>(0);
-  const swapAbsorbUntilRef = useRef(0);
+  const swapAtRef = useRef(0);
   const lastAbsorbedDownAtRef = useRef(0);
   const hasPlayedFirstCopyEntranceRef = useRef(false);
   const swapCallRef = useRef<gsap.core.Tween | null>(null);
@@ -229,15 +231,18 @@ export function ArchiveIntro() {
       const now = performance.now();
       if (copyStageRef.current === 0) {
         copyStageRef.current = 1;
-        swapAbsorbUntilRef.current = now + SWAP_ABSORB_MS;
+        swapAtRef.current = now;
         lastAbsorbedDownAtRef.current = now;
         textTimelineRef.current?.play();
         return true;
       }
-      // 换段后：最小吞噬窗口内，或滚轮事件仍连续（同一次手势的惯性）都不放行
+      // 换段后：最小窗口内一律吞掉；窗口外若滚轮仍连续（惯性）继续吞，
+      // 但超过硬上限后放行，避免连续滚动永远出不去。
+      const sinceSwap = now - swapAtRef.current;
       if (
-        now < swapAbsorbUntilRef.current ||
-        now - lastAbsorbedDownAtRef.current < GESTURE_GAP_MS
+        sinceSwap < SWAP_ABSORB_MS ||
+        (sinceSwap < SWAP_ABSORB_MAX_MS &&
+          now - lastAbsorbedDownAtRef.current < GESTURE_GAP_MS)
       ) {
         lastAbsorbedDownAtRef.current = now;
         return true;
@@ -327,7 +332,7 @@ export function ArchiveIntro() {
 
     if (!isActive) {
       copyStageRef.current = 0;
-      swapAbsorbUntilRef.current = 0;
+      swapAtRef.current = 0;
       lastAbsorbedDownAtRef.current = 0;
       hasPlayedFirstCopyEntranceRef.current = false;
       textTimelineRef.current?.pause().progress(0);

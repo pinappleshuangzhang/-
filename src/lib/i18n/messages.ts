@@ -187,7 +187,20 @@ export type MessageKey =
   | "contact.founded"
   | "contact.servicesLabel"
   | "contact.services"
-  | "contact.button";
+  | "contact.button"
+  | "contact.copied"
+  | "contact.copyAria"
+  | "contactForm.title"
+  | "contactForm.name"
+  | "contactForm.email"
+  | "contactForm.message"
+  | "contactForm.send"
+  | "contactForm.sending"
+  | "contactForm.successTitle"
+  | "contactForm.successBody"
+  | "contactForm.errorRequired"
+  | "contactForm.errorEmail"
+  | "contactForm.errorSend";
 
 type Messages = Record<MessageKey, string>;
 
@@ -423,6 +436,19 @@ const zh: Messages = {
   "contact.servicesLabel": "服务范围",
   "contact.services": "品牌 · 视觉 · 产品 · 网站 · 动态",
   "contact.button": "联系我们",
+  "contact.copied": "已复制",
+  "contact.copyAria": "复制邮箱",
+  "contactForm.title": "填写以下信息，与万有引力共同开启下一份调查",
+  "contactForm.name": "调查发起人 / NAME",
+  "contactForm.email": "你的邮箱 / EMAIL",
+  "contactForm.message": "调查内容 / INQUIRY",
+  "contactForm.send": "发送",
+  "contactForm.sending": "发送中",
+  "contactForm.successTitle": "已收到你的调查申请",
+  "contactForm.successBody": "我们会尽快通过邮件与你联系。",
+  "contactForm.errorRequired": "请填写此项",
+  "contactForm.errorEmail": "请输入有效的邮箱地址",
+  "contactForm.errorSend": "发送失败，请稍后再试，或直接发送邮件至",
 };
 
 const en: Messages = {
@@ -663,6 +689,19 @@ const en: Messages = {
   "contact.servicesLabel": "Services",
   "contact.services": "Brand · Identity · Product · Web · Motion",
   "contact.button": "Contact Us",
+  "contact.copied": "Copied",
+  "contact.copyAria": "Copy email",
+  "contactForm.title": "Fill in the details below to start the next survey with Grava",
+  "contactForm.name": "Initiator / NAME",
+  "contactForm.email": "Your Email / EMAIL",
+  "contactForm.message": "Survey Brief / INQUIRY",
+  "contactForm.send": "Send",
+  "contactForm.sending": "Sending",
+  "contactForm.successTitle": "Your survey request has been received",
+  "contactForm.successBody": "We will get back to you by email shortly.",
+  "contactForm.errorRequired": "This field is required",
+  "contactForm.errorEmail": "Please enter a valid email address",
+  "contactForm.errorSend": "Sending failed. Please try again later or email us at",
 };
 
 export const MESSAGES: Record<Locale, Messages> = { zh, en };

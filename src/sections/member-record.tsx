@@ -626,7 +626,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.3"
         aria-label={`${t("member.namePrefix")}${name}`}
-        className={`absolute z-10 whitespace-nowrap text-16 md:text-[length:calc(var(--su)*16)] ${textColor} ${nameClassName}`}
+        className={`absolute z-10 whitespace-nowrap text-18 md:text-[length:calc(var(--su)*18)] ${textColor} ${nameClassName}`}
       >
         <span className="font-serif-sc font-normal">
           <SplitWords text={t("member.namePrefix")} />
@@ -639,7 +639,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.4"
         aria-label={direction}
-        className={`absolute z-10 whitespace-nowrap font-serif-sc text-16 font-normal md:text-[length:calc(var(--su)*16)] ${textColor} ${directionClassName}`}
+        className={`absolute z-10 whitespace-nowrap font-serif-sc text-18 font-normal md:text-[length:calc(var(--su)*18)] ${textColor} ${directionClassName}`}
       >
         <SplitWords text={direction} />
       </p>

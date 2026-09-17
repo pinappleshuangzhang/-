@@ -583,7 +583,7 @@ export function Hero() {
         </div>
 
         <div
-          className={`absolute top-[calc(var(--su)*126)] left-[calc(100%-(var(--su)*507+20px))] hidden items-start gap-[calc(var(--su)*8)] text-left ${
+          className={`absolute top-[calc(var(--su)*126)] left-[calc(100%-(var(--su)*507+20px))] hidden items-start gap-[calc(var(--su)*16)] text-left ${
             locale === "zh"
               ? "w-[calc(var(--su)*432)] flex-col md:flex"
               : "w-max grid-cols-[max-content] md:grid"

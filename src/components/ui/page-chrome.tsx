@@ -92,7 +92,6 @@ export function PageChrome() {
         onOpenIndex={handleOpenIndex}
         onCloseIndex={() => setIndexOpen(false)}
         onHome={handleHome}
-        contactHref="mailto:shuangzhang@fintopia.tech"
         closeRef={closeRef}
       />
       <ArchiveIndex

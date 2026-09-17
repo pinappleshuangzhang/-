@@ -388,16 +388,15 @@ function MobileArchiveIndex({
           type="button"
           aria-label={t("nav.closeIndex")}
           onClick={onClose}
-          className="absolute right-1 top-1 flex size-8 items-center justify-center focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
+          className="group absolute right-1 top-1 flex size-8 items-center justify-center focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
         >
           <span
             aria-hidden="true"
-            className="absolute h-px w-4 rotate-45 bg-grey-400"
-          />
-          <span
-            aria-hidden="true"
-            className="absolute h-px w-4 -rotate-45 bg-grey-400"
-          />
+            className="relative size-4 transition-transform duration-500 ease-out group-hover:rotate-[360deg] group-focus-visible:rotate-[360deg] motion-reduce:transition-none"
+          >
+            <span className="absolute top-1/2 left-0 h-px w-full -translate-y-1/2 rotate-45 bg-grey-400" />
+            <span className="absolute top-1/2 left-0 h-px w-full -translate-y-1/2 -rotate-45 bg-grey-400" />
+          </span>
         </button>
 
         <div className="shrink-0 pt-[68px]">

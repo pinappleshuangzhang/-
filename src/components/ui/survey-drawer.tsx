@@ -229,7 +229,7 @@ export function SurveyDrawer({
           type="button"
           aria-label={t("nav.close")}
           onClick={onClose}
-          className="absolute right-1 top-1 z-10 flex size-8 appearance-none items-center justify-center border-0 bg-transparent text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 md:sr-only"
+          className="group absolute right-1 top-1 z-10 flex size-8 appearance-none items-center justify-center border-0 bg-transparent text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 md:sr-only"
         >
           <svg
             aria-hidden="true"
@@ -237,7 +237,7 @@ export function SurveyDrawer({
             height="16"
             viewBox="0 0 16 16"
             fill="none"
-            className="md:hidden"
+            className="md:hidden transition-transform duration-500 ease-out group-hover:rotate-[360deg] group-focus-visible:rotate-[360deg] motion-reduce:transition-none"
           >
             <path d="M1 1l14 14M15 1L1 15" stroke="currentColor" strokeWidth="1" />
           </svg>

@@ -31,12 +31,11 @@ function getMobileViewportServerSnapshot() {
 }
 
 /**
- * 标题黑条几何：中文取 Figma 780:96；英文取 983:1425
- * （英文从 “To ” 之后起笔，条更长、顶略下移）
+ * 标题黑条几何：中英文高度与 46px 标题行高一致，避免反白文字被裁切
  */
 const TITLE_BAR_BY_LOCALE = {
-  zh: { inset: 76, extend: 133, top: 46, height: 43 },
-  en: { inset: 46, extend: 220, top: 49, height: 43 },
+  zh: { inset: 64, extend: 133, top: 46, height: 46 },
+  en: { inset: 46, extend: 220, top: 46, height: 46 },
 } as const;
 
 // 高亮条比高亮词组左移 1px 起笔，右端越过词组末尾再延伸 30px
@@ -195,7 +194,7 @@ export function OrgFounding() {
           <div
             ref={blackBarRef}
             aria-hidden="true"
-            className="absolute left-[76px] top-[46px] h-[43px] w-[249px] overflow-hidden md:left-[calc(var(--su)*76)] md:top-[calc(var(--su)*46)] md:h-[calc(var(--su)*43)]"
+            className="absolute left-16 top-[46px] h-[46px] w-[261px] overflow-hidden md:left-[calc(var(--su)*64)] md:top-[calc(var(--su)*46)] md:h-[calc(var(--su)*46)]"
           >
             <span
               data-sd-bar
@@ -207,7 +206,7 @@ export function OrgFounding() {
               data-sd-sync="founding-title"
               data-sd-delay="0.35"
               data-sd-title-copy
-              className="absolute left-[-76px] top-[-46px] whitespace-nowrap text-white md:left-[calc(var(--su)*-76)] md:top-[calc(var(--su)*-46)]"
+              className="absolute left-[-64px] top-[-46px] whitespace-nowrap text-white md:left-[calc(var(--su)*-64)] md:top-[calc(var(--su)*-46)]"
             >
               <p>
                 <SplitWords text={t("org.line1a")} />
@@ -220,11 +219,11 @@ export function OrgFounding() {
         </div>
       </div>
 
-      {/* 右侧铭牌：底边锚定到标题底；超宽但低视口下，顶部至少留在导航底部 12px 之后 */}
+      {/* 右侧铭牌：常规桌面锚定标题底；1920 以上 --su 封顶，改为紧跟导航并保留 12px */}
       <div
         data-sd-media
         data-sd-delay="0.35"
-        className="absolute right-5 top-[max(calc(33.6%-var(--su)*213),calc(32px+var(--su)*20))] h-[calc(var(--su)*305)] w-[calc(var(--su)*507)] overflow-hidden"
+        className="absolute right-5 top-[max(calc(33.6%-var(--su)*213),calc(32px+var(--su)*20))] h-[calc(var(--su)*305)] w-[calc(var(--su)*507)] overflow-hidden min-[1920px]:top-[calc(32px+var(--su)*20)]"
       >
         <div
           data-sd-media-inner
@@ -285,7 +284,7 @@ export function OrgFounding() {
       </div>
 
       <div className="min-w-0 pb-0">
-        <div className="relative h-[38px] whitespace-nowrap font-serif-sc text-24 text-grey-400 md:h-[calc(var(--su)*38)] md:text-[length:calc(var(--su)*24)]">
+        <div className="relative h-[38px] whitespace-nowrap font-serif-sc text-24 leading-[36px] text-grey-400 md:h-[calc(var(--su)*38)] md:text-[length:calc(var(--su)*24)] md:leading-[calc(var(--su)*36)]">
           <p
             data-sd-words
             data-sd-sync="founding-founded"
@@ -304,7 +303,7 @@ export function OrgFounding() {
           <div
             ref={greenBarRef}
             aria-hidden="true"
-            className="absolute left-[119px] top-0 h-[33px] w-[246px] overflow-hidden md:h-[calc(var(--su)*33)]"
+            className="absolute left-[119px] top-0 h-9 w-[246px] overflow-hidden md:h-[calc(var(--su)*36)]"
           >
             <span
               data-sd-bar

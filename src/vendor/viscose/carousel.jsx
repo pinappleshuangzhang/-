@@ -2295,18 +2295,18 @@ export default function Carousel({
                 marginTop: isZhCategoryFont(categoryFontClass) ? "3px" : "-1px",
               }}
             >
-              <span className="block size-3 bg-grey-400 opacity-0 group-aria-[current=true]:opacity-100" />
+              {/* hover 与选中共用同一个方块，保证位置一致 */}
+              <span className="block size-3 bg-grey-400 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 group-aria-[current=true]:opacity-100" />
             </span>
             <FlipHoverButton
               label={`${String(i + 1).padStart(3, "0")}  ${categoryLabels[i] ?? p.listLabel}`}
-              showHoverMark
+              showHoverMark={false}
               groupEntryWords
               firstTokenClassName={
                 isZhCategoryFont(categoryFontClass)
                   ? "relative top-0.5 font-bodoni"
                   : "relative font-bodoni"
               }
-              markOffsetY={isZhCategoryFont(categoryFontClass) ? 3 : -1}
               aria-label={categoryLabels[i] ?? p.listLabel}
               onClick={() => categorySelectRef.current?.(i)}
               className="h-5 transition-colors group-hover:text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
