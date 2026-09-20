@@ -80,7 +80,7 @@
   --mobile-browser-bottom: #e5e6e8;
 
   /* 屏间切换幕布配色 */
-  --ascii-curtain-bg: #eeeef3;
+  --ascii-curtain-bg: #eaeaec;
   --ascii-curtain-color: var(--color-grey-200);
 }
 

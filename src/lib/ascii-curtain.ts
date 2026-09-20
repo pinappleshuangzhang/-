@@ -204,7 +204,7 @@ function parseHexColor(value: string): [number, number, number] {
       ? hex.split("").map((c) => c + c).join("")
       : hex;
   const num = Number.parseInt(full.slice(0, 6), 16);
-  if (full.length < 6 || Number.isNaN(num)) return [238, 238, 243];
+  if (full.length < 6 || Number.isNaN(num)) return [234, 234, 236];
   return [(num >> 16) & 0xff, (num >> 8) & 0xff, num & 0xff];
 }
 
@@ -309,7 +309,7 @@ export function createCurtainGrid(
 
   const styles = getComputedStyle(canvas);
   const background =
-    styles.getPropertyValue("--ascii-curtain-bg").trim() || "#eeeef3";
+    styles.getPropertyValue("--ascii-curtain-bg").trim() || "#eaeaec";
   const glyphColor =
     styles.getPropertyValue("--ascii-curtain-color").trim() || "#131313";
 
