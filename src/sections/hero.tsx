@@ -583,9 +583,9 @@ export function Hero() {
         </div>
 
         <div
-          className={`absolute top-[calc(var(--su)*126)] left-[calc(100%-(var(--su)*507+20px))] hidden items-start gap-[calc(var(--su)*16)] text-left ${
+          className={`absolute top-[calc(var(--su)*126)] left-[calc(100%-(var(--su-hero)*507+var(--page-margin)))] hidden items-start gap-[calc(var(--su)*16)] text-left ${
             locale === "zh"
-              ? "w-[calc(var(--su)*432)] flex-col md:flex"
+              ? "w-[calc(var(--su-hero)*432)] flex-col md:flex"
               : "w-max grid-cols-[max-content] md:grid"
           }`}
         >
@@ -605,13 +605,13 @@ export function Hero() {
             data-sd-words
             data-sd-delay="0.3"
             aria-label={subtitle}
-            className={`whitespace-nowrap font-serif-sc uppercase text-grey-400 ${
+            className={`flex w-full items-stretch whitespace-nowrap text-left font-serif-sc uppercase text-grey-400 ${
               locale === "zh"
-                ? "w-full text-left text-[length:calc(var(--su)*16)] leading-normal"
-                : "flex w-full items-stretch text-left text-[length:calc(var(--su)*14)] leading-normal"
+                ? "text-[length:calc(var(--su)*16)] leading-normal"
+                : "text-[length:calc(var(--su)*14)] leading-normal"
             }`}
           >
-            <span className={locale === "zh" ? undefined : "mr-1 shrink-0"}>
+            <span className={locale === "zh" ? "shrink-0" : "mr-1 shrink-0"}>
               <SplitWords
                 text={
                   locale === "zh" ? subtitlePrefix : subtitlePrefix.trimEnd()
@@ -619,11 +619,7 @@ export function Hero() {
               />
             </span>
             {subtitleHighlight ? (
-              <span
-                className={`relative inline-block text-white ${
-                  locale === "zh" ? "pr-[calc(var(--su)*36)]" : "min-w-0 flex-1"
-                }`}
-              >
+              <span className="relative min-w-0 flex-1 text-white">
                 <span
                   data-sd-bar
                   data-sd-delay="0.3"
@@ -644,7 +640,7 @@ export function Hero() {
       </div>
 
       {/* 右下角提示：同一锚点 + 同级文字节点，保证右/下间距与字号一致 */}
-      <div className="pointer-events-none absolute right-5 bottom-5 z-[35]">
+      <div className="pointer-events-none absolute right-[var(--page-margin)] bottom-[var(--page-margin)] z-[35]">
         <button
           ref={scrollHintRef}
           type="button"

@@ -103,8 +103,8 @@ export function ViscoseCarousel({
         onSelect={onSelect}
         scrollHandlerRef={scrollHandlerRef}
         paused={paused || !active}
-        cursorLabel={t("gallery.view")}
-        dragHintLabel={t("gallery.dragHint")}
+        cursorLabel={t("gallery.dragHint")}
+        cursorViewLabel={t("gallery.view")}
         categoryLabels={[
           t("gallery.category.brand"),
           t("gallery.category.product"),

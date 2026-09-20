@@ -129,7 +129,7 @@ export function HeroLoader({
           文字中心在 20px+10su，本行行高 18su，故 top = 20px+1su 时两者文字中心重合 */}
       <div
         data-loader-chrome
-        className="absolute left-3 right-3 top-[calc(env(safe-area-inset-top)+12px)] flex items-center justify-between md:left-5 md:right-5 md:top-[calc(20px+var(--su))]"
+        className="absolute left-3 right-3 top-[calc(env(safe-area-inset-top)+12px)] flex items-center justify-between md:left-[var(--page-margin)] md:right-[var(--page-margin)] md:top-[calc(var(--page-margin)+var(--su))]"
       >
         <p
           data-loader-status

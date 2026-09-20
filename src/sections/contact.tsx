@@ -54,7 +54,7 @@ function ContactLayout({
         data-sd-words={animated ? "" : undefined}
         data-sd-delay={animated ? "0.2" : undefined}
         aria-label={t("contact.cta")}
-        className={`absolute left-3 top-[109px] whitespace-nowrap text-24 font-normal uppercase leading-[34px] text-grey-400 md:left-5 md:top-[calc(var(--su)*133)] md:text-[length:calc(var(--su)*48)] md:leading-[calc(var(--su)*68)] ${titleFont}`}
+        className={`absolute left-3 top-[109px] whitespace-nowrap text-24 font-normal uppercase leading-[34px] text-grey-400 md:left-[var(--page-margin)] md:top-[calc(var(--su)*133)] md:text-[length:calc(var(--su)*48)] md:leading-[calc(var(--su)*68)] ${titleFont}`}
       >
         <SplitWords text={t("contact.cta")} animated={animated} />
       </Title>
@@ -76,7 +76,7 @@ function ContactLayout({
             ? t("contact.copied")
             : `${t("contact.copyAria")} ${CONTACT_RECIPIENT}`
         }
-        className={`group absolute left-3 top-[150px] h-[34px] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:left-5 md:top-[calc(var(--su)*204)] md:h-[calc(var(--su)*69)] ${
+        className={`group absolute left-3 top-[150px] h-[34px] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:left-[var(--page-margin)] md:top-[calc(var(--su)*204)] md:h-[calc(var(--su)*69)] ${
           locale === "en"
             ? "w-[205px] md:w-[calc(var(--su)*410)]"
             : "w-[177px] md:w-[calc(var(--su)*325)]"
@@ -103,7 +103,7 @@ function ContactLayout({
       </button>
 
       {/* 信息行按视口高度百分比下沉（稿面 379/800），大屏与标题区拉开呼吸感 */}
-      <dl className="absolute left-3 top-[240px] flex w-[345px] flex-col gap-[22px] md:left-5 md:right-5 md:top-[47.375%] md:grid md:w-auto md:grid-cols-8 md:gap-5">
+      <dl className="absolute left-3 top-[240px] flex w-[345px] flex-col gap-[22px] md:left-[var(--page-margin)] md:right-[var(--page-margin)] md:top-[47.375%] md:grid md:w-auto md:grid-cols-8 md:gap-5">
         <ContactFact
           label={t("contact.addressLabel")}
           value={t("contact.address")}
@@ -121,7 +121,7 @@ function ContactLayout({
         <ContactFact
           label={t("contact.servicesLabel")}
           value={t("contact.services")}
-          className="w-[345px] md:absolute md:left-[calc(100%-var(--su)*507)] md:top-0 md:w-max"
+          className="w-[345px] md:absolute md:left-[calc(100%-var(--su-hero)*507)] md:top-0 md:w-max"
           highlighted
           animated={animated}
         />
@@ -239,7 +239,7 @@ function ContactFact({
         aria-label={value}
         className={`relative font-serif-sc font-normal ${valueClassName} ${
           highlighted
-            ? "flex h-[26px] w-max items-center whitespace-nowrap text-white md:h-[calc(var(--su)*26)] md:w-[calc(var(--su)*507+22.5px-12.5vw)]"
+            ? "flex h-[26px] w-max items-center whitespace-nowrap text-white md:h-[calc(var(--su)*26)] md:w-[calc(var(--su-hero)*507+var(--page-margin)/4+17.5px-12.5vw)]"
             : "text-grey-400"
         }`}
       >

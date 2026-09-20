@@ -159,20 +159,20 @@ export function SiteNav({
       />
 
       <header
-        className={`fixed inset-x-0 top-[20px] hidden mix-blend-difference transition-opacity duration-500 ease-out md:block motion-reduce:transition-none ${isIndex ? "z-[70]" : "z-50"} ${hideNav ? "pointer-events-none opacity-0" : "opacity-100"} ${className ?? ""}`}
+        className={`fixed inset-x-0 top-[var(--page-margin)] hidden mix-blend-difference transition-opacity duration-500 ease-out md:block motion-reduce:transition-none ${isIndex ? "z-[70]" : "z-50"} ${hideNav ? "pointer-events-none opacity-0" : "opacity-100"} ${className ?? ""}`}
         aria-hidden={hideNav}
         {...(hideNav ? { inert: true } : {})}
       >
         <nav
           aria-label="Site"
-          className="relative mx-auto flex w-[calc(100%-40px)] items-center"
+          className="relative mx-auto flex w-[calc(100%-var(--page-margin)*2)] items-center"
         >
           {/* logo + 标题（Figma 1320:10071）：20px logo、6px 间距、文字下移 2px，点击回档案首页 */}
           <button
             type="button"
             onClick={handleHomeClick}
             className={`flex items-center gap-[calc(var(--su)*6)] border-0 bg-transparent p-0 text-left font-bodoni text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white focus-visible:outline-none ${
-              showBrand ? "" : "max-w-[calc(100%-(var(--su)*507+20px))]"
+              showBrand ? "" : "max-w-[calc(100%-(var(--su-hero)*507+var(--page-margin)))]"
             }`}
           >
             <BrandLogo className="size-[calc(var(--su)*20)] shrink-0" />
@@ -182,7 +182,10 @@ export function SiteNav({
           </button>
 
           {/* 与屏内右边栏图同缘：贴版心右、宽随 --su 缩放；目录在区左缘 */}
-          <div className="absolute right-0 top-1/2 flex w-[calc(var(--su)*507)] -translate-y-1/2 items-center justify-between">
+          <div
+            data-nav-actions
+            className="absolute right-0 top-1/2 flex w-[calc(var(--su-hero)*507)] -translate-y-1/2 items-center justify-between"
+          >
             <div className="flex w-max min-w-[calc(var(--su)*161)] shrink-0 items-center justify-between gap-[calc(var(--su)*32)]">
             <FlipHoverButton
               ref={desktopCloseRef}

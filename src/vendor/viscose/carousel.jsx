@@ -4,12 +4,6 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import * as THREE from "three";
 import gsap from "gsap";
-import { GalleryDragHint } from "@/components/ui/gallery-drag-hint";
-import {
-  hideGalleryDragHint,
-  playGalleryDragHint,
-} from "@/animations/gallery-drag-hint";
-
 import { FlipHoverButton } from "@/components/ui/flip-hover-button";
 import {
   vertexShader,
@@ -63,7 +57,7 @@ export default function Carousel({
   onSelect,
   scrollHandlerRef,
   cursorLabel,
-  dragHintLabel = "",
+  cursorViewLabel = "",
   categoryLabels,
   categoryFontClass,
   nameFont,
@@ -72,11 +66,14 @@ export default function Carousel({
   const pausedRef = useRef(paused);
   const kickLoopRef = useRef(() => {});
   const hideCursorTagRef = useRef(() => {});
-  const abortDragHintRef = useRef(() => {});
-  const dragHintRef = useRef(null);
   const nameFontRef = useRef(nameFont);
   const applyLocaleRef = useRef(() => {});
   const prevNameFontRef = useRef(nameFont);
+  // 渲染循环里按是否悬停卡片切换「拖拽 / 查看」文案，用 ref 拿到最新语言
+  const cursorLabelsRef = useRef({ drag: cursorLabel, view: cursorViewLabel });
+  useEffect(() => {
+    cursorLabelsRef.current = { drag: cursorLabel, view: cursorViewLabel };
+  }, [cursorLabel, cursorViewLabel]);
   useEffect(() => {
     nameFontRef.current = nameFont;
   }, [nameFont]);
@@ -84,7 +81,6 @@ export default function Carousel({
     pausedRef.current = paused;
     if (paused) {
       hideCursorTagRef.current();
-      abortDragHintRef.current();
     } else kickLoopRef.current();
   }, [paused]);
   const containerRef = useRef(null);
@@ -497,7 +493,6 @@ export default function Carousel({
 
       spinVel = 0;
       settling = false;
-      abortHint(false);
       picking = true;
       gsap.killTweensOf(state);
       gsap.to(state, {
@@ -678,7 +673,6 @@ export default function Carousel({
     };
 
     const onPointerDown = (e) => {
-      abortHint(false);
       ensureLoop();
       pointerTravel = 0;
       travelX = e.clientX;
@@ -1173,8 +1167,21 @@ export default function Carousel({
       if (over < 0 && hoverColor < 0.001) colorPlane = -1;
       uniforms.uHoverPlane.value = colorPlane;
       uniforms.uHoverColor.value = hoverColor;
+      // 第三阶段光标在屏内即显示提示：悬停卡片上显示「查看」，其余显示「拖拽」
       const wantClose =
-        over >= 0 && !coarse && viewW > params.cursorLabelFrom;
+        pointer.inside &&
+        interactive &&
+        !coarse &&
+        viewW > params.cursorLabelFrom;
+      if (hoverClose && wantClose) {
+        const nextLabel =
+          over >= 0
+            ? cursorLabelsRef.current.view || cursorLabelsRef.current.drag
+            : cursorLabelsRef.current.drag;
+        if (hoverClose.textContent !== nextLabel) {
+          hoverClose.textContent = nextLabel;
+        }
+      }
       if (wantClose !== tagUp) {
         tagUp = wantClose;
         if (hoverClose) {
@@ -1548,130 +1555,6 @@ export default function Carousel({
 
     let tl = null;
     let finalTl = null;
-    let hintTl = null;
-    let hintDelay = null;
-    let hintPlayed = false;
-
-    const hideHint = () => {
-      hideGalleryDragHint(dragHintRef.current);
-    };
-
-    const cancelHintSchedule = () => {
-      hintDelay?.kill();
-      hintDelay = null;
-    };
-
-    const abortHint = (restore) => {
-      const hadSchedule = Boolean(hintDelay);
-      const active = hintTl;
-      cancelHintSchedule();
-      if (active) {
-        const startSpin = active.hintStartSpin;
-        active.kill();
-        hintTl = null;
-        hideHint();
-        if (restore && typeof startSpin === "number") {
-          gsap.to(state, {
-            spin: startSpin,
-            duration: 0.4,
-            ease: "power2.out",
-            overwrite: "auto",
-            onUpdate: () => ensureLoop(),
-          });
-        }
-      }
-      if (hadSchedule || active) picking = false;
-    };
-    abortDragHintRef.current = () => abortHint(true);
-
-    const parkOnFirstCategory = () => {
-      const parked = spinForCell(0);
-      state.spin = parked;
-      spinVel = 0;
-      settling = false;
-      ensureLoop();
-      return parked;
-    };
-
-    const hintAnchor = () => {
-      // 正面卡片的轴对齐包围盒（屏幕像素），提示动线绕着它的右上角走。
-      const hw = frontCard.hw > 1 ? frontCard.hw : viewW * 0.13;
-      const hh = frontCard.hh > 1 ? frontCard.hh : viewH * 0.15;
-      const cr = Math.abs(Math.cos(frontCard.rot));
-      const sr = Math.abs(Math.sin(frontCard.rot));
-      const halfW = hw * cr + hh * sr;
-      const halfH = hw * sr + hh * cr;
-      const cx = viewW * 0.5 + frontCard.x;
-      const cy = viewH * 0.5 - frontCard.y;
-      return {
-        right: cx + halfW,
-        top: cy - halfH,
-        bottom: cy + halfH,
-        scale: Math.min(viewW, 1680) / 1440,
-      };
-    };
-
-    const startDragHint = (retried = false) => {
-      if (disposed || mobileNow || pausedRef.current) return;
-      if (stagePhase !== "final") return;
-      if (dragging) return;
-      const root = dragHintRef.current;
-      const square = root?.querySelector("[data-drag-hint-square]");
-      const label = root?.querySelector("[data-drag-hint-label]");
-      const blobs = Array.from(
-        root?.querySelectorAll("[data-drag-hint-blob]") ?? [],
-      );
-      if (!root || !square || !label || blobs.length === 0) {
-        if (!retried) requestAnimationFrame(() => startDragHint(true));
-        return;
-      }
-      if (hintPlayed) return;
-      parkOnFirstCategory();
-      const targets = { root, square, label, blobs };
-      const startSpin = state.spin;
-      picking = true;
-      hintPlayed = true;
-      hintTl = playGalleryDragHint({
-        targets,
-        state,
-        anchor: hintAnchor(),
-        slot: TAU / Math.round(params.count),
-        onFrame: () => ensureLoop(),
-        onComplete: () => {
-          picking = false;
-          hintTl = null;
-        },
-      });
-      hintTl.hintStartSpin = startSpin;
-    };
-
-    const scheduleDragHint = () => {
-      cancelHintSchedule();
-      let tries = 0;
-      const waitUntilStill = () => {
-        hintDelay = null;
-        if (disposed || pausedRef.current || stagePhase !== "final") return;
-        if (dragging) return;
-        const still =
-          Math.abs(state.shift - 1) < 0.001 &&
-          Math.abs(spinVel) < 0.001 &&
-          !settling &&
-          !finalTl?.isActive() &&
-          frontCard.hw > 1;
-        if (!still) {
-          parkOnFirstCategory();
-          tries += 1;
-          if (tries < 24) {
-            hintDelay = gsap.delayedCall(0.1, waitUntilStill);
-            return;
-          }
-        }
-        startDragHint();
-      };
-      picking = true;
-      parkOnFirstCategory();
-      hintDelay = gsap.delayedCall(0.2, waitUntilStill);
-    };
 
     let pendingGoFinal = false;
 
@@ -1704,7 +1587,6 @@ export default function Carousel({
           interactive = true;
           if (listEl) listEl.style.pointerEvents = "auto";
           if (stageBackground) gsap.set(stageBackground, { opacity: 0 });
-          scheduleDragHint();
         },
       });
 
@@ -1803,8 +1685,6 @@ export default function Carousel({
 
     const replay = () => {
       pendingGoFinal = false;
-      cancelHintSchedule();
-      abortHint(false);
       finalTl?.kill();
       tl?.kill();
       tl = build();
@@ -1967,9 +1847,7 @@ export default function Carousel({
         hoverBusy ||
         Math.abs(spinVel) > 0.0015 ||
         Boolean(tl?.isActive()) ||
-        Boolean(finalTl?.isActive()) ||
-        Boolean(hintTl?.isActive()) ||
-        Boolean(hintDelay?.isActive());
+        Boolean(finalTl?.isActive());
       if (!busy) {
         loopOn = false;
         renderer.setAnimationLoop(null);
@@ -2010,9 +1888,6 @@ export default function Carousel({
       disposed = true;
       kickLoopRef.current = () => {};
       hideCursorTagRef.current = () => {};
-      abortDragHintRef.current = () => {};
-      cancelHintSchedule();
-      abortHint(false);
       clearTimeout(holdTimer);
       clearTimeout(fontFallback);
       renderer.setAnimationLoop(null);
@@ -2198,20 +2073,15 @@ export default function Carousel({
         className="absolute inset-0 z-[2] touch-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-grey-400"
       />
 
-      <GalleryDragHint
-        ref={dragHintRef}
-        label={dragHintLabel}
-        fontClassName={
-          categoryFontClass.includes("font-serif-sc")
-            ? "font-serif-sc font-medium"
-            : "font-bodoni font-normal uppercase"
-        }
-      />
-
+      {/* 跟随光标的拖拽提示：黑底方块 + 白字 */}
       <p
         ref={hoverCloseRef}
         aria-hidden="true"
-        className="pointer-events-none absolute left-0 top-0 z-20 font-bodoni text-20 font-normal uppercase leading-normal text-white opacity-0 mix-blend-difference"
+        className={`pointer-events-none absolute left-0 top-0 z-20 flex aspect-square w-max items-center justify-center whitespace-nowrap bg-grey-400/70 px-3 text-[length:max(16px,calc(100vw/1440*16))] leading-none text-white opacity-0 ${
+          categoryFontClass.includes("font-serif-sc")
+            ? "font-serif-sc font-medium"
+            : "font-bodoni font-normal uppercase"
+        }`}
       >
         {cursorLabel}
       </p>
@@ -2273,12 +2143,13 @@ export default function Carousel({
         ref={listRef}
         aria-label="Projects"
         style={{
-          right: "20px",
+          // 左缘对齐全站 507 右列（--su-hero 1920 封顶）；行内容左对齐，右缘空缺不可见
+          left: "calc(100% - var(--page-margin) - var(--su-hero) * 507)",
           top: "50%",
           transform: "translateY(-50%)",
           width: su(507),
         }}
-        className={`absolute z-10 flex flex-col items-start gap-[calc(var(--viscose-su)*48)] leading-5 text-grey-300 opacity-0 [--viscose-su:calc(100vw/1440)] max-md:hidden ${categoryFontClass}`}
+        className={`absolute z-10 flex flex-col items-start gap-[calc(var(--viscose-su)*48)] leading-5 text-grey-300 opacity-0 [--viscose-su:calc(min(100vw,1680px)/1440)] max-md:hidden ${categoryFontClass}`}
       >
         {PROJECTS.slice(0, IMAGE_FILES.length).map((p, i) => (
           <li

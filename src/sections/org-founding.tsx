@@ -38,9 +38,13 @@ const TITLE_BAR_BY_LOCALE = {
   en: { inset: 46, extend: 220, top: 46, height: 46 },
 } as const;
 
-// 高亮条比高亮词组左移 1px 起笔，右端越过词组末尾再延伸 30px
+// 成立宣言高亮条左侧轻微越过文字，右侧吸附到 8 列栅格线
 const GREEN_BAR_SHIFT = 1;
-const GREEN_BAR_EXTEND = 30;
+const GRID_COLUMNS = 8;
+const GRID_GUTTER = 20;
+// 与 CSS --page-margin 同步：clamp(20px, 100vw/72, 40px)
+const pageMargin = () =>
+  Math.min(Math.max(20, window.innerWidth / 72), 40);
 
 // 鼠标视差：左下雕塑与右上铭牌均拆前后景，幅度相同
 const LAYER_FG_PARALLAX = { amp: 8, scale: 1.06 };
@@ -64,6 +68,9 @@ export function OrgFounding() {
     getMobileViewportServerSnapshot,
   );
 
+  const designersLabelRef = useRef<HTMLParagraphElement>(null);
+  const titleBlockRef = useRef<HTMLDivElement>(null);
+  const plateMediaRef = useRef<HTMLDivElement>(null);
   const titleLine2Ref = useRef<HTMLSpanElement>(null);
   const blackBarRef = useRef<HTMLDivElement>(null);
   const foundedHighlightRef = useRef<HTMLSpanElement>(null);
@@ -79,8 +86,26 @@ export function OrgFounding() {
     if (isMobileViewport) return;
     const bar = TITLE_BAR_BY_LOCALE[locale];
     const apply = () => {
-      // 与 CSS --su 同步：1680 封顶
+      // 与 CSS --su（1680 封顶）/--su-hero（1920 封顶，主图用）同步
       const su = Math.min(window.innerWidth, 1680) / 1440;
+      const suHero = Math.min(window.innerWidth, 1920) / 1440;
+      // 铭牌图顶部 = 实测导航右侧文字行底 + 20px（与页边距一致）；
+      // 标题块底边对齐图片底边（图高 305 按 suHero 放大，标题两行 92 按 su）
+      const navActions = document.querySelector<HTMLElement>(
+        "[data-nav-actions]",
+      );
+      const plate = plateMediaRef.current;
+      const titleBlock = titleBlockRef.current;
+      if (navActions && plate && titleBlock) {
+        const plateTop = navActions.getBoundingClientRect().bottom + 20;
+        plate.style.top = `${plateTop}px`;
+        const titleTop = plateTop + 305 * suHero - 92 * su;
+        titleBlock.style.top = `${titleTop}px`;
+        const label = designersLabelRef.current;
+        if (label) {
+          label.style.top = `${titleTop - 25 * su}px`;
+        }
+      }
       const line2 = titleLine2Ref.current;
       const blackBar = blackBarRef.current;
       if (line2 && blackBar) {
@@ -102,9 +127,22 @@ export function OrgFounding() {
       if (highlight && greenBar && greenCopy) {
         const left = highlight.offsetLeft - GREEN_BAR_SHIFT * su;
         greenBar.style.left = `${left}px`;
-        greenBar.style.width = `${
-          highlight.offsetWidth + (GREEN_BAR_SHIFT + GREEN_BAR_EXTEND) * su
-        }px`;
+        const pm = pageMargin();
+        const contentWidth = window.innerWidth - pm * 2;
+        const columnWidth =
+          (contentWidth - GRID_GUTTER * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
+        const gridLines = Array.from({ length: GRID_COLUMNS }, (_, index) => {
+          const start = pm + index * (columnWidth + GRID_GUTTER);
+          return [start, start + columnWidth];
+        })
+          .flat()
+          .sort((a, b) => a - b);
+        const highlightRight = highlight.getBoundingClientRect().right;
+        const targetRight =
+          gridLines.find((line) => line >= highlightRight) ??
+          window.innerWidth - pm;
+        const barLeft = greenBar.getBoundingClientRect().left;
+        greenBar.style.width = `${Math.max(targetRight - barLeft, 0)}px`;
         greenCopy.style.left = `${-left}px`;
       }
     };
@@ -166,14 +204,18 @@ export function OrgFounding() {
       <div data-founding-desktop className="absolute inset-0">
       {/* 左上：小字标注 + 大标题（黑色高亮条反白） */}
       <p
+        ref={designersLabelRef}
         data-sd-words
         data-sd-delay="0.2"
         aria-label={t("orgFounding.designers")}
-        className="absolute left-5 top-[30.5%] font-serif-sc text-12 text-grey-300 md:text-[length:calc(var(--su)*12)]"
+        className="absolute left-[var(--page-margin)] top-[30.5%] font-serif-sc text-12 text-grey-300 md:text-[length:calc(var(--su)*12)]"
       >
         <SplitWords text={t("orgFounding.designers")} />
       </p>
-      <div className="absolute left-5 top-[33.6%] whitespace-nowrap font-serif-sc text-32 leading-[46px] text-grey-400 md:text-[length:calc(var(--su)*32)] md:leading-[calc(var(--su)*46)]">
+      <div
+        ref={titleBlockRef}
+        className="absolute left-[var(--page-margin)] top-[33.6%] whitespace-nowrap font-serif-sc text-32 leading-[46px] text-grey-400 md:text-[length:calc(var(--su)*32)] md:leading-[calc(var(--su)*46)]"
+      >
         <div className="relative">
           <div
             data-sd-words
@@ -219,11 +261,12 @@ export function OrgFounding() {
         </div>
       </div>
 
-      {/* 右侧铭牌：常规桌面锚定标题底；1920 以上 --su 封顶，改为紧跟导航并保留 12px */}
+      {/* 右侧铭牌：顶部由 effect 实测导航底 + 20px 写入；标题块同步对齐图片底边 */}
       <div
+        ref={plateMediaRef}
         data-sd-media
         data-sd-delay="0.35"
-        className="absolute right-5 top-[max(calc(33.6%-var(--su)*213),calc(32px+var(--su)*20))] h-[calc(var(--su)*305)] w-[calc(var(--su)*507)] overflow-hidden min-[1920px]:top-[calc(32px+var(--su)*20)]"
+        className="absolute right-[var(--page-margin)] top-[calc(40px+var(--su)*24)] h-[calc(var(--su-hero)*305)] w-[calc(var(--su-hero)*507)] overflow-hidden"
       >
         <div
           data-sd-media-inner
@@ -234,7 +277,7 @@ export function OrgFounding() {
               src={plateBgImg}
               alt=""
               fill
-              sizes="(min-width: 768px) calc(100vw * 507 / 1440), 507px"
+              sizes="(min-width: 1920px) 676px, (min-width: 768px) calc(100vw * 507 / 1440), 507px"
               className="object-cover"
             />
           </div>
@@ -243,7 +286,7 @@ export function OrgFounding() {
               src={plateFgImg}
               alt={t("orgFounding.plateAlt")}
               fill
-              sizes="(min-width: 768px) calc(100vw * 507 / 1440), 507px"
+              sizes="(min-width: 1920px) 676px, (min-width: 768px) calc(100vw * 507 / 1440), 507px"
               className="object-cover"
             />
           </div>
@@ -251,11 +294,11 @@ export function OrgFounding() {
       </div>
 
       {/* 左下：雕塑图与成立宣言同一底栏——页边距 20、图文间距 20、底对齐 */}
-      <div className="absolute bottom-5 left-5 flex items-end gap-5">
+      <div className="absolute bottom-[var(--page-margin)] left-[var(--page-margin)] flex items-end gap-5">
       <div
         data-sd-media
         data-sd-delay="0.55"
-        className="relative size-[calc(var(--su)*325)] shrink-0 overflow-hidden"
+        className="relative size-[calc(var(--su-hero)*325)] shrink-0 overflow-hidden"
       >
         <div
           data-sd-media-inner
@@ -267,7 +310,7 @@ export function OrgFounding() {
               src={statuesBgImg}
               alt=""
               fill
-              sizes="(min-width: 768px) calc(100vw * 325 / 1440), 325px"
+              sizes="(min-width: 1920px) 433px, (min-width: 768px) calc(100vw * 325 / 1440), 325px"
               className="object-cover"
             />
           </div>
@@ -276,7 +319,7 @@ export function OrgFounding() {
               src={statuesFgImg}
               alt={t("orgFounding.statuesAlt")}
               fill
-              sizes="(min-width: 768px) calc(100vw * 325 / 1440), 325px"
+              sizes="(min-width: 1920px) 433px, (min-width: 768px) calc(100vw * 325 / 1440), 325px"
               className="object-cover"
             />
           </div>
