@@ -77,7 +77,7 @@ function ContactLayout({
             ? t("contact.copied")
             : `${t("contact.copyAria")} ${CONTACT_RECIPIENT}`
         }
-        className="group absolute left-3 top-[150px] h-[34px] w-max px-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:left-[var(--page-margin)] md:top-[calc(var(--su)*204)] md:h-[calc(var(--su)*69)] md:px-4"
+        className="group absolute left-3 top-[150px] h-[34px] w-max pl-0 pr-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:left-[var(--page-margin)] md:top-[calc(var(--su)*204)] md:h-[calc(var(--su)*69)] md:pr-4"
       >
         <span
           data-sd-bar={animated ? "" : undefined}
@@ -98,6 +98,12 @@ function ContactLayout({
           arrowSrc="/contact/contact-arrow-white.webp"
           className="text-white"
           fontClassName={titleFont}
+          // 图标可见部分在画布内偏下 5.6%；英文大写视觉中线更高，补偿量更大
+          trailingNudge={
+            locale === "en"
+              ? "-translate-y-[0.132em]"
+              : "-translate-y-[0.015em]"
+          }
           animated={animated}
         />
       </button>
@@ -138,6 +144,8 @@ type ContactButtonContentProps = {
   arrowSrc: string;
   className: string;
   fontClassName: string;
+  /** 尾部图标对齐文字视觉中线的垂直补偿 */
+  trailingNudge: string;
   animated?: boolean;
 };
 
@@ -149,6 +157,7 @@ function ContactButtonContent({
   arrowSrc,
   className,
   fontClassName,
+  trailingNudge,
   animated = false,
 }: ContactButtonContentProps) {
   return (
@@ -164,13 +173,15 @@ function ContactButtonContent({
           label={label}
           reserveLabel={reserveLabel}
           flipOnChange
-          trailing={(layerLabel) =>
-            layerLabel === copiedLabel ? (
-              <CopyCheckIcon variant="contact" />
-            ) : (
-              <ContactArrow src={arrowSrc} animated={false} />
-            )
-          }
+          trailing={(layerLabel) => (
+            <span className={`inline-flex items-center ${trailingNudge}`}>
+              {layerLabel === copiedLabel ? (
+                <CopyCheckIcon variant="contact" />
+              ) : (
+                <ContactArrow src={arrowSrc} animated={false} />
+              )}
+            </span>
+          )}
         />
       </span>
     </span>
@@ -190,7 +201,7 @@ function ContactArrow({
   return (
     <span
       aria-hidden="true"
-      className={`relative inline-flex size-[1em] shrink-0 items-center justify-center self-center overflow-hidden ${
+      className={`relative inline-flex size-6 shrink-0 items-center justify-center self-center overflow-hidden md:size-[calc(var(--su)*51)] ${
         animated ? "sd-word opacity-0" : ""
       }`}
     >
