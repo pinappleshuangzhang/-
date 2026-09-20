@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef, type Ref } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { BrandLogo } from "@/components/ui/brand-logo";
+import { CopyCheckIcon } from "@/components/ui/copy-check-icon";
 import { FlipHoverButton } from "@/components/ui/flip-hover-button";
 import { MobileSiteNav } from "@/components/ui/mobile-site-nav";
 import { useCopyContactEmail } from "@/lib/copy-contact-email";
@@ -205,6 +206,16 @@ export function SiteNav({
                 <FlipHoverButton
                   label={contactLabel}
                   flipOnChange
+                  reserveLabel={t("nav.contact")}
+                  showHoverMark={!copied}
+                  leading={(layerLabel) =>
+                    layerLabel === t("contact.copied") ? (
+                      <CopyCheckIcon
+                        variant="nav"
+                        className={isEn ? "-translate-y-px" : "translate-y-px"}
+                      />
+                    ) : null
+                  }
                   aria-live="polite"
                   aria-label={
                     copied

@@ -45,6 +45,11 @@ type FlipHoverButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   firstTokenClassName?: string;
   /** hover 方块相对文字中线的垂直微调 */
   markOffsetY?: number;
+  /** 跟在该层文案后的内容（如复制成功对勾） */
+  trailing?: (layerLabel: string) => ReactNode;
+  /** 在文案前、与 hover 黑方块同槽位 */
+  leading?: (layerLabel: string) => ReactNode;
+  reserveLabel?: string;
   children?: ReactNode;
 };
 
@@ -68,6 +73,9 @@ export const FlipHoverButton = forwardRef<
     groupEntryWords = false,
     firstTokenClassName,
     markOffsetY = 0,
+    trailing,
+    leading,
+    reserveLabel,
     className,
     onMouseEnter,
     onMouseLeave,
@@ -128,6 +136,9 @@ export const FlipHoverButton = forwardRef<
         markOffsetY={markOffsetY}
         groupEntryWords={groupEntryWords}
         firstTokenClassName={firstTokenClassName}
+        trailing={trailing}
+        leading={leading}
+        reserveLabel={reserveLabel}
       />
       {children}
     </>

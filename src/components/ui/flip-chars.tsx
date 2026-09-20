@@ -32,8 +32,12 @@ type FlipCharsProps = {
   markOffsetY?: number;
   groupEntryWords?: boolean;
   firstTokenClassName?: string;
-  /** 跟在文案后的内容（如箭头），随字一同翻入，不随宽度收缩而平移 */
-  trailing?: () => ReactNode;
+  /** 跟在该层文案后的内容（如箭头 / 对勾），随字一同翻入 */
+  trailing?: (layerLabel: string) => ReactNode;
+  /** 在文案前、与 hover 黑方块同槽位（如导航复制对勾） */
+  leading?: (layerLabel: string) => ReactNode;
+  /** 占位文案；不传则取当前出入层中较长的一档 */
+  reserveLabel?: string;
   className?: string;
 };
 
@@ -49,7 +53,7 @@ function renderChars(
       <span
         key={`${keyPrefix}-${index}-${char}`}
         {...{ [dataAttr]: "" }}
-        className="inline-block origin-center will-change-transform"
+        className="inline-block h-[1em] origin-center leading-none will-change-transform"
       >
         {char === " " ? "\u00A0" : char}
       </span>
@@ -70,7 +74,7 @@ function renderChars(
           <span
             key={`${keyPrefix}-${index}-${char}`}
             {...{ [dataAttr]: "" }}
-            className={`inline-block origin-center will-change-transform ${
+            className={`inline-block h-[1em] origin-center leading-none will-change-transform ${
               index < firstTokenLength ? (firstTokenClassName ?? "") : ""
             }`}
           >
@@ -95,15 +99,36 @@ function renderChars(
 
 function renderTrailing(
   side: "out" | "in",
-  trailing?: () => ReactNode,
+  layerLabel: string,
+  trailing?: (layerLabel: string) => ReactNode,
 ) {
-  if (!trailing) return null;
+  const node = trailing?.(layerLabel);
+  if (!node) return null;
   return (
     <span
       data-flip-trailing={side}
-      className="inline-flex origin-center will-change-transform"
+      className="inline-flex items-center origin-center will-change-transform"
     >
-      {trailing()}
+      {node}
+    </span>
+  );
+}
+
+function renderLeading(
+  side: "out" | "in",
+  layerLabel: string,
+  leading?: (layerLabel: string) => ReactNode,
+) {
+  const node = leading?.(layerLabel);
+  if (!node) return null;
+  return (
+    <span className="pointer-events-none absolute right-full top-1/2 mr-0.5 flex -translate-y-1/2 items-center md:mr-1">
+      <span
+        data-flip-leading={side}
+        className="inline-flex items-center origin-center will-change-transform"
+      >
+        {node}
+      </span>
     </span>
   );
 }
@@ -123,6 +148,8 @@ export const FlipChars = forwardRef<FlipCharsHandle, FlipCharsProps>(
       groupEntryWords = false,
       firstTokenClassName,
       trailing,
+      leading,
+      reserveLabel: reserveLabelProp,
       className,
     },
     forwardedRef,
@@ -150,12 +177,14 @@ export const FlipChars = forwardRef<FlipCharsHandle, FlipCharsProps>(
     const outLabel = changeFrom ?? label;
     const inLabel = changeFrom ? label : (hoverLabel ?? label);
     const reserveLabel =
-      Array.from(outLabel).length >= Array.from(inLabel).length
+      reserveLabelProp ??
+      (Array.from(outLabel).length >= Array.from(inLabel).length
         ? outLabel
-        : inLabel;
+        : inLabel);
+    const charsClass = "inline-flex items-center whitespace-nowrap leading-none";
     const layerClass = trailing
-      ? "inline-flex items-center gap-1.5 whitespace-nowrap md:gap-[calc(var(--su)*6)]"
-      : "inline-flex whitespace-nowrap";
+      ? "inline-flex items-center gap-1.5 whitespace-nowrap leading-none md:gap-[calc(var(--su)*6)]"
+      : charsClass;
 
     useEffect(() => {
       const el = rootRef.current;
@@ -173,12 +202,18 @@ export const FlipChars = forwardRef<FlipCharsHandle, FlipCharsProps>(
       const inTrailing = Array.from(
         el.querySelectorAll<HTMLElement>('[data-flip-trailing="in"]'),
       );
+      const outLeading = Array.from(
+        el.querySelectorAll<HTMLElement>('[data-flip-leading="out"]'),
+      );
+      const inLeading = Array.from(
+        el.querySelectorAll<HTMLElement>('[data-flip-leading="in"]'),
+      );
       const mark = el.querySelector<HTMLElement>("[data-flip-mark]");
       if (!outChars.length) return;
 
       setFlipCharsRest(
-        [...outChars, ...outTrailing],
-        [...inChars, ...inTrailing],
+        [...outChars, ...outTrailing, ...outLeading],
+        [...inChars, ...inTrailing, ...inLeading],
         changeFrom ? null : mark,
       );
       if (changeFrom && mark) {
@@ -192,8 +227,8 @@ export const FlipChars = forwardRef<FlipCharsHandle, FlipCharsProps>(
 
       if (changeFrom) {
         const timeline = buildFlipTimeline(
-          [...outChars, ...outTrailing],
-          [...inChars, ...inTrailing],
+          [...outChars, ...outTrailing, ...outLeading],
+          [...inChars, ...inTrailing, ...inLeading],
           {
             paused: true,
           },
@@ -206,8 +241,8 @@ export const FlipChars = forwardRef<FlipCharsHandle, FlipCharsProps>(
             Math.max(
               0,
               Math.max(
-                outChars.length + outTrailing.length,
-                inChars.length + inTrailing.length,
+                outChars.length + outTrailing.length + outLeading.length,
+                inChars.length + inTrailing.length + inLeading.length,
               ) - 1,
             );
         const playId = window.requestAnimationFrame(() => {
@@ -255,7 +290,7 @@ export const FlipChars = forwardRef<FlipCharsHandle, FlipCharsProps>(
       <span
         ref={rootRef}
         aria-hidden="true"
-        className={`relative inline-block overflow-visible ${className ?? ""}`}
+        className={`relative inline-block overflow-visible leading-none ${className ?? ""}`}
       >
         {showHoverMark && (
           <span
@@ -273,33 +308,44 @@ export const FlipChars = forwardRef<FlipCharsHandle, FlipCharsProps>(
           </span>
         )}
         <span className={`invisible ${layerClass}`}>
-          {Array.from(reserveLabel).map((char, index) => (
-            <span key={`reserve-${index}-${char}`}>
-              {char === " " ? "\u00A0" : char}
-            </span>
-          ))}
-          {trailing?.()}
+          <span className={charsClass}>
+            {Array.from(reserveLabel).map((char, index) => (
+              <span
+                key={`reserve-${index}-${char}`}
+                className="inline-block h-[1em] leading-none"
+              >
+                {char === " " ? "\u00A0" : char}
+              </span>
+            ))}
+          </span>
+          {trailing?.(reserveLabel)}
         </span>
         <span className={`absolute left-0 top-0 ${layerClass}`}>
-          {renderChars(
-            outLabel,
-            "out",
-            "data-flip-out",
-            groupEntryWords,
-            firstTokenClassName,
-          )}
-          {renderTrailing("out", trailing)}
-        </span>
-        {enabled && (
-          <span className={`absolute left-0 top-0 ${layerClass}`}>
+          {renderLeading("out", outLabel, leading)}
+          <span className={charsClass}>
             {renderChars(
-              inLabel,
-              "in",
-              "data-flip-in",
+              outLabel,
+              "out",
+              "data-flip-out",
               groupEntryWords,
               firstTokenClassName,
             )}
-            {renderTrailing("in", trailing)}
+          </span>
+          {renderTrailing("out", outLabel, trailing)}
+        </span>
+        {enabled && (
+          <span className={`absolute left-0 top-0 ${layerClass}`}>
+            {renderLeading("in", inLabel, leading)}
+            <span className={charsClass}>
+              {renderChars(
+                inLabel,
+                "in",
+                "data-flip-in",
+                groupEntryWords,
+                firstTokenClassName,
+              )}
+            </span>
+            {renderTrailing("in", inLabel, trailing)}
           </span>
         )}
       </span>

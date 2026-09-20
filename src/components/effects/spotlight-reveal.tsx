@@ -310,16 +310,18 @@ export function SpotlightReveal({
       className={`pointer-events-none ${className ?? "absolute inset-0"}`}
     >
       {/* 静态图：触屏 / 键盘 / 减少动效场景常显；鼠标场景由画布接管 */}
-      <div ref={imageRef} className="absolute inset-0">
+      <div ref={imageRef} className="absolute inset-0 overflow-hidden">
         {mobileSrc && (
-          <Image
-            src={mobileSrc}
-            alt=""
-            fill
-            sizes="(max-width: 767px) 100vw, 0px"
-            unoptimized
-            className="object-cover object-bottom md:hidden"
-          />
+          <div className="absolute -inset-0.5 md:hidden">
+            <Image
+              src={mobileSrc}
+              alt=""
+              fill
+              sizes="(max-width: 767px) 100vw, 0px"
+              unoptimized
+              className="object-cover object-bottom"
+            />
+          </div>
         )}
         <Image
           src={src}

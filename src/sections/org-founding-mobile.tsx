@@ -104,23 +104,34 @@ export function OrgFoundingMobile() {
   useEffect(() => {
     const bar = TITLE_BAR_BY_LOCALE[locale];
     const apply = () => {
+      // 版心宽 = 视口 − 两侧 12px 页边距；黑条右缘不越过版心（与图片右缘对齐）
+      const contentWidth = window.innerWidth - 24;
       const line2 = titleLine2Ref.current;
       const titleBar = titleBarRef.current;
       if (line2 && titleBar) {
-        titleBar.style.width = `${
-          Math.max(line2.offsetWidth - bar.inset, 0) + bar.extend
-        }px`;
+        // 中文：黑条右缘直接拉齐版心右缘（与下方通栏图片右缘对齐）；
+        // 英文：按文字宽度 + 延伸，右缘不越过版心
+        titleBar.style.width =
+          locale === "zh"
+            ? `${contentWidth - bar.inset}px`
+            : `${Math.min(
+                Math.max(line2.offsetWidth - bar.inset, 0) + bar.extend,
+                contentWidth - bar.inset,
+              )}px`;
       }
       const foundedLine2 = foundedLine2Ref.current;
       const foundedBar = foundedBarRef.current;
       if (foundedLine2 && foundedBar) {
-        foundedBar.style.width = `${
-          foundedLine2.offsetWidth + FOUNDED_BAR_EXTEND_BY_LOCALE[locale]
-        }px`;
+        foundedBar.style.width = `${Math.min(
+          foundedLine2.offsetWidth + FOUNDED_BAR_EXTEND_BY_LOCALE[locale],
+          contentWidth,
+        )}px`;
       }
     };
     apply();
     document.fonts?.ready.then(apply);
+    window.addEventListener("resize", apply);
+    return () => window.removeEventListener("resize", apply);
   }, [locale]);
 
   // 回到本屏时展示首屏（滚回顶部）

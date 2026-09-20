@@ -5,6 +5,7 @@ import Image from "next/image";
 import { SpotlightReveal } from "@/components/effects/spotlight-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
+import { CopyCheckIcon } from "@/components/ui/copy-check-icon";
 import { FlipChars, type FlipCharsHandle } from "@/components/ui/flip-chars";
 import { shouldMarkFocus } from "@/components/ui/flip-hover-button";
 import { SplitWords } from "@/components/ui/split-words";
@@ -76,25 +77,24 @@ function ContactLayout({
             ? t("contact.copied")
             : `${t("contact.copyAria")} ${CONTACT_RECIPIENT}`
         }
-        className={`group absolute left-3 top-[150px] h-[34px] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:left-[var(--page-margin)] md:top-[calc(var(--su)*204)] md:h-[calc(var(--su)*69)] ${
-          locale === "en"
-            ? "w-[205px] md:w-[calc(var(--su)*410)]"
-            : "w-[177px] md:w-[calc(var(--su)*325)]"
-        }`}
+        className="group absolute left-3 top-[150px] h-[34px] w-max px-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:left-[var(--page-margin)] md:top-[calc(var(--su)*204)] md:h-[calc(var(--su)*69)] md:px-4"
       >
         <span
           data-sd-bar={animated ? "" : undefined}
           data-sd-delay={animated ? "0.35" : undefined}
           aria-hidden="true"
+          // 黑条中心对齐文字字形视觉中心：英文 Bodoni 大写偏高，黑条随之上移
           className={`pointer-events-none absolute left-0 w-full origin-left bg-grey-400 ${
             locale === "en"
-              ? "top-px h-[29px] md:bottom-[calc(var(--su)*14)] md:top-auto md:h-[calc(var(--su)*60)]"
-              : "top-px h-[29px] md:top-0.5 md:h-[calc(var(--su)*66)] md:translate-y-px"
+              ? "top-px h-[29px] md:top-[calc(var(--su)*1)] md:h-[calc(var(--su)*60)]"
+              : "top-px h-[29px] md:top-[calc(var(--su)*2.5)] md:h-[calc(var(--su)*66)]"
           } ${animated ? "scale-x-0" : ""}`}
         />
         <ContactButtonContent
           flipRef={flipRef}
           label={copied ? t("contact.copied") : t("contact.button")}
+          copiedLabel={t("contact.copied")}
+          reserveLabel={t("contact.button")}
           arrowSrc="/contact/contact-arrow-white.webp"
           className="text-white"
           fontClassName={titleFont}
@@ -133,20 +133,22 @@ function ContactLayout({
 type ContactButtonContentProps = {
   flipRef: Ref<FlipCharsHandle>;
   label: string;
+  copiedLabel: string;
+  reserveLabel: string;
   arrowSrc: string;
   className: string;
   fontClassName: string;
-  positionClassName?: string;
   animated?: boolean;
 };
 
 function ContactButtonContent({
   flipRef,
   label,
+  copiedLabel,
+  reserveLabel,
   arrowSrc,
   className,
   fontClassName,
-  positionClassName = "left-0 top-0",
   animated = false,
 }: ContactButtonContentProps) {
   return (
@@ -154,16 +156,21 @@ function ContactButtonContent({
       data-sd-words={animated ? "" : undefined}
       data-sd-delay={animated ? "0.35" : undefined}
       aria-label={label}
-      className={`absolute flex h-[34px] items-center gap-1.5 whitespace-nowrap text-24 font-normal uppercase leading-[34px] md:h-[calc(var(--su)*69)] md:gap-[calc(var(--su)*6)] md:text-[length:calc(var(--su)*48)] md:leading-[calc(var(--su)*68)] ${fontClassName} ${positionClassName} ${className}`}
+      className={`relative z-10 flex h-full items-center whitespace-nowrap text-24 font-normal uppercase leading-[34px] md:text-[length:calc(var(--su)*48)] md:leading-[calc(var(--su)*68)] ${fontClassName} ${className}`}
     >
-      <span className={`sd-word inline-flex items-center ${animated ? "opacity-0" : ""}`}>
+      <span className={`sd-word inline-flex items-center leading-none ${animated ? "opacity-0" : ""}`}>
         <FlipChars
           ref={flipRef}
           label={label}
+          reserveLabel={reserveLabel}
           flipOnChange
-          trailing={() => (
-            <ContactArrow src={arrowSrc} animated={false} />
-          )}
+          trailing={(layerLabel) =>
+            layerLabel === copiedLabel ? (
+              <CopyCheckIcon variant="contact" />
+            ) : (
+              <ContactArrow src={arrowSrc} animated={false} />
+            )
+          }
         />
       </span>
     </span>
@@ -183,7 +190,7 @@ function ContactArrow({
   return (
     <span
       aria-hidden="true"
-      className={`relative block size-6 shrink-0 overflow-hidden md:-top-0.5 md:size-[calc(var(--su)*51)] ${
+      className={`relative inline-flex size-[1em] shrink-0 items-center justify-center self-center overflow-hidden ${
         animated ? "sd-word opacity-0" : ""
       }`}
     >

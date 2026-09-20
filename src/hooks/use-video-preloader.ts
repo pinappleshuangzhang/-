@@ -13,7 +13,9 @@ export type VideoPreloadState = {
 };
 
 /**
- * 以流式 fetch 预加载视频，暴露真实下载进度。
+ * 以 XHR 预加载视频，暴露真实下载进度。
+ * 不用 fetch + ReadableStream：Safari 读大视频流经常不吐进度甚至卡死主线程，
+ * XHR 的 onprogress 在全浏览器（含 Safari）都稳定。
  * 进度到 1 且 status 为 ready 时，objectUrl 可直接赋给 <video>，
  * 播放时视频已完整在内存中，不会出现缓冲或黑屏。
  */
@@ -34,57 +36,43 @@ export function useVideoPreloader(
 
   useEffect(() => {
     if (!enabled) return;
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
     let cancelled = false;
 
-    async function load() {
-      try {
-        const response = await fetch(src, { signal: controller.signal });
-        if (!response.ok || !response.body) {
-          throw new Error(`Failed to fetch video: ${response.status}`);
-        }
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", src);
+    xhr.responseType = "blob";
+    xhr.timeout = timeoutMs;
 
-        const total = Number(response.headers.get("content-length")) || 0;
-        const reader = response.body.getReader();
-        const chunks: BlobPart[] = [];
-        let received = 0;
+    xhr.onprogress = (event) => {
+      if (cancelled) return;
+      const progress = event.lengthComputable
+        ? Math.min(event.loaded / event.total, 0.999)
+        : Math.min(event.loaded / (event.loaded + 250_000), 0.9);
+      setState((prev) => ({ ...prev, progress }));
+    };
 
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          received += value.byteLength;
-          if (!cancelled) {
-            const progress =
-              total > 0
-                ? Math.min(received / total, 0.999)
-                : Math.min(received / (received + 250_000), 0.9);
-            setState((prev) => ({ ...prev, progress }));
-          }
-        }
-
-        const blob = new Blob(chunks, { type: "video/mp4" });
-        const url = URL.createObjectURL(blob);
-        objectUrlRef.current = url;
-        if (!cancelled) {
-          setState({ progress: 1, status: "ready", objectUrl: url });
-        }
-      } catch {
-        if (!cancelled) {
-          setState((prev) => ({ ...prev, status: "error" }));
-        }
-      } finally {
-        window.clearTimeout(timeout);
+    xhr.onload = () => {
+      if (cancelled) return;
+      if (xhr.status < 200 || xhr.status >= 300 || !(xhr.response instanceof Blob)) {
+        setState((prev) => ({ ...prev, status: "error" }));
+        return;
       }
-    }
+      const url = URL.createObjectURL(xhr.response);
+      objectUrlRef.current = url;
+      setState({ progress: 1, status: "ready", objectUrl: url });
+    };
 
-    load();
+    const fail = () => {
+      if (!cancelled) setState((prev) => ({ ...prev, status: "error" }));
+    };
+    xhr.onerror = fail;
+    xhr.ontimeout = fail;
+
+    xhr.send();
 
     return () => {
       cancelled = true;
-      controller.abort();
-      window.clearTimeout(timeout);
+      xhr.abort();
       if (objectUrlRef.current) {
         URL.revokeObjectURL(objectUrlRef.current);
         objectUrlRef.current = null;

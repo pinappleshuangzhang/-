@@ -96,12 +96,15 @@ export function HeroLoader({
                 visibility: index === 0 ? "visible" : "hidden",
               }}
             >
+              {/* unoptimized：与预加载共用同一原始 URL，进度 100% 时缓存必命中，
+                  避免优化器变体未就绪导致 Safari/慢网下材质空白 */}
               <Image
                 src={material.src}
                 alt={index === 0 ? cardAlt : ""}
                 width={218}
                 height={218}
                 priority
+                unoptimized
                 sizes="(max-width: 767px) 170px, 16vw"
                 className="size-full object-fill"
               />

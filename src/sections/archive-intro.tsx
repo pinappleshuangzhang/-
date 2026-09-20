@@ -34,8 +34,6 @@ const FOLDER_VIDEO_MOBILE_HEVC =
   "/archive/archive-folder-yellow-alpha-mobile-hevc.mp4?v=raw1";
 /** 进屏后书本视频一次性播完的总时长（与文字无关）。 */
 const AUTO_DURATION = 9;
-/** 手机无分段滚轮：第一段停留此时长后自动换第二段。 */
-const MOBILE_TEXT_SWAP_DELAY = 5;
 /** 换段后至少吞掉这么久的向下滚动，抵消触控板惯性。 */
 const SWAP_ABSORB_MS = 900;
 /** 滚轮事件间隔小于此值视为同一次手势的惯性，继续吞掉。 */
@@ -127,8 +125,8 @@ function ScrubText({
 /**
  * 第二屏：档案 GA_001《什么是引力？》
  * 视频与文字解耦：进屏后书本视频自顾自播到结束；
- * 桌面第一次向下滑换第二段文案，再向下滑才切屏，向上滑随时回上一屏；
- * 手机无分段滚轮，第一段停留数秒后自动换段。
+ * 第一次向下滑换第二段文案，再向下滑才切屏，向上滑随时回上一屏
+ * （桌面滚轮与手机触摸滑动走同一套拦截状态机）。
  */
 export function ArchiveIntro() {
   const container = useRef<HTMLElement>(null);
@@ -141,7 +139,6 @@ export function ArchiveIntro() {
   const swapAtRef = useRef(0);
   const lastAbsorbedDownAtRef = useRef(0);
   const hasPlayedFirstCopyEntranceRef = useRef(false);
-  const swapCallRef = useRef<gsap.core.Tween | null>(null);
 
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
@@ -220,10 +217,10 @@ export function ArchiveIntro() {
     },
   );
 
-  // 桌面滚动状态机：第一次向下滑换第二段文案，第二次才放行切屏；
-  // 向上滑始终直接回上一屏。只管文字，不碰视频。
+  // 滚动状态机（滚轮与触摸共用）：第一次向下滑换第二段文案，
+  // 第二次才放行切屏；向上滑始终直接回上一屏。只管文字，不碰视频。
   useEffect(() => {
-    if (!isActive || isMobileViewport || reducedMotion) {
+    if (!isActive || reducedMotion) {
       return;
     }
     return registerScrollInterceptor((deltaY) => {
@@ -249,7 +246,7 @@ export function ArchiveIntro() {
       }
       return false;
     });
-  }, [isActive, isMobileViewport, reducedMotion, registerScrollInterceptor]);
+  }, [isActive, reducedMotion, registerScrollInterceptor]);
 
   useGSAP(
     () => {
@@ -324,10 +321,8 @@ export function ArchiveIntro() {
     { dependencies: [locale], scope: container },
   );
 
-  // 进屏后视频自顾自整段播完；手机额外挂定时换段。离屏复位。
+  // 进屏后视频自顾自整段播完；离屏复位。
   useEffect(() => {
-    swapCallRef.current?.kill();
-    swapCallRef.current = null;
     videoHandleRef.current?.pause();
 
     if (!isActive) {
@@ -347,22 +342,12 @@ export function ArchiveIntro() {
       return;
     }
 
-    if (isMobileViewport && copyStageRef.current === 0) {
-      swapCallRef.current = gsap.delayedCall(MOBILE_TEXT_SWAP_DELAY, () => {
-        copyStageRef.current = 1;
-        textTimelineRef.current?.play();
-        swapCallRef.current = null;
-      });
-    }
-
     const videoHandle = videoHandleRef.current;
     if (videoReady) {
       videoHandle?.playToEnd(AUTO_DURATION);
     }
 
     return () => {
-      swapCallRef.current?.kill();
-      swapCallRef.current = null;
       videoHandle?.pause();
     };
   }, [isActive, isMobileViewport, reducedMotion, videoReady]);

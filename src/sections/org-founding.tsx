@@ -71,6 +71,7 @@ export function OrgFounding() {
   const designersLabelRef = useRef<HTMLParagraphElement>(null);
   const titleBlockRef = useRef<HTMLDivElement>(null);
   const plateMediaRef = useRef<HTMLDivElement>(null);
+  const titleLine1Ref = useRef<HTMLSpanElement>(null);
   const titleLine2Ref = useRef<HTMLSpanElement>(null);
   const blackBarRef = useRef<HTMLDivElement>(null);
   const foundedHighlightRef = useRef<HTMLSpanElement>(null);
@@ -112,9 +113,15 @@ export function OrgFounding() {
         blackBar.style.left = `${bar.inset * su}px`;
         blackBar.style.top = `${bar.top * su}px`;
         blackBar.style.height = `${bar.height * su}px`;
-        blackBar.style.width = `${
-          Math.max(line2.offsetWidth - bar.inset * su, 0) + bar.extend * su
-        }px`;
+        // 英文：黑条右缘对齐第一行文字右缘（…Connection 的 n）；中文按稿面延伸值
+        const line1 = titleLine1Ref.current;
+        blackBar.style.width =
+          locale === "en" && line1
+            ? `${Math.max(line1.offsetWidth - bar.inset * su, 0)}px`
+            : `${
+                Math.max(line2.offsetWidth - bar.inset * su, 0) +
+                bar.extend * su
+              }px`;
         const copy = blackBar.querySelector<HTMLElement>("[data-sd-title-copy]");
         if (copy) {
           copy.style.left = `${-bar.inset * su}px`;
@@ -224,7 +231,9 @@ export function OrgFounding() {
             aria-label={titleLabel}
           >
             <p aria-hidden="true">
-              <SplitWords text={t("org.line1a")} />
+              <span ref={titleLine1Ref} className="inline-block">
+                <SplitWords text={t("org.line1a")} />
+              </span>
             </p>
             <p aria-hidden="true">
               <span ref={titleLine2Ref} className="inline-block">

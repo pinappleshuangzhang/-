@@ -649,6 +649,38 @@ export default function Carousel({
       ensureLoop();
     };
 
+    // 切到本屏时鼠标往往静止，没有 pointermove 播种指针位置，
+    // 提示无法立即出现；用 window 级监听记住最近一次鼠标位置，
+    // 进入第三阶段 / 取消暂停时若落在画布内就直接播种。
+    const lastClient = { x: 0, y: 0, has: false };
+    const onWindowPointerMove = (e) => {
+      if (e.pointerType && e.pointerType !== "mouse") return;
+      lastClient.x = e.clientX;
+      lastClient.y = e.clientY;
+      lastClient.has = true;
+    };
+    const seedFromLastClient = () => {
+      if (disposed || !lastClient.has || coarse || mobileNow) return;
+      if (pointer.inside) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      if (
+        lastClient.x < rect.left ||
+        lastClient.x > rect.right ||
+        lastClient.y < rect.top ||
+        lastClient.y > rect.bottom
+      ) {
+        return;
+      }
+      bounds.left = rect.left;
+      bounds.top = rect.top;
+      trackPointer({
+        pointerType: "mouse",
+        clientX: lastClient.x,
+        clientY: lastClient.y,
+      });
+      ensureLoop();
+    };
+
     const applyWheelDelta = (deltaX, deltaY) => {
       // A single phone card has nothing to turn; spin would only tilt it.
       if (!interactive || mobileNow) return;
@@ -777,6 +809,9 @@ export default function Carousel({
     container.addEventListener("pointerleave", onPointerLeave);
     container.addEventListener("click", onClick);
     container.addEventListener("keydown", onKeyDown);
+    window.addEventListener("pointermove", onWindowPointerMove, {
+      passive: true,
+    });
 
     const updatePointer = (dt) => {
       // Held off until the entry finishes, so the cursor cannot soften the
@@ -1591,6 +1626,7 @@ export default function Carousel({
           interactive = true;
           if (listEl) listEl.style.pointerEvents = "auto";
           if (stageBackground) gsap.set(stageBackground, { opacity: 0 });
+          seedFromLastClient();
         },
       });
 
@@ -1875,7 +1911,10 @@ export default function Carousel({
       prevT = performance.now();
       renderer.setAnimationLoop(step);
     };
-    kickLoopRef.current = ensureLoop;
+    kickLoopRef.current = () => {
+      seedFromLastClient();
+      ensureLoop();
+    };
     // The loop may already be parked when the drawer covers the card, so the
     // pause effect drops the cursor label directly; the first frame back
     // re-evaluates hover and brings it up again if still over a card.
@@ -1897,6 +1936,7 @@ export default function Carousel({
       renderer.setAnimationLoop(null);
 
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("pointermove", onWindowPointerMove);
       container.removeEventListener("pointerdown", onPointerDown);
       container.removeEventListener("pointermove", onPointerMove);
       container.removeEventListener("pointerup", onPointerUp);
@@ -2084,7 +2124,8 @@ export default function Carousel({
         className={`pointer-events-none absolute left-0 top-0 z-20 flex aspect-square w-max items-center justify-center whitespace-nowrap bg-grey-400/70 px-3 text-[length:max(16px,calc(100vw/1440*16))] leading-none text-white opacity-0 ${
           categoryFontClass.includes("font-serif-sc")
             ? "font-serif-sc font-medium"
-            : "font-bodoni font-normal uppercase"
+            : // 大写 Bodoni 无下伸部，字形偏高，加顶部内边距做光学居中
+              "font-bodoni font-normal uppercase pt-[0.15em]"
         }`}
       >
         {cursorLabel}
