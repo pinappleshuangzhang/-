@@ -1536,6 +1536,10 @@ export default function Carousel({
       }
       tl.call(() => {
         if (disposed || gen !== entryGen) return;
+        // Safari：停留阶段不自动旋转。旋转让渲染循环永不停帧，
+        // 全屏 SDF 着色器 + 三层背景合成把 Metal 转译的 WebGL 压满；
+        // 静止后循环自动停帧（见 step 尾部 busy 判定），开销归零。
+        if (isSafari) return;
         ringAutoRotating = true;
         ensureLoop();
       }, undefined, ringLanded);
