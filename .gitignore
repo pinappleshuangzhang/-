@@ -3,6 +3,9 @@
 
 # next.js
 /.next/
+/.next-desktop/
+/.next-mobile/
+/.next-mobile-webpack/
 /out/
 
 # production
