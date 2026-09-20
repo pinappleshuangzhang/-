@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type RefObject } from "react";
+import { useRef, useSyncExternalStore, type RefObject } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -23,6 +23,7 @@ import {
 } from "@/animations/member-record-logo-hover";
 import { playFlowerBloom } from "@/animations/member-record-icon-fx";
 import { FogGlass } from "@/components/effects/fog-glass";
+import { isSafariFogClient } from "@/lib/fog-glass-engine";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
 import {
@@ -55,6 +56,18 @@ import { MemberRecordMobile } from "@/sections/member-record-mobile";
 import memberRecordImg from "../../public/archive/member-record.webp";
 
 gsap.registerPlugin(useGSAP);
+
+const subscribeNoop = () => () => {};
+
+/** Safari 不渲染雾玻璃（见 FogGlass），格子改走 hover/隐藏分支；挂载后才判定以避免水合不一致 */
+function useSafariNoFog() {
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false,
+  );
+  return mounted && isSafariFogClient();
+}
 
 /** 入场与 hover 共用一张溶解雪碧图，首次使用时生成并缓存 */
 let dissolveSprite: DissolveMaskSprite | null = null;
@@ -334,6 +347,9 @@ function DesktopEmptyFogCell({
   const iconRef = useRef<HTMLSpanElement>(null);
   const reducedMotion = useReducedMotion();
   const shouldBloom = Boolean(icon?.flower) && !reducedMotion;
+  // Safari 无雾玻璃：小花没有"擦开绽放"的语境，整格不渲染图标
+  const safariNoFog = useSafariNoFog();
+  const hideIcon = Boolean(icon?.flower) && safariNoFog;
 
   const playReveal = () => {
     const el = iconRef.current;
@@ -343,7 +359,7 @@ function DesktopEmptyFogCell({
 
   return (
     <div className={boxClassName}>
-      {icon ? (
+      {icon && !hideIcon ? (
         <span
           ref={iconRef}
           aria-hidden="true"
@@ -433,6 +449,7 @@ const GRAVA_STROKE_SEGMENTS = [
 function DesktopGravaCell() {
   const logoRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
+  const safariNoFog = useSafariNoFog();
 
   const playReveal = () => {
     if (reducedMotion) return;
@@ -449,15 +466,25 @@ function DesktopGravaCell() {
     <div className={MEMBER_GRAVA_FOG_BOX_CLASS}>
       {/* 霜下字标：隔霜模糊，擦开处清晰；达阈值后播放描边动画 */}
       <DesktopGravaLogo logoRef={logoRef} />
-      <FogGlass
-        className="absolute inset-0"
-        clipPath={MEMBER_GRAVA_FOG_CLIP}
-        maskShape={MEMBER_GRAVA_CELL_SHAPE}
-        revealThreshold={MEMBER_FOG_REVEAL_THRESHOLD}
-        appearDelay={MEMBER_RECORD_REVEAL_DELAY}
-        appearDuration={MEMBER_RECORD_REVEAL_DURATION}
-        onReveal={playReveal}
-      />
+      {safariNoFog ? (
+        // Safari 无雾：沿用原指针热区形状，hover 播放描边动画
+        <div
+          aria-hidden="true"
+          className="pointer-events-auto absolute inset-0"
+          style={{ clipPath: MEMBER_GRAVA_FOG_CLIP }}
+          onPointerEnter={playReveal}
+        />
+      ) : (
+        <FogGlass
+          className="absolute inset-0"
+          clipPath={MEMBER_GRAVA_FOG_CLIP}
+          maskShape={MEMBER_GRAVA_CELL_SHAPE}
+          revealThreshold={MEMBER_FOG_REVEAL_THRESHOLD}
+          appearDelay={MEMBER_RECORD_REVEAL_DELAY}
+          appearDuration={MEMBER_RECORD_REVEAL_DURATION}
+          onReveal={playReveal}
+        />
+      )}
     </div>
   );
 }
@@ -519,6 +546,7 @@ const MEMBER_MARK_DIAMONDS = [
 function DesktopMemberMark() {
   const rootRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
+  const safariNoFog = useSafariNoFog();
 
   /** 擦拭达阈值后播放菱形入场（雾面指针热区盖住了 Logo 本体的 hover） */
   const playReveal = () => {
@@ -550,15 +578,25 @@ function DesktopMemberMark() {
         ))}
       </div>
       <div className={MEMBER_MARK_FOG_BOX_CLASS}>
-        <FogGlass
-          className="absolute inset-0"
-          clipPath={MEMBER_MARK_FOG_CLIP}
-          maskShape={MEMBER_MARK_CELL_SHAPE}
-          revealThreshold={MEMBER_FOG_REVEAL_THRESHOLD}
-          appearDelay={MEMBER_RECORD_REVEAL_DELAY}
-          appearDuration={MEMBER_RECORD_REVEAL_DURATION}
-          onReveal={playReveal}
-        />
+        {safariNoFog ? (
+          // Safari 无雾：沿用原指针热区形状（多边形避免盖住相邻文字 hover）
+          <div
+            aria-hidden="true"
+            className="pointer-events-auto absolute inset-0"
+            style={{ clipPath: MEMBER_MARK_FOG_CLIP }}
+            onPointerEnter={playReveal}
+          />
+        ) : (
+          <FogGlass
+            className="absolute inset-0"
+            clipPath={MEMBER_MARK_FOG_CLIP}
+            maskShape={MEMBER_MARK_CELL_SHAPE}
+            revealThreshold={MEMBER_FOG_REVEAL_THRESHOLD}
+            appearDelay={MEMBER_RECORD_REVEAL_DELAY}
+            appearDuration={MEMBER_RECORD_REVEAL_DURATION}
+            onReveal={playReveal}
+          />
+        )}
       </div>
     </>
   );

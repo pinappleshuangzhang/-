@@ -37,8 +37,9 @@ export function isSafariFogClient() {
   return IS_SAFARI;
 }
 
-/** Safari 对 backdrop-filter + 换 mask / 改 transform 会整层重采样闪烁 */
-const MASK_APPLY_INTERVAL = IS_SAFARI ? 0.45 : CONFIG.maskApplyInterval;
+/** Safari 对 backdrop-filter + 换 mask / 改 transform 会整层重采样闪烁；
+    mask 已降为 1×，单次重采样便宜了，可用略高频率换跟手度 */
+const MASK_APPLY_INTERVAL = IS_SAFARI ? 0.3 : CONFIG.maskApplyInterval;
 const IDLE_RUNNER_RATE = IS_SAFARI ? 0 : CONFIG.idleRunnerRate;
 const DROP_SPAWN_CHANCE = IS_SAFARI ? 0 : CONFIG.dropSpawnChance;
 
@@ -77,6 +78,9 @@ export function createFogGlassEngine(
   const { frostElement, anchorElement, onReveal } = options;
   const revealThreshold = options.revealThreshold ?? CONFIG.revealThreshold;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // Safari：mask 用 1× 分辨率。每次擦拭要 PNG 编码 + backdrop-filter 整层重采样，
+  // 像素量减为 1/4 后卡顿显著缓解；孔洞是软渐变，拉伸无视觉差异。
+  const maskScale = IS_SAFARI ? 1 : dpr;
   const shapeSource = options.maskShape
     ? new Path2D(options.maskShape.path)
     : null;
@@ -138,9 +142,9 @@ export function createFogGlassEngine(
     canvas.style.height = `${h}px`;
     canvas.width = Math.max(1, Math.round(w * dpr));
     canvas.height = Math.max(1, Math.round(h * dpr));
-    // mask 与设备像素等分辨率，Retina 下边缘才无锯齿
-    mask.width = Math.max(1, Math.round(w * dpr));
-    mask.height = Math.max(1, Math.round(h * dpr));
+    // 非 Safari：mask 与设备像素等分辨率，Retina 下边缘才无锯齿
+    mask.width = Math.max(1, Math.round(w * maskScale));
+    mask.height = Math.max(1, Math.round(h * maskScale));
     buildShapePath();
     fillFogBase();
     baselineAlpha = measureFogAlpha();
@@ -230,7 +234,7 @@ export function createFogGlassEngine(
   }
 
   function stampHole(x: number, y: number) {
-    const s = dpr;
+    const s = maskScale;
     const r = CONFIG.brushSize * s;
     const gradient = maskCtx.createRadialGradient(
       x * s,
@@ -276,7 +280,7 @@ export function createFogGlassEngine(
   }
 
   function stepRunners(dt: number) {
-    const s = dpr;
+    const s = maskScale;
     for (let i = runners.length - 1; i >= 0; i -= 1) {
       const runner = runners[i];
 

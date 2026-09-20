@@ -70,6 +70,10 @@ export function FogGlass({
   const [engineFailed, setEngineFailed] = useState(false);
   const [engineGeneration, setEngineGeneration] = useState(0);
 
+  // Safari：雾层依赖 backdrop-filter + CSS mask，换 mask 必整层重光栅化，
+  // 无法做到跟手，整组雾玻璃不渲染；擦拭奖励动画由使用方改挂 hover 触发
+  const safariClient = mounted && isSafariFogClient();
+
   useEffect(() => {
     onRevealRef.current = onReveal;
   }, [onReveal]);
@@ -78,7 +82,7 @@ export function FogGlass({
     const canvas = canvasRef.current;
     const frost = frostRef.current;
     const anchor = rootRef.current;
-    if (!canvas || !frost || !anchor || !isDesktop || reducedMotion) {
+    if (!canvas || !frost || !anchor || !isDesktop || reducedMotion || safariClient) {
       setEngineFailed(false);
       setEngineGeneration(0);
       return;
@@ -100,7 +104,7 @@ export function FogGlass({
       engineRef.current = null;
       setEngineFailed(false);
     };
-  }, [mounted, isDesktop, reducedMotion, revealThreshold, maskShape]);
+  }, [mounted, isDesktop, reducedMotion, revealThreshold, maskShape, safariClient]);
 
   useEffect(() => {
     const engine = engineRef.current;
@@ -124,17 +128,14 @@ export function FogGlass({
     engineRef.current?.endStroke();
   };
 
-  if (!isDesktop || reducedMotion) return null;
+  if (!isDesktop || reducedMotion || safariClient) return null;
 
   const clipStyle = clipPath ? { clipPath } : undefined;
-  /* 激活后按网格入场节奏淡入；离开立即隐藏。
-     Safari 不能对 backdrop-filter 插值 opacity，否则整层闪；到期后瞬间显现。 */
+  /* 激活后按网格入场节奏淡入；离开立即隐藏 */
   const appearStyle = isActive
     ? {
         opacity: 1,
-        transition: isSafariFogClient()
-          ? `opacity 0s linear ${appearDelay}s`
-          : `opacity ${appearDuration}s linear ${appearDelay}s`,
+        transition: `opacity ${appearDuration}s linear ${appearDelay}s`,
       }
     : { opacity: 0, transition: "none" };
 
