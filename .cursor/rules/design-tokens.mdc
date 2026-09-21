@@ -8,6 +8,8 @@ alwaysApply: true
 令牌源文件：`design/tokens/*.tokens.json`（Figma 变量导出，为唯一事实来源）。
 CSS 变量定义在 `src/app/globals.css` 的 `@theme` 块中，样式一律使用令牌值，不要使用刻度外的任意值。
 
+例外：桌面态尺寸需随视口等比缩放时，写成 `calc(var(--su) * N)`，其中 `N` 仍必须取自下列刻度——倍率只放大稿面尺寸，不新增刻度值。缩放机制见 `responsive-layout` 的「内容缩放」一节。
+
 当前集合：`color`、`font-family`、`font-size`、`font-weight`、`line-height`、`radius`、`spacing`。
 
 ## 颜色（Color）
@@ -24,8 +26,8 @@ CSS 变量定义在 `src/app/globals.css` 的 `@theme` 块中，样式一律使�
 - 字体族（FontFamily）：`Noto Serif SC`（中文衬线，主字体）、`Libre Bodoni`（西文衬线，标题/装饰）。
   - Tailwind：`font-serif-sc`、`font-bodoni`。
 - 字号刻度（FontSize，px）：10 / 12 / 14 / 16 / 18 / 20 / 24 / 28 / 32 / 36 / 40 / 44 / 48 / 52 / 56 / 60 / 100。
-  - Tailwind：`text-10` ~ `text-60`、`text-100`。
-- 行高刻度（LineHeight，px）：14 / 18 / 20 / 24 / 26 / 28 / 32 / 36 / 40 / 44 / 48 / 52 / 56 / 60 / 64 / 68，用 `leading-[Npx]` 或与字号配对。
+  - Tailwind：`text-10` ~ `text-60`、`text-100`；桌面态随视口缩放时用 `text-[length:calc(var(--su)*N)]`。
+- 行高刻度（LineHeight，px）：14 / 18 / 20 / 24 / 26 / 28 / 32 / 36 / 40 / 44 / 48 / 52 / 56 / 60 / 64 / 68，用 `leading-[Npx]` 或与字号配对；随视口缩放时用 `leading-[calc(var(--su)*N)]`。
 - 字重（FontWeight）：Regular 400、Medium 500、SemiBold 600（已取消独立 FontStyle 集合）。
   - Noto Serif SC：仅 Light 300、Regular 400、Medium 500 三档，禁止 SemiBold / 其他字重。
   - Libre Bodoni：Regular 400、Medium 500、SemiBold 600 三档（如 `font-semibold`）。
@@ -37,7 +39,7 @@ CSS 变量定义在 `src/app/globals.css` 的 `@theme` 块中，样式一律使�
 
 0 / 2 / 4 / 6 / 8 / 10 / 12 / 16 / 20 / 24 / 28 / 32 / 36 / 40 / 44 / 48 / 52 / 56 / 60 / 64 / 68 / 72 / 76 / 80
 
-Tailwind 默认 4px 基数刻度可直接映射（如 `gap-5` = 20px、`p-10` = 40px）；6px 用 `p-1.5`、10px 用 `p-2.5`。不使用刻度以外的间距值。
+Tailwind 默认 4px 基数刻度可直接映射（如 `gap-5` = 20px、`p-10` = 40px）；6px 用 `p-1.5`、10px 用 `p-2.5`。不使用刻度以外的间距值；桌面态随视口缩放时写 `gap-[calc(var(--su)*20)]` 这类形式，括号内仍取本刻度。
 
 ## 圆角（Radius）
 
