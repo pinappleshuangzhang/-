@@ -1,0 +1,41 @@
+---
+description: 浏览器兼容与分端规范（Safari/WebKit、移动端、重效果降级），源自实际踩坑
+alwaysApply: true
+---
+
+# 浏览器兼容与分端规范
+
+支持基线（`package.json` 的 browserslist）：Chrome ≥ 100、Safari ≥ 15、Firefox ≥ 100、Edge ≥ 100。不要收窄；输出语法必须兼容 Safari 15（曾因新语法导致 Safari 15 整页无法滑动）。
+
+## 判端与分包
+
+- 判断桌面/移动一律用 `@/hooks/use-desktop-media`（`min-width: 768px`，SSR 按移动端返回 false），不要另写 `matchMedia` 或 UA 嗅探判端。
+- 重资源（WebGL 效果、桌面视频、大图）按端拆分加载：移动端不得下载桌面分包，反之亦然。
+- 判 WebKit（选视频编码等）参考 `alpha-scrub-video.tsx` 的 `pickSource`：iOS 上所有浏览器（含 iPhone Chrome）都是 WebKit，按 Safari 处理。
+
+## 视频
+
+- 透明（alpha）视频必须双源：VP9 WebM（Chrome/Firefox/Edge）+ HEVC alpha MP4（Safari 与全部 iOS 浏览器）。WebKit 不支持 VP9 alpha，只给 WebM 会黑底。
+- 需要真实下载进度的预载用 XHR + blob（见 `@/hooks/use-video-preloader`），不要依赖 `<video>` 的 `progress` 事件——Safari 下不稳定，曾导致加载卡死在 0%。
+- 首屏以下视频 `preload="none"`，进入视口再加载；手机端提供更低码率的独立文件。
+
+## Safari 重效果降级（必须）
+
+新增或改动以下类型的效果时，必须在 Safari 实测，且预留降级路径：
+
+- **backdrop-filter + mask**：Safari 每次换 mask / 改 transform 会整层重采样闪烁。对策见 `fog-glass-engine.ts`：限制 mask 更新频率、mask 用 1× 分辨率、用 `left/top` 而非 `transform` 定位、位置取整、用 blob URL 而非 data:URL。仍不可接受时整段降级（Safari 不渲染雾玻璃，改 hover 播放动画）。
+- **WebGL**：Safari 下关 MSAA、压像素比；画布输出与合成层保持预乘 alpha 一致，否则光斑/边缘出现外框。渲染循环必须"静止即停帧"，禁止空转 rAF——Safari 曾因此持续 GPU 满载。
+- **Canvas 2D 大批量绘制**：Safari 无法像 Chrome（Skia）那样合批上万次 drawImage，整屏字形/粒子类绘制要预构建 + 分帧（按时间预算切片），参考 `ascii-curtain.ts`。
+- **图片 mask 换帧**：Safari 异步解码，帧未就绪就换会闪一帧全遮，先解码完成再切（见 `dissolve-mask.ts`）。
+
+降级原则：症状明确修不动时，果断按 `isSafari` 分支关掉效果、退化为静态或 hover 触发，不要无限调参。
+
+## 移动端布局与滚动
+
+- iOS Safari 页面内可滚区域会被 Lenis / 全局触控拦截吃掉事件：移动端区块需要原生滚动时，必须放开 Lenis 与 `touch-action` 拦截（曾导致第三屏、第五屏完全不能滚）。
+- 高度不定的手机视口里，"大图自适应收缩"和"弹性间隔"都验证失败过；采用**固定间距 + 正文区内部滚动 + 操作按钮固定在底部工具条**的确定性布局。
+- 移动端禁止使用 `--su` / `--su-hero`（见 responsive-layout 规则），按对应设计稿画板（390 宽）实现。
+
+## 提测要求
+
+涉及视频、WebGL、backdrop-filter、Canvas、滚动交互的改动，合入前至少在 macOS Safari 与 iOS Safari（真机或模拟器）各过一遍；只在 Chrome 验证不算通过。
