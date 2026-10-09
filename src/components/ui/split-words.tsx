@@ -26,15 +26,18 @@ export function segmentWords(text: string): string[] {
 export function SplitWords({
   text,
   animated = true,
+  wrap = false,
 }: {
   text: string;
   animated?: boolean;
+  /** 词间用普通空格，允许按容器宽度折行 */
+  wrap?: boolean;
 }) {
   return (
     <>
       {segmentWords(text).map((word, index) =>
         word.trim() === "" ? (
-          "\u00A0"
+          wrap ? " " : "\u00A0"
         ) : (
           <span
             key={`${word}-${index}`}

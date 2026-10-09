@@ -42,7 +42,10 @@ import {
   MEMBER_TOP_RIGHT_FOG_BOX_CLASS,
   MEMBER_TOP_RIGHT_FOG_CLIP,
 } from "@/lib/member-record-cells";
-import { memberTextLayout } from "@/lib/member-record-profile-layout";
+import {
+  MEMBER_TEXT_LAYOUT_EN,
+  memberTextLayout,
+} from "@/lib/member-record-profile-layout";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { SplitWords } from "@/components/ui/split-words";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
@@ -88,7 +91,8 @@ export function MemberRecord() {
   const container = useRef<HTMLElement>(null);
   const isActive = useScreenActive();
   const reducedMotion = useReducedMotion();
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
+  const isEn = locale === "en";
 
   useGSAP(
     () => {
@@ -207,7 +211,9 @@ export function MemberRecord() {
               name="South"
               role={t("member.role01")}
               direction={t("member.direction01")}
-              {...memberTextLayout(
+              {...(isEn
+                ? MEMBER_TEXT_LAYOUT_EN["01"]
+                : memberTextLayout(
                 {
                   headerClassName: "left-[2.472%] top-[5.573%] w-[24.85%]",
                   dividerClassName: "left-[2.472%] top-[10.611%]",
@@ -224,14 +230,16 @@ export function MemberRecord() {
                     "left-[2.472%] top-[calc(17.47%_+_var(--su)*50)] w-[24.85%]",
                   actionsClassName: "left-[2.472%] top-[23.902%]",
                 },
-              )}
+              ))}
             />
             <MemberProfile
               identifier="02"
               name="Sheep"
               role={t("member.role02")}
               direction={t("member.direction02")}
-              {...memberTextLayout(
+              {...(isEn
+                ? MEMBER_TEXT_LAYOUT_EN["02"]
+                : memberTextLayout(
                 {
                   headerClassName: "left-[66.142%] top-[5.573%] w-[24.85%]",
                   dividerClassName: "left-[67.491%] top-[10.611%]",
@@ -248,14 +256,16 @@ export function MemberRecord() {
                     "left-[70.884%] top-[calc(15.434%_+_var(--su)*50)] w-[24.85%]",
                   actionsClassName: "left-[71.985%] top-[23.902%]",
                 },
-              )}
+              ))}
             />
             <MemberProfile
               identifier="03"
               name="Joe"
               role={t("member.role03")}
               direction={t("member.direction03")}
-              {...memberTextLayout(
+              {...(isEn
+                ? MEMBER_TEXT_LAYOUT_EN["03"]
+                : memberTextLayout(
                 {
                   headerClassName: "left-[28.367%] top-[39.228%] w-[19.69%]",
                   dividerClassName: "left-[28.367%] top-[44.266%]",
@@ -272,14 +282,16 @@ export function MemberRecord() {
                     "left-[28.368%] top-[calc(51.233%_+_var(--su)*50)] w-[19.69%]",
                   actionsClassName: "left-[28.367%] top-[58.306%]",
                 },
-              )}
+              ))}
             />
             <MemberProfile
               identifier="04"
               name="Pineapple"
               role={t("member.role04")}
               direction={t("member.direction04")}
-              {...memberTextLayout(
+              {...(isEn
+                ? MEMBER_TEXT_LAYOUT_EN["04"]
+                : memberTextLayout(
                 {
                   headerClassName: "left-[68.263%] top-[39.228%] w-[24.85%]",
                   dividerClassName: "left-[67.514%] top-[44.266%]",
@@ -296,7 +308,7 @@ export function MemberRecord() {
                     "left-[67.066%] top-[calc(48.446%_+_var(--su)*50)] w-[24.85%]",
                   actionsClassName: "left-[64.97%] top-[58.306%]",
                 },
-              )}
+              ))}
             />
             <DesktopGravaCell />
             <DesktopMemberMark />
@@ -633,8 +645,15 @@ function MemberProfile({
   directionClassName,
   actionsClassName,
 }: MemberProfileProps) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
+  const isEn = locale === "en";
   const textColor = "text-white";
+  const headerSize = isEn
+    ? "text-14 leading-normal md:text-[length:calc(var(--su)*14)]"
+    : "text-16 md:text-[length:calc(var(--su)*16)]";
+  const bodySize = isEn
+    ? "text-16 leading-normal md:text-[length:calc(var(--su)*16)]"
+    : "text-18 leading-[26px] md:text-[length:calc(var(--su)*18)] md:leading-[calc(var(--su)*26)]";
 
   return (
     <div className="pointer-events-none absolute inset-0">
@@ -642,7 +661,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.2"
         aria-label={`${t("member.investigator")}_${identifier}_${role}`}
-        className={`absolute z-10 text-16 md:text-[length:calc(var(--su)*16)] ${textColor} ${headerClassName}`}
+        className={`absolute z-10 whitespace-nowrap ${headerSize} ${textColor} ${headerClassName}`}
       >
         <span className="font-serif-sc font-normal">
           <SplitWords text={t("member.investigator")} />
@@ -660,7 +679,7 @@ function MemberProfile({
         className={`absolute z-10 origin-left scale-x-0 border-t border-dashed border-white/30 ${dividerClassName}`}
         aria-hidden="true"
       >
-        <span className="invisible whitespace-nowrap text-16 md:text-[length:calc(var(--su)*16)]">
+        <span className={`invisible whitespace-nowrap ${headerSize}`}>
           <span className="font-serif-sc font-normal">
             {t("member.investigator")}
           </span>
@@ -672,7 +691,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.3"
         aria-label={`${t("member.namePrefix")}${name}`}
-        className={`absolute z-10 whitespace-nowrap text-18 leading-[26px] md:text-[length:calc(var(--su)*18)] md:leading-[calc(var(--su)*26)] ${textColor} ${nameClassName}`}
+        className={`absolute z-10 whitespace-nowrap ${bodySize} ${textColor} ${nameClassName}`}
       >
         <span className="font-serif-sc font-normal">
           <SplitWords text={t("member.namePrefix")} />
@@ -685,13 +704,17 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.4"
         aria-label={direction.replace(/\n/g, " ")}
-        className={`absolute z-10 whitespace-nowrap font-serif-sc text-18 font-normal leading-[26px] md:text-[length:calc(var(--su)*18)] md:leading-[calc(var(--su)*26)] ${textColor} ${directionClassName}`}
+        className={`absolute z-10 font-serif-sc font-normal ${isEn ? "" : "whitespace-nowrap"} ${bodySize} ${textColor} ${directionClassName}`}
       >
-        {direction.split("\n").map((line, lineIndex) => (
-          <span key={`${line}-${lineIndex}`} className="block">
-            <SplitWords text={line} />
-          </span>
-        ))}
+        {isEn ? (
+          <SplitWords text={direction.replace(/\n/g, " ")} wrap />
+        ) : (
+          direction.split("\n").map((line, lineIndex) => (
+            <span key={`${line}-${lineIndex}`} className="block">
+              <SplitWords text={line} />
+            </span>
+          ))
+        )}
       </p>
       <div
         data-sd-words
