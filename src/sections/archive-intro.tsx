@@ -34,12 +34,6 @@ const FOLDER_VIDEO_MOBILE_HEVC =
   "/archive/archive-folder-yellow-alpha-mobile-hevc.mp4?v=raw1";
 /** 进屏后书本视频一次性播完的总时长（与文字无关）。 */
 const AUTO_DURATION = 9;
-/** 换段后至少吞掉这么久的向下滚动，抵消触控板惯性。 */
-const SWAP_ABSORB_MS = 900;
-/** 滚轮事件间隔小于此值视为同一次手势的惯性，继续吞掉。 */
-const GESTURE_GAP_MS = 250;
-/** 换段后吞噬的硬上限：超过此时长后向下滚一律放行，避免连续滚动卡死。 */
-const SWAP_ABSORB_MAX_MS = 1600;
 const MOBILE_QUERY = "(max-width: 767px)";
 
 function subscribeMobileViewport(callback: () => void) {
@@ -91,16 +85,23 @@ function segmentWords(text: string): string[] {
   return attachClosingPunctuation(text.split(/(\s+)/).filter(Boolean));
 }
 
-/** 逐词入场、逐字变色文本：外层词 span 供入场动画，内层字 span 供滚动点亮。 */
-function ScrubText({
+/** 逐词入场文本：词 span 供 Son Daven 式入场动画。 */
+function RevealText({
   text,
   revealDelay,
+  className,
 }: {
   text: string;
   revealDelay?: number;
+  className?: string;
 }) {
   return (
-    <p aria-label={text} data-sd-words data-sd-delay={revealDelay}>
+    <p
+      aria-label={text}
+      data-sd-words
+      data-sd-delay={revealDelay}
+      className={className}
+    >
       {segmentWords(text).map((word, wordIndex) =>
         word.trim() === "" ? (
           word
@@ -110,11 +111,7 @@ function ScrubText({
             aria-hidden="true"
             className="sd-word inline-block opacity-0"
           >
-            {Array.from(word).map((char, charIndex) => (
-              <span key={charIndex} data-scrub-char>
-                {char}
-              </span>
-            ))}
+            {word}
           </span>
         ),
       )}
@@ -122,42 +119,16 @@ function ScrubText({
   );
 }
 
-/** 文案内 \n 拆成多行 ScrubText，英文手动断行以控制行数 */
-function ScrubLines({
-  text,
-  revealDelay,
-}: {
-  text: string;
-  revealDelay?: number;
-}) {
-  return text
-    .split("\n")
-    .map((line, lineIndex) => (
-      <ScrubText
-        key={`${line}-${lineIndex}`}
-        text={line}
-        revealDelay={revealDelay}
-      />
-    ));
-}
-
 /**
  * 第二屏：档案 GA_001《什么是引力？》
- * 视频与文字解耦：进屏后书本视频自顾自播到结束；
- * 第一次向下滑换第二段文案，再向下滑才切屏，向上滑随时回上一屏
- * （桌面滚轮与手机触摸滑动走同一套拦截状态机）。
+ * 视频与文字解耦：进屏后书本视频自顾自播到结束，文案整段逐词入场
+ * （Figma 1397:305 / 1397:436）。
  */
 export function ArchiveIntro() {
   const container = useRef<HTMLElement>(null);
   const cornerTitlesRef = useRef<HTMLDivElement>(null);
   const videoHandleRef = useRef<AlphaScrubVideoHandle>(null);
-  const textTimelineRef = useRef<gsap.core.Timeline | null>(null);
-
-  /** 0 = 第一段文案在屏，1 = 已换第二段 */
-  const copyStageRef = useRef<0 | 1>(0);
-  const swapAtRef = useRef(0);
-  const lastAbsorbedDownAtRef = useRef(0);
-  const hasPlayedFirstCopyEntranceRef = useRef(false);
+  const hasPlayedCopyEntranceRef = useRef(false);
 
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
@@ -171,7 +142,7 @@ export function ArchiveIntro() {
     getMobileViewportServerSnapshot,
   );
   const isActive = useScreenActive();
-  const { registerScrollInterceptor, navigationLocked } = useSectionPager();
+  const { navigationLocked } = useSectionPager();
   const { t, locale } = useLocale();
   const isEnglish = locale === "en";
 
@@ -180,32 +151,29 @@ export function ArchiveIntro() {
     setVideoAllowed(true);
   }
 
-  // 书内第一段由本屏自己入场；两段都排除整屏统一入场，避免第二段被一起点亮后叠字。
+  // 书内文案由本屏自己入场，并排除整屏统一入场，避免重复点亮。
   useGSAP(
     () => {
-      const root = container.current;
-      const primaryCopy = root?.querySelector<HTMLElement>("[data-swap-a]");
-      if (!primaryCopy) return;
+      const copy = container.current?.querySelector<HTMLElement>(
+        "[data-intro-copy]",
+      );
+      if (!copy) return;
 
       if (reducedMotion) {
-        setSondavenVisible(primaryCopy);
+        setSondavenVisible(copy);
         return;
       }
       if (!isActive) {
-        if (!hasPlayedFirstCopyEntranceRef.current) {
-          setSondavenHidden(primaryCopy);
-        }
+        if (!hasPlayedCopyEntranceRef.current) setSondavenHidden(copy);
         return;
       }
-      if (hasPlayedFirstCopyEntranceRef.current) {
-        if (copyStageRef.current === 0) {
-          setSondavenVisible(primaryCopy);
-        }
+      if (hasPlayedCopyEntranceRef.current) {
+        setSondavenVisible(copy);
         return;
       }
 
-      hasPlayedFirstCopyEntranceRef.current = true;
-      playSondavenReveal(primaryCopy);
+      hasPlayedCopyEntranceRef.current = true;
+      playSondavenReveal(copy);
     },
     {
       dependencies: [isActive, isMobileViewport, reducedMotion, locale],
@@ -236,127 +204,17 @@ export function ArchiveIntro() {
     },
   );
 
-  // 滚动状态机（滚轮与触摸共用）：第一次向下滑换第二段文案，
-  // 第二次才放行切屏；向上滑始终直接回上一屏。只管文字，不碰视频。
-  useEffect(() => {
-    if (!isActive || reducedMotion) {
-      return;
-    }
-    return registerScrollInterceptor((deltaY) => {
-      if (deltaY < 0) return false;
-      const now = performance.now();
-      if (copyStageRef.current === 0) {
-        copyStageRef.current = 1;
-        swapAtRef.current = now;
-        lastAbsorbedDownAtRef.current = now;
-        textTimelineRef.current?.play();
-        return true;
-      }
-      // 换段后：最小窗口内一律吞掉；窗口外若滚轮仍连续（惯性）继续吞，
-      // 但超过硬上限后放行，避免连续滚动永远出不去。
-      const sinceSwap = now - swapAtRef.current;
-      if (
-        sinceSwap < SWAP_ABSORB_MS ||
-        (sinceSwap < SWAP_ABSORB_MAX_MS &&
-          now - lastAbsorbedDownAtRef.current < GESTURE_GAP_MS)
-      ) {
-        lastAbsorbedDownAtRef.current = now;
-        return true;
-      }
-      return false;
-    });
-  }, [isActive, reducedMotion, registerScrollInterceptor]);
-
-  useGSAP(
-    () => {
-      const root = container.current;
-      if (!root) return;
-
-      // 换段时间轴（真实秒数，触发后一次性播完）：
-      //   0 ~ 0.7   第一段逐词退场
-      //   0.6 起    切到第二段并逐词入场
-      const charsA = gsap.utils.toArray<HTMLElement>(
-        "[data-swap-a] [data-scrub-char]",
-        root,
-      );
-      const wordsA = gsap.utils.toArray<HTMLElement>(
-        "[data-swap-a] .sd-word",
-        root,
-      );
-      const charsB = gsap.utils.toArray<HTMLElement>(
-        "[data-swap-b] [data-scrub-char]",
-        root,
-      );
-      const wordsB = gsap.utils.toArray<HTMLElement>(
-        "[data-swap-b] .sd-word",
-        root,
-      );
-      const shuffledWordsA = gsap.utils.shuffle([...wordsA]);
-      const shuffledWordsB = gsap.utils.shuffle([...wordsB]);
-      const swapA = root.querySelector<HTMLElement>("[data-swap-a]");
-      const swapB = root.querySelector<HTMLElement>("[data-swap-b]");
-      gsap.set(wordsA, { opacity: 1, yPercent: 0, scale: 1 });
-      gsap.set(wordsB, { opacity: 0, yPercent: 75, scale: 0 });
-      if (swapB) gsap.set(swapB, { autoAlpha: 0 });
-      if (swapA) gsap.set(swapA, { autoAlpha: 1 });
-      gsap.set([charsA, charsB], { color: "var(--color-grey-400)" });
-
-      const timeline = gsap.timeline({ paused: true });
-      timeline
-        .to(
-          shuffledWordsA,
-          {
-            opacity: 0,
-            yPercent: 75,
-            scale: 0,
-            duration: 0.45,
-            ease: "power2.in",
-            stagger: { amount: 0.25 },
-          },
-          0,
-        )
-        .to(swapA, { autoAlpha: 0, duration: 0.01 }, 0.6)
-        .to(swapB, { autoAlpha: 1, duration: 0.01 }, 0.6)
-        .to(
-          shuffledWordsB,
-          {
-            opacity: 1,
-            yPercent: 0,
-            scale: 1,
-            duration: 0.7,
-            ease: "power2.out",
-            stagger: 0.04,
-          },
-          0.65,
-        );
-      textTimelineRef.current = timeline;
-      // locale 切换会重建文案节点；若已换到第二段，直接落到终态。
-      if (copyStageRef.current === 1) timeline.progress(1);
-
-      return () => {
-        textTimelineRef.current = null;
-      };
-    },
-    { dependencies: [locale], scope: container },
-  );
-
   // 进屏后视频自顾自整段播完；离屏复位。
   useEffect(() => {
     videoHandleRef.current?.pause();
 
     if (!isActive) {
-      copyStageRef.current = 0;
-      swapAtRef.current = 0;
-      lastAbsorbedDownAtRef.current = 0;
-      hasPlayedFirstCopyEntranceRef.current = false;
-      textTimelineRef.current?.pause().progress(0);
+      hasPlayedCopyEntranceRef.current = false;
       videoHandleRef.current?.seekTo(0);
       return;
     }
 
     if (reducedMotion) {
-      copyStageRef.current = 1;
-      textTimelineRef.current?.progress(1);
       videoHandleRef.current?.seekTo(1);
       return;
     }
@@ -449,74 +307,54 @@ export function ArchiveIntro() {
             </div>
           </div>
 
-          {/* 卡片内文字：移动端 Figma 701:201/202 = 14px、左 67、顶 368 */}
+          {/* 卡片内文字：桌面 Figma 1397:315 / 1397:448；移动端沿用 701:204 卡片内左缘 */}
           <div
-            className={`absolute left-[8.6538%] top-[35.2%] w-[49.4%] ${
+            data-intro-copy
+            data-sd-global-ignore
+            className={`absolute left-[8.6538%] top-[26%] flex w-[55%] flex-col gap-1 font-serif-sc font-normal text-grey-400 ${
               isEnglish
-                ? "-translate-y-4 md:left-[calc(var(--su)*52)] md:top-[calc(35.7%-var(--su)*36)] md:w-[calc(var(--su)*308)]"
-                : "md:left-[calc(var(--su)*52)] md:top-[35.7%] md:w-[55%]"
+                ? "md:left-[calc(var(--su)*52)] md:top-[calc(var(--su)*140)] md:w-[calc(var(--su)*269)] md:gap-[calc(var(--su)*4)]"
+                : "md:left-[calc(var(--su)*64)] md:top-[calc(var(--su)*126)] md:w-[calc(var(--su)*256)] md:gap-[calc(var(--su)*8)]"
             }`}
           >
-            <div className="relative">
-              <div
-                data-swap-a
-                data-sd-global-ignore
-                className={`flex flex-col gap-3 md:gap-[calc(var(--su)*24)] ${
+            <div
+              className={`flex flex-col gap-1.5 ${
+                isEnglish
+                  ? "md:gap-[calc(var(--su)*8)]"
+                  : "md:gap-[calc(var(--su)*10)]"
+              }`}
+            >
+              <RevealText
+                text={t("intro.line1")}
+                revealDelay={0.4}
+                className={`text-12 leading-[18px] md:leading-normal ${
                   isEnglish
-                    ? "md:relative md:top-[calc(var(--su)*26)] md:translate-y-5"
-                    : ""
+                    ? "md:text-[length:calc(var(--su)*16)]"
+                    : "md:text-[length:calc(var(--su)*18)]"
                 }`}
-              >
-                <div
-                  className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200/40 ${
-                    isEnglish
-                      ? "max-md:text-12 max-md:leading-[18px] md:text-[length:calc(var(--su)*20)] md:leading-[calc(var(--su)*28)]"
-                      : "whitespace-nowrap md:text-[length:calc(var(--su)*24)] md:leading-normal"
-                  }`}
-                >
-                  <ScrubLines text={t("intro.line1")} revealDelay={0.4} />
-                </div>
-                <div
-                  className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200/40 ${
-                    isEnglish
-                      ? "max-md:text-12 max-md:leading-[18px] md:w-[calc(var(--su)*308)] md:text-[length:calc(var(--su)*20)] md:leading-[calc(var(--su)*28)]"
-                      : "whitespace-nowrap md:text-[length:calc(var(--su)*24)] md:leading-normal"
-                  }`}
-                >
-                  <ScrubLines text={t("intro.line2a")} revealDelay={0.5} />
-                  <ScrubLines text={t("intro.line2b")} revealDelay={0.55} />
-                  <ScrubLines text={t("intro.line2c")} revealDelay={0.6} />
-                </div>
-              </div>
+              />
               <div
-                data-swap-b
-                data-sd-global-ignore
-                className={`absolute left-0 top-[-11px] flex w-[124.6%] flex-col gap-3 md:inset-x-0 ${
+                className={
                   isEnglish
-                    ? "md:top-0 md:w-[calc(var(--su)*308)] md:gap-2 md:translate-y-2.5"
-                    : "md:top-[calc(var(--su)*-10)] md:w-auto md:gap-[calc(var(--su)*24)]"
-                }`}
+                    ? "text-10 leading-[16px] md:text-[length:calc(var(--su)*14)] md:leading-[calc(var(--su)*25)]"
+                    : "text-12 leading-[18px] md:text-[length:calc(var(--su)*16)] md:leading-[calc(var(--su)*28)]"
+                }
               >
-                <div
-                  className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200/40 ${
-                    isEnglish
-                      ? "max-md:text-12 max-md:leading-[18px] md:text-[length:calc(var(--su)*20)] md:leading-[calc(var(--su)*32)]"
-                      : "md:text-[length:calc(var(--su)*24)] md:leading-normal"
-                  }`}
-                >
-                  <ScrubLines text={t("intro.bridge")} />
-                </div>
-                <div
-                  className={`font-serif-sc text-32 font-normal leading-[46px] text-grey-200/40 ${
-                    isEnglish
-                      ? "md:relative md:-top-1 md:text-[length:calc(var(--su)*48)] md:leading-[calc(var(--su)*70)]"
-                      : "md:text-[length:calc(var(--su)*48)] md:leading-normal"
-                  }`}
-                >
-                  <ScrubText text={t("intro.gravity")} />
-                </div>
+                <RevealText text={t("intro.line2a")} revealDelay={0.5} />
+                <RevealText text={t("intro.line2b")} revealDelay={0.55} />
+                <RevealText text={t("intro.line2c")} revealDelay={0.6} />
+                <RevealText text={t("intro.bridge")} revealDelay={0.65} />
               </div>
             </div>
+            <RevealText
+              text={t("intro.gravity")}
+              revealDelay={0.7}
+              className={`text-24 leading-normal ${
+                isEnglish
+                  ? "md:text-[length:calc(var(--su)*40)]"
+                  : "md:text-[length:calc(var(--su)*44)]"
+              }`}
+            />
           </div>
         </div>
       </div>
