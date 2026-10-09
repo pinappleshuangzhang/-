@@ -8,8 +8,8 @@ export type MemberTextLayout = {
   actionsClassName: string;
 };
 
-/** 英文版位置（Figma 1406:784），调查方向按限宽自然折行 */
-export const MEMBER_TEXT_LAYOUT_EN: Record<
+/** 桌面端中英文共用位置（Figma 1406:784），右侧两组与左侧行高对齐 */
+export const MEMBER_TEXT_LAYOUT: Record<
   "01" | "02" | "03" | "04",
   MemberTextLayout
 > = {

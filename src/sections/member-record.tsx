@@ -42,10 +42,7 @@ import {
   MEMBER_TOP_RIGHT_FOG_BOX_CLASS,
   MEMBER_TOP_RIGHT_FOG_CLIP,
 } from "@/lib/member-record-cells";
-import {
-  MEMBER_TEXT_LAYOUT_EN,
-  memberTextLayout,
-} from "@/lib/member-record-profile-layout";
+import { MEMBER_TEXT_LAYOUT } from "@/lib/member-record-profile-layout";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { SplitWords } from "@/components/ui/split-words";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
@@ -91,8 +88,7 @@ export function MemberRecord() {
   const container = useRef<HTMLElement>(null);
   const isActive = useScreenActive();
   const reducedMotion = useReducedMotion();
-  const { locale, t } = useLocale();
-  const isEn = locale === "en";
+  const { t } = useLocale();
 
   useGSAP(
     () => {
@@ -211,104 +207,28 @@ export function MemberRecord() {
               name="South"
               role={t("member.role01")}
               direction={t("member.direction01")}
-              {...(isEn
-                ? MEMBER_TEXT_LAYOUT_EN["01"]
-                : memberTextLayout(
-                {
-                  headerClassName: "left-[2.472%] top-[5.573%] w-[24.85%]",
-                  dividerClassName: "left-[2.472%] top-[10.611%]",
-                  nameClassName: "left-[2.472%] top-[13.183%] w-[24.85%]",
-                  directionClassName:
-                    "left-[2.472%] top-[calc(13.183%_+_var(--su)*50)] w-[24.85%]",
-                  actionsClassName: "left-[2.472%] top-[23.902%]",
-                },
-                {
-                  headerClassName: "left-[2.472%] top-[9.861%] w-[24.85%]",
-                  dividerClassName: "left-[2.472%] top-[14.898%]",
-                  nameClassName: "left-[2.472%] top-[17.47%] w-[24.85%]",
-                  directionClassName:
-                    "left-[2.472%] top-[calc(17.47%_+_var(--su)*50)] w-[24.85%]",
-                  actionsClassName: "left-[2.472%] top-[23.902%]",
-                },
-              ))}
+              {...MEMBER_TEXT_LAYOUT["01"]}
             />
             <MemberProfile
               identifier="02"
               name="Sheep"
               role={t("member.role02")}
               direction={t("member.direction02")}
-              {...(isEn
-                ? MEMBER_TEXT_LAYOUT_EN["02"]
-                : memberTextLayout(
-                {
-                  headerClassName: "left-[66.142%] top-[5.573%] w-[24.85%]",
-                  dividerClassName: "left-[67.491%] top-[10.611%]",
-                  nameClassName: "left-[68.614%] top-[13.183%] w-[24.85%]",
-                  directionClassName:
-                    "left-[70.187%] top-[calc(13.183%_+_var(--su)*50)] w-[24.85%]",
-                  actionsClassName: "left-[71.985%] top-[23.902%]",
-                },
-                {
-                  headerClassName: "left-[68.115%] top-[7.824%] w-[24.85%]",
-                  dividerClassName: "left-[68.714%] top-[12.862%]",
-                  nameClassName: "left-[70.061%] top-[15.434%] w-[24.85%]",
-                  directionClassName:
-                    "left-[70.884%] top-[calc(15.434%_+_var(--su)*50)] w-[24.85%]",
-                  actionsClassName: "left-[71.985%] top-[23.902%]",
-                },
-              ))}
+              {...MEMBER_TEXT_LAYOUT["02"]}
             />
             <MemberProfile
               identifier="03"
               name="Joe"
               role={t("member.role03")}
               direction={t("member.direction03")}
-              {...(isEn
-                ? MEMBER_TEXT_LAYOUT_EN["03"]
-                : memberTextLayout(
-                {
-                  headerClassName: "left-[28.367%] top-[39.228%] w-[19.69%]",
-                  dividerClassName: "left-[28.367%] top-[44.266%]",
-                  nameClassName: "left-[28.367%] top-[46.838%] w-[19.69%]",
-                  directionClassName:
-                    "left-[28.367%] top-[calc(46.838%_+_var(--su)*50)] w-[19.69%]",
-                  actionsClassName: "left-[28.367%] top-[58.306%]",
-                },
-                {
-                  headerClassName: "left-[28.368%] top-[43.623%] w-[19.69%]",
-                  dividerClassName: "left-[28.368%] top-[48.66%]",
-                  nameClassName: "left-[28.368%] top-[51.233%] w-[19.69%]",
-                  directionClassName:
-                    "left-[28.368%] top-[calc(51.233%_+_var(--su)*50)] w-[19.69%]",
-                  actionsClassName: "left-[28.367%] top-[58.306%]",
-                },
-              ))}
+              {...MEMBER_TEXT_LAYOUT["03"]}
             />
             <MemberProfile
               identifier="04"
               name="Pineapple"
               role={t("member.role04")}
               direction={t("member.direction04")}
-              {...(isEn
-                ? MEMBER_TEXT_LAYOUT_EN["04"]
-                : memberTextLayout(
-                {
-                  headerClassName: "left-[68.263%] top-[39.228%] w-[24.85%]",
-                  dividerClassName: "left-[67.514%] top-[44.266%]",
-                  nameClassName: "left-[67.065%] top-[46.838%] w-[24.85%]",
-                  directionClassName:
-                    "left-[66.167%] top-[calc(46.838%_+_var(--su)*50)] w-[24.85%]",
-                  actionsClassName: "left-[64.97%] top-[58.306%]",
-                },
-                {
-                  headerClassName: "left-[69.237%] top-[40.836%] w-[24.85%]",
-                  dividerClassName: "left-[68.638%] top-[45.874%]",
-                  nameClassName: "left-[67.964%] top-[48.446%] w-[24.85%]",
-                  directionClassName:
-                    "left-[67.066%] top-[calc(48.446%_+_var(--su)*50)] w-[24.85%]",
-                  actionsClassName: "left-[64.97%] top-[58.306%]",
-                },
-              ))}
+              {...MEMBER_TEXT_LAYOUT["04"]}
             />
             <DesktopGravaCell />
             <DesktopMemberMark />
