@@ -570,7 +570,7 @@ export function Hero() {
                 : "w-0 min-w-full text-[length:calc(var(--su)*14)]"
             }`}
             barClassName={barInitial}
-            fillLineEnd
+            fillLineEnd={locale === "zh"}
           />
         </div>
       </div>
