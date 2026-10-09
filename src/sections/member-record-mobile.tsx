@@ -163,7 +163,9 @@ function MobileMemberProfile({
   actionsClassName,
   fillClassName,
 }: MobileMemberProfileProps) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
+  const separator = locale === "en" ? " _ " : "_";
+  const idLabel = `${separator}${identifier}${separator}`;
 
   return (
     <div className="group pointer-events-none absolute inset-0 font-serif-sc text-12 font-normal leading-[18px] text-white">
@@ -176,7 +178,7 @@ function MobileMemberProfile({
         className={`absolute z-10 whitespace-nowrap ${headerClassName}`}
       >
         {t("member.investigator")}
-        <span className="font-bodoni">_{identifier}_</span>
+        <span className="font-bodoni">{idLabel}</span>
         {role}
       </p>
       <span
@@ -185,7 +187,7 @@ function MobileMemberProfile({
       >
         <span className="invisible whitespace-nowrap">
           {t("member.investigator")}
-          <span className="font-bodoni">_{identifier}_</span>
+          <span className="font-bodoni">{idLabel}</span>
           {role}
         </span>
       </span>

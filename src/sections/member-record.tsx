@@ -648,26 +648,25 @@ function MemberProfile({
   const { locale, t } = useLocale();
   const isEn = locale === "en";
   const textColor = "text-white";
-  const headerSize = isEn
-    ? "text-14 leading-normal md:text-[length:calc(var(--su)*14)]"
-    : "text-16 md:text-[length:calc(var(--su)*16)]";
-  const bodySize = isEn
-    ? "text-16 leading-normal md:text-[length:calc(var(--su)*16)]"
-    : "text-18 leading-[26px] md:text-[length:calc(var(--su)*18)] md:leading-[calc(var(--su)*26)]";
+  const separator = isEn ? " _ " : "_";
+  const idLabel = `${separator}${identifier}${separator}`;
+  const headerSize =
+    "text-14 leading-normal md:text-[length:calc(var(--su)*14)]";
+  const bodySize = "text-16 leading-normal md:text-[length:calc(var(--su)*16)]";
 
   return (
     <div className="pointer-events-none absolute inset-0">
       <p
         data-sd-words
         data-sd-delay="0.2"
-        aria-label={`${t("member.investigator")}_${identifier}_${role}`}
+        aria-label={`${t("member.investigator")}${idLabel}${role}`}
         className={`absolute z-10 whitespace-nowrap ${headerSize} ${textColor} ${headerClassName}`}
       >
         <span className="font-serif-sc font-normal">
           <SplitWords text={t("member.investigator")} />
         </span>
         <span className="font-bodoni font-normal">
-          <SplitWords text={`_${identifier}_`} />
+          <SplitWords text={idLabel} />
         </span>
         <span className="font-serif-sc font-normal">
           <SplitWords text={role} />
@@ -683,7 +682,7 @@ function MemberProfile({
           <span className="font-serif-sc font-normal">
             {t("member.investigator")}
           </span>
-          <span className="font-bodoni font-normal">_{identifier}_</span>
+          <span className="font-bodoni font-normal">{idLabel}</span>
           <span className="font-serif-sc font-normal">{role}</span>
         </span>
       </span>
@@ -696,7 +695,7 @@ function MemberProfile({
         <span className="font-serif-sc font-normal">
           <SplitWords text={t("member.namePrefix")} />
         </span>
-        <span className="font-serif-sc font-medium">
+        <span className="font-serif-sc font-normal">
           <SplitWords text={name} />
         </span>
       </p>
