@@ -233,7 +233,7 @@ const zh: Messages = {
   "index.ga004": "《视觉调查档案》",
   "index.ga006": "《开启一份新调查》",
   "hero.title": "万有引力设计档案室",
-  "hero.subtitle": "为品牌、产品与体验，建立被选择的引力。",
+  "hero.subtitle": "为品牌、产品与体验，建立被选择的引力",
   "hero.subtitleHighlight": "建立被选择的引力",
   "hero.scrollDown": "向下滑动",
   "hero.skipVideo": "跳过视频",

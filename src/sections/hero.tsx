@@ -571,6 +571,7 @@ export function Hero() {
                 : "text-[length:calc(var(--su)*14)]"
             }`}
             barClassName={barInitial}
+            fillLineEnd
           />
         </div>
       </div>

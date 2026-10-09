@@ -8,6 +8,8 @@ type HeroSubtitleProps = {
   lineClassName?: string;
   highlightClassName?: string;
   barClassName?: string;
+  /** 高亮在行尾时把色块延伸到容器右缘（与标题右缘对齐） */
+  fillLineEnd?: boolean;
 };
 
 function splitLine(line: string, highlight: string) {
@@ -28,6 +30,7 @@ export function HeroSubtitle({
   lineClassName = "",
   highlightClassName = "",
   barClassName = "",
+  fillLineEnd = false,
 }: HeroSubtitleProps) {
   const lines = text.split("\n");
 
@@ -40,10 +43,11 @@ export function HeroSubtitle({
     >
       {lines.map((line, lineIndex) => {
         const { before, mark, after } = splitLine(line, highlight);
+        const fill = fillLineEnd && mark !== "" && after === "";
         return (
           <span
             key={`${line}-${lineIndex}`}
-            className={`flex whitespace-nowrap ${lineClassName}`}
+            className={`flex whitespace-nowrap ${fill ? "self-stretch" : ""} ${lineClassName}`}
           >
             {before ? (
               <span>
@@ -51,7 +55,9 @@ export function HeroSubtitle({
               </span>
             ) : null}
             {mark ? (
-              <span className={`relative text-white ${highlightClassName}`}>
+              <span
+                className={`relative text-white ${fill ? "min-w-0 flex-1" : ""} ${highlightClassName}`}
+              >
                 <span
                   data-sd-bar
                   data-sd-delay="0.3"
