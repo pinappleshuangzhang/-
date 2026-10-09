@@ -481,7 +481,7 @@ const en: Messages = {
   "index.ga006": "Start A New Survey",
   "hero.title": "Grava Design Archive",
   "hero.subtitle":
-    "We Help Brands, Products, And Experiences\nEarn Attention, Preference, And Trust.",
+    "We Help Brands, Products, And Experiences Earn Attention, Preference, And Trust.",
   "hero.subtitleHighlight": "We Help",
   "hero.scrollDown": "Scroll Down",
   "hero.skipVideo": "Skip Video",

@@ -536,8 +536,7 @@ export function Hero() {
           <HeroSubtitle
             text={subtitle}
             highlight={subtitleHighlight}
-            className="flex w-full flex-col items-center gap-1 font-serif-sc text-12 uppercase leading-[18px] text-grey-400"
-            lineClassName="justify-center"
+            className="flex w-full flex-col items-center text-center font-serif-sc text-12 uppercase leading-[18px] text-grey-400"
             highlightClassName="px-1.5"
             barClassName={barInitial}
           />
@@ -565,10 +564,10 @@ export function Hero() {
           <HeroSubtitle
             text={subtitle}
             highlight={subtitleHighlight}
-            className={`flex w-full flex-col items-start text-left font-serif-sc uppercase leading-normal text-grey-400 ${
+            className={`flex flex-col items-start text-left font-serif-sc uppercase leading-normal text-grey-400 ${
               locale === "zh"
-                ? "text-[length:calc(var(--su)*16)]"
-                : "text-[length:calc(var(--su)*14)]"
+                ? "w-full text-[length:calc(var(--su)*16)]"
+                : "w-0 min-w-full text-[length:calc(var(--su)*14)]"
             }`}
             barClassName={barInitial}
             fillLineEnd
