@@ -22,11 +22,11 @@ export const MEMBER_TEXT_LAYOUT_EN: Record<
     actionsClassName: "left-[2.547%] top-[23.902%]",
   },
   "02": {
-    headerClassName: "left-[68.165%] top-[7.824%]",
-    dividerClassName: "left-[68.789%] top-[12.862%]",
-    nameClassName: "left-[70.112%] top-[15.434%]",
+    headerClassName: "left-[68.165%] top-[9.861%]",
+    dividerClassName: "left-[68.789%] top-[14.609%]",
+    nameClassName: "left-[70.112%] top-[17.181%]",
     directionClassName:
-      "left-[70.936%] top-[calc(15.434%_+_var(--su)*42)] w-[27.79%]",
+      "left-[70.936%] top-[calc(17.181%_+_var(--su)*39)] w-[27.79%]",
     actionsClassName: "left-[71.985%] top-[23.902%]",
   },
   "03": {
@@ -38,11 +38,11 @@ export const MEMBER_TEXT_LAYOUT_EN: Record<
     actionsClassName: "left-[28.367%] top-[58.306%]",
   },
   "04": {
-    headerClassName: "left-[69.312%] top-[40.836%]",
-    dividerClassName: "left-[68.713%] top-[45.874%]",
-    nameClassName: "left-[68.039%] top-[48.446%]",
+    headerClassName: "left-[69.312%] top-[43.623%]",
+    dividerClassName: "left-[68.713%] top-[48.371%]",
+    nameClassName: "left-[68.039%] top-[50.943%]",
     directionClassName:
-      "left-[67.116%] top-[calc(48.446%_+_var(--su)*42)] w-[31.61%]",
+      "left-[67.116%] top-[calc(50.943%_+_var(--su)*39)] w-[31.61%]",
     actionsClassName: "left-[64.97%] top-[58.306%]",
   },
 };
