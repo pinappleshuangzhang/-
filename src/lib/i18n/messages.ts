@@ -481,8 +481,8 @@ const en: Messages = {
   "index.ga006": "Start A New Survey",
   "hero.title": "Grava Design Archive",
   "hero.subtitle":
-    "We Help Brands, Products, And Experiences Earn Attention, Preference, And Trust",
-  "hero.subtitleHighlight": "Earn Attention, Preference, And Trust",
+    "We help brands, products, and experiences. Earn attention, preference, and trust",
+  "hero.subtitleHighlight": "",
   "hero.scrollDown": "Scroll Down",
   "hero.skipVideo": "Skip Video",
   // 尾随普通空格会被行内折叠掉，用不换行空格才能与编号隔开

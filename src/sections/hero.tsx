@@ -525,10 +525,10 @@ export function Hero() {
             data-sd-words
             data-sd-delay="0.15"
             aria-label={t("hero.title")}
-            className={`whitespace-nowrap font-serif-sc font-medium uppercase text-grey-400 ${
+            className={`whitespace-nowrap uppercase text-grey-400 ${
               locale === "zh"
-                ? "text-32 leading-[48px]"
-                : "text-28 leading-[48px]"
+                ? "font-serif-sc text-32 font-medium leading-[48px]"
+                : "font-bodoni text-28 font-normal leading-[48px]"
             }`}
           >
             <SplitWords text={t("hero.title")} />
@@ -536,7 +536,9 @@ export function Hero() {
           <HeroSubtitle
             text={subtitle}
             highlight={subtitleHighlight}
-            className="flex w-full flex-col items-center text-center font-serif-sc text-12 uppercase leading-[18px] text-grey-400"
+            className={`flex w-full flex-col items-center text-center font-serif-sc text-12 leading-[18px] text-grey-400 ${
+              locale === "zh" ? "uppercase" : ""
+            }`}
             highlightClassName="px-1.5"
             barClassName={barInitial}
           />
@@ -553,10 +555,10 @@ export function Hero() {
             data-sd-words
             data-sd-delay="0.15"
             aria-label={t("hero.title")}
-            className={`whitespace-nowrap font-serif-sc font-medium uppercase text-grey-400 ${
+            className={`whitespace-nowrap uppercase leading-none text-grey-400 ${
               locale === "zh"
-                ? "text-[length:calc(var(--su-hero)*48)] leading-none"
-                : "text-[length:calc(var(--su)*40)] leading-none"
+                ? "font-serif-sc font-medium text-[length:calc(var(--su-hero)*48)]"
+                : "font-bodoni font-normal text-[length:calc(var(--su)*40)]"
             }`}
           >
             <SplitWords text={t("hero.title")} />
@@ -564,10 +566,10 @@ export function Hero() {
           <HeroSubtitle
             text={subtitle}
             highlight={subtitleHighlight}
-            className={`flex flex-col items-start text-left font-serif-sc uppercase leading-normal text-grey-400 ${
+            className={`flex flex-col items-start text-left font-serif-sc leading-normal text-grey-400 ${
               locale === "zh"
-                ? "w-full text-[length:calc(var(--su)*16)]"
-                : "w-0 min-w-full text-[length:calc(var(--su)*14)]"
+                ? "w-full text-[length:calc(var(--su)*16)] uppercase"
+                : "w-0 min-w-full text-[length:calc(var(--su)*12)]"
             }`}
             barClassName={barInitial}
             fillLineEnd={locale === "zh"}
