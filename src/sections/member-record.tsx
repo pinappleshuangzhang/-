@@ -212,14 +212,16 @@ export function MemberRecord() {
                   headerClassName: "left-[2.472%] top-[5.573%] w-[24.85%]",
                   dividerClassName: "left-[2.472%] top-[10.611%]",
                   nameClassName: "left-[2.472%] top-[13.183%] w-[24.85%]",
-                  directionClassName: "left-[2.472%] top-[17.578%] w-[24.85%]",
+                  directionClassName:
+                    "left-[2.472%] top-[calc(13.183%_+_var(--su)*50)] w-[24.85%]",
                   actionsClassName: "left-[2.472%] top-[23.902%]",
                 },
                 {
                   headerClassName: "left-[2.472%] top-[9.861%] w-[24.85%]",
                   dividerClassName: "left-[2.472%] top-[14.898%]",
                   nameClassName: "left-[2.472%] top-[17.47%] w-[24.85%]",
-                  directionClassName: "left-[2.472%] top-[21.972%] w-[24.85%]",
+                  directionClassName:
+                    "left-[2.472%] top-[calc(17.47%_+_var(--su)*50)] w-[24.85%]",
                   actionsClassName: "left-[2.472%] top-[23.902%]",
                 },
               )}
@@ -234,14 +236,16 @@ export function MemberRecord() {
                   headerClassName: "left-[66.142%] top-[5.573%] w-[24.85%]",
                   dividerClassName: "left-[67.491%] top-[10.611%]",
                   nameClassName: "left-[68.614%] top-[13.183%] w-[24.85%]",
-                  directionClassName: "left-[70.187%] top-[17.578%] w-[24.85%]",
+                  directionClassName:
+                    "left-[70.187%] top-[calc(13.183%_+_var(--su)*50)] w-[24.85%]",
                   actionsClassName: "left-[71.985%] top-[23.902%]",
                 },
                 {
                   headerClassName: "left-[68.115%] top-[7.824%] w-[24.85%]",
                   dividerClassName: "left-[68.714%] top-[12.862%]",
                   nameClassName: "left-[70.061%] top-[15.434%] w-[24.85%]",
-                  directionClassName: "left-[70.884%] top-[19.936%] w-[24.85%]",
+                  directionClassName:
+                    "left-[70.884%] top-[calc(15.434%_+_var(--su)*50)] w-[24.85%]",
                   actionsClassName: "left-[71.985%] top-[23.902%]",
                 },
               )}
@@ -256,14 +260,16 @@ export function MemberRecord() {
                   headerClassName: "left-[28.367%] top-[39.228%] w-[19.69%]",
                   dividerClassName: "left-[28.367%] top-[44.266%]",
                   nameClassName: "left-[28.367%] top-[46.838%] w-[19.69%]",
-                  directionClassName: "left-[28.367%] top-[51.232%] w-[19.69%]",
+                  directionClassName:
+                    "left-[28.367%] top-[calc(46.838%_+_var(--su)*50)] w-[19.69%]",
                   actionsClassName: "left-[28.367%] top-[58.306%]",
                 },
                 {
                   headerClassName: "left-[28.368%] top-[43.623%] w-[19.69%]",
                   dividerClassName: "left-[28.368%] top-[48.66%]",
                   nameClassName: "left-[28.368%] top-[51.233%] w-[19.69%]",
-                  directionClassName: "left-[28.368%] top-[55.734%] w-[19.69%]",
+                  directionClassName:
+                    "left-[28.368%] top-[calc(51.233%_+_var(--su)*50)] w-[19.69%]",
                   actionsClassName: "left-[28.367%] top-[58.306%]",
                 },
               )}
@@ -278,14 +284,16 @@ export function MemberRecord() {
                   headerClassName: "left-[68.263%] top-[39.228%] w-[24.85%]",
                   dividerClassName: "left-[67.514%] top-[44.266%]",
                   nameClassName: "left-[67.065%] top-[46.838%] w-[24.85%]",
-                  directionClassName: "left-[66.167%] top-[51.232%] w-[24.85%]",
+                  directionClassName:
+                    "left-[66.167%] top-[calc(46.838%_+_var(--su)*50)] w-[24.85%]",
                   actionsClassName: "left-[64.97%] top-[58.306%]",
                 },
                 {
                   headerClassName: "left-[69.237%] top-[40.836%] w-[24.85%]",
                   dividerClassName: "left-[68.638%] top-[45.874%]",
                   nameClassName: "left-[67.964%] top-[48.446%] w-[24.85%]",
-                  directionClassName: "left-[67.066%] top-[52.947%] w-[24.85%]",
+                  directionClassName:
+                    "left-[67.066%] top-[calc(48.446%_+_var(--su)*50)] w-[24.85%]",
                   actionsClassName: "left-[64.97%] top-[58.306%]",
                 },
               )}
@@ -664,7 +672,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.3"
         aria-label={`${t("member.namePrefix")}${name}`}
-        className={`absolute z-10 whitespace-nowrap text-18 md:text-[length:calc(var(--su)*18)] ${textColor} ${nameClassName}`}
+        className={`absolute z-10 whitespace-nowrap text-18 leading-[26px] md:text-[length:calc(var(--su)*18)] md:leading-[calc(var(--su)*26)] ${textColor} ${nameClassName}`}
       >
         <span className="font-serif-sc font-normal">
           <SplitWords text={t("member.namePrefix")} />
@@ -677,7 +685,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.4"
         aria-label={direction.replace(/\n/g, " ")}
-        className={`absolute z-10 whitespace-nowrap font-serif-sc text-18 font-normal md:text-[length:calc(var(--su)*18)] ${textColor} ${directionClassName}`}
+        className={`absolute z-10 whitespace-nowrap font-serif-sc text-18 font-normal leading-[26px] md:text-[length:calc(var(--su)*18)] md:leading-[calc(var(--su)*26)] ${textColor} ${directionClassName}`}
       >
         {direction.split("\n").map((line, lineIndex) => (
           <span key={`${line}-${lineIndex}`} className="block">
