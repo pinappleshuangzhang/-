@@ -327,13 +327,17 @@ export function ArchiveIntro() {
               <RevealText
                 text={t("intro.line1")}
                 revealDelay={0.4}
-                className="text-12 leading-[18px] md:text-[length:calc(var(--su)*18)] md:leading-normal"
+                className={`text-12 leading-[18px] md:leading-normal ${
+                  isEnglish
+                    ? "md:text-[length:calc(var(--su)*18)]"
+                    : "md:text-[length:calc(var(--su)*20)]"
+                }`}
               />
               <div
                 className={
                   isEnglish
                     ? "text-10 leading-[16px] md:text-[length:calc(var(--su)*16)] md:leading-[calc(var(--su)*28)]"
-                    : "text-12 leading-[18px] md:text-[length:calc(var(--su)*16)] md:leading-[calc(var(--su)*28)]"
+                    : "text-12 leading-[18px] md:text-[length:calc(var(--su)*18)] md:leading-[calc(var(--su)*32)]"
                 }
               >
                 <RevealText text={t("intro.line2a")} revealDelay={0.5} />
