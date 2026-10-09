@@ -313,7 +313,7 @@ export function ArchiveIntro() {
             data-sd-global-ignore
             className={`absolute left-[8.6538%] top-[26%] flex w-[55%] flex-col gap-1 font-serif-sc font-normal text-grey-400 ${
               isEnglish
-                ? "md:left-[calc(var(--su)*52)] md:top-[calc(var(--su)*140)] md:w-[calc(var(--su)*269)] md:gap-[calc(var(--su)*4)]"
+                ? "md:left-[calc(var(--su)*52)] md:top-[calc(var(--su)*140)] md:w-[calc(var(--su)*280)] md:gap-[calc(var(--su)*4)]"
                 : "md:left-[calc(var(--su)*64)] md:top-[calc(var(--su)*126)] md:w-[calc(var(--su)*256)] md:gap-[calc(var(--su)*8)]"
             }`}
           >
@@ -327,16 +327,12 @@ export function ArchiveIntro() {
               <RevealText
                 text={t("intro.line1")}
                 revealDelay={0.4}
-                className={`text-12 leading-[18px] md:leading-normal ${
-                  isEnglish
-                    ? "md:text-[length:calc(var(--su)*16)]"
-                    : "md:text-[length:calc(var(--su)*18)]"
-                }`}
+                className="text-12 leading-[18px] md:text-[length:calc(var(--su)*18)] md:leading-normal"
               />
               <div
                 className={
                   isEnglish
-                    ? "text-10 leading-[16px] md:text-[length:calc(var(--su)*14)] md:leading-[calc(var(--su)*25)]"
+                    ? "text-10 leading-[16px] md:text-[length:calc(var(--su)*16)] md:leading-[calc(var(--su)*28)]"
                     : "text-12 leading-[18px] md:text-[length:calc(var(--su)*16)] md:leading-[calc(var(--su)*28)]"
                 }
               >
