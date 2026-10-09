@@ -665,7 +665,7 @@ function MemberProfile({
         <span className="font-serif-sc font-normal">
           <SplitWords text={t("member.investigator")} />
         </span>
-        <span className="font-bodoni font-normal">
+        <span className="font-serif-sc font-normal">
           <SplitWords text={idLabel} />
         </span>
         <span className="font-serif-sc font-normal">
@@ -682,7 +682,7 @@ function MemberProfile({
           <span className="font-serif-sc font-normal">
             {t("member.investigator")}
           </span>
-          <span className="font-bodoni font-normal">{idLabel}</span>
+          <span className="font-serif-sc font-normal">{idLabel}</span>
           <span className="font-serif-sc font-normal">{role}</span>
         </span>
       </span>

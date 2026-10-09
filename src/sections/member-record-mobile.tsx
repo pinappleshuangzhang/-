@@ -178,7 +178,7 @@ function MobileMemberProfile({
         className={`absolute z-10 whitespace-nowrap ${headerClassName}`}
       >
         {t("member.investigator")}
-        <span className="font-bodoni">{idLabel}</span>
+        <span>{idLabel}</span>
         {role}
       </p>
       <span
@@ -187,7 +187,7 @@ function MobileMemberProfile({
       >
         <span className="invisible whitespace-nowrap">
           {t("member.investigator")}
-          <span className="font-bodoni">{idLabel}</span>
+          <span>{idLabel}</span>
           {role}
         </span>
       </span>
