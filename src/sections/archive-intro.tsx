@@ -313,8 +313,8 @@ export function ArchiveIntro() {
             data-sd-global-ignore
             className={`absolute left-[8.6538%] top-[26%] flex w-[55%] flex-col gap-1 font-serif-sc font-normal text-grey-400 ${
               isEnglish
-                ? "md:left-[calc(var(--su)*52)] md:top-[calc(var(--su)*140)] md:w-[calc(var(--su)*280)] md:gap-[calc(var(--su)*4)]"
-                : "md:left-[calc(var(--su)*64)] md:top-[calc(var(--su)*126)] md:w-[calc(var(--su)*256)] md:gap-[calc(var(--su)*8)]"
+                ? "md:left-[calc(var(--su)*52)] md:top-[calc(var(--su)*130)] md:w-[calc(var(--su)*280)] md:gap-[calc(var(--su)*4)]"
+                : "md:left-[calc(var(--su)*64)] md:top-[calc(var(--su)*116)] md:w-[calc(var(--su)*256)] md:gap-[calc(var(--su)*8)]"
             }`}
           >
             <div
