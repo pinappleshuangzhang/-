@@ -42,7 +42,7 @@ export function SurveyDrawerContent({
   const { locale, t } = useLocale();
   const activeCategory = SURVEY_CATEGORY_BY_CODE[initialCode];
   const activeWork = SURVEY_WORK_BY_CATEGORY[initialCode];
-  const heading = `Survey Details_${activeCategory.number}`;
+  const heading = `Investigation Details_${activeCategory.number}`;
   // 手机版标题跟随语言（Figma 1008-561 为「调查详情_003」），桌面版固定英文
   const mobileHeading = `${t("survey.detailTitle")}_${activeCategory.number}`;
 
@@ -80,7 +80,7 @@ export function SurveyDrawerContent({
               <span
                 data-sd-words
                 data-sd-delay="0.15"
-                className={`md:hidden ${locale === "zh" ? "font-serif-sc" : ""}`}
+                className={`md:hidden ${locale === "zh" ? "font-serif-sc" : "text-20"}`}
               >
                 <SplitWords text={mobileHeading} />
               </span>

@@ -89,7 +89,7 @@ export const SURVEY_CATEGORIES: SurveyCategory[] = [
 /** 001 品牌设计：The Apple Moment，对照作品提交模版 / 交付文件夹 */
 export const SURVEY_G_001: SurveyWork = {
   id: "g-001",
-  title: "Survey Details_001",
+  title: "Investigation Details_001",
   typeLabel: "( A Brand)",
   archivedLabel: "( 2026 Archived)",
   activeCategory: "A",
@@ -191,7 +191,7 @@ export const SURVEY_G_001: SurveyWork = {
 /** 002 产品设计：Future Creative 2026 */
 export const SURVEY_G_002: SurveyWork = {
   id: "g-002",
-  title: "Survey Details_002",
+  title: "Investigation Details_002",
   typeLabel: "( B Product)",
   archivedLabel: "( 2026 Archived)",
   activeCategory: "B",
@@ -268,7 +268,7 @@ export const SURVEY_G_002: SurveyWork = {
 /** 003 网站设计：Easycash 数字品牌视觉重塑 */
 export const SURVEY_G_003: SurveyWork = {
   id: "g-003",
-  title: "Survey Details_003",
+  title: "Investigation Details_003",
   typeLabel: "( C Website)",
   archivedLabel: "( 2026 Archived)",
   activeCategory: "C",

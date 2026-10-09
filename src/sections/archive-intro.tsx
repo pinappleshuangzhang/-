@@ -122,6 +122,25 @@ function ScrubText({
   );
 }
 
+/** 文案内 \n 拆成多行 ScrubText，英文手动断行以控制行数 */
+function ScrubLines({
+  text,
+  revealDelay,
+}: {
+  text: string;
+  revealDelay?: number;
+}) {
+  return text
+    .split("\n")
+    .map((line, lineIndex) => (
+      <ScrubText
+        key={`${line}-${lineIndex}`}
+        text={line}
+        revealDelay={revealDelay}
+      />
+    ));
+}
+
 /**
  * 第二屏：档案 GA_001《什么是引力？》
  * 视频与文字解耦：进屏后书本视频自顾自播到结束；
@@ -451,22 +470,22 @@ export function ArchiveIntro() {
                 <div
                   className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200/40 ${
                     isEnglish
-                      ? "md:text-[length:calc(var(--su)*24)] md:leading-[calc(var(--su)*30)]"
-                      : "md:text-[length:calc(var(--su)*24)] md:leading-normal"
+                      ? "max-md:text-12 max-md:leading-[18px] md:text-[length:calc(var(--su)*20)] md:leading-[calc(var(--su)*28)]"
+                      : "whitespace-nowrap md:text-[length:calc(var(--su)*24)] md:leading-normal"
                   }`}
                 >
-                  <ScrubText text={t("intro.line1")} revealDelay={0.4} />
+                  <ScrubLines text={t("intro.line1")} revealDelay={0.4} />
                 </div>
                 <div
                   className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200/40 ${
                     isEnglish
-                      ? "md:w-[calc(var(--su)*308)] md:text-[length:calc(var(--su)*24)] md:leading-[calc(var(--su)*36)]"
-                      : "md:text-[length:calc(var(--su)*24)] md:leading-normal"
+                      ? "max-md:text-12 max-md:leading-[18px] md:w-[calc(var(--su)*308)] md:text-[length:calc(var(--su)*20)] md:leading-[calc(var(--su)*28)]"
+                      : "whitespace-nowrap md:text-[length:calc(var(--su)*24)] md:leading-normal"
                   }`}
                 >
-                  <ScrubText text={t("intro.line2a")} revealDelay={0.5} />
-                  <ScrubText text={t("intro.line2b")} revealDelay={0.55} />
-                  <ScrubText text={t("intro.line2c")} revealDelay={0.6} />
+                  <ScrubLines text={t("intro.line2a")} revealDelay={0.5} />
+                  <ScrubLines text={t("intro.line2b")} revealDelay={0.55} />
+                  <ScrubLines text={t("intro.line2c")} revealDelay={0.6} />
                 </div>
               </div>
               <div
@@ -481,18 +500,11 @@ export function ArchiveIntro() {
                 <div
                   className={`font-serif-sc text-14 font-normal leading-[20px] text-grey-200/40 ${
                     isEnglish
-                      ? "md:text-[length:calc(var(--su)*24)] md:leading-[calc(var(--su)*40)]"
+                      ? "max-md:text-12 max-md:leading-[18px] md:text-[length:calc(var(--su)*20)] md:leading-[calc(var(--su)*32)]"
                       : "md:text-[length:calc(var(--su)*24)] md:leading-normal"
                   }`}
                 >
-                  {t("intro.bridge")
-                    .split("\n")
-                    .map((line, lineIndex) => (
-                      <ScrubText
-                        key={`${line}-${lineIndex}`}
-                        text={line}
-                      />
-                    ))}
+                  <ScrubLines text={t("intro.bridge")} />
                 </div>
                 <div
                   className={`font-serif-sc text-32 font-normal leading-[46px] text-grey-200/40 ${

@@ -676,10 +676,14 @@ function MemberProfile({
       <p
         data-sd-words
         data-sd-delay="0.4"
-        aria-label={direction}
+        aria-label={direction.replace(/\n/g, " ")}
         className={`absolute z-10 whitespace-nowrap font-serif-sc text-18 font-normal md:text-[length:calc(var(--su)*18)] ${textColor} ${directionClassName}`}
       >
-        <SplitWords text={direction} />
+        {direction.split("\n").map((line, lineIndex) => (
+          <span key={`${line}-${lineIndex}`} className="block">
+            <SplitWords text={line} />
+          </span>
+        ))}
       </p>
       <div
         data-sd-words

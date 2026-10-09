@@ -69,7 +69,7 @@ export function MobileSiteNav({
             className={`border-0 bg-transparent p-0 text-left ${
               showBrand
                 ? `whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
-                : `max-w-[calc(100%-98px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
+                : `max-w-[calc(100%-98px)] overflow-hidden text-ellipsis whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
             } ${focusRing}`}
           >
             {title}
@@ -79,7 +79,7 @@ export function MobileSiteNav({
             className={
               showBrand
                 ? `whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
-                : `max-w-[calc(100%-98px)] whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
+                : `max-w-[calc(100%-98px)] overflow-hidden text-ellipsis whitespace-nowrap font-bodoni text-12 font-normal uppercase leading-[18px] ${ink}`
             }
           >
             {title}

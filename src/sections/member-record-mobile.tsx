@@ -198,7 +198,11 @@ function MobileMemberProfile({
       <p
         className={`absolute z-10 whitespace-nowrap ${directionClassName}`}
       >
-        {direction}
+        {direction.split("\n").map((line, lineIndex) => (
+          <span key={`${line}-${lineIndex}`} className="block">
+            {line}
+          </span>
+        ))}
       </p>
       <div
         className={`absolute z-10 flex items-center gap-4 whitespace-nowrap ${actionsClassName} ${MEMBER_PROFILE_ACTIONS_VISIBLE ? "" : "hidden"}`}

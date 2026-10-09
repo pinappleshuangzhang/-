@@ -17,6 +17,7 @@ import {
 import { setSondavenVisible } from "@/animations/sondaven-reveal";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
+import { HeroSubtitle } from "@/components/ui/hero-subtitle";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { useDesktopMedia } from "@/hooks/use-desktop-media";
 import { useHeroPreloader } from "@/hooks/use-hero-preloader";
@@ -470,12 +471,8 @@ export function Hero() {
   );
 
   const subtitle = t("hero.subtitle");
-  const highlight =
-    locale === "zh" ? '"引力"的探索' : "Explore Gravity Together";
-  const highlightIndex = subtitle.lastIndexOf(highlight);
-  const subtitlePrefix =
-    highlightIndex >= 0 ? subtitle.slice(0, highlightIndex) : subtitle;
-  const subtitleHighlight = highlightIndex >= 0 ? highlight : "";
+  const subtitleHighlight = t("hero.subtitleHighlight");
+  const barInitial = locale === "zh" ? "scale-x-0" : "scale-x-100";
 
   return (
     <ScreenShell ref={container}>
@@ -536,50 +533,14 @@ export function Hero() {
           >
             <SplitWords text={t("hero.title")} />
           </h1>
-          <div className="flex w-full flex-col items-center gap-2">
-            <p
-              data-sd-words
-              data-sd-delay="0.3"
-              aria-label={subtitle}
-              className={`w-full whitespace-nowrap font-serif-sc uppercase text-grey-400 ${
-                locale === "zh"
-                  ? "text-12 leading-[18px]"
-                  : "text-14 leading-[20px]"
-              }`}
-            >
-              <SplitWords text={subtitlePrefix} />
-            </p>
-            {subtitleHighlight ? (
-              <p
-                data-sd-words
-                data-sd-delay="0.3"
-                aria-hidden="true"
-                className={`relative -top-px whitespace-nowrap font-serif-sc uppercase text-white ${
-                  locale === "zh"
-                    ? "h-[17px] w-[88px] px-2 text-12 leading-[18px]"
-                    : "h-[20px] w-auto px-2.5 text-14 leading-[20px]"
-                }`}
-              >
-                <span
-                  data-sd-bar
-                  data-sd-delay="0.3"
-                  aria-hidden="true"
-                  className={`absolute inset-0 origin-left bg-grey-400 ${
-                    locale === "zh" ? "scale-x-0" : "scale-x-100"
-                  }`}
-                />
-                <span className="relative inline-block whitespace-nowrap">
-                  <SplitWords
-                    text={
-                      locale === "zh"
-                        ? subtitleHighlight.replace('"的', '" 的')
-                        : subtitleHighlight
-                    }
-                  />
-                </span>
-              </p>
-            ) : null}
-          </div>
+          <HeroSubtitle
+            text={subtitle}
+            highlight={subtitleHighlight}
+            className="flex w-full flex-col items-center gap-1 font-serif-sc text-12 uppercase leading-[18px] text-grey-400"
+            lineClassName="justify-center"
+            highlightClassName="px-1.5"
+            barClassName={barInitial}
+          />
         </div>
 
         <div
@@ -601,41 +562,16 @@ export function Hero() {
           >
             <SplitWords text={t("hero.title")} />
           </h1>
-          <p
-            data-sd-words
-            data-sd-delay="0.3"
-            aria-label={subtitle}
-            className={`flex w-full items-stretch whitespace-nowrap text-left font-serif-sc uppercase text-grey-400 ${
+          <HeroSubtitle
+            text={subtitle}
+            highlight={subtitleHighlight}
+            className={`flex w-full flex-col items-start text-left font-serif-sc uppercase leading-normal text-grey-400 ${
               locale === "zh"
-                ? "text-[length:calc(var(--su)*16)] leading-normal"
-                : "text-[length:calc(var(--su)*14)] leading-normal"
+                ? "text-[length:calc(var(--su)*16)]"
+                : "text-[length:calc(var(--su)*14)]"
             }`}
-          >
-            <span className={locale === "zh" ? "shrink-0" : "mr-1 shrink-0"}>
-              <SplitWords
-                text={
-                  locale === "zh" ? subtitlePrefix : subtitlePrefix.trimEnd()
-                }
-              />
-            </span>
-            {subtitleHighlight ? (
-              <span className="relative min-w-0 flex-1 text-white">
-                <span
-                  data-sd-bar
-                  data-sd-delay="0.3"
-                  aria-hidden="true"
-                  className={`absolute bottom-0 left-0 top-0 origin-left bg-grey-400 ${
-                    locale === "zh"
-                      ? "right-0 scale-x-0"
-                      : "right-0 scale-x-100"
-                  }`}
-                />
-                <span className="relative">
-                  <SplitWords text={subtitleHighlight} />
-                </span>
-              </span>
-            ) : null}
-          </p>
+            barClassName={barInitial}
+          />
         </div>
       </div>
 
