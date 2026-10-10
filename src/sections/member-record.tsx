@@ -567,6 +567,7 @@ function MemberProfile({
 }: MemberProfileProps) {
   const { locale, t } = useLocale();
   const isEn = locale === "en";
+  const weight = isEn ? "font-normal" : "font-light";
   const textColor = "text-white";
   const separator = isEn ? " _ " : "_";
   const idLabel = `${separator}${identifier}${separator}`;
@@ -582,13 +583,13 @@ function MemberProfile({
         aria-label={`${t("member.investigator")}${idLabel}${role}`}
         className={`absolute z-10 whitespace-nowrap ${headerSize} ${textColor} ${headerClassName}`}
       >
-        <span className="font-serif-sc font-normal">
+        <span className={`font-serif-sc ${weight}`}>
           <SplitWords text={t("member.investigator")} />
         </span>
-        <span className="font-serif-sc font-normal">
+        <span className={`font-serif-sc ${weight}`}>
           <SplitWords text={idLabel} />
         </span>
-        <span className="font-serif-sc font-normal">
+        <span className={`font-serif-sc ${weight}`}>
           <SplitWords text={role} />
         </span>
       </p>
@@ -599,11 +600,11 @@ function MemberProfile({
         aria-hidden="true"
       >
         <span className={`invisible whitespace-nowrap ${headerSize}`}>
-          <span className="font-serif-sc font-normal">
+          <span className={`font-serif-sc ${weight}`}>
             {t("member.investigator")}
           </span>
-          <span className="font-serif-sc font-normal">{idLabel}</span>
-          <span className="font-serif-sc font-normal">{role}</span>
+          <span className={`font-serif-sc ${weight}`}>{idLabel}</span>
+          <span className={`font-serif-sc ${weight}`}>{role}</span>
         </span>
       </span>
       <p
@@ -612,10 +613,10 @@ function MemberProfile({
         aria-label={`${t("member.namePrefix")}${name}`}
         className={`absolute z-10 whitespace-nowrap ${bodySize} ${textColor} ${nameClassName}`}
       >
-        <span className="font-serif-sc font-normal">
+        <span className={`font-serif-sc ${weight}`}>
           <SplitWords text={t("member.namePrefix")} />
         </span>
-        <span className="font-serif-sc font-normal">
+        <span className={`font-serif-sc ${weight}`}>
           <SplitWords text={name} />
         </span>
       </p>
@@ -623,7 +624,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.4"
         aria-label={direction.replace(/\n/g, " ")}
-        className={`absolute z-10 font-serif-sc font-normal ${isEn ? "" : "whitespace-nowrap"} ${bodySize} ${textColor} ${directionClassName}`}
+        className={`absolute z-10 font-serif-sc ${weight} ${isEn ? "" : "whitespace-nowrap"} ${bodySize} ${textColor} ${directionClassName}`}
       >
         {isEn ? (
           <SplitWords text={direction.replace(/\n/g, " ")} wrap />

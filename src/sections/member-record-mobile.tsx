@@ -168,7 +168,11 @@ function MobileMemberProfile({
   const idLabel = `${separator}${identifier}${separator}`;
 
   return (
-    <div className="group pointer-events-none absolute inset-0 font-serif-sc text-12 font-normal leading-[18px] text-white">
+    <div
+      className={`group pointer-events-none absolute inset-0 font-serif-sc text-12 leading-[18px] text-white ${
+        locale === "en" ? "font-normal" : "font-light"
+      }`}
+    >
       <button
         type="button"
         aria-label={`${name} ${t("member.investigator")}`}
