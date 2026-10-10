@@ -482,7 +482,7 @@ const en: Messages = {
   "hero.title": "Grava Design Archive",
   "hero.subtitle":
     "We help brands, products, and experiences. Earn attention, preference, and trust",
-  "hero.subtitleHighlight": "",
+  "hero.subtitleHighlight": "Earn attention, preference, and trust",
   "hero.scrollDown": "Scroll Down",
   "hero.skipVideo": "Skip Video",
   // 尾随普通空格会被行内折叠掉，用不换行空格才能与编号隔开

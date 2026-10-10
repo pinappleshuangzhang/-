@@ -571,8 +571,11 @@ export function Hero() {
                 ? "w-full text-[length:calc(var(--su)*16)] uppercase"
                 : "w-0 min-w-full text-[length:calc(var(--su)*12)]"
             }`}
+            highlightClassName={
+              locale === "zh" ? "" : "ml-[calc(var(--su)*4)]"
+            }
             barClassName={barInitial}
-            fillLineEnd={locale === "zh"}
+            fillLineEnd
           />
         </div>
       </div>
