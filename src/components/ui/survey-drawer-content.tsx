@@ -72,7 +72,7 @@ export function SurveyDrawerContent({
             <h1
               id={titleId}
               aria-label={heading}
-              className="whitespace-nowrap font-bodoni text-44 font-normal uppercase leading-[55px] text-grey-400 max-md:text-24 max-md:normal-case max-md:leading-[34px] md:text-[length:calc(var(--su)*44)] md:leading-[calc(var(--su)*55)]"
+              className="whitespace-nowrap font-bodoni text-40 font-normal uppercase leading-[55px] text-grey-400 max-md:text-24 max-md:normal-case max-md:leading-[34px] md:text-[length:calc(var(--su)*40)] md:leading-[calc(var(--su)*55)]"
             >
               <span data-sd-words data-sd-delay="0.15" className="max-md:hidden">
                 <SplitWords text={heading} />

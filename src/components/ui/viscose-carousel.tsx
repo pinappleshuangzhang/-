@@ -111,7 +111,13 @@ export function ViscoseCarousel({
           t("gallery.category.website"),
         ]}
         categoryFontClass={locale === "zh" ? "font-serif-sc" : "font-bodoni"}
+        categoryPrefix={
+          locale === "zh"
+            ? t("survey.detailTitle")
+            : t("survey.detailTitle").toUpperCase()
+        }
         nameFont={locale === "zh" ? "Noto Serif SC" : "Libre Bodoni"}
+        listFontSize={locale === "zh" ? 14 : 12}
       />
     </div>
   );

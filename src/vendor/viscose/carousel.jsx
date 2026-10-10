@@ -43,10 +43,6 @@ function su(value) {
 /** 入场种子所穿的贴图格，也是移动端第三阶段最初展示的分类 */
 const INITIAL_CELL = Math.round(defaultParams().imageOffset);
 
-function isZhCategoryFont(fontClass) {
-  return String(fontClass ?? "").includes("font-serif-sc");
-}
-
 const blankTexture = () => {
   const t = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
   t.needsUpdate = true;
@@ -60,13 +56,16 @@ export default function Carousel({
   cursorViewLabel = "",
   categoryLabels,
   categoryFontClass,
+  categoryPrefix,
   nameFont,
+  listFontSize = 14,
   paused = false,
 }) {
   const pausedRef = useRef(paused);
   const kickLoopRef = useRef(() => {});
   const hideCursorTagRef = useRef(() => {});
   const nameFontRef = useRef(nameFont);
+  const listFontSizeRef = useRef(listFontSize);
   const applyLocaleRef = useRef(() => {});
   const prevNameFontRef = useRef(nameFont);
   // 渲染循环里按是否悬停卡片切换「拖拽 / 查看」文案，用 ref 拿到最新语言
@@ -76,7 +75,8 @@ export default function Carousel({
   }, [cursorLabel, cursorViewLabel]);
   useEffect(() => {
     nameFontRef.current = nameFont;
-  }, [nameFont]);
+    listFontSizeRef.current = listFontSize;
+  }, [nameFont, listFontSize]);
   useEffect(() => {
     pausedRef.current = paused;
     if (paused) {
@@ -140,6 +140,7 @@ export default function Carousel({
 
     const params = defaultParams();
     params.nameFont = nameFontRef.current;
+    params.listSize = (listFontSizeRef.current / 1440) * 100;
     // progress: the seed is born at screen centre
     // launch:   the seed travels out to its place on the ring
     // spread:   the rest peel off it and the ring draws
@@ -1733,6 +1734,7 @@ export default function Carousel({
     // 语言切换：第一阶段重跑入场；第二/三阶段只换字体，停在当前阶段。
     applyLocaleRef.current = () => {
       params.nameFont = nameFontRef.current;
+      params.listSize = (listFontSizeRef.current / 1440) * 100;
       if (stagePhase === "entry") {
         replay();
         return;
@@ -2194,7 +2196,7 @@ export default function Carousel({
           transform: "translateY(-50%)",
           width: su(507),
         }}
-        className={`absolute z-10 flex flex-col items-start gap-[calc(var(--viscose-su)*48)] leading-5 text-grey-300 opacity-0 [--viscose-su:calc(min(100vw,1680px)/1440)] max-md:hidden ${categoryFontClass}`}
+        className="absolute z-10 flex flex-col items-start gap-[calc(var(--viscose-su)*48)] whitespace-nowrap font-serif-sc leading-5 text-grey-300 opacity-0 [--viscose-su:calc(min(100vw,1680px)/1440)] max-md:hidden"
       >
         {PROJECTS.slice(0, IMAGE_FILES.length).map((p, i) => (
           <li
@@ -2206,23 +2208,16 @@ export default function Carousel({
           >
             <span
               className="pointer-events-none absolute right-full top-1/2 mr-1 flex -translate-y-1/2 items-center"
-              style={{
-                // 中文方块下移 2、英文方块上移 2（相对原 1px）
-                marginTop: isZhCategoryFont(categoryFontClass) ? "3px" : "-1px",
-              }}
+              // Noto Serif SC 字形中心比行盒中心低约 0.07em，随字号缩放
+              style={{ marginTop: "0.07em" }}
             >
               {/* hover 与选中共用同一个方块，保证位置一致 */}
               <span className="block size-3 bg-grey-400 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 group-aria-[current=true]:opacity-100" />
             </span>
             <FlipHoverButton
-              label={`${String(i + 1).padStart(3, "0")}  ${categoryLabels[i] ?? p.listLabel}`}
+              label={`${categoryPrefix}_${String(i + 1).padStart(3, "0")}  ${categoryLabels[i] ?? p.listLabel}`}
               showHoverMark={false}
               groupEntryWords
-              firstTokenClassName={
-                isZhCategoryFont(categoryFontClass)
-                  ? "relative top-0.5 font-bodoni"
-                  : "relative font-bodoni"
-              }
               aria-label={categoryLabels[i] ?? p.listLabel}
               onClick={() => categorySelectRef.current?.(i)}
               className="h-5 transition-colors group-hover:text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"

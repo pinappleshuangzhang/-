@@ -163,7 +163,7 @@ export function defaultParams() {
     idxSize: (16 / 1440) * 100, // a step lighter and smaller than the name
     idxFont: "Libre Bodoni",
     idxWeight: 400,
-    listSize: (16 / 1440) * 100, // Figma 最终分类列表 16px
+    listSize: (14 / 1440) * 100, // 由 carousel 的 listFontSize 按语言覆盖
 
     // The morph between one card's words and the next.
     nameMorphTime: 1.2,

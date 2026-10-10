@@ -234,7 +234,10 @@ export function createMeta(refs, params) {
 
     // The column and the counter are set from here too, so all the type moves
     // as one piece across a breakpoint instead of half of it growing.
-    if (list) list.style.fontSize = `${params.listSize * textK}vw`;
+    // 与右列 --su-hero 同在 1920 封顶，否则大屏下长标题冲出右缘
+    if (list) {
+      list.style.fontSize = `calc(min(100vw, 1920px) * ${(params.listSize * textK) / 100})`;
+    }
     if (loader) {
       loader.style.bottom = `${params.loaderBottom}px`;
       loader.style.fontFamily = smallFace;
