@@ -558,7 +558,7 @@ export function Hero() {
             className={`whitespace-nowrap uppercase leading-none text-grey-400 ${
               locale === "zh"
                 ? "font-serif-sc font-medium text-[length:calc(var(--su-hero)*48)]"
-                : "font-bodoni font-normal text-[length:calc(var(--su)*40)]"
+                : "font-bodoni font-normal text-[length:calc(var(--su-hero)*40)]"
             }`}
           >
             <SplitWords text={t("hero.title")} />
