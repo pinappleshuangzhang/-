@@ -14,11 +14,9 @@ CSS 变量定义在 `src/app/globals.css` 的 `@theme` 块中，样式一律使�
 
 ## 颜色（Color）
 
-- Green（品牌绿）：`green-50` ~ `green-900`
-  - 50 `#F3FCF4` / 100 `#DFF6E4` / 200 `#BBECC4` / 300 `#93E1A1` / 400 `#6FD881` / 500 `#3FCA58` / 600 `#32A246` / 700 `#267935` / 800 `#195123` / 900 `#0D2812`
 - Grey（中性灰）：`grey-50` ~ `grey-400` + `white`
   - 50 `#F4F4F4` / 100 `#DEDEDE` / 200 `#999999` / 300 `#666666` / 400 `#131313` / White `#FFFFFF`
-- Tailwind 用法：`text-green-500`、`bg-grey-400`、`border-grey-100` 等。
+- Tailwind 用法：`text-grey-300`、`bg-grey-400`、`border-grey-100` 等。
 - 只使用以上色板，不使用 Tailwind 默认调色板或任意 hex 值。
 
 ## 字体（Typography）

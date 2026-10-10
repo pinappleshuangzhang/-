@@ -12,18 +12,6 @@
 }
 
 @theme {
-  /* Color / Green */
-  --color-green-50: #f3fcf4;
-  --color-green-100: #dff6e4;
-  --color-green-200: #bbecc4;
-  --color-green-300: #93e1a1;
-  --color-green-400: #6fd881;
-  --color-green-500: #3fca58;
-  --color-green-600: #32a246;
-  --color-green-700: #267935;
-  --color-green-800: #195123;
-  --color-green-900: #0d2812;
-
   /* Color / Grey */
   --color-grey-50: #f4f4f4;
   --color-grey-100: #dedede;
@@ -171,7 +159,7 @@ canvas[data-ascii-curtain="idle"] {
 }
 
 ::selection {
-  background: var(--color-green-500);
+  background: var(--color-grey-300);
   color: var(--color-white);
 }
 

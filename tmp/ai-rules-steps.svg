@@ -1,0 +1,149 @@
+<svg id="ai-rules-steps-art" xmlns="http://www.w3.org/2000/svg" width="880" height="720" viewBox="0 0 880 720" role="img" aria-labelledby="ai-rules-steps-title ai-rules-steps-desc">
+    <title id="ai-rules-steps-title">先写规则，再写代码</title>
+    <desc id="ai-rules-steps-desc">三阶段步骤图。前期落地工作流、架构、质量、令牌、响应式。中期写页面并遵守动画、性能、无障碍、降级预留。后期做 Safari 提测、内存收敛、键盘验收后上线。</desc>
+    <defs>
+      <pattern id="ai-rules-hatch" width="8" height="8" patternUnits="userSpaceOnUse">
+        <circle cx="1" cy="1" r="0.7" fill="#d6d6d6"/>
+      </pattern>
+    </defs>
+    <style>
+      #ai-rules-steps-art { font-family: "Noto Serif SC", "PingFang SC", "Noto Sans SC", ui-serif, serif; }
+      #ai-rules-steps-art .ink { fill: #131313; }
+      #ai-rules-steps-art .paper { fill: #f4f4f4; }
+      #ai-rules-steps-art .card { fill: #ffffff; stroke: #131313; }
+      #ai-rules-steps-art .chip { fill: #f4f4f4; stroke: #131313; }
+      #ai-rules-steps-art .muted { fill: #666666; }
+      #ai-rules-steps-art .accent { fill: #131313; }
+      #ai-rules-steps-art .band { fill: #131313; }
+      #ai-rules-steps-art .band-ink { fill: #ffffff; }
+    </style>
+    <rect width="880" height="720" class="paper"/>
+    <rect width="880" height="720" fill="url(#ai-rules-hatch)"/>
+    <rect x="40" y="40" width="800" height="640" class="paper" stroke="#131313" stroke-width="1.5"/>
+
+    <text x="64" y="78" class="muted" font-size="13">9 份规则 · 三阶段</text>
+    <text x="64" y="118" class="ink" font-size="34" font-weight="500">先写规则，再写代码</text>
+    <text x="64" y="148" class="muted" font-size="14">.cursor/rules 里的手册，AI 每次对话都会读</text>
+
+    <g transform="translate(64,176)">
+      <rect width="228" height="96" rx="2" class="chip" stroke-width="1"/>
+      <rect x="16" y="22" width="28" height="36" rx="1" class="card" stroke-width="1.2"/>
+      <rect x="22" y="28" width="16" height="2" class="ink"/>
+      <rect x="22" y="34" width="12" height="2" class="ink"/>
+      <rect x="22" y="40" width="14" height="2" class="ink"/>
+      <text x="56" y="42" class="ink" font-size="15" font-weight="500">写禁止</text>
+      <text x="56" y="64" class="muted" font-size="12">不要写建议</text>
+    </g>
+    <g transform="translate(326,176)">
+      <rect width="228" height="96" rx="2" class="chip" stroke-width="1"/>
+      <circle cx="32" cy="40" r="14" class="card" stroke-width="1.2"/>
+      <path d="M26 40 L30 44 L40 32" fill="none" stroke="#131313" stroke-width="1.8"/>
+      <text x="56" y="42" class="ink" font-size="15" font-weight="500">给替代</text>
+      <text x="56" y="64" class="muted" font-size="12">禁 width 用 scale</text>
+    </g>
+    <g transform="translate(588,176)">
+      <rect width="228" height="96" rx="2" class="chip" stroke-width="1"/>
+      <rect x="18" y="24" width="26" height="32" rx="1" class="card" stroke-width="1.2"/>
+      <rect x="22" y="30" width="18" height="3" class="ink"/>
+      <rect x="22" y="37" width="12" height="3" class="ink"/>
+      <text x="56" y="42" class="ink" font-size="15" font-weight="500">工具兜底</text>
+      <text x="56" y="64" class="muted" font-size="12">ESLint 锁死</text>
+    </g>
+
+    <path d="M292 288 L316 300 L292 312" class="ink"/>
+    <path d="M554 288 L578 300 L554 312" class="ink"/>
+
+    <g transform="translate(64,316)">
+      <rect width="228" height="328" rx="2" class="card" stroke-width="1.5"/>
+      <circle cx="32" cy="36" r="16" class="band"/>
+      <text x="32" y="41" text-anchor="middle" class="band-ink" font-size="16" font-weight="500">1</text>
+      <text x="58" y="32" class="ink" font-size="18" font-weight="500">前期</text>
+      <text x="58" y="52" class="muted" font-size="12">开工前 · 打地基</text>
+      <g transform="translate(68,70)">
+        <rect x="0" y="16" width="52" height="8" class="ink"/>
+        <rect x="8" y="8" width="36" height="8" class="chip" stroke-width="1"/>
+        <rect x="16" y="0" width="20" height="8" class="card" stroke-width="1"/>
+      </g>
+      <text x="16" y="128" class="muted" font-size="11">5 份规则必须先定</text>
+      <g transform="translate(14,146)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">工作流 · 先方案再动手</text>
+      </g>
+      <g transform="translate(14,182)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">架构 · 一屏一文件</text>
+      </g>
+      <g transform="translate(14,218)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">质量 · 禁 any 锁 lint</text>
+      </g>
+      <g transform="translate(14,254)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">令牌 · 只用刻度值</text>
+      </g>
+      <g transform="translate(14,290)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">响应式 · 先定放大或留白</text>
+      </g>
+    </g>
+
+    <g transform="translate(326,316)">
+      <rect width="228" height="328" rx="2" class="card" stroke-width="1.5"/>
+      <circle cx="32" cy="36" r="16" class="band"/>
+      <text x="32" y="41" text-anchor="middle" class="band-ink" font-size="16" font-weight="500">2</text>
+      <text x="58" y="32" class="ink" font-size="18" font-weight="500">中期</text>
+      <text x="58" y="52" class="muted" font-size="12">写页面 · 边写边防坑</text>
+      <g transform="translate(78,70)">
+        <rect width="72" height="46" rx="2" class="card" stroke-width="1.2"/>
+        <rect x="6" y="6" width="60" height="28" class="chip"/>
+        <path d="M34 16 L44 23 L34 30 Z" class="ink"/>
+        <rect x="24" y="38" width="24" height="3" class="ink"/>
+      </g>
+      <text x="16" y="146" class="muted" font-size="11">4 份规则持续生效</text>
+      <g transform="translate(14,164)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">动画 · 唯一 Lenis 同帧</text>
+      </g>
+      <g transform="translate(14,200)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">性能 · 只动 transform</text>
+      </g>
+      <g transform="translate(14,236)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">无障碍 · 焦点与键盘</text>
+      </g>
+      <g transform="translate(14,272)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">兼容 · 写效果就留降级</text>
+      </g>
+    </g>
+
+    <g transform="translate(588,316)">
+      <rect width="228" height="328" rx="2" class="card" stroke-width="1.5"/>
+      <circle cx="32" cy="36" r="16" class="band"/>
+      <text x="32" y="41" text-anchor="middle" class="band-ink" font-size="16" font-weight="500">3</text>
+      <text x="58" y="32" class="ink" font-size="18" font-weight="500">后期</text>
+      <text x="58" y="52" class="muted" font-size="12">上线前 · 多端验收</text>
+      <g transform="translate(86,72)">
+        <circle cx="20" cy="20" r="22" class="card" stroke-width="1.5"/>
+        <path d="M10 21 L17 28 L32 12" fill="none" stroke="#131313" stroke-width="2.2"/>
+      </g>
+      <text x="16" y="146" class="muted" font-size="11">Chrome 通过不算过</text>
+      <g transform="translate(14,164)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">Safari 双端实测</text>
+      </g>
+      <g transform="translate(14,200)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">停帧拆包清素材</text>
+      </g>
+      <g transform="translate(14,236)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">减动效 + 纯键盘</text>
+      </g>
+      <g transform="translate(14,272)">
+        <rect width="200" height="28" rx="2" class="chip" stroke-width="1"/>
+        <text x="10" y="19" class="ink" font-size="13">lint · build · 令牌三处</text>
+      </g>
+    </g>
+  </svg>

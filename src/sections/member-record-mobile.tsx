@@ -172,7 +172,7 @@ function MobileMemberProfile({
       <button
         type="button"
         aria-label={`${name} ${t("member.investigator")}`}
-        className={`pointer-events-auto absolute bg-transparent focus-visible:ring-2 focus-visible:ring-green-500 ${fillClassName}`}
+        className={`pointer-events-auto absolute bg-transparent focus-visible:ring-2 focus-visible:ring-grey-300 ${fillClassName}`}
       />
       <p
         className={`absolute z-10 whitespace-nowrap ${headerClassName}`}
