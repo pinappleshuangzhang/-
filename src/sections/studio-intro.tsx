@@ -35,7 +35,7 @@ import { StudioIntroCards } from "@/sections/studio-intro-cards";
 import layer01Img from "../../public/archive-ga-004/background-layers/layer-01.webp";
 import layer03Img from "../../public/archive-ga-004/background-layers/layer-03.webp";
 import layer04Img from "../../public/archive-ga-004/background-layers/layer-04.webp";
-import markDarkImg from "../../public/studio-intro/plate-mark.svg";
+import markGImg from "../../public/studio-intro/mark-g.svg";
 
 const MOBILE_QUERY = "(max-width: 767px)";
 
@@ -60,10 +60,10 @@ function cardGroup(root: HTMLElement): HTMLElement | null {
 
 /**
  * 《工作室简介》第三屏（桌面态，设计稿 1486:5 / 1486:63）。
- * 三步屏内状态机（registerScrollInterceptor）：
- *   step0 图一舞台（圆环持续旋转）→ 下滑 → step1 整体以视口中心放大
- *   → 下滑 → step2 图一隐藏、图二卡片信封式自下而上入场
- *   → 上滑 → 一条连续时间轴：卡片反向退场 → 舞台从放大态回缩至原始态（直回 step0）
+ * 两步屏内状态机（registerScrollInterceptor）：
+ *   step0 图一舞台（圆环持续旋转）→ 下滑 → 一条连续时间轴：
+ *   以视口中心放大（由慢到快）→ 图一淡出 → 图二整卡信封式翻入（step2）
+ *   → 上滑 → 反向连续时间轴：整卡退场 → 舞台从放大态回缩至原始态（回 step0）
  * 移动端沿用原组织记录屏 OrgFoundingMobile。
  */
 export function StudioIntro() {
@@ -88,7 +88,7 @@ export function StudioIntro() {
   const ringOuterRef = useRef<HTMLImageElement>(null);
   const ringInnerRef = useRef<HTMLImageElement>(null);
 
-  const stepRef = useRef<0 | 1 | 2>(0);
+  const stepRef = useRef<0 | 2>(0);
   const cooldownUntilRef = useRef(0);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
 
@@ -165,15 +165,12 @@ export function StudioIntro() {
 
       if (reducedMotion) {
         if (down && step === 0) {
-          stepRef.current = 1;
-          gsap.set(stage, { scale: STAGE_ZOOM_SCALE });
-        } else if (down && step === 1) {
           stepRef.current = 2;
           gsap.set(stage, { autoAlpha: 0 });
           gsap.set(cards, { autoAlpha: 1 });
           gsap.set(group, CARD_SHOWN);
           setSondavenVisible(cards);
-        } else if (!down && step > 0) {
+        } else if (!down && step === 2) {
           resetToStage();
         } else {
           return false;
@@ -190,27 +187,23 @@ export function StudioIntro() {
 
       if (down) {
         if (step === 0) {
-          stepRef.current = 1;
-          begin(
-            gsap
-              .timeline()
-              .to(stage, { scale: STAGE_ZOOM_SCALE, ...ZOOM_IN }),
-          );
-          return true;
-        }
-        if (step === 1) {
+          // 一条连续时间轴：放大（由慢到快）→ 图一淡出 → 整卡信封翻入
           stepRef.current = 2;
           const tl = gsap.timeline();
-          tl.to(stage, { autoAlpha: 0, duration: 0.45, ease: "power2.out" }, 0);
-          tl.set(cards, { autoAlpha: 1 }, 0);
-          // 整张大卡一体信封式翻入（自下而上）
+          tl.to(stage, { scale: STAGE_ZOOM_SCALE, ...ZOOM_IN }, 0);
+          tl.to(
+            stage,
+            { autoAlpha: 0, duration: 0.45, ease: "power2.out" },
+            ZOOM_IN.duration - 0.2,
+          );
+          tl.set(cards, { autoAlpha: 1 }, "<");
           tl.fromTo(
             group,
             CARD_HIDDEN,
             { ...CARD_SHOWN, duration: 1.15, ease: "power4.out" },
-            0.2,
+            "<",
           );
-          tl.add(playSondavenReveal(cards), 0.7);
+          tl.add(playSondavenReveal(cards), "<0.5");
           begin(tl);
           return true;
         }
@@ -226,11 +219,6 @@ export function StudioIntro() {
         tl.set(stage, { autoAlpha: 1, scale: STAGE_ZOOM_SCALE });
         tl.to(stage, { scale: 1, ...ZOOM_OUT });
         begin(tl);
-        return true;
-      }
-      if (step === 1) {
-        stepRef.current = 0;
-        begin(gsap.timeline().to(stage, { scale: 1, ...ZOOM_OUT }));
         return true;
       }
       return false; // step0 继续上滑 → 交回分页器切上一屏
@@ -249,8 +237,19 @@ export function StudioIntro() {
 
   return (
     <ScreenShell aria-label={t("studioIntro.aria")}>
-      {/* 图一舞台：设计稿 1440×800，元素以视口中心锚定按 --su 换算；底色对稿 #E0E0E0 */}
+      {/* 图一舞台：设计稿 1440×800，元素以视口中心锚定按 --su 换算；底色对稿 #E0E0E0。
+          层序对稿（底→顶）：layer-04 → layer-03 → layer-01 */}
       <div ref={stageRef} className="absolute inset-0 bg-[#E0E0E0]">
+        {/* layer-04 小圆环（逆时针，最底） */}
+        <div className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-292)] mt-[calc(var(--su)*-236)] h-[calc(var(--su)*542)] w-[calc(var(--su)*541)] overflow-hidden rounded-full">
+          <Image
+            ref={ringInnerRef}
+            src={layer04Img}
+            alt=""
+            sizes="(min-width: 768px) 38vw, 100vw"
+            className="h-full w-full"
+          />
+        </div>
         {/* layer-03 大圆环（顺时针）：圆形裁切避免矩形图角随旋转扫入画面 */}
         <div className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-563)] mt-[calc(var(--su)*-612)] h-[calc(var(--su)*1175)] w-[calc(var(--su)*1162)] overflow-hidden rounded-full">
           <Image
@@ -258,16 +257,6 @@ export function StudioIntro() {
             src={layer03Img}
             alt=""
             sizes="(min-width: 768px) 81vw, 100vw"
-            className="h-full w-full"
-          />
-        </div>
-        {/* layer-04 小圆环（逆时针） */}
-        <div className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-292)] mt-[calc(var(--su)*-236)] h-[calc(var(--su)*542)] w-[calc(var(--su)*541)] overflow-hidden rounded-full">
-          <Image
-            ref={ringInnerRef}
-            src={layer04Img}
-            alt=""
-            sizes="(min-width: 768px) 38vw, 100vw"
             className="h-full w-full"
           />
         </div>
@@ -279,30 +268,28 @@ export function StudioIntro() {
           sizes="100vw"
           className="object-cover"
         />
-        {/* 中心口号组：分隔线 + G 标 + 两行文案（随整屏逐行入场） */}
-        <div className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-80)] mt-[calc(var(--su)*-23)] w-[calc(var(--su)*160)]">
-          <div className="flex items-center justify-between">
-            <span
-              aria-hidden="true"
-              className="h-px w-[calc(var(--su)*49)] bg-grey-300"
-            />
-            <Image
-              src={markDarkImg}
-              alt=""
-              unoptimized
-              className="h-[calc(var(--su)*14)] w-[calc(var(--su)*13)]"
-            />
-            <span
-              aria-hidden="true"
-              className="h-px w-[calc(var(--su)*51)] bg-grey-300"
-            />
-          </div>
-          <p
-            data-sd-lines
-            data-sd-delay="0.5"
-            aria-label={`${t("studioIntro.line1")} ${t("studioIntro.line2")}`}
-            className="mt-[calc(var(--su)*12)] text-center font-serif-sc text-[length:calc(var(--su)*16)] leading-[calc(var(--su)*26)] text-grey-400"
-          >
+        {/* 中心口号组：分隔线 + 黑底 G 标 + 两行文案，三者同为 sd-line 逐行入场 */}
+        <div
+          data-sd-lines
+          data-sd-delay="0.5"
+          aria-label={`${t("studioIntro.line1")} ${t("studioIntro.line2")}`}
+          className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-80)] mt-[calc(var(--su)*-23)] w-[calc(var(--su)*160)]"
+        >
+          <span aria-hidden="true" className="block overflow-hidden">
+            <span className="sd-line mx-auto flex w-[calc(var(--su)*138)] items-center justify-between opacity-0">
+              <span className="h-px w-[calc(var(--su)*49)] bg-grey-300" />
+              <span className="flex h-[calc(var(--su)*12)] w-[calc(var(--su)*12)] items-center justify-center bg-grey-400">
+                <Image
+                  src={markGImg}
+                  alt=""
+                  unoptimized
+                  className="h-[calc(var(--su)*10)] w-[calc(var(--su)*10)]"
+                />
+              </span>
+              <span className="h-px w-[calc(var(--su)*51)] bg-grey-300" />
+            </span>
+          </span>
+          <div className="mt-[calc(var(--su)*6)] text-center font-serif-sc text-[length:calc(var(--su)*16)] leading-[calc(var(--su)*23)] text-grey-400">
             <span aria-hidden="true" className="block overflow-hidden">
               <span className="sd-line block opacity-0">
                 {t("studioIntro.line1")}
@@ -313,7 +300,7 @@ export function StudioIntro() {
                 {t("studioIntro.line2")}
               </span>
             </span>
-          </p>
+          </div>
         </div>
       </div>
       {/* 图二卡片层：初始隐藏，step2 信封式入场；文字动画由本组件手动驱动 */}

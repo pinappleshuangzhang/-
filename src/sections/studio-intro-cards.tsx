@@ -21,7 +21,7 @@ const CARD_MASK_STYLE = {
 } as const;
 
 const CAPTION_CLASS =
-  "absolute font-bodoni text-[length:calc(var(--su)*8)] leading-[calc(var(--su)*14)] tracking-[0.08em] text-grey-300";
+  "absolute font-bodoni text-[length:calc(var(--su)*8)] uppercase leading-[calc(var(--su)*14)] tracking-[0.08em] text-grey-300";
 
 /** 逐行入场通用：overflow-hidden 行容器 + .sd-line 初始隐藏 */
 function RevealLine({ text }: { text: string }) {
@@ -109,8 +109,8 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
               className="absolute left-[calc(var(--su)*251)] top-[calc(var(--su)*130)] h-[calc(var(--su)*20)] w-[calc(var(--su)*20)]"
             />
           </div>
-          {/* 右下玻璃形（旋转 180°）+ 工作方式 */}
-          <div className="absolute left-[calc(var(--su)*569)] top-[calc(var(--su)*417)] h-[calc(var(--su)*279)] w-[calc(var(--su)*753.3)]">
+          {/* 右下玻璃形（旋转 180°，对稿右缘贴齐画布 1331） */}
+          <div className="absolute left-[calc(var(--su)*577.7)] top-[calc(var(--su)*417)] h-[calc(var(--su)*279)] w-[calc(var(--su)*753.3)]">
             <Image
               src={cardBrImg}
               alt=""
@@ -122,7 +122,7 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
             <div
               data-sd-lines
               aria-label={`${t("studioIntro.card2Title")} ${t("studioIntro.card2Body1")} ${t("studioIntro.card2Body2")}`}
-              className="absolute left-[calc(var(--su)*260)] top-[calc(var(--su)*95)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*24)] text-grey-400"
+              className="absolute left-[calc(var(--su)*251.3)] top-[calc(var(--su)*95)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*24)] text-grey-400"
             >
               <RevealLine text={t("studioIntro.card2Title")} />
               <RevealLine text={t("studioIntro.card2Body1")} />
