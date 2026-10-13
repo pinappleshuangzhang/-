@@ -8,7 +8,7 @@ import { ArchiveIntro } from "@/sections/archive-intro";
 import { Contact } from "@/sections/contact";
 import { Hero } from "@/sections/hero";
 import { MemberRecord } from "@/sections/member-record";
-import { OrgFounding } from "@/sections/org-founding";
+import { StudioIntro } from "@/sections/studio-intro";
 
 const SCREENS: PagerScreen[] = [
   {
@@ -31,7 +31,7 @@ const SCREENS: PagerScreen[] = [
     navVariant: "archive-ga-002",
     background: "archive",
     titleKey: "screen.ga002",
-    node: <OrgFounding />,
+    node: <StudioIntro />,
   },
   {
     key: "archive-ga-003",

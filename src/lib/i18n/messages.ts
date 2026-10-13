@@ -64,6 +64,15 @@ export type MessageKey =
   | "orgFounding.detail1"
   | "orgFounding.detail1Mobile"
   | "orgFounding.detail2"
+  | "studioIntro.aria"
+  | "studioIntro.line1"
+  | "studioIntro.line2"
+  | "studioIntro.card1Title"
+  | "studioIntro.card1Body"
+  | "studioIntro.card2Title"
+  | "studioIntro.card2Body1"
+  | "studioIntro.card2Body2"
+  | "studioIntro.plateAlt"
   | "member.aria"
   | "member.imageAlt"
   | "member.investigator"
@@ -267,6 +276,15 @@ const zh: Messages = {
   "orgFounding.detail1": "我们进入不同的品牌、产品、空间与数字体验",
   "orgFounding.detail1Mobile": "我们进入不同的品牌、产品、空间与数字体验",
   "orgFounding.detail2": "每一次设计都会形成一份“调查档案”",
+  "studioIntro.aria": "档案 GA_002 工作室简介",
+  "studioIntro.line1": "理解连接如何发生",
+  "studioIntro.line2": "创造被选择的引力",
+  "studioIntro.card1Title": "我们想做的——",
+  "studioIntro.card1Body": "就是把这种看不见的连接变成真实可感的设计",
+  "studioIntro.card2Title": "我们的工作方式——",
+  "studioIntro.card2Body1": "从策略判断、系统构建，到视觉表达与体验落地",
+  "studioIntro.card2Body2": "帮助品牌找到方向并将它转为完整、可持续的设计系统",
+  "studioIntro.plateAlt": "嵌有工作室标识的金属铭牌装置",
   "member.aria": "档案 GA_003 成员记录",
   "member.imageAlt": "摆放白色书籍与雕塑半身像的成员档案展柜",
   "member.investigator": "调查员",
@@ -519,6 +537,18 @@ const en: Messages = {
   "orgFounding.detail1Mobile":
     "We Enter Different Brands, Products, Spaces, And Digital Experiences.",
   "orgFounding.detail2": "Every Design Becomes A Survey Archive",
+  "studioIntro.aria": "Archive GA_002 Studio Introduction",
+  "studioIntro.line1": "Understand How Connection Happens",
+  "studioIntro.line2": "Create Gravity That Is Chosen",
+  "studioIntro.card1Title": "What We Want To Do —",
+  "studioIntro.card1Body":
+    "Turn This Invisible Connection Into Real, Tangible Design",
+  "studioIntro.card2Title": "How We Work —",
+  "studioIntro.card2Body1":
+    "From Strategic Judgment And System Building To Visual Expression And Experience Delivery",
+  "studioIntro.card2Body2":
+    "Helping Brands Find Direction And Turn It Into A Complete, Sustainable Design System",
+  "studioIntro.plateAlt": "Metal Plate Installation With The Studio Logo",
   "member.aria": "Archive GA_003 Member Record",
   "member.imageAlt":
     "Member Archive Display With White Books And A Sculpted Bust",
