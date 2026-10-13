@@ -193,22 +193,23 @@ export function StudioIntro() {
           const tl = gsap.timeline();
           tl.to(stage, { scale: STAGE_ZOOM_SCALE, ...ZOOM_IN }, 0);
           // 卡片层带全屏底色，不可瞬切（会把图一硬盖掉），
-          // 改为交叉淡入：图一放大在底下透出，2.4s 处完全接管
+          // 改为交叉淡入：图一放大在底下透出，1.1s 处完全接管。
+          // 去程总长 ~1.7s，与回程（0.7s 退场 + 1.0s 回缩）速率对称
           tl.fromTo(
             cards,
             { autoAlpha: 0 },
-            { autoAlpha: 1, duration: 1.6, ease: "power2.inOut" },
-            0.8,
+            { autoAlpha: 1, duration: 0.6, ease: "power2.inOut" },
+            0.5,
           );
-          tl.set(stage, { autoAlpha: 0 }, 2.4);
-          // 整卡信封翻入放缓，文字在卡片大体落定后再逐词浮现
+          tl.set(stage, { autoAlpha: 0 }, 1.1);
+          // 整卡信封翻入，文字在卡片大体落定后再逐词浮现
           tl.fromTo(
             group,
             CARD_HIDDEN,
-            { ...CARD_SHOWN, duration: 2.6, ease: "power4.out" },
-            0.8,
+            { ...CARD_SHOWN, duration: 1.2, ease: "power4.out" },
+            0.5,
           );
-          tl.add(playSondavenReveal(cards), 2.2);
+          tl.add(playSondavenReveal(cards), 1.1);
           begin(tl);
           return true;
         }
