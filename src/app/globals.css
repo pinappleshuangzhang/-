@@ -116,6 +116,28 @@ body {
   cursor: pointer;
 }
 
+/**
+ * 稿面覆盖层：按 1440×800 画板做 cover 缩放，内容与全出血背景同步放大并同样裁切。
+ * 用于「屏内元素必须始终压在背景实物同一位置」的分屏（联系屏取件机）；
+ * 层内 --su 被改写成背景的 cover 倍率，子元素照旧写 calc(var(--su) * 稿面像素)。
+ */
+.stage-cover-1440 {
+  --su: max(100vw / 1440, 100vh / 800);
+  width: calc(var(--su) * 1440);
+  height: calc(var(--su) * 800);
+}
+
+/**
+ * 稿面包含层：按 1440×800 画板做 contain 缩放，宽或高先触边即停、整板不裁切。
+ * 用于「整板构图需随大屏拉伸但不能溢出」的画布（工作室简介图二卡片）；
+ * 层内 --su 被改写成 contain 倍率，子元素（含文字）照旧写 calc(var(--su) * 稿面像素)。
+ */
+.stage-contain-1440 {
+  --su: min(100vw / 1440, 100vh / 800);
+  width: calc(var(--su) * 1440);
+  height: calc(var(--su) * 800);
+}
+
 /* 整屏分页模式：页面本身不滚动，翻屏由 SectionPagerProvider 接管 */
 html[data-section-pager],
 html[data-section-pager] body {

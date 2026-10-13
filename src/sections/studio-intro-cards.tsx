@@ -50,9 +50,12 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
         data-sd-global-ignore
         className="invisible absolute inset-0 bg-[#E0E2E6] opacity-0"
       >
+        {/* stage-contain-1440：层内 --su 改写为 contain 倍率（宽或高先触边），
+            大屏下整板拉伸铺满、文字随稿面刻度同步缩放；居中用负 margin，
+            不占用 transform（信封动画需要） */}
         <div
           data-studio-card-group
-          className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-720)] mt-[calc(var(--su)*-400)] h-[calc(var(--su)*800)] w-[calc(var(--su)*1440)]"
+          className="stage-contain-1440 absolute left-1/2 top-1/2 ml-[calc(var(--su)*-720)] mt-[calc(var(--su)*-400)]"
         >
           {/* 左上玻璃形 + 想做的事 */}
           <div className="absolute left-[calc(var(--su)*109)] top-[calc(var(--su)*129)] h-[calc(var(--su)*279)] w-[calc(var(--su)*753.3)]">
