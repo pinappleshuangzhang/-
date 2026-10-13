@@ -53,11 +53,9 @@ function getMobileViewportServerSnapshot() {
   return false;
 }
 
-/** 入场顺序（自下而上）：data-studio-card 数值即次序 */
-function orderedCards(root: HTMLElement): HTMLElement[] {
-  return Array.from(
-    root.querySelectorAll<HTMLElement>("[data-studio-card]"),
-  ).sort((a, b) => Number(a.dataset.studioCard) - Number(b.dataset.studioCard));
+/** 图二整张大卡：信封式 3D 翻入/退场的单一目标 */
+function cardGroup(root: HTMLElement): HTMLElement | null {
+  return root.querySelector<HTMLElement>("[data-studio-card-group]");
 }
 
 /**
@@ -105,7 +103,8 @@ export function StudioIntro() {
     if (stage) gsap.set(stage, { scale: 1, autoAlpha: 1 });
     if (cards) {
       gsap.set(cards, { autoAlpha: 0 });
-      gsap.set(orderedCards(cards), CARD_HIDDEN);
+      const group = cardGroup(cards);
+      if (group) gsap.set(group, CARD_HIDDEN);
       setSondavenHidden(cards);
     }
   }, []);
@@ -116,8 +115,9 @@ export function StudioIntro() {
     const stage = stageRef.current;
     const cards = cardsRef.current;
     if (stage) gsap.set(stage, { transformOrigin: "50% 50%" });
-    if (cards) {
-      gsap.set(orderedCards(cards), {
+    const group = cards ? cardGroup(cards) : null;
+    if (group) {
+      gsap.set(group, {
         transformPerspective: 900,
         transformOrigin: "50% 50%",
         force3D: true,
@@ -160,6 +160,9 @@ export function StudioIntro() {
       const down = deltaY > 0;
       const step = stepRef.current;
 
+      const group = cardGroup(cards);
+      if (!group) return false;
+
       if (reducedMotion) {
         if (down && step === 0) {
           stepRef.current = 1;
@@ -168,7 +171,7 @@ export function StudioIntro() {
           stepRef.current = 2;
           gsap.set(stage, { autoAlpha: 0 });
           gsap.set(cards, { autoAlpha: 1 });
-          gsap.set(orderedCards(cards), CARD_SHOWN);
+          gsap.set(group, CARD_SHOWN);
           setSondavenVisible(cards);
         } else if (!down && step > 0) {
           resetToStage();
@@ -200,10 +203,11 @@ export function StudioIntro() {
           const tl = gsap.timeline();
           tl.to(stage, { autoAlpha: 0, duration: 0.45, ease: "power2.out" }, 0);
           tl.set(cards, { autoAlpha: 1 }, 0);
+          // 整张大卡一体信封式翻入（自下而上）
           tl.fromTo(
-            orderedCards(cards),
+            group,
             CARD_HIDDEN,
-            { ...CARD_SHOWN, duration: 1.15, ease: "power4.out", stagger: 0.12 },
+            { ...CARD_SHOWN, duration: 1.15, ease: "power4.out" },
             0.2,
           );
           tl.add(playSondavenReveal(cards), 0.7);
@@ -216,11 +220,7 @@ export function StudioIntro() {
         // 一条连续时间轴：卡片反向退场 → 舞台放大态 → 回缩至原始态
         stepRef.current = 0;
         const tl = gsap.timeline();
-        tl.to(
-          orderedCards(cards).reverse(),
-          { ...CARD_HIDDEN, duration: 0.7, ease: "power4.in", stagger: 0.08 },
-          0,
-        );
+        tl.to(group, { ...CARD_HIDDEN, duration: 0.7, ease: "power4.in" }, 0);
         tl.set(cards, { autoAlpha: 0 });
         tl.add(() => setSondavenHidden(cards));
         tl.set(stage, { autoAlpha: 1, scale: STAGE_ZOOM_SCALE });
@@ -249,15 +249,8 @@ export function StudioIntro() {
 
   return (
     <ScreenShell aria-label={t("studioIntro.aria")}>
-      {/* 图一舞台：设计稿 1440×800，元素以视口中心锚定按 --su 换算 */}
-      <div ref={stageRef} className="absolute inset-0">
-        <Image
-          src={layer01Img}
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover"
-        />
+      {/* 图一舞台：设计稿 1440×800，元素以视口中心锚定按 --su 换算；底色对稿 #E0E0E0 */}
+      <div ref={stageRef} className="absolute inset-0 bg-[#E0E0E0]">
         {/* layer-03 大圆环（顺时针）：圆形裁切避免矩形图角随旋转扫入画面 */}
         <div className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-563)] mt-[calc(var(--su)*-612)] h-[calc(var(--su)*1175)] w-[calc(var(--su)*1162)] overflow-hidden rounded-full">
           <Image
@@ -278,6 +271,14 @@ export function StudioIntro() {
             className="h-full w-full"
           />
         </div>
+        {/* layer-01 前景覆盖层（带透明中心），压在双圆环之上 */}
+        <Image
+          src={layer01Img}
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover"
+        />
         {/* 中心口号组：分隔线 + G 标 + 两行文案（随整屏逐行入场） */}
         <div className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-80)] mt-[calc(var(--su)*-23)] w-[calc(var(--su)*160)]">
           <div className="flex items-center justify-between">
