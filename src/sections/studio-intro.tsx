@@ -32,8 +32,8 @@ import { BrandLogo } from "@/components/ui/brand-logo";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { SplitWords } from "@/components/ui/split-words";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { OrgFoundingMobile } from "@/sections/org-founding-mobile";
 import { StudioIntroCards } from "@/sections/studio-intro-cards";
+import { StudioIntroMobile } from "@/sections/studio-intro-mobile";
 import layer01Img from "../../public/archive-ga-004/background-layers/layer-01.webp";
 import layer03Img from "../../public/archive-ga-004/background-layers/layer-03.webp";
 import layer04Img from "../../public/archive-ga-004/background-layers/layer-04.webp";
@@ -64,7 +64,7 @@ function cardGroup(root: HTMLElement): HTMLElement | null {
  *   step0 图一舞台（圆环持续旋转）→ 下滑 → 一条连续时间轴：
  *   以视口中心放大（由慢到快）→ 图一淡出 → 图二整卡信封式翻入（step2）
  *   → 上滑 → 反向连续时间轴：整卡退场 → 舞台从放大态回缩至原始态（回 step0）
- * 移动端沿用原组织记录屏 OrgFoundingMobile。
+ * 移动端见 StudioIntroMobile（390 画板，淡出/渐入交互）。
  */
 export function StudioIntro() {
   const isActive = useScreenActive();
@@ -238,7 +238,7 @@ export function StudioIntro() {
   ]);
 
   if (isMobileViewport) {
-    return <OrgFoundingMobile />;
+    return <StudioIntroMobile />;
   }
 
   return (
