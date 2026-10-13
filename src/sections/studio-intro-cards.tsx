@@ -60,7 +60,7 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
             <div
               data-sd-words
               aria-label={`${t("studioIntro.card1Title")} ${t("studioIntro.card1Body")}`}
-              className="absolute left-[calc(var(--su)*180)] top-[calc(var(--su)*117)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*23)] text-grey-400"
+              className="absolute left-[calc(var(--su)*170)] top-[calc(var(--su)*117)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*23)] text-grey-400"
             >
               <RevealLine text={t("studioIntro.card1Title")} />
               <RevealLine text={t("studioIntro.card1Body")} />
