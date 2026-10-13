@@ -28,15 +28,15 @@ import {
   useScreenActive,
   useSectionPager,
 } from "@/components/providers/section-pager-provider";
+import { BrandLogo } from "@/components/ui/brand-logo";
 import { ScreenShell } from "@/components/ui/screen-shell";
+import { SplitWords } from "@/components/ui/split-words";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { OrgFoundingMobile } from "@/sections/org-founding-mobile";
 import { StudioIntroCards } from "@/sections/studio-intro-cards";
 import layer01Img from "../../public/archive-ga-004/background-layers/layer-01.webp";
 import layer03Img from "../../public/archive-ga-004/background-layers/layer-03.webp";
 import layer04Img from "../../public/archive-ga-004/background-layers/layer-04.webp";
-import markGImg from "../../public/studio-intro/mark-g.svg";
-
 const MOBILE_QUERY = "(max-width: 767px)";
 
 function subscribeMobileViewport(callback: () => void) {
@@ -268,39 +268,32 @@ export function StudioIntro() {
           sizes="100vw"
           className="object-cover"
         />
-        {/* 中心口号组：分隔线 + 黑底 G 标 + 两行文案，三者同为 sd-line 逐行入场 */}
+        {/* 中心口号组：分隔线 + 品牌 logo（缩小版 BrandLogo）+ 两行文案，
+            全部作为 sd-word 参与同一套逐词随机浮现 */}
         <div
-          data-sd-lines
+          data-sd-words
           data-sd-delay="0.5"
           aria-label={`${t("studioIntro.line1")} ${t("studioIntro.line2")}`}
           className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-80)] mt-[calc(var(--su)*-23)] w-[calc(var(--su)*160)]"
         >
-          <span aria-hidden="true" className="block overflow-hidden">
-            <span className="sd-line mx-auto flex w-[calc(var(--su)*138)] items-center justify-between opacity-0">
-              <span className="h-px w-[calc(var(--su)*49)] bg-grey-300" />
-              <span className="flex h-[calc(var(--su)*12)] w-[calc(var(--su)*12)] items-center justify-center bg-grey-400">
-                <Image
-                  src={markGImg}
-                  alt=""
-                  unoptimized
-                  className="h-[calc(var(--su)*10)] w-[calc(var(--su)*10)]"
-                />
-              </span>
-              <span className="h-px w-[calc(var(--su)*51)] bg-grey-300" />
+          <div
+            aria-hidden="true"
+            className="mx-auto flex w-[calc(var(--su)*138)] items-center justify-between"
+          >
+            <span className="sd-word h-px w-[calc(var(--su)*49)] bg-grey-300 opacity-0" />
+            <span className="sd-word opacity-0">
+              <BrandLogo className="block size-[calc(var(--su)*12)] text-grey-400" />
             </span>
-          </span>
-          <div className="mt-[calc(var(--su)*6)] text-center font-serif-sc text-[length:calc(var(--su)*16)] leading-[calc(var(--su)*23)] text-grey-400">
-            <span aria-hidden="true" className="block overflow-hidden">
-              <span className="sd-line block opacity-0">
-                {t("studioIntro.line1")}
-              </span>
-            </span>
-            <span aria-hidden="true" className="block overflow-hidden">
-              <span className="sd-line block opacity-0">
-                {t("studioIntro.line2")}
-              </span>
-            </span>
+            <span className="sd-word h-px w-[calc(var(--su)*51)] bg-grey-300 opacity-0" />
           </div>
+          <p
+            aria-hidden="true"
+            className="mt-[calc(var(--su)*6)] text-center font-serif-sc text-[length:calc(var(--su)*16)] leading-[calc(var(--su)*23)] text-grey-400"
+          >
+            <SplitWords text={t("studioIntro.line1")} />
+            <br />
+            <SplitWords text={t("studioIntro.line2")} />
+          </p>
         </div>
       </div>
       {/* 图二卡片层：初始隐藏，step2 信封式入场；文字动画由本组件手动驱动 */}
