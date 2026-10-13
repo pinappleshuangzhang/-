@@ -21,8 +21,9 @@ const CARD_MASK_STYLE = {
   maskRepeat: "no-repeat",
 } as const;
 
+// 对稿：Libre Bodoni 8px / 行高 14 / 全大写 / 无字距 / #131313
 const CAPTION_CLASS =
-  "absolute font-bodoni text-[length:calc(var(--su)*8)] uppercase leading-[calc(var(--su)*14)] tracking-[0.08em] text-grey-300";
+  "absolute font-bodoni text-[length:calc(var(--su)*8)] uppercase leading-[calc(var(--su)*14)] text-grey-400";
 
 /** 正文行：行内逐词随机浮现（与全站标题/口号同一套 sd-words 动画） */
 function RevealLine({ text }: { text: string }) {
