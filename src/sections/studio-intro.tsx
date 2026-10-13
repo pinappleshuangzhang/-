@@ -273,7 +273,7 @@ export function StudioIntro() {
             全部作为 sd-word 参与同一套逐词随机浮现 */}
         <div
           data-sd-words
-          data-sd-delay="0.5"
+          data-sd-delay="0.1"
           aria-label={`${t("studioIntro.line1")} ${t("studioIntro.line2")}`}
           className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-80)] mt-[calc(var(--su)*-23)] w-[calc(var(--su)*160)]"
         >
@@ -281,11 +281,11 @@ export function StudioIntro() {
             aria-hidden="true"
             className="mx-auto flex w-[calc(var(--su)*138)] items-center justify-between"
           >
-            <span className="sd-word h-px w-[calc(var(--su)*49)] bg-grey-300 opacity-0" />
+            <span className="sd-word h-[0.3px] w-[calc(var(--su)*49)] bg-grey-300 opacity-0" />
             <span className="sd-word opacity-0">
               <BrandLogo className="block size-[calc(var(--su)*12)] text-grey-400" />
             </span>
-            <span className="sd-word h-px w-[calc(var(--su)*51)] bg-grey-300 opacity-0" />
+            <span className="sd-word h-[0.3px] w-[calc(var(--su)*51)] bg-grey-300 opacity-0" />
           </div>
           <p
             aria-hidden="true"

@@ -59,7 +59,7 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
             <div
               data-sd-words
               aria-label={`${t("studioIntro.card1Title")} ${t("studioIntro.card1Body")}`}
-              className="absolute left-[calc(var(--su)*180)] top-[calc(var(--su)*117)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*24)] text-grey-400"
+              className="absolute left-[calc(var(--su)*180)] top-[calc(var(--su)*117)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*23)] text-grey-400"
             >
               <RevealLine text={t("studioIntro.card1Title")} />
               <RevealLine text={t("studioIntro.card1Body")} />
@@ -96,9 +96,9 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
               sizes="42vw"
               className="-scale-y-100"
             />
-            {/* vertical-rl + rotate180 = 西文侧躺、自下而上读（对稿 -90°） */}
+            {/* vertical-rl + rotate180 = 西文侧躺、自下而上读（对稿 -90°，12px 无字距） */}
             <p
-              className="absolute left-[calc(var(--su)*17)] top-[calc(var(--su)*119)] rotate-180 font-bodoni text-[length:calc(var(--su)*12)] tracking-[0.3em] text-grey-400"
+              className="absolute left-[calc(var(--su)*17)] top-[calc(var(--su)*119)] rotate-180 font-bodoni text-[length:calc(var(--su)*12)] text-grey-400"
               style={{ writingMode: "vertical-rl" }}
             >
               GRAVA
@@ -110,8 +110,9 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
               className="absolute left-[calc(var(--su)*251)] top-[calc(var(--su)*130)] h-[calc(var(--su)*20)] w-[calc(var(--su)*20)]"
             />
           </div>
-          {/* 右下玻璃形（旋转 180°，形体靠容器左侧：569..1322.3） */}
-          <div className="absolute left-[calc(var(--su)*569)] top-[calc(var(--su)*417)] h-[calc(var(--su)*279)] w-[calc(var(--su)*753.3)]">
+          {/* 右下玻璃形（旋转 180°）：像素对稿实测，形体 577.7..1331，
+              下排斜缝与上排、水平缝一致（约 9px） */}
+          <div className="absolute left-[calc(var(--su)*577.7)] top-[calc(var(--su)*417)] h-[calc(var(--su)*279)] w-[calc(var(--su)*753.3)]">
             <Image
               src={cardBrImg}
               alt=""
@@ -123,7 +124,7 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
             <div
               data-sd-words
               aria-label={`${t("studioIntro.card2Title")} ${t("studioIntro.card2Body1")} ${t("studioIntro.card2Body2")}`}
-              className="absolute left-[calc(var(--su)*260)] top-[calc(var(--su)*95)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*24)] text-grey-400"
+              className="absolute left-[calc(var(--su)*251.3)] top-[calc(var(--su)*95)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*23)] text-grey-400"
             >
               <RevealLine text={t("studioIntro.card2Title")} />
               <RevealLine text={t("studioIntro.card2Body1")} />
