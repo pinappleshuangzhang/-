@@ -202,10 +202,10 @@ export function StudioIntro() {
           tl.fromTo(
             group,
             CARD_HIDDEN,
-            { ...CARD_SHOWN, duration: 1.8, ease: "power4.out" },
+            { ...CARD_SHOWN, duration: 2.6, ease: "power4.out" },
             0.55,
           );
-          tl.add(playSondavenReveal(cards), 1.4);
+          tl.add(playSondavenReveal(cards), 1.9);
           begin(tl);
           return true;
         }
