@@ -235,8 +235,10 @@ export function StudioIntroMobile() {
           ref={clusterRef}
           className="absolute left-1/2 top-1/2 size-0 origin-top-left"
         >
-          {/* layer-04 小圆环（逆时针，最底） */}
-          <div className="absolute left-0 top-0 ml-[-263.6px] mt-[-227.8px] size-[492.6px] overflow-hidden rounded-full">
+          {/* layer-04 小圆环（逆时针，最底）。
+              注：稿面构图整体偏上 13px（上色带 45 / 下色带 72），真机矮视口下
+              上下留白不等；此处整组下移 13.5px 改为严格垂直居中，上下各约 59px */}
+          <div className="absolute left-0 top-0 ml-[-263.6px] mt-[-214.3px] size-[492.6px] overflow-hidden rounded-full">
             <Image
               ref={ringInnerRef}
               src={layer04Img}
@@ -246,7 +248,7 @@ export function StudioIntroMobile() {
             />
           </div>
           {/* layer-03 大圆环（顺时针）：还原整圆便于旋转，圆形裁切 */}
-          <div className="absolute left-0 top-0 ml-[-510.2px] mt-[-569.9px] h-[1069.1px] w-[1057.1px] overflow-hidden rounded-full">
+          <div className="absolute left-0 top-0 ml-[-510.2px] mt-[-556.4px] h-[1069.1px] w-[1057.1px] overflow-hidden rounded-full">
             <Image
               ref={ringOuterRef}
               src={layer03Img}
@@ -256,7 +258,7 @@ export function StudioIntroMobile() {
             />
           </div>
           {/* layer-01 前景覆盖层（带透明中心） */}
-          <div className="absolute left-0 top-0 ml-[-653.4px] mt-[-377px] h-[727.8px] w-[1310.9px]">
+          <div className="absolute left-0 top-0 ml-[-653.4px] mt-[-363.9px] h-[727.8px] w-[1310.9px]">
             <Image
               src={layer01Img}
               alt=""
@@ -265,14 +267,14 @@ export function StudioIntroMobile() {
               className="object-cover"
             />
           </div>
-          {/* 上下渐变色条：贴齐 844 画板上下缘，与 layer-01 上下缘各重叠 1px 盖住接缝 */}
+          {/* 上下渐变色条：贴齐 844 画板上下缘，与 layer-01 上下缘各重叠约 1px 盖住接缝 */}
           <div
             aria-hidden="true"
-            className="absolute left-0 top-0 ml-[-700px] mt-[-423px] h-[46px] w-[1400px] bg-gradient-to-r from-[#F3F5F9] via-[#ECEEF2] to-[#E8EAEE]"
+            className="absolute left-0 top-0 ml-[-700px] mt-[-423px] h-[60px] w-[1400px] bg-gradient-to-r from-[#F3F5F9] via-[#ECEEF2] to-[#E8EAEE]"
           />
           <div
             aria-hidden="true"
-            className="absolute left-0 top-0 ml-[-700px] mt-[350px] h-[73px] w-[1400px] bg-gradient-to-r from-[#E4E5E9] via-[#E0E2E6] to-[#DFE1E5]"
+            className="absolute left-0 top-0 ml-[-700px] mt-[363px] h-[60px] w-[1400px] bg-gradient-to-r from-[#E4E5E9] via-[#E0E2E6] to-[#DFE1E5]"
           />
         </div>
         {/* 中心口号组：分隔线 + 品牌 logo + 两行文案，逐词随机浮现 */}
