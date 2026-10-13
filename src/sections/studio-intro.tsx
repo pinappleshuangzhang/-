@@ -194,7 +194,7 @@ export function StudioIntro() {
           tl.to(stage, { scale: STAGE_ZOOM_SCALE, ...ZOOM_IN }, 0);
           tl.to(
             stage,
-            { autoAlpha: 0, duration: 2.0, ease: "power2.in" },
+            { autoAlpha: 0, duration: 3.0, ease: "power2.in" },
             0.2,
           );
           tl.set(cards, { autoAlpha: 1 }, 0.55);

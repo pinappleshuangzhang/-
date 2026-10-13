@@ -10,8 +10,8 @@ import gsap from "gsap";
 
 /** step0 → step1 的整体放大倍率（以视口中心为原点），可按观感调整 */
 export const STAGE_ZOOM_SCALE = 1.6;
-/** 放大：由慢到快（与圆环淡出同在 2.2s 收尾，保持同步结束） */
-export const ZOOM_IN = { duration: 2.2, ease: "power2.in" } as const;
+/** 放大：由慢到快（与圆环淡出同在 3.2s 收尾，保持同步结束） */
+export const ZOOM_IN = { duration: 3.2, ease: "power2.in" } as const;
 /** 回缩：由快到慢 */
 export const ZOOM_OUT = { duration: 1.0, ease: "power2.out" } as const;
 
