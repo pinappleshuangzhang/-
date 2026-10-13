@@ -4,11 +4,8 @@ import { useLayoutEffect, useRef, type Ref } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { BrandLogo } from "@/components/ui/brand-logo";
-import { CopyCheckIcon } from "@/components/ui/copy-check-icon";
 import { FlipHoverButton } from "@/components/ui/flip-hover-button";
 import { MobileSiteNav } from "@/components/ui/mobile-site-nav";
-import { useCopyContactEmail } from "@/lib/copy-contact-email";
-import { CONTACT_RECIPIENT } from "@/lib/contact-form";
 import type { MessageKey } from "@/lib/i18n/messages";
 import type { NavVariant } from "@/lib/nav-variants";
 
@@ -21,6 +18,8 @@ type SiteNavProps = {
   navVariant?: NavVariant;
   onOpenIndex?: () => void;
   onCloseIndex?: () => void;
+  /** 「联系我们」跳转最后一屏 */
+  onContact?: () => void;
   /** 目录展开时，左侧品牌入口返回首页 */
   onHome?: () => void;
   closeRef?: Ref<HTMLButtonElement>;
@@ -56,6 +55,7 @@ export function SiteNav({
   navVariant = "studio",
   onOpenIndex,
   onCloseIndex,
+  onContact,
   onHome,
   closeRef,
   className,
@@ -64,10 +64,8 @@ export function SiteNav({
   const { locale, setLocale, t } = useLocale();
   const { runWithCurtain, navigationLocked, introOverlayActive, goToScreen } =
     useSectionPager();
-  const { copied, copy } = useCopyContactEmail();
   const isEn = locale === "en";
   const indexLabel = isIndex ? t("nav.close") : t("nav.index");
-  const contactLabel = copied ? t("contact.copied") : t("nav.contact");
   // 中文态显示「英」；英文态显示「CN」
   const langLabel = isEn ? "CN" : "英";
   const navFont = isEn ? "font-bodoni" : "font-serif-sc";
@@ -173,7 +171,9 @@ export function SiteNav({
             type="button"
             onClick={handleHomeClick}
             className={`flex items-center gap-[calc(var(--su)*6)] border-0 bg-transparent p-0 text-left font-bodoni text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white focus-visible:outline-none ${
-              showBrand ? "" : "max-w-[calc(100%-(var(--su-hero)*507+var(--page-margin)))]"
+              showBrand
+                ? ""
+                : "max-w-[calc(100%-(var(--su-hero)*507+var(--page-margin)))]"
             }`}
           >
             <BrandLogo className="size-[calc(var(--su)*20)] shrink-0" />
@@ -188,58 +188,30 @@ export function SiteNav({
             className="absolute right-0 top-1/2 flex w-[calc(var(--su-hero)*507)] -translate-y-1/2 items-center justify-between"
           >
             <div className="flex w-max min-w-[calc(var(--su)*161)] shrink-0 items-center justify-between gap-[calc(var(--su)*32)]">
+              <FlipHoverButton
+                ref={desktopCloseRef}
+                label={indexLabel}
+                aria-label={indexAriaLabel}
+                onClick={handleIndexClick}
+                markOffsetY={markOffsetY}
+                className={linkClass}
+              />
+              <FlipHoverButton
+                label={t("nav.contact")}
+                onClick={onContact}
+                markOffsetY={markOffsetY}
+                className={linkClass}
+              />
+            </div>
             <FlipHoverButton
-              ref={desktopCloseRef}
-              label={indexLabel}
-              aria-label={indexAriaLabel}
-              onClick={handleIndexClick}
+              label={langLabel}
+              aria-label={t("nav.language")}
+              aria-pressed={locale === "en"}
+              resetMarkOnClick
+              onClick={handleLanguageClick}
               markOffsetY={markOffsetY}
-              className={linkClass}
+              className={`w-16 justify-end ${linkClass}`}
             />
-            <span
-              className={`relative inline-flex shrink-0 ${navFont} text-[length:calc(var(--su)*12)] font-normal uppercase leading-none`}
-            >
-              <span aria-hidden="true" className="invisible whitespace-nowrap">
-                {t("nav.contact")}
-              </span>
-              <span className="absolute left-0 top-1/2 -translate-y-1/2">
-                <FlipHoverButton
-                  label={contactLabel}
-                  flipOnChange
-                  reserveLabel={t("nav.contact")}
-                  showHoverMark={!copied}
-                  leading={(layerLabel) =>
-                    layerLabel === t("contact.copied") ? (
-                      <CopyCheckIcon
-                        variant="nav"
-                        className={isEn ? "-translate-y-px" : "translate-y-px"}
-                      />
-                    ) : null
-                  }
-                  aria-live="polite"
-                  aria-label={
-                    copied
-                      ? t("contact.copied")
-                      : `${t("contact.copyAria")} ${CONTACT_RECIPIENT}`
-                  }
-                  onClick={() => {
-                    void copy();
-                  }}
-                  markOffsetY={markOffsetY}
-                  className={linkClass}
-                />
-              </span>
-            </span>
-          </div>
-          <FlipHoverButton
-            label={langLabel}
-            aria-label={t("nav.language")}
-            aria-pressed={locale === "en"}
-            resetMarkOnClick
-            onClick={handleLanguageClick}
-            markOffsetY={markOffsetY}
-            className={`w-16 justify-end ${linkClass}`}
-          />
           </div>
         </nav>
       </header>

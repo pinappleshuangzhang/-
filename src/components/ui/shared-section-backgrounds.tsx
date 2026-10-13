@@ -37,9 +37,14 @@ export function SharedSectionBackgrounds({
             >
               {skipImage ? null : (
                 <SectionBackground
-                  src={config.src}
+                  src={
+                    !isDesktop && config.mobileSrc
+                      ? config.mobileSrc
+                      : config.src
+                  }
                   priority={config.priority}
                   unoptimized={config.unoptimized}
+                  quality={config.quality}
                   imageClassName={config.imageClassName}
                 />
               )}

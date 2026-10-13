@@ -10,7 +10,7 @@ import { FlipChars, type FlipCharsHandle } from "@/components/ui/flip-chars";
 import { shouldMarkFocus } from "@/components/ui/flip-hover-button";
 import { SplitWords } from "@/components/ui/split-words";
 import { CONTACT_RECIPIENT } from "@/lib/contact-form";
-import { useCopyContactEmail } from "@/lib/copy-contact-email";
+import { useCopyTarget } from "@/lib/copy-text";
 import contactEmbossedBgImg from "../../public/contact/contact-embossed-bg.webp";
 import contactEmbossedBgMobileImg from "../../public/contact/contact-embossed-bg-mobile.webp";
 
@@ -44,7 +44,8 @@ function ContactLayout({
   animated?: boolean;
 }) {
   const { locale, t } = useLocale();
-  const { copied, copy } = useCopyContactEmail();
+  const { copiedKey, copy } = useCopyTarget();
+  const copied = copiedKey === "email";
   const flipRef = useRef<FlipCharsHandle>(null);
   const Title = heading;
   const titleFont = locale === "en" ? "font-bodoni" : "font-serif-sc";
@@ -63,7 +64,7 @@ function ContactLayout({
       <button
         type="button"
         onClick={() => {
-          void copy();
+          void copy("email", CONTACT_RECIPIENT);
         }}
         onMouseEnter={() => flipRef.current?.play()}
         onMouseLeave={() => flipRef.current?.reverse()}

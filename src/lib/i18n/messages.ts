@@ -200,6 +200,14 @@ export type MessageKey =
   | "contact.button"
   | "contact.copied"
   | "contact.copyAria"
+  | "contactSurvey.aria"
+  | "contactSurvey.headline"
+  | "contactSurvey.line1"
+  | "contactSurvey.line2"
+  | "contactSurvey.line3"
+  | "contactSurvey.line4"
+  | "contactSurvey.emailAria"
+  | "contactSurvey.phoneAria"
   | "contactForm.title"
   | "contactForm.name"
   | "contactForm.email"
@@ -457,6 +465,14 @@ const zh: Messages = {
   "contact.button": "联系我们",
   "contact.copied": "已复制",
   "contact.copyAria": "复制邮箱",
+  "contactSurvey.aria": "联系我们",
+  "contactSurvey.headline": "每个项目，都始于一次关于“引力”的调查",
+  "contactSurvey.line1": "如果你正在创建新品牌",
+  "contactSurvey.line2": "推进品牌升级",
+  "contactSurvey.line3": "重塑产品与数字体验",
+  "contactSurvey.line4": "欢迎与我们联系",
+  "contactSurvey.emailAria": "复制邮箱",
+  "contactSurvey.phoneAria": "复制电话",
   "contactForm.title": "填写以下信息，与万有引力共同开启下一份调查",
   "contactForm.name": "调查发起人 / NAME",
   "contactForm.email": "你的邮箱 / EMAIL",
@@ -723,6 +739,14 @@ const en: Messages = {
   "contact.button": "Contact Us",
   "contact.copied": "Copied",
   "contact.copyAria": "Copy email",
+  "contactSurvey.aria": "Contact Us",
+  "contactSurvey.headline": "Every Project Begins With A Survey Of Gravity",
+  "contactSurvey.line1": "If You Are Building A New Brand",
+  "contactSurvey.line2": "Advancing A Brand Upgrade",
+  "contactSurvey.line3": "Reshaping Products And Digital Experience",
+  "contactSurvey.line4": "Get In Touch With Us",
+  "contactSurvey.emailAria": "Copy email",
+  "contactSurvey.phoneAria": "Copy phone number",
   "contactForm.title": "Fill in the details below to start the next survey with Grava",
   "contactForm.name": "Initiator / NAME",
   "contactForm.email": "Your Email / EMAIL",

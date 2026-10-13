@@ -91,6 +91,7 @@ export function PageChrome() {
         navVariant={navVariant}
         onOpenIndex={handleOpenIndex}
         onCloseIndex={() => setIndexOpen(false)}
+        onContact={() => handleSelect("contact")}
         onHome={handleHome}
         closeRef={closeRef}
       />

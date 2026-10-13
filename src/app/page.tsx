@@ -5,7 +5,7 @@ import {
 import { PageChrome } from "@/components/ui/page-chrome";
 import { ArchiveGa004Viscose } from "@/sections/archive-ga-004-viscose";
 import { ArchiveIntro } from "@/sections/archive-intro";
-import { Contact } from "@/sections/contact";
+import { ContactSurvey } from "@/sections/contact-survey";
 import { Hero } from "@/sections/hero";
 import { MemberRecord } from "@/sections/member-record";
 import { StudioIntro } from "@/sections/studio-intro";
@@ -50,9 +50,9 @@ const SCREENS: PagerScreen[] = [
   {
     key: "contact",
     navVariant: "contact",
-    background: "archive",
+    background: "contact",
     titleKey: "screen.contact",
-    node: <Contact />,
+    node: <ContactSurvey />,
   },
 ];
 

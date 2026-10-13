@@ -6,6 +6,8 @@ type SectionBackgroundProps = {
   /** 首屏背景传 true，其余分屏懒加载 */
   priority?: boolean;
   unoptimized?: boolean;
+  /** 需保留细节的实拍背景传 95（取值须在 next.config 的 images.qualities 内） */
+  quality?: number;
   imageClassName?: string;
   className?: string;
 };
@@ -16,6 +18,7 @@ export function SectionBackground({
   alt = "",
   priority = false,
   unoptimized = false,
+  quality,
   imageClassName = "object-cover",
   className,
 }: SectionBackgroundProps) {
@@ -27,6 +30,7 @@ export function SectionBackground({
         fill
         priority={priority}
         unoptimized={unoptimized}
+        quality={quality}
         placeholder="blur"
         sizes="100vw"
         className={imageClassName}
