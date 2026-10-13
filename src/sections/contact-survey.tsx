@@ -42,13 +42,13 @@ export function ContactSurvey() {
             data-sd-words
             data-sd-delay="0.2"
             aria-label={t("contactSurvey.headline")}
-            className={`absolute top-[137px] w-[266px] text-center font-serif-sc text-14 font-normal uppercase leading-5 text-grey-400 md:top-[calc(var(--su)*114)] md:w-max md:text-[length:calc(var(--su)*18)] md:leading-[calc(var(--su)*26)] ${GROUP_CENTER}`}
+            className={`absolute top-[137px] w-[266px] text-center font-serif-sc text-14 font-normal uppercase leading-5 text-grey-400 md:top-[calc(var(--su)*114)] md:w-max md:text-[length:calc(var(--su)*16)] md:leading-[calc(var(--su)*26)] ${GROUP_CENTER}`}
           >
             <SplitWords text={t("contactSurvey.headline")} />
           </h1>
 
           <div
-            className={`absolute top-[169px] w-[266px] text-center font-serif-sc text-14 font-normal uppercase text-grey-400 md:top-[calc(var(--su)*151)] md:w-[calc(var(--su)*491)] md:text-[length:calc(var(--su)*18)] ${GROUP_CENTER}`}
+            className={`absolute top-[169px] w-[266px] text-center font-serif-sc text-14 font-normal uppercase text-grey-400 md:top-[calc(var(--su)*151)] md:w-[calc(var(--su)*491)] md:text-[length:calc(var(--su)*16)] ${GROUP_CENTER}`}
           >
             <SurveyLine delay="0.3" before={t("contactSurvey.line1")}>
               <Nameplate />
@@ -221,7 +221,7 @@ function ContactCopyButton({
       aria-label={copied ? copiedLabel : ariaLabel}
       data-sd-words
       data-sd-delay={delay}
-      className="relative flex items-end gap-2 font-serif-sc text-16 font-normal leading-[23px] text-grey-400 underline decoration-solid underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:gap-[calc(var(--su)*8)] md:text-[length:calc(var(--su)*18)] md:leading-[calc(var(--su)*26)]"
+      className="relative flex items-end gap-2 font-serif-sc text-16 font-normal leading-[23px] text-grey-400 underline decoration-solid underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:gap-[calc(var(--su)*8)] md:text-[length:calc(var(--su)*16)] md:leading-[calc(var(--su)*26)]"
     >
       <CopiedBubble label={copiedLabel} visible={copied} />
       <span className="sd-word inline-flex shrink-0 opacity-0">{icon}</span>
