@@ -187,23 +187,24 @@ export function StudioIntro() {
 
       if (down) {
         if (step === 0) {
-          // 一条连续时间轴：放大（由慢到快）→ 图一淡出 → 整卡信封翻入
+          // 一条连续时间轴：放大与淡出同步进行，图一未完全消失时
+          // 卡片已开始信封翻入，画面无空档
           stepRef.current = 2;
           const tl = gsap.timeline();
           tl.to(stage, { scale: STAGE_ZOOM_SCALE, ...ZOOM_IN }, 0);
           tl.to(
             stage,
-            { autoAlpha: 0, duration: 0.45, ease: "power2.out" },
-            ZOOM_IN.duration - 0.2,
+            { autoAlpha: 0, duration: 1.0, ease: "power2.in" },
+            0.2,
           );
-          tl.set(cards, { autoAlpha: 1 }, "<");
+          tl.set(cards, { autoAlpha: 1 }, 0.55);
           tl.fromTo(
             group,
             CARD_HIDDEN,
             { ...CARD_SHOWN, duration: 1.15, ease: "power4.out" },
-            "<",
+            0.55,
           );
-          tl.add(playSondavenReveal(cards), "<0.5");
+          tl.add(playSondavenReveal(cards), 1.0);
           begin(tl);
           return true;
         }
