@@ -198,13 +198,14 @@ export function StudioIntro() {
             0.2,
           );
           tl.set(cards, { autoAlpha: 1 }, 0.55);
+          // 整卡信封翻入放缓，文字在卡片大体落定后再逐词浮现
           tl.fromTo(
             group,
             CARD_HIDDEN,
-            { ...CARD_SHOWN, duration: 1.15, ease: "power4.out" },
+            { ...CARD_SHOWN, duration: 1.8, ease: "power4.out" },
             0.55,
           );
-          tl.add(playSondavenReveal(cards), 1.0);
+          tl.add(playSondavenReveal(cards), 1.4);
           begin(tl);
           return true;
         }
