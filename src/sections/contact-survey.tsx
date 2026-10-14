@@ -51,13 +51,13 @@ export function ContactSurvey() {
             className={`absolute top-[169px] w-[266px] text-center font-serif-sc text-14 font-normal uppercase text-grey-400 md:top-[calc(var(--su)*151)] md:w-[calc(var(--su)*491)] md:text-[length:calc(var(--su)*16)] ${GROUP_CENTER}`}
           >
             <SurveyLine delay="0.3" before={t("contactSurvey.line1")}>
-              <Nameplate />
+              <SurveyIcon src="/contact-survey/survey-icon-1.webp" />
             </SurveyLine>
             <SurveyLine delay="0.35" after={t("contactSurvey.line2")}>
-              <PlaceholderChip />
+              <SurveyIcon src="/contact-survey/survey-icon-2.webp" />
             </SurveyLine>
             <SurveyLine delay="0.4" before={t("contactSurvey.line3")}>
-              <PlaceholderChip />
+              <SurveyIcon src="/contact-survey/survey-icon-3.webp" />
             </SurveyLine>
             <SurveyLine delay="0.45" before={t("contactSurvey.line4")} />
           </div>
@@ -159,38 +159,20 @@ function GapSlot({ children }: { children: ReactNode }) {
   );
 }
 
-/** 稿面 30.584×42.101 的金属铭牌，叠一层高光渐变 */
-function Nameplate() {
+/** 括号内图标：源图 108×108，按稿面占位 28×28 居中 */
+function SurveyIcon({ src }: { src: string }) {
   return (
     <GapSlot>
-      <span className="absolute left-1/2 top-1/2 block h-[26px] w-[19px] -translate-x-1/2 -translate-y-1/2 md:h-[calc(var(--su)*42.101)] md:w-[calc(var(--su)*30.584)]">
+      <span className="absolute left-1/2 top-1/2 block size-[18px] -translate-x-1/2 -translate-y-1/2 md:size-[calc(var(--su)*28)]">
         <Image
-          src="/contact-survey/nameplate.webp"
+          src={src}
           alt=""
           fill
-          sizes="(max-width: 767px) 19px, calc(100vw * 31 / 1440)"
-          className="object-fill"
-        />
-        <Image
-          src="/contact-survey/nameplate-glare.svg"
-          alt=""
-          width={8}
-          height={19}
-          className="absolute left-[52.61%] top-[28.34%] h-[46.21%] w-[25.95%]"
+          unoptimized
+          sizes="(max-width: 767px) 18px, 28px"
+          className="object-contain"
         />
       </span>
-    </GapSlot>
-  );
-}
-
-/** 稿面 28×28 待替换素材的占位色块 */
-function PlaceholderChip() {
-  return (
-    <GapSlot>
-      <span
-        aria-hidden="true"
-        className="absolute left-1/2 top-1/2 block size-[18px] -translate-x-1/2 -translate-y-1/2 bg-grey-100 md:size-[calc(var(--su)*28)]"
-      />
     </GapSlot>
   );
 }
