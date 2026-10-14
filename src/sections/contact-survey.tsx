@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useLocale } from "@/components/providers/locale-provider";
 import { CopiedBubble, CopiedToast } from "@/components/ui/copied-bubble";
 import { ScreenShell } from "@/components/ui/screen-shell";
+import { ContactMachine } from "@/sections/contact-machine";
 import { SplitWords } from "@/components/ui/split-words";
 import { useCopyTarget } from "@/lib/copy-text";
 
@@ -38,6 +39,7 @@ export function ContactSurvey() {
          * 移动端 display:contents，子元素仍相对 #contact 按 390 画板定位。
          */}
         <div className="contents md:absolute md:left-1/2 md:top-1/2 md:block md:-translate-x-1/2 md:-translate-y-1/2 stage-cover-1440">
+          <ContactMachine />
           <h1
             data-sd-words
             data-sd-delay="0.2"

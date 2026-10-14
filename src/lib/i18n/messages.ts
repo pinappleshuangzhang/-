@@ -208,6 +208,7 @@ export type MessageKey =
   | "contactSurvey.line4"
   | "contactSurvey.emailAria"
   | "contactSurvey.phoneAria"
+  | "contactSurvey.gearAria"
   | "contactForm.title"
   | "contactForm.name"
   | "contactForm.email"
@@ -473,6 +474,7 @@ const zh: Messages = {
   "contactSurvey.line4": "欢迎与我们联系",
   "contactSurvey.emailAria": "复制邮箱",
   "contactSurvey.phoneAria": "复制电话",
+  "contactSurvey.gearAria": "向下拨动齿轮，切换卡片",
   "contactForm.title": "填写以下信息，与万有引力共同开启下一份调查",
   "contactForm.name": "调查发起人 / NAME",
   "contactForm.email": "你的邮箱 / EMAIL",
@@ -747,6 +749,7 @@ const en: Messages = {
   "contactSurvey.line4": "Get In Touch With Us",
   "contactSurvey.emailAria": "Copy email",
   "contactSurvey.phoneAria": "Copy phone number",
+  "contactSurvey.gearAria": "Drag the gear down to change the card",
   "contactForm.title": "Fill in the details below to start the next survey with Grava",
   "contactForm.name": "Initiator / NAME",
   "contactForm.email": "Your Email / EMAIL",
