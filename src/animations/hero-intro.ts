@@ -2,6 +2,7 @@ import gsap from "gsap";
 import {
   playSondavenReveal,
   setSondavenHidden,
+  setSondavenVisible,
 } from "@/animations/sondaven-reveal";
 
 /** 加载屏最短时长：资源更快也要铺满 2s，资源较慢则等待实际加载完成 */
