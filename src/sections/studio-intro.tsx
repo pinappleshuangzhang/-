@@ -281,7 +281,7 @@ export function StudioIntro() {
           />
         </div>
         {/* layer-01 前景覆盖层（带透明中心），压在双圆环之上。
-            源图为 2048 无损 WebP；unoptimized 直出避免优化管线 q75 重压致糊 */}
+            源图已按 q70 有损压过；unoptimized 直出，避免优化管线再压一次 */}
         <Image
           src={layer01Img}
           alt=""

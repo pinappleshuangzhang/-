@@ -1,8 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useScreenActive } from "@/components/providers/section-pager-provider";
 import { CopiedBubble, CopiedToast } from "@/components/ui/copied-bubble";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { ContactMachine } from "@/sections/contact-machine";
@@ -15,10 +16,14 @@ const CONTACT_PHONE = "+86 13016116021";
 /**
  * 最后一屏：GA_ARCHIVE_004《开启一份新调查》。
  * 背景取件机由共享背景层提供，这里只承载调查文案与联系方式。
+ * 图片进屏才挂载：六屏都叠在视口里，一进站就下会和开场视频抢带宽。
  */
 export function ContactSurvey() {
   const { t } = useLocale();
   const { copiedKey, copy } = useCopyTarget();
+  const isActive = useScreenActive();
+  const [mediaReady, setMediaReady] = useState(false);
+  if (isActive && !mediaReady) setMediaReady(true);
 
   return (
     <ScreenShell aria-label={t("contactSurvey.aria")}>
@@ -45,13 +50,22 @@ export function ContactSurvey() {
 
           <div className="flex w-full max-w-[340px] flex-col gap-1 text-center font-serif-sc text-14 font-normal text-grey-400 md:absolute md:left-[calc(var(--su)*707.5)] md:top-[calc(var(--su)*151)] md:block md:w-[calc(var(--su)*491)] md:max-w-none md:-translate-x-1/2 md:text-[length:calc(var(--su)*16)]">
             <SurveyLine delay="0.3" before={t("contactSurvey.line1")}>
-              <SurveyIcon src="/contact-survey/survey-icon-1.webp" />
+              <SurveyIcon
+                src="/contact-survey/survey-icon-1.webp"
+                load={mediaReady}
+              />
             </SurveyLine>
             <SurveyLine delay="0.35" after={t("contactSurvey.line2")}>
-              <SurveyIcon src="/contact-survey/survey-icon-2.webp" />
+              <SurveyIcon
+                src="/contact-survey/survey-icon-2.webp"
+                load={mediaReady}
+              />
             </SurveyLine>
             <SurveyLine delay="0.4" before={t("contactSurvey.line3")}>
-              <SurveyIcon src="/contact-survey/survey-icon-3.webp" />
+              <SurveyIcon
+                src="/contact-survey/survey-icon-3.webp"
+                load={mediaReady}
+              />
             </SurveyLine>
             <SurveyLine delay="0.45" before={t("contactSurvey.line4")} />
           </div>
@@ -67,13 +81,15 @@ export function ContactSurvey() {
               }}
               delay="0.55"
               icon={
-                <Image
-                  src="/contact-survey/icon-mail.svg"
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="size-4 shrink-0 md:size-[calc(var(--su)*20)]"
-                />
+                mediaReady ? (
+                  <Image
+                    src="/contact-survey/icon-mail.svg"
+                    alt=""
+                    width={20}
+                    height={20}
+                    className="size-4 shrink-0 md:size-[calc(var(--su)*20)]"
+                  />
+                ) : null
               }
             />
             <ContactCopyButton
@@ -86,13 +102,15 @@ export function ContactSurvey() {
               }}
               delay="0.6"
               icon={
-                <Image
-                  src="/contact-survey/icon-phone.svg"
-                  alt=""
-                  width={22}
-                  height={20}
-                  className="h-4 w-[17px] shrink-0 md:h-[calc(var(--su)*20)] md:w-[calc(var(--su)*22)]"
-                />
+                mediaReady ? (
+                  <Image
+                    src="/contact-survey/icon-phone.svg"
+                    alt=""
+                    width={22}
+                    height={20}
+                    className="h-4 w-[17px] shrink-0 md:h-[calc(var(--su)*20)] md:w-[calc(var(--su)*22)]"
+                  />
+                ) : null
               }
             />
           </div>
@@ -153,18 +171,20 @@ function GapSlot({ children }: { children: ReactNode }) {
 }
 
 /** 括号内图标：源图 108×108，移动端 26，桌面稿面 28 */
-function SurveyIcon({ src }: { src: string }) {
+function SurveyIcon({ src, load }: { src: string; load: boolean }) {
   return (
     <GapSlot>
       <span className="absolute left-1/2 top-1/2 block size-[26px] -translate-x-1/2 -translate-y-1/2 md:size-[calc(var(--su)*28)]">
-        <Image
-          src={src}
-          alt=""
-          fill
-          unoptimized
-          sizes="(max-width: 767px) 26px, 28px"
-          className="object-contain"
-        />
+        {load ? (
+          <Image
+            src={src}
+            alt=""
+            fill
+            unoptimized
+            sizes="(max-width: 767px) 26px, 28px"
+            className="object-contain"
+          />
+        ) : null}
       </span>
     </GapSlot>
   );

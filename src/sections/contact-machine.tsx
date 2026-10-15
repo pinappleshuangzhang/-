@@ -31,6 +31,8 @@ type SlidePair = [string, string];
  */
 export function ContactMachine() {
   const isActive = useScreenActive();
+  const [mediaReady, setMediaReady] = useState(false);
+  if (isActive && !mediaReady) setMediaReady(true);
   const reduced = useReducedMotion();
   const gearRef = useRef<HTMLSpanElement>(null);
   const frontLayerRef = useRef<HTMLDivElement>(null);
@@ -121,11 +123,12 @@ export function ContactMachine() {
   }, []);
 
   useEffect(() => {
+    if (!mediaReady) return;
     for (const src of SLIDES) {
       const image = new window.Image();
       image.src = src;
     }
-  }, []);
+  }, [mediaReady]);
 
   useEffect(() => {
     reducedRef.current = reduced;
@@ -149,8 +152,16 @@ export function ContactMachine() {
         className="machine-window absolute overflow-hidden bg-white"
         aria-hidden="true"
       >
-        <CardLayer layerRef={frontLayerRef} src={layerSrc[0]} />
-        <CardLayer layerRef={backLayerRef} src={layerSrc[1]} />
+        <CardLayer
+          layerRef={frontLayerRef}
+          src={layerSrc[0]}
+          load={mediaReady}
+        />
+        <CardLayer
+          layerRef={backLayerRef}
+          src={layerSrc[1]}
+          load={mediaReady}
+        />
         <span
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
@@ -168,14 +179,16 @@ export function ContactMachine() {
           ref={gearRef}
           className="absolute inset-0 block origin-center will-change-transform"
         >
-          <Image
-            src="/contact-survey/machine-gear.webp"
-            alt=""
-            fill
-            unoptimized
-            sizes="227px"
-            className="object-fill"
-          />
+          {mediaReady ? (
+            <Image
+              src="/contact-survey/machine-gear.webp"
+              alt=""
+              fill
+              unoptimized
+              sizes="227px"
+              className="object-fill"
+            />
+          ) : null}
         </span>
       </div>
 
@@ -183,14 +196,16 @@ export function ContactMachine() {
         aria-hidden="true"
         className="machine-mask pointer-events-none absolute"
       >
-        <Image
-          src="/contact-survey/machine-mask.webp"
-          alt=""
-          fill
-          unoptimized
-          sizes="81px"
-          className="object-fill"
-        />
+        {mediaReady ? (
+          <Image
+            src="/contact-survey/machine-mask.webp"
+            alt=""
+            fill
+            unoptimized
+            sizes="81px"
+            className="object-fill"
+          />
+        ) : null}
       </div>
 
       <span
@@ -210,20 +225,24 @@ export function ContactMachine() {
 function CardLayer({
   layerRef,
   src,
+  load,
 }: {
   layerRef: RefObject<HTMLDivElement | null>;
   src: string;
+  load: boolean;
 }) {
   return (
     <div ref={layerRef} className="absolute inset-0 will-change-transform">
-      <Image
-        src={src}
-        alt=""
-        fill
-        unoptimized
-        sizes="104px"
-        className="object-cover"
-      />
+      {load ? (
+        <Image
+          src={src}
+          alt=""
+          fill
+          unoptimized
+          sizes="104px"
+          className="object-cover"
+        />
+      ) : null}
     </div>
   );
 }

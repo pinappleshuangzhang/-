@@ -22,6 +22,11 @@ type SectionBackgroundConfig = {
   quality?: number;
   /** 仅桌面挂载图片，避免手机下载 5K 背景 */
   desktopOnly?: boolean;
+  /**
+   * 进到该屏（或邻近预热）才挂图。
+   * 分屏都是 inset-0，默认懒加载仍会和首屏视频抢带宽。
+   */
+  activeOnly?: boolean;
 };
 
 export const SECTION_BACKGROUNDS: Record<
@@ -44,5 +49,6 @@ export const SECTION_BACKGROUNDS: Record<
     fallbackClassName: "bg-grey-100",
     // 取件机实拍：大屏下随 cover 放大到 1.8 倍以上，压到 75 会糊
     quality: 95,
+    activeOnly: true,
   },
 };

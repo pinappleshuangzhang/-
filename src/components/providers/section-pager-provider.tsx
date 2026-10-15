@@ -643,6 +643,7 @@ export function SectionPagerProvider({
       >
         <SharedSectionBackgrounds
           active={activeScreen?.background ?? null}
+          nearEnd={index >= screens.length - 2}
         />
         {screens.map((screen, screenIndex) => {
           const isActive = screenIndex === index;
