@@ -572,8 +572,9 @@ function MemberProfile({
   const separator = isEn ? " _ " : "_";
   const idLabel = `${separator}${identifier}${separator}`;
   const headerSize =
-    "text-14 leading-normal md:text-[length:calc(var(--su)*14)]";
-  const bodySize = "text-16 leading-normal md:text-[length:calc(var(--su)*16)]";
+    "text-14 leading-normal md:text-[length:calc(var(--su-hero)*14)]";
+  const bodySize =
+    "text-16 leading-normal md:text-[length:calc(var(--su-hero)*16)]";
 
   return (
     <div className="pointer-events-none absolute inset-0">
@@ -650,7 +651,7 @@ function MemberProfile({
 
 function ProfileAction({ label }: { label: string }) {
   return (
-    <span className="profile-action pointer-events-auto flex cursor-pointer items-center gap-0.5 font-serif-sc text-16 font-normal md:text-[length:calc(var(--su)*16)]">
+    <span className="profile-action pointer-events-auto flex cursor-pointer items-center gap-0.5 font-serif-sc text-16 font-normal md:text-[length:calc(var(--su-hero)*16)]">
       <SplitWords text={label} />
       <span aria-hidden="true" className="relative block size-4 overflow-hidden">
         <Image

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -19,7 +19,6 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { HeroSubtitle } from "@/components/ui/hero-subtitle";
 import { ScreenShell } from "@/components/ui/screen-shell";
-import { useDesktopMedia } from "@/hooks/use-desktop-media";
 import { useHeroPreloader } from "@/hooks/use-hero-preloader";
 import { HeroLoader, LOADER_ASSET_PATHS } from "@/sections/hero-loader";
 import archiveBoxImg from "../../public/hero/hero-loader-bg.webp";
@@ -28,8 +27,29 @@ gsap.registerPlugin(useGSAP);
 
 const DESKTOP_VIDEO_SRC = "/hero/hero-intro.mp4?v=202609111835";
 const MOBILE_VIDEO_SRC = "/hero/hero-mobile-intro.mp4?v=202609111006";
+/** 手机尾帧玻璃板上沿，相对 720×1280 画面 */
+const MOBILE_VIDEO_WIDTH = 720;
+const MOBILE_VIDEO_HEIGHT = 1280;
+const MOBILE_PANEL_TOP = 345 / MOBILE_VIDEO_HEIGHT;
 /** 是否播放开场视频；true 时视频下载进度计入加载屏 */
 const SHOW_INTRO_VIDEO = true;
+
+function subscribeVideoSrc(callback: () => void) {
+  const media = window.matchMedia("(min-width: 768px)");
+  media.addEventListener("change", callback);
+  return () => media.removeEventListener("change", callback);
+}
+
+function getVideoSrcSnapshot() {
+  return window.matchMedia("(min-width: 768px)").matches
+    ? DESKTOP_VIDEO_SRC
+    : MOBILE_VIDEO_SRC;
+}
+
+/** 服务端与 hydration 首帧不选地址，避免桌面先去下手机片再 abort */
+function getVideoSrcServerSnapshot() {
+  return null;
+}
 
 /** 按第三屏相同规则拆词，供 Son Daven 随机逐词入场。 */
 function segmentWords(text: string): string[] {
@@ -65,22 +85,27 @@ export function Hero() {
   const loaderRef = useRef<HTMLDivElement>(null);
   const videoLayerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isDesktop = useDesktopMedia();
-  const videoSrc = isDesktop ? DESKTOP_VIDEO_SRC : MOBILE_VIDEO_SRC;
+  // 首帧不选地址。若 hydration 时按服务端的「手机」去下视频，
+  // 桌面 Safari 会先请求手机片再 abort，下一次 blob XHR 会永久挂起，加载条停在 0%。
+  const videoSrc = useSyncExternalStore(
+    subscribeVideoSrc,
+    getVideoSrcSnapshot,
+    getVideoSrcServerSnapshot,
+  );
 
   const preload = useHeroPreloader(videoSrc, LOADER_ASSET_PATHS, {
     videoEnabled: SHOW_INTRO_VIDEO,
     timeoutMs: 45000,
   });
   const preloadRef = useRef(preload);
-  // GSAP 闭包只建一次；首次渲染 isDesktop 尚为服务端默认 false，
-  // 直接捕获 videoSrc 会让桌面 Safari 回退到手机竖版视频，必须走 ref 取最新值。
-  const videoSrcRef = useRef(videoSrc);
+  // GSAP 闭包只建一次，播放地址走 ref，避免闭包钉死在首帧的空地址上。
+  const videoSrcRef = useRef(DESKTOP_VIDEO_SRC);
   const { locale, t } = useLocale();
   // 分页器默认锁定；停在档案盒页后解锁，由滚动拦截器决定是否起播视频
   const { setNavigationLocked, setIntroOverlayActive, registerScrollInterceptor } =
     useSectionPager();
   const firstFrameRef = useRef<HTMLDivElement>(null);
+  const titleZoneRef = useRef<HTMLDivElement>(null);
   const scrollHintRef = useRef<HTMLButtonElement>(null);
   const skipRef = useRef<HTMLButtonElement>(null);
   const introPhaseRef = useRef<"loading" | "holding" | "playing" | "done">(
@@ -95,11 +120,60 @@ export function Hero() {
 
   useEffect(() => {
     preloadRef.current = preload;
-  }, [preload]);
+    if (videoSrc) videoSrcRef.current = videoSrc;
+  }, [preload, videoSrc]);
 
+  // 红框上沿是导航实际下沿（含状态栏），下沿是玻璃板在当前视口里的位置
+  // （含浏览器上下栏把 100dvh 压矮后的 object-cover 裁切）。标题在框内居中，
+  // 框比标题矮时改为顶对齐，避免向上溢出盖住导航。
   useEffect(() => {
-    videoSrcRef.current = videoSrc;
-  }, [videoSrc]);
+    const zone = titleZoneRef.current;
+    const hero = container.current;
+    if (!zone || !hero) return;
+    let cancelled = false;
+
+    const place = () => {
+      if (cancelled) return;
+      if (window.matchMedia("(min-width: 768px)").matches) return;
+      const heroBox = hero.getBoundingClientRect();
+      if (heroBox.height <= 0) return;
+      const header = [...document.querySelectorAll("header")].find((el) => {
+        const box = el.getBoundingClientRect();
+        return box.height > 0 && box.width > 0;
+      });
+      const navBottom = header
+        ? Math.max(header.getBoundingClientRect().bottom - heroBox.top, 0)
+        : 0;
+      const scale = Math.max(
+        heroBox.width / MOBILE_VIDEO_WIDTH,
+        heroBox.height / MOBILE_VIDEO_HEIGHT,
+      );
+      const displayedHeight = MOBILE_VIDEO_HEIGHT * scale;
+      const cropTop = (displayedHeight - heroBox.height) / 2;
+      const panelTop = MOBILE_PANEL_TOP * displayedHeight - cropTop;
+      const top = navBottom;
+      const height = Math.max(panelTop - top, 0);
+      const group = zone.firstElementChild;
+      const groupHeight = group?.getBoundingClientRect().height ?? 0;
+      zone.style.top = `${top}px`;
+      zone.style.bottom = "auto";
+      zone.style.height = `${height}px`;
+      zone.style.alignItems = groupHeight > height ? "flex-start" : "center";
+    };
+
+    place();
+    const viewport = window.visualViewport;
+    window.addEventListener("resize", place);
+    viewport?.addEventListener("resize", place);
+    viewport?.addEventListener("scroll", place);
+    document.fonts?.ready.then(place);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("resize", place);
+      viewport?.removeEventListener("resize", place);
+      viewport?.removeEventListener("scroll", place);
+    };
+  }, [locale]);
 
   // 导航不靠加载层遮挡，改由此信号显式隐藏，遮罩卸载后才淡入
   useEffect(() => {
@@ -204,11 +278,11 @@ export function Hero() {
     };
   }, []);
 
-  // 独立于 GSAP 媒体查询的保险：即使 Safari 未触发 matchMedia 回调，
-  // 也不能让加载层和分页锁永久留在页面上。
+  // 揭幕时间轴一旦开始就会把 doneRef 设为 true，但 Safari 上 clip-path
+  // 动画可能永不结束。保险只看加载层是否还在，避免被提前解除。
   useEffect(() => {
+    if (loaderDismissed) return;
     const timeout = window.setTimeout(() => {
-      if (doneRef.current) return;
       const loader = loaderRef.current;
       const videoLayer = videoLayerRef.current;
       const firstFrame = firstFrameRef.current;
@@ -235,7 +309,7 @@ export function Hero() {
     }, LOADER_FAILSAFE_MS);
 
     return () => window.clearTimeout(timeout);
-  }, [setNavigationLocked]);
+  }, [loaderDismissed, setNavigationLocked]);
 
   useGSAP(
     (_, contextSafe) => {
@@ -420,9 +494,15 @@ export function Hero() {
       const releaseLoader = (next: () => void) => {
         window.clearInterval(gate);
         loaderProgress.update(100);
-        materialCycle.complete(() => {
+        let released = false;
+        const go = () => {
+          if (released) return;
+          released = true;
           window.setTimeout(next, LOADER_HOLD_MS);
-        });
+        };
+        materialCycle.complete(go);
+        // 材质交叉渐变的 onComplete 在 Safari 上可能不来，不能让退场一直等它。
+        window.setTimeout(go, 1200);
       };
 
       const startSequence = () => {
@@ -516,11 +596,16 @@ export function Hero() {
 
       {/* 最终首屏内容：Figma 884:2070，标题组与目录左侧光学对齐 */}
       <div data-hero-titles className="invisible absolute inset-0 z-30 opacity-0">
+        {/* 红框：导航下沿到玻璃板上沿（尾帧约 27%）。标题整组在框内居中 */}
         <div
-          className={`absolute left-1/2 top-[103px] flex -translate-x-1/2 flex-col items-center gap-2 text-center md:hidden ${
-            locale === "zh" ? "w-[290px]" : "w-[366px]"
-          }`}
+          ref={titleZoneRef}
+          className="absolute inset-x-0 top-[calc(env(safe-area-inset-top)+30px)] bottom-[73%] flex items-center justify-center md:hidden"
         >
+          <div
+            className={`flex flex-col items-center text-center ${
+              locale === "zh" ? "w-[290px] gap-2" : "w-[366px] gap-1"
+            }`}
+          >
           <h1
             data-sd-words
             data-sd-delay="0.15"
@@ -539,16 +624,17 @@ export function Hero() {
             className={`flex w-full flex-col items-center text-center font-serif-sc text-12 leading-[18px] text-grey-400 ${
               locale === "zh" ? "uppercase" : ""
             }`}
-            highlightClassName="px-1.5"
+            highlightClassName={locale === "zh" ? "px-1.5" : "mt-1 px-1.5"}
             barClassName={barInitial}
           />
+          </div>
         </div>
 
         <div
-          className={`absolute top-[calc(var(--su)*126)] left-[calc(100%-(var(--su-hero)*507+var(--page-margin)))] hidden items-start text-left ${
+          className={`absolute top-[calc(var(--su)*126+max(0px,min(100vw,2560px)-1920px)*42/640)] left-[calc(100%-(var(--su-hero)*507+var(--page-margin)))] hidden items-start text-left [--su-title:calc(min(100vw,1920px)/1440+max(0px,min(100vw,2560px)-1920px)/3840)] ${
             locale === "zh"
-              ? "w-[calc(var(--su-hero)*432)] flex-col gap-[calc(var(--su)*16)] md:flex"
-              : "w-max grid-cols-[max-content] gap-[calc(var(--su)*8)] md:grid"
+              ? "w-[calc(var(--su-title)*432)] flex-col gap-[calc(var(--su)*16)] md:flex"
+              : "w-max grid-cols-[max-content] gap-[calc(var(--su)*8)] [--su-title-en:min(var(--su-title),var(--su-hero)*507/490)] md:grid"
           }`}
         >
           <h1
@@ -557,8 +643,8 @@ export function Hero() {
             aria-label={t("hero.title")}
             className={`whitespace-nowrap uppercase leading-none text-grey-400 ${
               locale === "zh"
-                ? "font-serif-sc font-medium text-[length:calc(var(--su-hero)*48)]"
-                : "font-bodoni font-normal text-[length:calc(var(--su-hero)*40)]"
+                ? "font-serif-sc font-medium text-[length:calc(var(--su-title)*48)]"
+                : "font-bodoni font-normal text-[length:calc(var(--su-title-en)*40)]"
             }`}
           >
             <SplitWords text={t("hero.title")} />
@@ -620,6 +706,9 @@ export function Hero() {
           >
             <HeroLoader
               roleLabel={t("loader.role")}
+              welcomeLabel={
+                locale === "en" ? t("loader.welcome") : undefined
+              }
               idLabel={t("loader.id")}
               applyLabel={t("loader.apply")}
               reviewLabel={t("loader.review")}

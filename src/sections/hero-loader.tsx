@@ -35,6 +35,8 @@ const MATERIALS = [
 
 type HeroLoaderProps = {
   roleLabel: string;
+  /** 手机英文固定欢迎语；有值时手机隐藏阶段文案，桌面仍走阶段切换 */
+  welcomeLabel?: string;
   idLabel: string;
   applyLabel: string;
   reviewLabel: string;
@@ -48,6 +50,7 @@ type HeroLoaderProps = {
  */
 export function HeroLoader({
   roleLabel,
+  welcomeLabel,
   idLabel,
   applyLabel,
   reviewLabel,
@@ -139,11 +142,20 @@ export function HeroLoader({
           aria-hidden="true"
           className="flex items-center font-serif-sc text-12 font-normal leading-[18px] text-grey-400 md:text-[length:calc(var(--su)*12)] md:leading-[calc(var(--su)*18)]"
         >
-          <span className="whitespace-nowrap">{roleLabel}</span>
+          {welcomeLabel ? (
+            <span className="whitespace-nowrap md:hidden">{welcomeLabel}</span>
+          ) : null}
+          <span
+            className={`whitespace-nowrap ${welcomeLabel ? "hidden md:inline" : ""}`}
+          >
+            {roleLabel}
+          </span>
           <span className="relative top-px font-bodoni md:top-[2px]">
             {idLabel}
           </span>
-          <span className="ml-1 block h-[18px] overflow-hidden md:ml-[calc(var(--su)*4)] md:h-[calc(var(--su)*18)]">
+          <span
+            className={`ml-1 h-[18px] overflow-hidden md:ml-[calc(var(--su)*4)] md:h-[calc(var(--su)*18)] ${welcomeLabel ? "hidden md:block" : "block"}`}
+          >
             <span
               data-loader-phase-track
               className="flex flex-col items-start will-change-transform"
@@ -171,6 +183,9 @@ export function HeroLoader({
         data-loader-live
         data-role={roleLabel}
         data-id={idLabel}
+        data-welcome={
+          welcomeLabel ? `${welcomeLabel}${idLabel}` : undefined
+        }
         aria-live="polite"
         className="sr-only"
       >

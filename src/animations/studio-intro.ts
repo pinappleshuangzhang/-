@@ -40,6 +40,37 @@ export const CARD_SHOWN = {
   scale: 1,
 };
 
+/**
+ * Safari 平面入场。rotationY 叠在 ScreenShell 的 overflow:hidden 上时，
+ * WebKit 会把 3D 层裁成左半张，右半边（照片与右下卡）要转到 0° 才出现。
+ */
+export const CARD_HIDDEN_SAFARI = {
+  autoAlpha: 0,
+  yPercent: 8,
+  y: 0,
+  z: 0,
+  rotationY: 0,
+  rotationX: 0,
+  scale: 1,
+};
+
+export const CARD_SHOWN_SAFARI = {
+  autoAlpha: 1,
+  yPercent: 0,
+  y: 0,
+  z: 0,
+  rotationY: 0,
+  rotationX: 0,
+  scale: 1,
+};
+
+/** 桌面 Safari（不含 iOS 上的 Chrome）才走平面入场 */
+export function isSafariCardClient() {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  return /safari/i.test(ua) && !/chrome|chromium|crios|edg|android/i.test(ua);
+}
+
 export type SpinLayer = {
   el: HTMLElement;
   /** 1 顺时针，-1 逆时针 */

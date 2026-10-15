@@ -14,6 +14,7 @@ export type MessageKey =
   | "nav.title.ga002"
   | "nav.title.ga003"
   | "nav.title.ga004"
+  | "nav.title.ga004.mobile"
   | "nav.title.contact"
   | "screen.studio"
   | "screen.ga001"
@@ -35,6 +36,7 @@ export type MessageKey =
   | "hero.scrollDown"
   | "hero.skipVideo"
   | "loader.role"
+  | "loader.welcome"
   | "loader.id"
   | "loader.apply"
   | "loader.review"
@@ -67,11 +69,14 @@ export type MessageKey =
   | "studioIntro.aria"
   | "studioIntro.line1"
   | "studioIntro.line2"
+  | "studioIntro.line3"
+  | "studioIntro.line4"
   | "studioIntro.card1Title"
   | "studioIntro.card1Body"
   | "studioIntro.card2Title"
   | "studioIntro.card2Body1"
   | "studioIntro.card2Body2"
+  | "studioIntro.card2Body3"
   | "studioIntro.plateAlt"
   | "member.aria"
   | "member.imageAlt"
@@ -208,7 +213,6 @@ export type MessageKey =
   | "contactSurvey.line4"
   | "contactSurvey.emailAria"
   | "contactSurvey.phoneAria"
-  | "contactSurvey.gearAria"
   | "contactForm.title"
   | "contactForm.name"
   | "contactForm.email"
@@ -235,6 +239,7 @@ const zh: Messages = {
   "nav.title.ga002": "《组织记录》",
   "nav.title.ga003": "《成员记录》",
   "nav.title.ga004": "《视觉调查档案》",
+  "nav.title.ga004.mobile": "《视觉调查档案》",
   "nav.title.contact": "《开启一份新调查》",
   "screen.studio": "万有引力设计档案室",
   "screen.ga001": "档案 GA_001 什么是引力？",
@@ -256,6 +261,7 @@ const zh: Messages = {
   "hero.scrollDown": "向下滑动",
   "hero.skipVideo": "跳过视频",
   "loader.role": "临时调查员",
+  "loader.welcome": "",
   "loader.id": "G_U0412",
   "loader.apply": "申请临时访问权限",
   "loader.review": "档案连接中",
@@ -288,11 +294,14 @@ const zh: Messages = {
   "studioIntro.aria": "档案 GA_002 工作室简介",
   "studioIntro.line1": "理解连接如何发生",
   "studioIntro.line2": "创造被选择的引力",
+  "studioIntro.line3": "",
+  "studioIntro.line4": "",
   "studioIntro.card1Title": "我们想做的——",
   "studioIntro.card1Body": "就是把这种看不见的连接变成真实可感的设计",
   "studioIntro.card2Title": "我们的工作方式——",
   "studioIntro.card2Body1": "从策略判断、系统构建，到视觉表达与体验落地",
   "studioIntro.card2Body2": "帮助品牌找到方向并将它转为完整、可持续的设计系统",
+  "studioIntro.card2Body3": "",
   "studioIntro.plateAlt": "嵌有工作室标识的金属铭牌装置",
   "member.aria": "档案 GA_003 成员记录",
   "member.imageAlt": "摆放白色书籍与雕塑半身像的成员档案展柜",
@@ -474,7 +483,6 @@ const zh: Messages = {
   "contactSurvey.line4": "欢迎与我们联系",
   "contactSurvey.emailAria": "复制邮箱",
   "contactSurvey.phoneAria": "复制电话",
-  "contactSurvey.gearAria": "向下拨动齿轮，切换卡片",
   "contactForm.title": "填写以下信息，与万有引力共同开启下一份调查",
   "contactForm.name": "调查发起人 / NAME",
   "contactForm.email": "你的邮箱 / EMAIL",
@@ -500,6 +508,7 @@ const en: Messages = {
   "nav.title.ga002": "Organization Record",
   "nav.title.ga003": "Member Record",
   "nav.title.ga004": "Visual Investigation Archive",
+  "nav.title.ga004.mobile": "Investigation Archive",
   "nav.title.contact": "Start A New Survey",
   "screen.studio": "Universal Gravity Design Archive",
   "screen.ga001": "Archive GA_001 What Is Gravity?",
@@ -522,11 +531,13 @@ const en: Messages = {
   "hero.scrollDown": "Scroll Down",
   "hero.skipVideo": "Skip Video",
   // 尾随普通空格会被行内折叠掉，用不换行空格才能与编号隔开
-  "loader.role": "Temporary Investigator\u00A0",
+  "loader.role": "Temporary investigator\u00A0",
+  // 手机英文加载行：句末不换行空格用来隔开编号
+  "loader.welcome": "Welcome, Temporary Investigator\u00A0",
   "loader.id": "G_U0412",
-  "loader.apply": "Requesting Temporary Access",
-  "loader.review": "Connecting Archive",
-  "loader.approved": "Temporary Application Approved",
+  "loader.apply": "Requesting temporary access",
+  "loader.review": "Connecting archive",
+  "loader.approved": "Temporary application approved",
   "loader.cardAlt": "Grava material plaque",
   "intro.line1": "We keep seeing the same thing:",
   "intro.line2a": "Some brands stick,",
@@ -556,16 +567,19 @@ const en: Messages = {
     "We Enter Different Brands, Products, Spaces, And Digital Experiences.",
   "orgFounding.detail2": "Every Design Becomes A Survey Archive",
   "studioIntro.aria": "Archive GA_002 Studio Introduction",
-  "studioIntro.line1": "Understand How Connection Happens",
-  "studioIntro.line2": "Create Gravity That Is Chosen",
-  "studioIntro.card1Title": "What We Want To Do —",
+  "studioIntro.line1": "Understand what",
+  "studioIntro.line2": "creates connection",
+  "studioIntro.line3": "Create a pull",
+  "studioIntro.line4": "people can feel",
+  "studioIntro.card1Title": "We want to——",
   "studioIntro.card1Body":
-    "Turn This Invisible Connection Into Real, Tangible Design",
-  "studioIntro.card2Title": "How We Work —",
+    "Turn this invisible connection into design people can truly feel",
+  "studioIntro.card2Title": "How we work——",
   "studioIntro.card2Body1":
-    "From Strategic Judgment And System Building To Visual Expression And Experience Delivery",
+    "From finding direction and building systems to shaping visuals and experiences",
   "studioIntro.card2Body2":
-    "Helping Brands Find Direction And Turn It Into A Complete, Sustainable Design System",
+    "We help brands turn unclear ideas into a design system that lasts",
+  "studioIntro.card2Body3": "",
   "studioIntro.plateAlt": "Metal Plate Installation With The Studio Logo",
   "member.aria": "Archive GA_003 Member Record",
   "member.imageAlt":
@@ -577,10 +591,11 @@ const en: Messages = {
   "member.role02": "Builder",
   "member.role03": "Explorer",
   "member.role04": "Connector",
-  "member.direction01": "Focus _ Spots the real problem\nand sets direction",
-  "member.direction02": "Focus _ Turns ideas into\nclear, scalable systems",
-  "member.direction03": "Focus _ Keeps testing new\nvisual and creative moves",
-  "member.direction04": "Focus _ Brings people, products,\nand experiences together",
+  "member.direction01": "Focus _ Spots the real problem and sets direction",
+  "member.direction02": "Focus _ Turns ideas into clear, scalable systems",
+  "member.direction03": "Focus _ Keeps testing new visual and creative moves",
+  "member.direction04":
+    "Focus _ Brings people, products, and\nexperiences together",
   "member.portfolio": "Portfolio",
   "member.contactMe": "Contact",
   "gallery.list": "Archive Card Gallery",
@@ -742,14 +757,13 @@ const en: Messages = {
   "contact.copied": "Copied",
   "contact.copyAria": "Copy email",
   "contactSurvey.aria": "Contact Us",
-  "contactSurvey.headline": "Every Project Begins With A Survey Of Gravity",
-  "contactSurvey.line1": "If You Are Building A New Brand",
-  "contactSurvey.line2": "Advancing A Brand Upgrade",
-  "contactSurvey.line3": "Reshaping Products And Digital Experience",
-  "contactSurvey.line4": "Get In Touch With Us",
+  "contactSurvey.headline": "Every project begins with a survey of gravity",
+  "contactSurvey.line1": "If you are building a new brand",
+  "contactSurvey.line2": "Advancing a brand upgrade",
+  "contactSurvey.line3": "Reshaping products and digital experience",
+  "contactSurvey.line4": "Get in touch with us",
   "contactSurvey.emailAria": "Copy email",
   "contactSurvey.phoneAria": "Copy phone number",
-  "contactSurvey.gearAria": "Drag the gear down to change the card",
   "contactForm.title": "Fill in the details below to start the next survey with Grava",
   "contactForm.name": "Initiator / NAME",
   "contactForm.email": "Your Email / EMAIL",

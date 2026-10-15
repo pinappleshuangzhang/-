@@ -108,17 +108,24 @@ export function SiteNav({
     };
   }, [closeRef, isIndex]);
 
-  const title = showBrand ? (
-    "Grava Design Studio"
-  ) : (
-    <>
-      <span>{code}</span>
-      {isEn ? " " : null}
-      <span className={isEn ? "italic" : "font-serif-sc"}>
-        {titleKey ? t(titleKey) : null}
-      </span>
-    </>
-  );
+  const titleText = titleKey ? t(titleKey) : null;
+  // 移动端第五屏英文标题去掉 Visual，只留 Investigation Archive
+  const mobileTitleText =
+    navVariant === "archive-ga-004" && isEn
+      ? t("nav.title.ga004.mobile")
+      : titleText;
+  const renderTitle = (label: string | null) =>
+    showBrand ? (
+      "Grava Design Studio"
+    ) : (
+      <>
+        <span>{code}</span>
+        {isEn ? " " : null}
+        <span className={isEn ? "italic" : "font-serif-sc"}>{label}</span>
+      </>
+    );
+  const title = renderTitle(titleText);
+  const mobileTitle = renderTitle(mobileTitleText);
   const indexAriaLabel = isIndex ? t("nav.closeIndex") : t("nav.openIndex");
   const handleIndexClick = isIndex ? onCloseIndex : onOpenIndex;
   // 品牌 logo/标题点击：目录展开时沿用 onHome（先收目录），否则直接回档案首页
@@ -141,7 +148,7 @@ export function SiteNav({
     <>
       <MobileSiteNav
         elevated={isIndex}
-        title={title}
+        title={mobileTitle}
         showBrand={showBrand}
         onTitleClick={isIndex ? onHome : undefined}
         isEnglish={isEn}

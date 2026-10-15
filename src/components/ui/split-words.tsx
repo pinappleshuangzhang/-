@@ -33,11 +33,34 @@ export function SplitWords({
   /** 词间用普通空格，允许按容器宽度折行 */
   wrap?: boolean;
 }) {
+  const segments = segmentWords(text);
+  if (wrap) {
+    const words = segments.filter((word) => word.trim() !== "");
+    const isLexical = (value: string) => /[\p{L}\p{N}]/u.test(value);
+    return (
+      <>
+        {words.map((word, index) => {
+          const next = words[index + 1];
+          const gap = next !== undefined && isLexical(word) && isLexical(next);
+          return (
+            <span
+              key={`${word}-${index}`}
+              aria-hidden="true"
+              className={`sd-word inline-block ${gap ? "mr-[0.25em]" : ""} ${animated ? "opacity-0" : ""}`}
+            >
+              {word}
+            </span>
+          );
+        })}
+      </>
+    );
+  }
+
   return (
     <>
-      {segmentWords(text).map((word, index) =>
+      {segments.map((word, index) =>
         word.trim() === "" ? (
-          wrap ? " " : "\u00A0"
+          "\u00A0"
         ) : (
           <span
             key={`${word}-${index}`}

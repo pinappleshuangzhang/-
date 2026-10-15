@@ -26,9 +26,15 @@ const CAPTION_CLASS =
   "absolute font-bodoni text-[length:calc(var(--su)*8)] uppercase leading-[calc(var(--su)*14)] text-grey-400";
 
 /** 正文行：行内逐词随机浮现（与全站标题/口号同一套 sd-words 动画） */
-function RevealLine({ text }: { text: string }) {
+function RevealLine({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}) {
   return (
-    <span aria-hidden="true" className="block">
+    <span aria-hidden="true" className={className ? `block ${className}` : "block"}>
       <SplitWords text={text} />
     </span>
   );
@@ -42,7 +48,8 @@ function RevealLine({ text }: { text: string }) {
  */
 export const StudioIntroCards = forwardRef<HTMLDivElement>(
   function StudioIntroCards(_props, ref) {
-    const { t } = useLocale();
+    const { t, locale } = useLocale();
+    const isEn = locale === "en";
     return (
       // 对稿背景色 #E0E2E6（设计稿画板底色，非令牌刻度）
       <div
@@ -63,9 +70,20 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
             <div
               data-sd-words
               aria-label={`${t("studioIntro.card1Title")} ${t("studioIntro.card1Body")}`}
-              className="absolute left-[calc(var(--su)*170)] top-[calc(var(--su)*117)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*23)] text-grey-400"
+              className={
+                isEn
+                  ? "absolute left-[calc(var(--su)*115)] top-[calc(var(--su)*122)] w-[calc(var(--su)*433)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*23)] text-grey-400"
+                  : "absolute left-[calc(var(--su)*170)] top-[calc(var(--su)*117)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*23)] text-grey-400"
+              }
             >
-              <RevealLine text={t("studioIntro.card1Title")} />
+              <RevealLine
+                text={t("studioIntro.card1Title")}
+                className={
+                  isEn
+                    ? undefined
+                    : "text-[length:calc(var(--su)*16)] leading-[calc(var(--su)*26)]"
+                }
+              />
               <RevealLine text={t("studioIntro.card1Body")} />
             </div>
           </div>
@@ -127,12 +145,26 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
             />
             <div
               data-sd-words
-              aria-label={`${t("studioIntro.card2Title")} ${t("studioIntro.card2Body1")} ${t("studioIntro.card2Body2")}`}
-              className="absolute left-[calc(var(--su)*251.3)] top-[calc(var(--su)*95)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*23)] text-grey-400"
+              aria-label={`${t("studioIntro.card2Title")} ${t("studioIntro.card2Body1")} ${t("studioIntro.card2Body2")} ${t("studioIntro.card2Body3")}`.trim()}
+              className={
+                isEn
+                  ? "absolute left-[calc(var(--su)*161.3)] top-[calc(var(--su)*87)] w-[calc(var(--su)*549)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*25)] text-grey-400"
+                  : "absolute left-[calc(var(--su)*251.3)] top-[calc(var(--su)*95)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*23)] text-grey-400"
+              }
             >
-              <RevealLine text={t("studioIntro.card2Title")} />
+              <RevealLine
+                text={t("studioIntro.card2Title")}
+                className={
+                  isEn
+                    ? "text-[length:calc(var(--su)*16)] leading-[calc(var(--su)*25)]"
+                    : undefined
+                }
+              />
               <RevealLine text={t("studioIntro.card2Body1")} />
               <RevealLine text={t("studioIntro.card2Body2")} />
+              {t("studioIntro.card2Body3") ? (
+                <RevealLine text={t("studioIntro.card2Body3")} />
+              ) : null}
             </div>
           </div>
           {/* Bodoni 小注：按稿置于画布层（白卡区，非照片内） */}

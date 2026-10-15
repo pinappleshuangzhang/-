@@ -16,8 +16,11 @@ import {
 } from "@/animations/sondaven-reveal";
 import {
   CARD_HIDDEN,
+  CARD_HIDDEN_SAFARI,
   CARD_SHOWN,
+  CARD_SHOWN_SAFARI,
   STAGE_ZOOM_SCALE,
+  isSafariCardClient,
   ZOOM_IN,
   ZOOM_OUT,
   startLayerSpin,
@@ -70,7 +73,14 @@ export function StudioIntro() {
   const isActive = useScreenActive();
   const reducedMotion = useReducedMotion();
   const { phase, registerScrollInterceptor } = useSectionPager();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const isEn = locale === "en";
+  const sloganLines = [
+    t("studioIntro.line1"),
+    t("studioIntro.line2"),
+    t("studioIntro.line3"),
+    t("studioIntro.line4"),
+  ].filter((line) => line.length > 0);
   const isMobileViewport = useSyncExternalStore(
     subscribeMobileViewport,
     getMobileViewportSnapshot,
@@ -104,7 +114,9 @@ export function StudioIntro() {
     if (cards) {
       gsap.set(cards, { autoAlpha: 0 });
       const group = cardGroup(cards);
-      if (group) gsap.set(group, CARD_HIDDEN);
+      if (group) {
+        gsap.set(group, isSafariCardClient() ? CARD_HIDDEN_SAFARI : CARD_HIDDEN);
+      }
       setSondavenHidden(cards);
     }
   }, []);
@@ -116,7 +128,7 @@ export function StudioIntro() {
     const cards = cardsRef.current;
     if (stage) gsap.set(stage, { transformOrigin: "50% 50%" });
     const group = cards ? cardGroup(cards) : null;
-    if (group) {
+    if (group && !isSafariCardClient()) {
       gsap.set(group, {
         transformPerspective: 900,
         transformOrigin: "50% 50%",
@@ -162,13 +174,15 @@ export function StudioIntro() {
 
       const group = cardGroup(cards);
       if (!group) return false;
+      const cardHidden = isSafariCardClient() ? CARD_HIDDEN_SAFARI : CARD_HIDDEN;
+      const cardShown = isSafariCardClient() ? CARD_SHOWN_SAFARI : CARD_SHOWN;
 
       if (reducedMotion) {
         if (down && step === 0) {
           stepRef.current = 2;
           gsap.set(stage, { autoAlpha: 0 });
           gsap.set(cards, { autoAlpha: 1 });
-          gsap.set(group, CARD_SHOWN);
+          gsap.set(group, cardShown);
           setSondavenVisible(cards);
         } else if (!down && step === 2) {
           resetToStage();
@@ -205,8 +219,8 @@ export function StudioIntro() {
           // 整卡信封翻入，文字在卡片大体落定后再逐词浮现
           tl.fromTo(
             group,
-            CARD_HIDDEN,
-            { ...CARD_SHOWN, duration: 1.2, ease: "power4.out" },
+            cardHidden,
+            { ...cardShown, duration: 1.2, ease: "power4.out" },
             0.5,
           );
           tl.add(playSondavenReveal(cards), 1.1);
@@ -219,7 +233,7 @@ export function StudioIntro() {
         // 一条连续时间轴：卡片反向退场 → 舞台放大态 → 回缩至原始态
         stepRef.current = 0;
         const tl = gsap.timeline();
-        tl.to(group, { ...CARD_HIDDEN, duration: 0.7, ease: "power4.in" }, 0);
+        tl.to(group, { ...cardHidden, duration: 0.7, ease: "power4.in" }, 0);
         tl.set(cards, { autoAlpha: 0 });
         tl.add(() => setSondavenHidden(cards));
         tl.set(stage, { autoAlpha: 1, scale: STAGE_ZOOM_SCALE });
@@ -246,7 +260,7 @@ export function StudioIntro() {
       {/* 图一舞台：设计稿 1440×800，元素以视口中心锚定按 --su 换算；底色对稿 #E0E0E0。
           层序对稿（底→顶）：layer-04 → layer-03 → layer-01 */}
       <div ref={stageRef} className="absolute inset-0 bg-[#E0E0E0]">
-        {/* layer-04 小圆环（逆时针，最底） */}
+        {/* layer-04：稿 1509:891，left 428 top 164，541×542。相对视口中心 (-21.5, +35) */}
         <div className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-292)] mt-[calc(var(--su)*-236)] h-[calc(var(--su)*542)] w-[calc(var(--su)*541)] overflow-hidden rounded-full">
           <Image
             ref={ringInnerRef}
@@ -256,7 +270,7 @@ export function StudioIntro() {
             className="h-full w-full"
           />
         </div>
-        {/* layer-03 大圆环（顺时针）：圆形裁切避免矩形图角随旋转扫入画面 */}
+        {/* layer-03：稿 1509:892。框 1162×800 贴顶，图高 146.9%、上移 26.51%，整图 left 157 top -212，1162×1175。相对视口中心 (+18, -24.5) */}
         <div className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-563)] mt-[calc(var(--su)*-612)] h-[calc(var(--su)*1175)] w-[calc(var(--su)*1162)] overflow-hidden rounded-full">
           <Image
             ref={ringOuterRef}
@@ -281,26 +295,38 @@ export function StudioIntro() {
         <div
           data-sd-words
           data-sd-delay="0.1"
-          aria-label={`${t("studioIntro.line1")} ${t("studioIntro.line2")}`}
-          className="absolute left-1/2 top-1/2 ml-[calc(var(--su)*-80)] mt-[calc(var(--su)*-23)] w-[calc(var(--su)*160)]"
+          aria-label={sloganLines.join(" ")}
+          className={
+            isEn
+              ? "absolute left-1/2 top-1/2 ml-[calc(var(--su)*-118)] mt-[calc(var(--su)*-42)] w-[calc(var(--su)*236)]"
+              : "absolute left-1/2 top-1/2 ml-[calc(var(--su)*-80)] mt-[calc(var(--su)*-23)] w-[calc(var(--su)*160)]"
+          }
         >
           <div
             aria-hidden="true"
             className="mx-auto flex w-[calc(var(--su)*138)] items-center justify-between"
           >
-            <span className="sd-word h-[0.3px] w-[calc(var(--su)*49)] bg-grey-300 opacity-0" />
+            <span className="sd-word h-px w-[calc(var(--su)*49)] opacity-0">
+              {/* Safari 会把不足 1px 的背景高度舍成 0。先占 1px，再压回 0.3px */}
+              <span className="block h-px w-full origin-center scale-y-[0.3] bg-grey-300" />
+            </span>
             <span className="sd-word opacity-0">
               <BrandLogo className="block size-[calc(var(--su)*12)] text-grey-400" />
             </span>
-            <span className="sd-word h-[0.3px] w-[calc(var(--su)*51)] bg-grey-300 opacity-0" />
+            <span className="sd-word h-px w-[calc(var(--su)*51)] opacity-0">
+              <span className="block h-px w-full origin-center scale-y-[0.3] bg-grey-300" />
+            </span>
           </div>
           <p
             aria-hidden="true"
-            className="mt-[calc(var(--su)*6)] text-center font-serif-sc text-[length:calc(var(--su)*16)] leading-[calc(var(--su)*23)] text-grey-400"
+            className={`${isEn ? "mt-[calc(var(--su)*8)]" : "mt-[calc(var(--su)*6)]"} text-center font-serif-sc text-[length:calc(var(--su)*16)] leading-[calc(var(--su)*23)] text-grey-400`}
           >
-            <SplitWords text={t("studioIntro.line1")} />
-            <br />
-            <SplitWords text={t("studioIntro.line2")} />
+            {sloganLines.map((line, index) => (
+              <span key={line}>
+                {index > 0 ? <br /> : null}
+                <SplitWords text={line} />
+              </span>
+            ))}
           </p>
         </div>
       </div>

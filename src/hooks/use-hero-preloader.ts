@@ -15,8 +15,8 @@ type BytesState = {
 };
 
 /**
- * 按字节流预加载一组静态资源，进度 0~1。
- * 无 Content-Length 时按文件完成数均分。
+ * 预加载一组静态资源，进度按完成数 0~1。
+ * 不用 ReadableStream：Safari 读流经常不结束，加载条会一直等不到 ready。
  */
 function useBytesPreloader(srcs: readonly string[]): BytesState {
   const key = srcs.join("|");
@@ -32,50 +32,35 @@ function useBytesPreloader(srcs: readonly string[]): BytesState {
 
     const controller = new AbortController();
     let cancelled = false;
-    const totals = list.map(() => 0);
-    const received = list.map(() => 0);
-    const finished = list.map(() => false);
+    const timeout = window.setTimeout(() => controller.abort(), 12000);
+    let finished = 0;
 
-    const emit = (status: VideoPreloadStatus = "loading") => {
-      if (cancelled) return;
-      const totalSum = totals.reduce((sum, value) => sum + value, 0);
-      const receivedSum = received.reduce((sum, value) => sum + value, 0);
-      let progress =
-        totalSum > 0
-          ? receivedSum / totalSum
-          : finished.filter(Boolean).length / list.length;
-      if (status === "ready") progress = 1;
-      else progress = Math.min(progress, 0.999);
-      setState({ progress, status });
-    };
-
-    async function loadOne(src: string, index: number) {
+    async function loadOne(src: string) {
       const response = await fetch(src, { signal: controller.signal });
-      if (!response.ok || !response.body) {
+      if (!response.ok) {
         throw new Error(`Failed to fetch asset: ${response.status}`);
       }
-      totals[index] = Number(response.headers.get("content-length")) || 0;
-      const reader = response.body.getReader();
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        received[index] += value.byteLength;
-        if (totals[index] === 0) totals[index] = received[index];
-        emit();
+      await response.blob();
+      finished += 1;
+      if (!cancelled) {
+        setState({
+          progress: Math.min(finished / list.length, 0.999),
+          status: "loading",
+        });
       }
-      finished[index] = true;
-      if (totals[index] === 0) totals[index] = Math.max(received[index], 1);
-      received[index] = totals[index];
     }
 
-    Promise.all(list.map((src, index) => loadOne(src, index)))
-      .then(() => emit("ready"))
+    Promise.all(list.map((src) => loadOne(src)))
+      .then(() => {
+        if (!cancelled) setState({ progress: 1, status: "ready" });
+      })
       .catch(() => {
         if (!cancelled) setState((prev) => ({ ...prev, status: "error" }));
       });
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timeout);
       controller.abort();
     };
   }, [key]);
@@ -88,7 +73,7 @@ function useBytesPreloader(srcs: readonly string[]): BytesState {
  * 开启视频时视频占主要权重，关闭时只跟静态资源。
  */
 export function useHeroPreloader(
-  videoSrc: string,
+  videoSrc: string | null,
   extraSrcs: readonly string[],
   {
     videoEnabled,
@@ -98,22 +83,33 @@ export function useHeroPreloader(
     timeoutMs?: number;
   },
 ): HeroPreloadState {
-  const video = useVideoPreloader(videoSrc, {
-    // 预载已改为 XHR（onprogress 在 Safari 也稳定），全浏览器统一等待视频，
-    // 保证进度真实、进首页时视频已在内存，起播零等待。
-    enabled: videoEnabled,
+  const video = useVideoPreloader(videoSrc ?? "", {
+    // 地址未定（桌面/手机还没在客户端判完）时不要发请求。
+    // 桌面 Safari 若先下手机片再 abort，下一次 blob XHR 会永久挂起。
+    enabled: videoEnabled && Boolean(videoSrc),
     timeoutMs,
   });
   const assets = useBytesPreloader(extraSrcs);
 
   return useMemo(() => {
+    // 禁用态的 ready 没有 objectUrl。开着视频时必须等到真正的 blob，
+    // 否则首帧会把“还没开始下”误判成已完成。
+    const videoReady =
+      !videoEnabled ||
+      (video.status === "ready" && video.objectUrl !== null);
+    const videoFailed = videoEnabled && video.status === "error";
+    // 地址刚确定的那一帧，hook 里可能还留着「未启用 = ready」的旧状态，进度是 1 但没有 blob。
+    const videoProgress =
+      !videoSrc || (video.status === "ready" && video.objectUrl === null)
+        ? 0
+        : video.progress;
     const progress = videoEnabled
-      ? video.progress * 0.88 + assets.progress * 0.12
+      ? videoProgress * 0.88 + assets.progress * 0.12
       : assets.progress;
     const status: VideoPreloadStatus =
-      video.status === "error" || assets.status === "error"
+      videoFailed || assets.status === "error"
         ? "error"
-        : video.status === "ready" && assets.status === "ready"
+        : videoReady && assets.status === "ready"
           ? "ready"
           : "loading";
     return {
@@ -128,5 +124,6 @@ export function useHeroPreloader(
     video.progress,
     video.status,
     videoEnabled,
+    videoSrc,
   ]);
 }

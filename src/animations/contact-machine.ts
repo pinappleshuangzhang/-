@@ -5,8 +5,6 @@ export const GEAR_STEP_DEG = 15;
 export const SLIDE_DURATION = 0.6;
 /** 两步起点的间隔，含上面的动画时长 */
 export const AUTO_STEP_INTERVAL = 3.2;
-/** 稿面像素：向下拖过约一齿才算一步，调用处再乘稿面倍率 */
-export const DRAG_STEP_PX = 36;
 
 const STEP_EASE = "power2.inOut";
 

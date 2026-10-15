@@ -60,17 +60,17 @@ export function MemberRecordMobile() {
             direction={t("member.direction01")}
             {...memberTextLayout(
               {
-                headerClassName: "left-[4.834%] top-[3.748%]",
-                dividerClassName: "left-[4.834%] top-[8.166%]",
-                nameClassName: "left-[4.834%] top-[10.308%]",
-                directionClassName: "left-[4.834%] top-[14.19%]",
+                headerClassName: "left-[4.834%] top-[calc(12.249%-46px)]",
+                dividerClassName: "left-[4.834%] top-[calc(16.667%-46px)]",
+                nameClassName: "left-[4.834%] top-[calc(18.809%-46px)]",
+                directionClassName: "left-[4.834%] top-[calc(22.691%-46px)]",
                 actionsClassName: "left-[4.834%] top-[21.82%]",
               },
               {
-                headerClassName: "left-[4.834%] top-[6.827%]",
-                dividerClassName: "left-[4.834%] top-[11.245%]",
-                nameClassName: "left-[4.834%] top-[13.387%]",
-                directionClassName: "left-[4.834%] top-[17.269%]",
+                headerClassName: "left-[4.834%] top-[calc(12.249%-46px)]",
+                dividerClassName: "left-[4.834%] top-[calc(16.667%-46px)]",
+                nameClassName: "left-[4.834%] top-[calc(18.809%-46px)]",
+                directionClassName: "left-[4.834%] top-[calc(22.691%-46px)]",
                 actionsClassName: "left-[4.834%] top-[21.82%]",
               },
             )}
@@ -83,17 +83,17 @@ export function MemberRecordMobile() {
             direction={t("member.direction02")}
             {...memberTextLayout(
               {
-                headerClassName: "left-[4.834%] top-[32.129%]",
-                dividerClassName: "left-[4.834%] top-[36.546%]",
-                nameClassName: "left-[4.834%] top-[38.688%]",
-                directionClassName: "left-[4.834%] top-[42.57%]",
+                headerClassName: "left-[4.834%] top-[calc(35.911%-18px)]",
+                dividerClassName: "left-[4.834%] top-[calc(40.329%-18px)]",
+                nameClassName: "left-[4.834%] top-[calc(42.471%-18px)]",
+                directionClassName: "left-[4.834%] top-[calc(46.353%-18px)]",
                 actionsClassName: "left-[4.834%] top-[47.523%]",
               },
               {
-                headerClassName: "left-[4.834%] top-[33.735%]",
-                dividerClassName: "left-[4.834%] top-[38.153%]",
-                nameClassName: "left-[4.834%] top-[40.294%]",
-                directionClassName: "left-[4.834%] top-[44.177%]",
+                headerClassName: "left-[4.834%] top-[calc(35.911%-18px)]",
+                dividerClassName: "left-[4.834%] top-[calc(40.329%-18px)]",
+                nameClassName: "left-[4.834%] top-[calc(42.471%-18px)]",
+                directionClassName: "left-[4.834%] top-[calc(46.353%-18px)]",
                 actionsClassName: "left-[4.834%] top-[47.523%]",
               },
             )}
@@ -106,17 +106,17 @@ export function MemberRecordMobile() {
             direction={t("member.direction03")}
             {...memberTextLayout(
               {
-                headerClassName: "left-[27.493%] top-[57.831%]",
-                dividerClassName: "left-[27.493%] top-[62.249%]",
-                nameClassName: "left-[27.493%] top-[64.391%]",
-                directionClassName: "left-[27.493%] top-[68.273%]",
+                headerClassName: "left-[27.493%] top-[calc(60.91%-11px)]",
+                dividerClassName: "left-[27.493%] top-[calc(65.328%-11px)]",
+                nameClassName: "left-[27.493%] top-[calc(67.47%-11px)]",
+                directionClassName: "left-[27.493%] top-[calc(71.352%-11px)]",
                 actionsClassName: "left-[27.493%] top-[73.226%]",
               },
               {
-                headerClassName: "left-[27.493%] top-[59.973%]",
-                dividerClassName: "left-[27.493%] top-[64.391%]",
-                nameClassName: "left-[27.493%] top-[66.533%]",
-                directionClassName: "left-[27.493%] top-[70.415%]",
+                headerClassName: "left-[27.493%] top-[calc(60.91%-11px)]",
+                dividerClassName: "left-[27.493%] top-[calc(65.328%-11px)]",
+                nameClassName: "left-[27.493%] top-[calc(67.47%-11px)]",
+                directionClassName: "left-[27.493%] top-[calc(71.352%-11px)]",
                 actionsClassName: "left-[27.493%] top-[73.226%]",
               },
             )}
@@ -129,17 +129,17 @@ export function MemberRecordMobile() {
             direction={t("member.direction04")}
             {...memberTextLayout(
               {
-                headerClassName: "left-[4.834%] top-[80.455%]",
-                dividerClassName: "left-[4.834%] top-[84.873%]",
-                nameClassName: "left-[4.834%] top-[87.015%]",
-                directionClassName: "left-[4.834%] top-[90.897%]",
+                headerClassName: "left-[4.834%] top-[calc(83.233%-18px)]",
+                dividerClassName: "left-[4.834%] top-[calc(87.651%-18px)]",
+                nameClassName: "left-[4.834%] top-[calc(89.793%-18px)]",
+                directionClassName: "left-[4.834%] top-[calc(93.675%-18px)]",
                 actionsClassName: "left-[4.834%] top-[95.85%]",
               },
               {
-                headerClassName: "left-[4.834%] top-[82.999%]",
-                dividerClassName: "left-[4.834%] top-[87.416%]",
-                nameClassName: "left-[4.834%] top-[89.558%]",
-                directionClassName: "left-[4.834%] top-[93.441%]",
+                headerClassName: "left-[4.834%] top-[calc(83.233%-18px)]",
+                dividerClassName: "left-[4.834%] top-[calc(87.651%-18px)]",
+                nameClassName: "left-[4.834%] top-[calc(89.793%-18px)]",
+                directionClassName: "left-[4.834%] top-[calc(93.675%-18px)]",
                 actionsClassName: "left-[4.834%] top-[95.85%]",
               },
             )}
@@ -166,6 +166,15 @@ function MobileMemberProfile({
   const { locale, t } = useLocale();
   const separator = locale === "en" ? " _ " : "_";
   const idLabel = `${separator}${identifier}${separator}`;
+  // 调查方向右缘距格子白线 16px：01/02 按斜边在该行的位置，03/04 按右边框。
+  const enDirectionRight =
+    identifier === "01"
+      ? "right-[calc(18.7%+16px)]"
+      : identifier === "02"
+        ? "right-[calc(13.2%+16px)]"
+        : "right-[calc(0.6%+16px)]";
+  const enDirectionWrap =
+    identifier === "04" ? "whitespace-pre-line" : "";
 
   return (
     <div
@@ -202,13 +211,13 @@ function MobileMemberProfile({
         {name}
       </p>
       <p
-        className={`absolute z-10 whitespace-nowrap ${directionClassName}`}
+        className={`absolute z-10 ${
+          locale === "en"
+            ? `${enDirectionRight} ${enDirectionWrap}`
+            : "whitespace-nowrap"
+        } ${directionClassName}`}
       >
-        {direction.split("\n").map((line, lineIndex) => (
-          <span key={`${line}-${lineIndex}`} className="block">
-            {line}
-          </span>
-        ))}
+        {direction}
       </p>
       <div
         className={`absolute z-10 flex items-center gap-4 whitespace-nowrap ${actionsClassName} ${MEMBER_PROFILE_ACTIONS_VISIBLE ? "" : "hidden"}`}

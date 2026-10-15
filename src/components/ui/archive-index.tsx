@@ -419,7 +419,7 @@ function MobileArchiveIndex({
         </div>
 
         <nav aria-label={t("index.nav")} className="mt-9 min-h-0 flex-1">
-          <ul className="flex h-full flex-col justify-between gap-2">
+          <ul className="flex flex-col gap-9">
             {ARCHIVE_INDEX_ITEMS.map((item) => (
               <li key={item.code}>
                 <MobileIndexMenuItem

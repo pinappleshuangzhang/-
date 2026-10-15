@@ -128,6 +128,105 @@ body {
 }
 
 /**
+ * 移动端取件机覆盖层：按 390×844 画板做 cover 缩放，与 machine-bg-mobile 的 object-cover 对齐。
+ * 倍率写成 --cover，避免移动端使用全局 --su（小视口会把尺寸压到不可读）。
+ */
+.stage-cover-390 {
+  --cover: max(100vw / 390, 100vh / 844);
+  width: calc(var(--cover) * 390);
+  height: calc(var(--cover) * 844);
+}
+
+/*
+ * 取件机叠层坐标。移动端按 390 画板压在手机底图上（--cover）；
+ * 768 以上改回 1440 画板（--su）。阴影偏移用 --sx / --sy / --sb。
+ */
+.machine-window {
+  left: calc(var(--cover) * 140);
+  top: calc(var(--cover) * 524.67);
+  width: calc(var(--cover) * 69.33);
+  height: calc(var(--cover) * 114.67);
+  border-radius: calc(var(--cover) * 4);
+  --sx: calc(var(--cover) * 4.67);
+  --sy: calc(var(--cover) * 2.67);
+  --sb: calc(var(--cover) * 6.27);
+}
+
+.machine-gear {
+  left: calc(var(--cover) * 178);
+  top: calc(var(--cover) * 511.33);
+  width: calc(var(--cover) * 140.67);
+  height: calc(var(--cover) * 144.67);
+}
+
+.machine-mask {
+  left: calc(var(--cover) * 209.02);
+  top: calc(var(--cover) * 524.67);
+  width: calc(var(--cover) * 54.04);
+  height: calc(var(--cover) * 139.08);
+}
+
+.machine-highlight-top {
+  left: calc(var(--cover) * 210.35);
+  top: calc(var(--cover) * 522.45);
+  width: calc(var(--cover) * 52.7);
+  height: calc(var(--cover) * 4.44);
+  filter: blur(1px);
+}
+
+.machine-highlight-side {
+  left: calc(var(--cover) * 211.02);
+  top: calc(var(--cover) * 640.82);
+  width: calc(var(--cover) * 4);
+  height: calc(var(--cover) * 20.71);
+  filter: blur(1px);
+}
+
+@media (min-width: 768px) {
+  .machine-window {
+    left: calc(var(--su) * 626.54);
+    top: calc(var(--su) * 480);
+    width: calc(var(--su) * 103.93);
+    height: calc(var(--su) * 155);
+    border-radius: calc(var(--su) * 6);
+    background-color: transparent;
+    --sx: calc(var(--su) * 7);
+    --sy: calc(var(--su) * 4);
+    --sb: calc(var(--su) * 9.4);
+  }
+
+  .machine-gear {
+    left: calc(var(--su) * 674.6);
+    top: calc(var(--su) * 446.67);
+    width: calc(var(--su) * 226.81);
+    height: calc(var(--su) * 233.59);
+  }
+
+  .machine-mask {
+    left: calc(var(--su) * 730);
+    top: calc(var(--su) * 480);
+    width: calc(var(--su) * 81);
+    height: calc(var(--su) * 188);
+  }
+
+  .machine-highlight-top {
+    left: calc(var(--su) * 732);
+    top: calc(var(--su) * 477);
+    width: calc(var(--su) * 79);
+    height: calc(var(--su) * 6);
+    filter: blur(2px);
+  }
+
+  .machine-highlight-side {
+    left: calc(var(--su) * 733);
+    top: calc(var(--su) * 637);
+    width: calc(var(--su) * 6);
+    height: calc(var(--su) * 28);
+    filter: blur(2px);
+  }
+}
+
+/**
  * 稿面包含层：按 1440×800 画板做 contain 缩放，宽或高先触边即停、整板不裁切。
  * 用于「整板构图需随大屏拉伸但不能溢出」的画布（工作室简介图二卡片）；
  * 层内 --su 被改写成 contain 倍率，子元素（含文字）照旧写 calc(var(--su) * 稿面像素)。

@@ -76,7 +76,12 @@ export function createLoaderProgress(
       });
     }
 
-    const announcement = `${live.dataset.role ?? ""}${live.dataset.id ?? ""} ${phaseLabel()} ${pct}`;
+    const welcome = live.dataset.welcome?.trim();
+    const mobileWelcome =
+      welcome && window.matchMedia("(max-width: 767px)").matches;
+    const announcement = mobileWelcome
+      ? `${welcome} ${pct}`
+      : `${live.dataset.role ?? ""}${live.dataset.id ?? ""} ${phaseLabel()} ${pct}`;
     if (live.textContent !== announcement) live.textContent = announcement;
   };
   gsap.set(bar, { scaleX: 0, transformOrigin: "left center" });
@@ -86,6 +91,10 @@ export function createLoaderProgress(
   return {
     update(target) {
       tween?.kill();
+      // 先同步写 DOM。Safari 上 GSAP tween 的 onUpdate 可能一直排不进帧，
+      // 百分比和进度条会停在初始 0%。
+      proxy.value = target;
+      render();
       tween = gsap.to(proxy, {
         value: target,
         duration: 0.2,

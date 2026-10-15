@@ -13,14 +13,6 @@ const CONTACT_EMAIL = "grava.6.67430@gmail.com";
 const CONTACT_PHONE = "+86 13016116021";
 
 /**
- * 稿面 1440×800（Figma 1489:292）：标题、正文、联系方式三组的中心都落在 707.5，
- * 比画板中线左移 12.5，用于对齐背景中的取件机。
- * 桌面态的 left 是稿面层内坐标（见 stage-cover-1440），移动端按 390 画板居中。
- */
-const GROUP_CENTER =
-  "left-1/2 -translate-x-1/2 md:left-[calc(var(--su)*707.5)]";
-
-/**
  * 最后一屏：GA_ARCHIVE_004《开启一份新调查》。
  * 背景取件机由共享背景层提供，这里只承载调查文案与联系方式。
  */
@@ -40,18 +32,18 @@ export function ContactSurvey() {
          */}
         <div className="contents md:absolute md:left-1/2 md:top-1/2 md:block md:-translate-x-1/2 md:-translate-y-1/2 stage-cover-1440">
           <ContactMachine />
+          {/* 移动端英文会折行，三组改为纵向流动；桌面仍按稿面绝对定位 */}
+          <div className="absolute inset-x-5 top-[112px] flex flex-col items-center gap-2 [@media(max-width:767px)_and_(min-height:860px)]:top-auto [@media(max-width:767px)_and_(min-height:860px)]:bottom-[calc(41vh+80px)] md:contents">
           <h1
             data-sd-words
             data-sd-delay="0.2"
             aria-label={t("contactSurvey.headline")}
-            className={`absolute top-[137px] w-[266px] text-center font-serif-sc text-14 font-normal uppercase leading-5 text-grey-400 md:top-[calc(var(--su)*114)] md:w-max md:text-[length:calc(var(--su)*16)] md:leading-[calc(var(--su)*26)] ${GROUP_CENTER}`}
+            className="w-full max-w-[340px] text-center font-serif-sc text-14 font-normal leading-6 text-grey-400 md:absolute md:left-[calc(var(--su)*707.5)] md:top-[calc(var(--su)*114)] md:w-max md:max-w-none md:-translate-x-1/2 md:text-[length:calc(var(--su)*16)] md:leading-[calc(var(--su)*26)]"
           >
             <SplitWords text={t("contactSurvey.headline")} />
           </h1>
 
-          <div
-            className={`absolute top-[169px] w-[266px] text-center font-serif-sc text-14 font-normal uppercase text-grey-400 md:top-[calc(var(--su)*151)] md:w-[calc(var(--su)*491)] md:text-[length:calc(var(--su)*16)] ${GROUP_CENTER}`}
-          >
+          <div className="flex w-full max-w-[340px] flex-col gap-1 text-center font-serif-sc text-14 font-normal text-grey-400 md:absolute md:left-[calc(var(--su)*707.5)] md:top-[calc(var(--su)*151)] md:block md:w-[calc(var(--su)*491)] md:max-w-none md:-translate-x-1/2 md:text-[length:calc(var(--su)*16)]">
             <SurveyLine delay="0.3" before={t("contactSurvey.line1")}>
               <SurveyIcon src="/contact-survey/survey-icon-1.webp" />
             </SurveyLine>
@@ -64,9 +56,7 @@ export function ContactSurvey() {
             <SurveyLine delay="0.45" before={t("contactSurvey.line4")} />
           </div>
 
-          <div
-            className={`absolute top-[297px] flex flex-col items-center gap-3 md:top-[calc(var(--su)*315)] md:flex-row md:gap-[calc(var(--su)*24)] ${GROUP_CENTER}`}
-          >
+          <div className="flex flex-col items-center gap-3 md:absolute md:left-[calc(var(--su)*707.5)] md:top-[calc(var(--su)*315)] md:-translate-x-1/2 md:flex-row md:gap-[calc(var(--su)*24)]">
             <ContactCopyButton
               label={CONTACT_EMAIL}
               ariaLabel={`${t("contactSurvey.emailAria")} ${CONTACT_EMAIL}`}
@@ -106,6 +96,7 @@ export function ContactSurvey() {
               }
             />
           </div>
+          </div>
         </div>
       </div>
     </ScreenShell>
@@ -134,7 +125,7 @@ function SurveyLine({
       data-sd-words
       data-sd-delay={delay}
       aria-label={text}
-      className="leading-[29px] md:leading-[calc(var(--su)*38)]"
+      className="leading-7 md:leading-[calc(var(--su)*38)]"
     >
       {before && <SplitWords text={before} />}
       {children && (
@@ -161,17 +152,17 @@ function GapSlot({ children }: { children: ReactNode }) {
   );
 }
 
-/** 括号内图标：源图 108×108，按稿面占位 28×28 居中 */
+/** 括号内图标：源图 108×108，移动端 26，桌面稿面 28 */
 function SurveyIcon({ src }: { src: string }) {
   return (
     <GapSlot>
-      <span className="absolute left-1/2 top-1/2 block size-[18px] -translate-x-1/2 -translate-y-1/2 md:size-[calc(var(--su)*28)]">
+      <span className="absolute left-1/2 top-1/2 block size-[26px] -translate-x-1/2 -translate-y-1/2 md:size-[calc(var(--su)*28)]">
         <Image
           src={src}
           alt=""
           fill
           unoptimized
-          sizes="(max-width: 767px) 18px, 28px"
+          sizes="(max-width: 767px) 26px, 28px"
           className="object-contain"
         />
       </span>

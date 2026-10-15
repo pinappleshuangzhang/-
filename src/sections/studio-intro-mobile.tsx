@@ -21,15 +21,19 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import layer01Img from "../../public/archive-ga-004/background-layers/layer-01.webp";
 import layer03Img from "../../public/archive-ga-004/background-layers/layer-03.webp";
 import layer04Img from "../../public/archive-ga-004/background-layers/layer-04.webp";
-import cardBottomImg from "../../public/studio-intro/mobile/card-m-bottom.svg";
-import cardPhotoImg from "../../public/studio-intro/mobile/card-m-photo.svg";
-import cardTopImg from "../../public/studio-intro/mobile/card-m-top.svg";
-import cardWorkImg from "../../public/studio-intro/mobile/card-m-work.svg";
+import cardBlImg from "../../public/studio-intro/mobile/card-m-bl.svg";
+import cardBrImg from "../../public/studio-intro/mobile/card-m-br.svg";
+import cardTlImg from "../../public/studio-intro/mobile/card-m-tl.svg";
+import cardTrImg from "../../public/studio-intro/mobile/card-m-tr.svg";
 import markG20Img from "../../public/studio-intro/mark-g-20.svg";
-import plateMarkImg from "../../public/studio-intro/plate-mark.svg";
-import platePhotoImg from "../../public/studio-intro/plate-photo.webp";
+import platePhotoMobileImg from "../../public/studio-intro/mobile/plate-photo.webp";
 
-/** 斜切照片遮罩（移动稿 350×263，斜边朝左上） */
+/** 斜切遮罩的水平视觉中心，相对 164.618 宽的包围盒。铭牌对齐这里。 */
+const PLATE_VISUAL_CENTER = 91.095 / 164.618;
+/** 铭牌照片 728×974，用于按卡片比例计算封面裁切 */
+const PLATE_IMAGE_ASPECT = 728 / 974;
+
+/** 斜切照片遮罩（移动稿 164.6×364，已按稿旋转 180°） */
 const CARD_MASK_STYLE = {
   WebkitMaskImage: "url(/studio-intro/mobile/card-m-mask.svg)",
   maskImage: "url(/studio-intro/mobile/card-m-mask.svg)",
@@ -44,10 +48,16 @@ const CAPTION_CLASS =
   "absolute font-bodoni text-[6px] uppercase leading-[14px] text-grey-400";
 
 /** 正文行：行内逐词随机浮现（与全站同一套 sd-words 动画） */
-function RevealLine({ text }: { text: string }) {
+function RevealLine({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}) {
   return (
-    <span aria-hidden="true" className="block">
-      <SplitWords text={text} />
+    <span aria-hidden="true" className={className ? `block ${className}` : "block"}>
+      <SplitWords text={text} wrap />
     </span>
   );
 }
@@ -56,7 +66,7 @@ function RevealLine({ text }: { text: string }) {
  * 《工作室简介》第三屏移动端（Figma 1489:447 / 1489:477，390 画板）。
  * 图一为桌面舞台的 0.91 倍裁片（同源图层，中心锚定 + 上下渐变色条）。
  * 交互：一次下滑 → 图一整层淡出（无放大）→ 图二渐入 + 逐词文字；
- * 图二内容区可原生滚动（矮视口兜底），顶部再上滑返回图一，
+ * 图二页边距固定，卡片随可视高度拉伸或压缩，照片不变形；顶部再上滑返回图一，
  * 首尾边界交回分页器切屏。
  */
 export function StudioIntroMobile() {
@@ -69,6 +79,7 @@ export function StudioIntroMobile() {
   const clusterRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const boardWrapRef = useRef<HTMLDivElement>(null);
   const ringOuterRef = useRef<HTMLImageElement>(null);
   const ringInnerRef = useRef<HTMLImageElement>(null);
 
@@ -112,6 +123,83 @@ export function StudioIntroMobile() {
     return () => {
       window.removeEventListener("resize", apply);
       window.visualViewport?.removeEventListener("resize", apply);
+    };
+  }, []);
+
+  // 图二铺满可视区域（visualViewport，含 Safari 工具栏）。页边距固定，
+  // 卡片用百分比拉伸或压缩，不整板缩放，也不出现内部滚动。
+  useEffect(() => {
+    const apply = () => {
+      const layer = cardsRef.current;
+      const wrap = boardWrapRef.current;
+      if (!layer || !wrap) return;
+      const viewport = window.visualViewport;
+      const width = viewport?.width ?? layer.clientWidth;
+      const height = viewport?.height ?? layer.clientHeight;
+      const offsetTop = viewport?.offsetTop ?? 0;
+      const offsetLeft = viewport?.offsetLeft ?? 0;
+      wrap.style.width = `${width}px`;
+      wrap.style.height = `${height}px`;
+      wrap.style.marginLeft = `${offsetLeft}px`;
+      wrap.style.marginTop = `${offsetTop}px`;
+      const photo = wrap.querySelector<HTMLElement>("[data-plate-photo]");
+      if (photo && photo.clientWidth > 0 && photo.clientHeight > 0) {
+        const renderedWidth = Math.max(
+          photo.clientWidth,
+          photo.clientHeight * PLATE_IMAGE_ASPECT,
+        );
+        const overflow = renderedWidth - photo.clientWidth;
+        const shift =
+          photo.clientWidth * PLATE_VISUAL_CENTER - photo.clientWidth / 2;
+        const position = overflow > 1 ? 0.5 - shift / overflow : 0.5;
+        photo.style.objectPosition = `${position * 100}% 50%`;
+      }
+      // 正文在卡片里垂直居中。会盖住上下小字时，两段用同一个比例缩小。
+      const copies = [
+        ...wrap.querySelectorAll<HTMLElement>("[data-card-copy]"),
+      ];
+      copies.forEach((copy) => {
+        copy.style.transform = "none";
+      });
+      const gap = 8;
+      let scale = 1;
+      for (const copy of copies) {
+        const card = copy.parentElement?.parentElement;
+        if (!card) continue;
+        const cardRect = card.getBoundingClientRect();
+        const copyRect = copy.getBoundingClientRect();
+        if (copyRect.height <= 0 || cardRect.height <= 0) continue;
+        const center = cardRect.top + cardRect.height / 2;
+        let topBound = cardRect.top;
+        let bottomBound = cardRect.bottom;
+        for (const caption of card.querySelectorAll("p")) {
+          const rect = caption.getBoundingClientRect();
+          if (rect.height <= 0) continue;
+          const captionMid = rect.top + rect.height / 2;
+          if (captionMid < center) topBound = Math.max(topBound, rect.bottom);
+          else bottomBound = Math.min(bottomBound, rect.top);
+        }
+        const room = Math.min(
+          center - topBound - gap,
+          bottomBound - center - gap,
+        );
+        if (room > 0) scale = Math.min(scale, (room * 2) / copyRect.height);
+      }
+      if (scale < 1) {
+        for (const copy of copies) {
+          copy.style.transform = `scale(${scale})`;
+        }
+      }
+    };
+    apply();
+    document.fonts.ready.then(apply);
+    window.addEventListener("resize", apply);
+    window.visualViewport?.addEventListener("resize", apply);
+    window.visualViewport?.addEventListener("scroll", apply);
+    return () => {
+      window.removeEventListener("resize", apply);
+      window.visualViewport?.removeEventListener("resize", apply);
+      window.visualViewport?.removeEventListener("scroll", apply);
     };
   }, []);
 
@@ -180,18 +268,18 @@ export function StudioIntroMobile() {
 
       if (step === 0) {
         if (!down) return false; // 上滑交回分页器切上一屏
-        // 图一整层淡出（无放大），图二交叠渐入 + 逐词文字
+        // 图一淡出放慢到 2s；图二在它明显变淡后再渐入
         stepRef.current = 2;
         scroller.scrollTop = 0;
         const tl = gsap.timeline();
-        tl.to(stage, { autoAlpha: 0, duration: 0.6, ease: "power2.in" }, 0);
+        tl.to(stage, { autoAlpha: 0, duration: 2, ease: "power2.in" }, 0);
         tl.fromTo(
           cards,
           { autoAlpha: 0 },
-          { autoAlpha: 1, duration: 0.6, ease: "power2.out" },
-          0.35,
+          { autoAlpha: 1, duration: 1.2, ease: "power2.out" },
+          1.2,
         );
-        tl.add(playSondavenReveal(cards), 0.55);
+        tl.add(playSondavenReveal(cards), 1.6);
         begin(tl);
         return true;
       }
@@ -220,9 +308,25 @@ export function StudioIntroMobile() {
     });
   }, [isActive, reducedMotion, registerScrollInterceptor, resetToStage]);
 
-  const workBody = `${t("studioIntro.card2Body1")}${
-    locale === "zh" ? "，" : ", "
-  }${t("studioIntro.card2Body2")}`;
+  const isEn = locale === "en";
+  const sloganLines = [
+    t("studioIntro.line1"),
+    t("studioIntro.line2"),
+    t("studioIntro.line3"),
+    t("studioIntro.line4"),
+  ].filter((line) => line.length > 0);
+  const card2Lines =
+    locale === "zh"
+      ? [
+          t("studioIntro.card2Title"),
+          `${t("studioIntro.card2Body1")}，${t("studioIntro.card2Body2")}`,
+        ]
+      : [
+          t("studioIntro.card2Title"),
+          t("studioIntro.card2Body1"),
+          t("studioIntro.card2Body2"),
+          t("studioIntro.card2Body3"),
+        ].filter((line) => line.length > 0);
 
   return (
     <ScreenShell aria-label={t("studioIntro.aria")}>
@@ -281,129 +385,160 @@ export function StudioIntroMobile() {
         <div
           data-sd-words
           data-sd-delay="0.2"
-          aria-label={`${t("studioIntro.line1")} ${t("studioIntro.line2")}`}
-          className="absolute left-1/2 top-1/2 ml-[-80px] mt-[-26px] w-[160px]"
+          aria-label={sloganLines.join(" ")}
+          className={
+            isEn
+              ? "absolute left-1/2 top-1/2 ml-[-118px] mt-[-50px] w-[236px]"
+              : "absolute left-1/2 top-1/2 ml-[-80px] mt-[-26px] w-[160px]"
+          }
         >
           <div
             aria-hidden="true"
             className="mx-auto flex w-[138px] items-center justify-between"
           >
-            <span className="sd-word h-[0.3px] w-[49px] bg-grey-300 opacity-0" />
-            <span className="sd-word opacity-0">
+            <span className="sd-word h-px w-[49px] shrink-0 opacity-0">
+              <span className="block h-px w-full origin-center scale-y-50 bg-grey-300" />
+            </span>
+            <span className="sd-word shrink-0 opacity-0">
               <BrandLogo className="block size-[12px] text-grey-400" />
             </span>
-            <span className="sd-word h-[0.3px] w-[51px] bg-grey-300 opacity-0" />
+            <span className="sd-word h-px w-[51px] shrink-0 opacity-0">
+              <span className="block h-px w-full origin-center scale-y-50 bg-grey-300" />
+            </span>
           </div>
           <p
             aria-hidden="true"
             className="mt-2 text-center font-serif-sc text-14 leading-[20px] text-grey-400"
           >
-            <SplitWords text={t("studioIntro.line1")} />
-            <br />
-            <SplitWords text={t("studioIntro.line2")} />
+            {sloganLines.map((line, index) => (
+              <span key={line}>
+                {index > 0 ? <br /> : null}
+                <SplitWords text={line} />
+              </span>
+            ))}
           </p>
         </div>
       </div>
-      {/* 图二卡片层：初始隐藏，step2 渐入；文字动画手动驱动。
-          data-lenis-prevent：分页模式下 Lenis 会拦截 touchmove，
-          无此标记的嵌套滚动容器在 iOS 上无法原生滚动 */}
+      {/* 图二卡片层：页边距固定（左右 12、上 86、下 23），卡片拉伸或压缩 */}
       <div
         ref={cardsRef}
         data-sd-global-ignore
-        className="invisible absolute inset-0 bg-[#E0E2E6] opacity-0"
+        className="invisible absolute inset-0 overflow-hidden bg-[#E0E2E6] opacity-0"
       >
-        <div
-          ref={scrollerRef}
-          data-pager-scroller
-          data-lenis-prevent=""
-          className="absolute inset-0 overflow-y-scroll overscroll-y-contain touch-pan-y"
-        >
-          {/* 画布：390 画板纵向 844，矮视口内部滚动；左右页边 20px */}
-          <div className="relative h-[844px] w-full">
-            {/* 上卡 + 想做的事 */}
-            <div className="absolute left-5 right-5 top-[86px] h-[177.7px]">
-              <Image src={cardTopImg} alt="" fill unoptimized sizes="100vw" />
-              <p className={`${CAPTION_CLASS} left-[12px] top-[12px]`}>
-                39.9042° N 116.4074° E
-              </p>
-              <p className={`${CAPTION_CLASS} right-[12px] top-[12px]`}>
-                Real · Tangible
-              </p>
-              <div
-                data-sd-words
-                aria-label={`${t("studioIntro.card1Title")} ${t("studioIntro.card1Body")}`}
-                className="absolute left-[calc(50%-120px)] top-[50px] font-serif-sc text-12 leading-[23px] text-grey-400"
-              >
-                <RevealLine text={t("studioIntro.card1Title")} />
-                <RevealLine text={t("studioIntro.card1Body")} />
-              </div>
-            </div>
-            {/* 下卡（垂直翻转）+ GRAVA 竖排与 G 标 */}
-            <div className="absolute left-5 right-5 top-[646.3px] h-[177.7px]">
-              <Image
-                src={cardBottomImg}
-                alt=""
-                fill
-                unoptimized
-                sizes="100vw"
-                className="rotate-180"
-              />
-              {/* vertical-rl + rotate180 = 西文侧躺、自下而上读 */}
-              <p
-                className="absolute left-[12px] top-[76.7px] rotate-180 font-bodoni text-10 text-grey-400"
-                style={{ writingMode: "vertical-rl" }}
-              >
-                GRAVA
-              </p>
-              <Image
-                src={markG20Img}
-                alt=""
-                unoptimized
-                className="absolute left-1/2 top-[83.7px] ml-[-10px] size-[20px]"
-              />
-            </div>
-            {/* 照片卡玻璃形底 */}
-            <div className="absolute left-5 right-5 top-[218.9px] h-[263px]">
-              <Image src={cardPhotoImg} alt="" fill unoptimized sizes="100vw" />
-            </div>
-            {/* 铭牌照片：按稿斜切裁片 */}
-            <div
-              className="absolute left-5 right-5 top-[218.9px] h-[263px]"
-              style={CARD_MASK_STYLE}
-            >
-              <div className="absolute left-[-14px] top-[-83.3px] h-[486.7px] w-[calc(100%+14px)]">
+        <div ref={scrollerRef} className="absolute inset-0 overflow-hidden">
+          <div ref={boardWrapRef} className="relative h-full w-full">
+            <div className="absolute bottom-[23px] left-3 right-3 top-[86px]">
+              {/* 左上：想做的事 */}
+              <div className="absolute left-0 top-0 h-[calc((100%-7px)/2)] w-[63.661%]">
                 <Image
-                  src={platePhotoImg}
-                  alt={t("studioIntro.plateAlt")}
+                  src={cardTlImg}
+                  alt=""
                   fill
-                  sizes="(max-width: 767px) 100vw, 43vw"
-                  className="object-cover"
+                  unoptimized
+                  sizes="60vw"
+                  className="object-fill"
                 />
+                <p className={`${CAPTION_CLASS} left-[5.15%] top-[3.3%]`}>
+                  39.9042° N 116.4074° E
+                </p>
+                <p className={`${CAPTION_CLASS} bottom-[3.3%] left-[5.15%]`}>
+                  Real · Tangible
+                </p>
+                <div className="absolute inset-0 flex items-center">
+                <div
+                  data-sd-words
+                  aria-label={`${t("studioIntro.card1Title")} ${t("studioIntro.card1Body")}`}
+                  data-card-copy
+                  className="ml-[19.74%] w-[51.07%] origin-center font-serif-sc text-14 leading-[28px] text-grey-400"
+                >
+                  <RevealLine
+                    text={t("studioIntro.card1Title")}
+                    className="text-16 leading-[28px]"
+                  />
+                  <RevealLine text={t("studioIntro.card1Body")} />
+                </div>
+                </div>
               </div>
-              <Image
-                src={plateMarkImg}
-                alt=""
-                unoptimized
-                className="absolute left-[171px] top-[139px] h-[8.3px] w-[7.7px]"
-              />
-            </div>
-            {/* 工作方式卡（旋转 180°）+ 文案 */}
-            <div className="absolute left-5 right-5 top-[458.9px] h-[233px]">
-              <Image
-                src={cardWorkImg}
-                alt=""
-                fill
-                unoptimized
-                sizes="100vw"
-                className="rotate-180"
-              />
-              <div
-                data-sd-words
-                aria-label={`${t("studioIntro.card2Title")} ${workBody}`}
-                className="absolute left-[calc(50%-120px)] top-[59px] w-[240px] font-serif-sc text-12 leading-[23px] text-grey-400"
-              >
-                <RevealLine text={t("studioIntro.card2Title")} />
-                <RevealLine text={workBody} />
+              {/* 右上：铭牌照片。遮罩随卡拉伸，照片 object-cover 不变形 */}
+              <div className="absolute left-[54.645%] top-0 h-[calc((100%-7px)/2)] w-[45.355%]">
+                <Image
+                  src={cardTrImg}
+                  alt=""
+                  fill
+                  unoptimized
+                  sizes="43vw"
+                  className="rotate-180 object-fill"
+                />
+                <div className="absolute inset-0" style={CARD_MASK_STYLE}>
+                  <Image
+                    src={platePhotoMobileImg}
+                    alt={t("studioIntro.plateAlt")}
+                    fill
+                    sizes="(max-width: 767px) 50vw, 43vw"
+                    data-plate-photo=""
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+              {/* 左下：GRAVA + G */}
+              <div className="absolute bottom-0 left-0 h-[calc((100%-7px)/2)] w-[47.268%]">
+                <Image
+                  src={cardBlImg}
+                  alt=""
+                  fill
+                  unoptimized
+                  sizes="45vw"
+                  className="object-fill"
+                />
+                <div className="absolute inset-0 flex items-center">
+                  <p
+                    className="ml-[4.62%] rotate-180 font-bodoni text-10 text-grey-400"
+                    style={{ writingMode: "vertical-rl" }}
+                  >
+                    GRAVA
+                  </p>
+                </div>
+                <div className="absolute inset-0 flex items-center">
+                  <Image
+                    src={markG20Img}
+                    alt=""
+                    unoptimized
+                    className="ml-[40.46%] size-[20px]"
+                  />
+                </div>
+              </div>
+              {/* 右下：工作方式 */}
+              <div className="absolute bottom-0 left-[38.251%] h-[calc((100%-7px)/2)] w-[61.749%]">
+                <Image
+                  src={cardBrImg}
+                  alt=""
+                  fill
+                  unoptimized
+                  sizes="58vw"
+                  className="rotate-180 object-fill"
+                />
+                <p className={`${CAPTION_CLASS} right-[5.31%] top-[3.3%]`}>
+                  Complete · Sustainable
+                </p>
+                <p className={`${CAPTION_CLASS} bottom-[3.3%] right-[5.31%]`}>
+                  Strategy · Systems · Visuals · Experience
+                </p>
+                <div className="absolute inset-0 flex items-center">
+                <div
+                  data-sd-words
+                  aria-label={card2Lines.join(" ")}
+                  data-card-copy
+                  className="ml-[23.01%] w-[65.49%] origin-center font-serif-sc text-14 leading-[28px] text-grey-400"
+                >
+                  <RevealLine
+                    text={card2Lines[0] ?? ""}
+                    className="text-16 leading-[28px]"
+                  />
+                  {card2Lines.slice(1).map((line) => (
+                    <RevealLine key={line} text={line} />
+                  ))}
+                </div>
+                </div>
               </div>
             </div>
           </div>
