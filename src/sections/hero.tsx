@@ -11,6 +11,7 @@ import {
   LOADER_FAILSAFE_MS,
   LOADER_HOLD_MS,
   LOADER_MIN_DURATION_MS,
+  presentHeroFinale,
   revealArchiveHold,
   revealHeroFinale,
 } from "@/animations/hero-intro";
@@ -25,8 +26,8 @@ import archiveBoxImg from "../../public/hero/hero-loader-bg.webp";
 
 gsap.registerPlugin(useGSAP);
 
-const DESKTOP_VIDEO_SRC = "/hero/hero-intro.mp4?v=202609111835";
-const MOBILE_VIDEO_SRC = "/hero/hero-mobile-intro.mp4?v=202609111006";
+const DESKTOP_VIDEO_SRC = "/hero/hero-intro.mp4?v=202610151743";
+const MOBILE_VIDEO_SRC = "/hero/hero-mobile-intro.mp4?v=202610151743";
 /** 手机尾帧玻璃板上沿，相对 720×1280 画面 */
 const MOBILE_VIDEO_WIDTH = 720;
 const MOBILE_VIDEO_HEIGHT = 1280;
@@ -95,7 +96,7 @@ export function Hero() {
 
   const preload = useHeroPreloader(videoSrc, LOADER_ASSET_PATHS, {
     videoEnabled: SHOW_INTRO_VIDEO,
-    timeoutMs: 45000,
+    timeoutMs: LOADER_FAILSAFE_MS,
   });
   const preloadRef = useRef(preload);
   // GSAP 闭包只建一次，播放地址走 ref，避免闭包钉死在首帧的空地址上。
@@ -278,33 +279,25 @@ export function Hero() {
     };
   }, []);
 
-  // 揭幕时间轴一旦开始就会把 doneRef 设为 true，但 Safari 上 clip-path
-  // 动画可能永不结束。保险只看加载层是否还在，避免被提前解除。
+  // 加载超过保险上限：跳过开场视频，直接落在档案室尾帧并亮标题。
   useEffect(() => {
-    if (loaderDismissed) return;
+    if (loaderDismissed || introPhaseRef.current !== "loading") return;
     const timeout = window.setTimeout(() => {
-      const loader = loaderRef.current;
-      const videoLayer = videoLayerRef.current;
-      const firstFrame = firstFrameRef.current;
-      const lastFrame = document.querySelector<HTMLElement>(
-        '[data-shared-bg="studio"]',
-      );
-      const isMobile = window.matchMedia("(max-width: 767px)").matches;
-      if (loader) gsap.set(loader, { autoAlpha: 0 });
-      if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
-      // 手机保留视频层（首/尾帧定格）；桌面切到静态尾帧并卸载视频。
-      if (isMobile) {
-        if (videoLayer) gsap.set(videoLayer, { autoAlpha: 1 });
-      } else {
-        if (videoLayer) gsap.set(videoLayer, { autoAlpha: 0 });
-        if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
-        setIntroDone(true);
-      }
-      setSondavenVisible(container.current);
+      if (introPhaseRef.current !== "loading") return;
+      presentHeroFinale({
+        loader: loaderRef.current,
+        firstFrame: firstFrameRef.current,
+        lastFrame: document.querySelector<HTMLElement>(
+          '[data-shared-bg="studio"]',
+        ),
+        videoLayer: videoLayerRef.current,
+        root: container.current,
+      });
       introPhaseRef.current = "done";
       gsap.set([scrollHintRef.current, skipRef.current], { autoAlpha: 0 });
       doneRef.current = true;
       setNavigationLocked(false);
+      setIntroDone(true);
       setLoaderDismissed(true);
     }, LOADER_FAILSAFE_MS);
 
@@ -392,6 +385,26 @@ export function Hero() {
           root,
           onRevealStart: () => setNavigationLocked(false),
         }).eventCallback("onComplete", finish);
+      });
+
+      const skipToArchiveRoom = contextSafe!(() => {
+        if (introPhaseRef.current === "done") {
+          setLoaderDismissed(true);
+          return;
+        }
+        presentHeroFinale({
+          loader,
+          firstFrame: firstFrameRef.current,
+          lastFrame,
+          videoLayer,
+          root,
+        });
+        hideCornerActions(0);
+        introPhaseRef.current = "done";
+        doneRef.current = true;
+        setNavigationLocked(false);
+        setIntroDone(true);
+        setLoaderDismissed(true);
       });
 
       const holdOnArchive = contextSafe!(() => {
@@ -520,7 +533,7 @@ export function Hero() {
 
           if (state.status === "error") {
             loaderProgress.update(timeProgress * 100);
-            if (timeProgress >= 1) releaseLoader(holdOnArchive);
+            if (timeProgress >= 1) releaseLoader(skipToArchiveRoom);
             return;
           }
 

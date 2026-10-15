@@ -8,7 +8,7 @@ import {
 export const LOADER_MIN_DURATION_MS = 2000;
 /** 到 100% 后短停再退场 */
 export const LOADER_HOLD_MS = 700;
-/** Safari matchMedia 未触发时的加载层保险上限 */
+/** 加载过久则跳过视频，直接进档案室屏并亮标题 */
 export const LOADER_FAILSAFE_MS = 10000;
 /** 文案阶段：0–35% 申请 / 35–65% 连接 / 65–100% 已批准 */
 export const LOADER_PHASE_REVIEW = 0.35;
@@ -292,6 +292,36 @@ export function revealArchiveHold({
     );
   }
   return timeline;
+}
+
+/**
+ * 加载超时/失败：立刻落在档案室尾帧并亮标题，不再等开场视频。
+ */
+export function presentHeroFinale({
+  loader,
+  firstFrame,
+  lastFrame,
+  videoLayer,
+  root,
+}: {
+  loader: HTMLElement | null;
+  firstFrame: HTMLElement | null;
+  lastFrame: HTMLElement | null;
+  videoLayer: HTMLElement | null;
+  root: HTMLElement | null;
+}): void {
+  const curtain = root?.querySelector<HTMLElement>("[data-loader-curtain]");
+  if (loader) {
+    gsap.set(loader, { autoAlpha: 0, clearProps: "clip-path,willChange" });
+  }
+  if (curtain) gsap.set(curtain, { autoAlpha: 0, clearProps: "clip-path,willChange" });
+  if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
+  if (videoLayer) gsap.set(videoLayer, { autoAlpha: 0 });
+  if (lastFrame) gsap.set(lastFrame, { autoAlpha: 1 });
+  if (!root) return;
+  const titles = root.querySelector<HTMLElement>("[data-hero-titles]");
+  if (titles) gsap.set(titles, { autoAlpha: 1 });
+  setSondavenVisible(root);
 }
 
 /**
