@@ -644,6 +644,8 @@ export function SectionPagerProvider({
         <SharedSectionBackgrounds
           active={activeScreen?.background ?? null}
           nearEnd={index >= screens.length - 2}
+          introOverlayActive={introOverlayActive}
+          screenIndex={index}
         />
         {screens.map((screen, screenIndex) => {
           const isActive = screenIndex === index;
@@ -655,7 +657,8 @@ export function SectionPagerProvider({
               inert={!isActive}
             >
               <ScreenActiveContext.Provider value={isActive}>
-                {screen.node}
+                {/* 加载序幕期间后几屏不挂载，invisible 仍在视口内，懒加载拦不住 */}
+                {screenIndex === 0 || !introOverlayActive ? screen.node : null}
               </ScreenActiveContext.Provider>
             </div>
           );

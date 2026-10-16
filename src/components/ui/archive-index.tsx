@@ -17,6 +17,7 @@ import {
   type ArchiveIndexItem,
 } from "@/lib/archive-index-items";
 import { useLocale } from "@/components/providers/locale-provider";
+import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import binderImg from "../../../public/archive-index/binder.webp";
 import bgImg from "../../../public/archive-index/bg.webp";
@@ -61,13 +62,15 @@ export function ArchiveIndex({
   const mobileDrawerRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
   const { locale, t } = useLocale();
+  const { introOverlayActive } = useSectionPager();
   const [mounted, setMounted] = useState(open);
   if (open && !mounted) {
     setMounted(true);
   }
 
-  // 目录关闭时组件仍挂载：空闲预热活页夹与背景，避免首次展开才请求解码。
+  // 目录关闭时组件仍挂载：加载序幕结束后再空闲预热，避免和开场视频抢带宽。
   useEffect(() => {
+    if (introOverlayActive) return;
     const sources = [binderImg.src, bgImg.src];
     const warm = () => {
       for (const src of sources) {
@@ -82,7 +85,7 @@ export function ArchiveIndex({
     }
     const timer = window.setTimeout(warm, 800);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [introOverlayActive]);
 
   useEffect(() => {
     if (!open) return;

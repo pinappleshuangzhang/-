@@ -10,6 +10,8 @@ type SectionBackgroundProps = {
   quality?: number;
   imageClassName?: string;
   className?: string;
+  onLoad?: () => void;
+  onError?: () => void;
 };
 
 /** 分屏全出血背景图：铺满整个 section，渐进式模糊占位 */
@@ -21,6 +23,8 @@ export function SectionBackground({
   quality,
   imageClassName = "object-cover",
   className,
+  onLoad,
+  onError,
 }: SectionBackgroundProps) {
   return (
     <div className={`absolute inset-0 ${className ?? ""}`}>
@@ -34,6 +38,8 @@ export function SectionBackground({
         placeholder="blur"
         sizes="100vw"
         className={imageClassName}
+        onLoad={onLoad}
+        onError={onError}
       />
     </div>
   );

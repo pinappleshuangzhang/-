@@ -1,8 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import dynamic from "next/dynamic";
-import { useEffect, useState, type MutableRefObject } from "react";
+import {
+  useEffect,
+  useState,
+  type ComponentType,
+  type MutableRefObject,
+} from "react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { ViscoseMobileGallery } from "@/components/ui/viscose-mobile-gallery";
@@ -13,13 +17,18 @@ import {
   type ViscoseCarouselItem,
 } from "@/lib/viscose-carousel-items";
 
-const ViscoseDesktopCarousel = dynamic(
-  () =>
-    import("@/components/ui/viscose-desktop-carousel").then(
-      (module) => module.ViscoseDesktopCarousel,
-    ),
-  { ssr: false },
-);
+type DesktopCarouselProps = {
+  onSelect: (index: number) => void;
+  scrollHandlerRef: MutableRefObject<((deltaY: number) => boolean) | null>;
+  paused?: boolean;
+  cursorLabel: string;
+  cursorViewLabel: string;
+  categoryLabels: string[];
+  categoryFontClass: string;
+  categoryPrefix: string;
+  nameFont: string;
+  listFontSize: number;
+};
 
 type ViscoseCarouselProps = {
   items: ViscoseCarouselItem[];
@@ -45,11 +54,19 @@ export function ViscoseCarousel({
   const { index: screenIndex } = useSectionPager();
   const isDesktop = useDesktopMedia();
   const [hasActivated, setHasActivated] = useState(false);
+  const [DesktopCarousel, setDesktopCarousel] =
+    useState<ComponentType<DesktopCarouselProps> | null>(null);
 
   useEffect(() => {
-    if (!isDesktop) return;
-    void import("@/components/ui/viscose-desktop-carousel");
-  }, [isDesktop]);
+    if (!active || !isDesktop || reducedMotion) return;
+    let cancelled = false;
+    void import("@/components/ui/viscose-desktop-carousel").then((module) => {
+      if (!cancelled) setDesktopCarousel(() => module.ViscoseDesktopCarousel);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [active, isDesktop, reducedMotion]);
 
   useViscosePrefetch({
     seedSrc: items[VISCOSE_SEED_INDEX]?.src,
@@ -99,22 +116,24 @@ export function ViscoseCarousel({
     <div
       className={`absolute inset-0 isolate overflow-hidden ${active ? "" : "invisible"} ${className ?? ""}`}
     >
-      <ViscoseDesktopCarousel
-        onSelect={onSelect}
-        scrollHandlerRef={scrollHandlerRef}
-        paused={paused || !active}
-        cursorLabel={t("gallery.dragHint")}
-        cursorViewLabel={t("gallery.view")}
-        categoryLabels={[
-          t("gallery.category.brand"),
-          t("gallery.category.product"),
-          t("gallery.category.website"),
-        ]}
-        categoryFontClass={locale === "zh" ? "font-serif-sc" : "font-bodoni"}
-        categoryPrefix={t("survey.detailTitle")}
-        nameFont={locale === "zh" ? "Noto Serif SC" : "Libre Bodoni"}
-        listFontSize={locale === "zh" ? 14 : 12}
-      />
+      {DesktopCarousel ? (
+        <DesktopCarousel
+          onSelect={onSelect}
+          scrollHandlerRef={scrollHandlerRef}
+          paused={paused || !active}
+          cursorLabel={t("gallery.dragHint")}
+          cursorViewLabel={t("gallery.view")}
+          categoryLabels={[
+            t("gallery.category.brand"),
+            t("gallery.category.product"),
+            t("gallery.category.website"),
+          ]}
+          categoryFontClass={locale === "zh" ? "font-serif-sc" : "font-bodoni"}
+          categoryPrefix={t("survey.detailTitle")}
+          nameFont={locale === "zh" ? "Noto Serif SC" : "Libre Bodoni"}
+          listFontSize={locale === "zh" ? 14 : 12}
+        />
+      ) : null}
     </div>
   );
 }

@@ -132,7 +132,7 @@ export function ArchiveIntro() {
 
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
-  // 首屏序幕结束（导航解锁）后才开始加载视频，避免和首屏视频抢带宽
+  // 导航解锁且进入本屏后才加载视频，避免和开场视频抢带宽
   const [videoAllowed, setVideoAllowed] = useState(false);
 
   const reducedMotion = useReducedMotion();
@@ -146,8 +146,9 @@ export function ArchiveIntro() {
   const { t, locale } = useLocale();
   const isEnglish = locale === "en";
 
-  // 渲染期间锁存：一旦解锁过就保持允许（序幕重播时不重新卸载视频）
-  if (!navigationLocked && !videoAllowed) {
+  // 导航解锁并且进入本屏后才加载。揭开后若还停在首屏，不去下文件夹视频。
+  // 一旦允许就保持，序幕重播时不重新卸载。
+  if (!navigationLocked && isActive && !videoAllowed) {
     setVideoAllowed(true);
   }
 

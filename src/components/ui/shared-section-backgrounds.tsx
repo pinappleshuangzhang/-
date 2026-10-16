@@ -12,6 +12,9 @@ type SharedSectionBackgroundsProps = {
   active: SectionBackgroundKey | null;
   /** 倒数第二屏起预热 activeOnly 背景，避开首屏开场视频 */
   nearEnd?: boolean;
+  /** 首屏加载序幕还在时，尾帧和档案背景先不请求 */
+  introOverlayActive?: boolean;
+  screenIndex?: number;
 };
 
 /**
@@ -21,6 +24,8 @@ type SharedSectionBackgroundsProps = {
 export function SharedSectionBackgrounds({
   active,
   nearEnd = false,
+  introOverlayActive = false,
+  screenIndex = 0,
 }: SharedSectionBackgroundsProps) {
   const isDesktop = useDesktopMedia();
 
@@ -34,6 +39,8 @@ export function SharedSectionBackgrounds({
             active={active === key}
             nearEnd={nearEnd}
             isDesktop={isDesktop}
+            introOverlayActive={introOverlayActive}
+            screenIndex={screenIndex}
           />
         ),
       )}
@@ -46,20 +53,30 @@ function SharedBackgroundLayer({
   active,
   nearEnd,
   isDesktop,
+  introOverlayActive,
+  screenIndex,
 }: {
   backgroundKey: SectionBackgroundKey;
   active: boolean;
   nearEnd: boolean;
   isDesktop: boolean;
+  introOverlayActive: boolean;
+  screenIndex: number;
 }) {
   const config = SECTION_BACKGROUNDS[backgroundKey];
-  const allow = active || (Boolean(config.activeOnly) && nearEnd);
-  const [loaded, setLoaded] = useState(!config.activeOnly);
-  if (allow && !loaded) setLoaded(true);
-
-  const skipImage =
+  // 尾帧在加载层下面看不见；档案背景要等离开首屏。挂上之后保持，避免来回卸载。
+  const blocked =
     (Boolean(config.desktopOnly) && !isDesktop) ||
-    (Boolean(config.activeOnly) && !loaded);
+    (introOverlayActive &&
+      (backgroundKey === "studio" || backgroundKey === "archive")) ||
+    (backgroundKey === "archive" && screenIndex === 0);
+  const wantsImage =
+    !blocked &&
+    (config.activeOnly ? active || nearEnd : true);
+  const [loaded, setLoaded] = useState(false);
+  if (wantsImage && !loaded) setLoaded(true);
+
+  const skipImage = !loaded;
 
   return (
     <div

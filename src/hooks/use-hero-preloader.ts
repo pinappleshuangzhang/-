@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import {
   useVideoPreloader,
   type VideoPreloadState,
@@ -14,58 +14,73 @@ type BytesState = {
   status: VideoPreloadStatus;
 };
 
+const ASSET_LOADING: BytesState = { progress: 0, status: "loading" };
+
+let expectedIds: readonly string[] = [];
+let expectedKey = "";
+const loadedIds = new Set<string>();
+let assetError = false;
+let assetSnapshot: BytesState = ASSET_LOADING;
+const assetListeners = new Set<() => void>();
+
+function publishAssets() {
+  const total = expectedIds.length;
+  let loaded = 0;
+  for (const id of expectedIds) {
+    if (loadedIds.has(id)) loaded += 1;
+  }
+  const status: VideoPreloadStatus = assetError
+    ? "error"
+    : total > 0 && loaded === total
+      ? "ready"
+      : "loading";
+  const progress =
+    status === "ready" ? 1 : total === 0 ? 0 : Math.min(loaded / total, 0.999);
+  if (
+    assetSnapshot.progress === progress &&
+    assetSnapshot.status === status
+  ) {
+    return;
+  }
+  assetSnapshot = { progress, status };
+  for (const listener of assetListeners) listener();
+}
+
 /**
- * 预加载一组静态资源，进度按完成数 0~1。
- * 不用 ReadableStream：Safari 读流经常不结束，加载条会一直等不到 ready。
+ * 声明加载屏上真正会显示的图。进度只跟这些图的 onLoad，
+ * 不再为进度单独 fetch 一遍再丢掉。
  */
-function useBytesPreloader(srcs: readonly string[]): BytesState {
-  const key = srcs.join("|");
-  const [state, setState] = useState<BytesState>(() =>
-    key.length === 0
-      ? { progress: 1, status: "ready" }
-      : { progress: 0, status: "loading" },
+export function expectLoaderImages(ids: readonly string[]) {
+  const key = ids.join("|");
+  if (key === expectedKey) return;
+  expectedKey = key;
+  expectedIds = ids;
+  publishAssets();
+}
+
+export function reportLoaderImage(id: string, ok = true) {
+  if (!ok) assetError = true;
+  else loadedIds.add(id);
+  publishAssets();
+}
+
+function subscribeAssets(listener: () => void) {
+  assetListeners.add(listener);
+  return () => {
+    assetListeners.delete(listener);
+  };
+}
+
+function getAssetSnapshot() {
+  return assetSnapshot;
+}
+
+function useLoaderImageProgress(): BytesState {
+  return useSyncExternalStore(
+    subscribeAssets,
+    getAssetSnapshot,
+    () => ASSET_LOADING,
   );
-
-  useEffect(() => {
-    if (key.length === 0) return;
-    const list = key.split("|");
-
-    const controller = new AbortController();
-    let cancelled = false;
-    const timeout = window.setTimeout(() => controller.abort(), 12000);
-    let finished = 0;
-
-    async function loadOne(src: string) {
-      const response = await fetch(src, { signal: controller.signal });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch asset: ${response.status}`);
-      }
-      await response.blob();
-      finished += 1;
-      if (!cancelled) {
-        setState({
-          progress: Math.min(finished / list.length, 0.999),
-          status: "loading",
-        });
-      }
-    }
-
-    Promise.all(list.map((src) => loadOne(src)))
-      .then(() => {
-        if (!cancelled) setState({ progress: 1, status: "ready" });
-      })
-      .catch(() => {
-        if (!cancelled) setState((prev) => ({ ...prev, status: "error" }));
-      });
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeout);
-      controller.abort();
-    };
-  }, [key]);
-
-  return state;
 }
 
 /**
@@ -74,7 +89,6 @@ function useBytesPreloader(srcs: readonly string[]): BytesState {
  */
 export function useHeroPreloader(
   videoSrc: string | null,
-  extraSrcs: readonly string[],
   {
     videoEnabled,
     timeoutMs,
@@ -89,7 +103,7 @@ export function useHeroPreloader(
     enabled: videoEnabled && Boolean(videoSrc),
     timeoutMs,
   });
-  const assets = useBytesPreloader(extraSrcs);
+  const assets = useLoaderImageProgress();
 
   return useMemo(() => {
     // 禁用态的 ready 没有 objectUrl。开着视频时必须等到真正的 blob，

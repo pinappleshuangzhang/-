@@ -1,5 +1,13 @@
+"use client";
+
+import { useLayoutEffect } from "react";
 import Image from "next/image";
 import { SectionBackground } from "@/components/ui/section-background";
+import { useDesktopMedia } from "@/hooks/use-desktop-media";
+import {
+  expectLoaderImages,
+  reportLoaderImage,
+} from "@/hooks/use-hero-preloader";
 import { SECTION_BACKGROUNDS } from "@/lib/section-backgrounds";
 import boxImg1 from "../../public/hero/loader-box-1.webp";
 import boxImg2 from "../../public/hero/loader-box-2.webp";
@@ -10,18 +18,8 @@ import boxImg6 from "../../public/hero/loader-box-6.webp";
 import boxShadow from "../../public/hero/loader-box-shadow.svg";
 
 const archiveBackground = SECTION_BACKGROUNDS.archive;
-
-export const LOADER_ASSET_PATHS = [
-  "/hero/loader-box-1.webp",
-  "/hero/loader-box-2.webp",
-  "/hero/loader-box-3.webp",
-  "/hero/loader-box-4.webp",
-  "/hero/loader-box-5.webp",
-  "/hero/loader-box-6.webp",
-  "/hero/loader-box-shadow.svg",
-  archiveBackground.src.src,
-  "/hero/hero-loader-bg.webp",
-] as const;
+const LOADER_ARCHIVE_ID = "loader-archive";
+const LOADER_SHADOW_ID = "loader-shadow";
 
 /** 六张 Grava 材质图渐隐循环 */
 const MATERIALS = [
@@ -58,13 +56,29 @@ export function HeroLoader({
   cardAlt,
 }: HeroLoaderProps) {
   const phases = [applyLabel, reviewLabel, approvedLabel];
+  const isDesktop = useDesktopMedia();
+
+  useLayoutEffect(() => {
+    expectLoaderImages([
+      ...MATERIALS.map((material) => material.key),
+      LOADER_SHADOW_ID,
+      ...(isDesktop ? [LOADER_ARCHIVE_ID] : []),
+    ]);
+  }, [isDesktop]);
 
   return (
     <>
       <div className="absolute inset-0 bg-[linear-gradient(97deg,var(--color-white)_0%,var(--color-grey-100)_102.81%)] md:hidden" />
-      <div className={`absolute inset-0 hidden md:block ${archiveBackground.fallbackClassName}`}>
-        <SectionBackground src={archiveBackground.src} priority />
-      </div>
+      {isDesktop ? (
+        <div className={`absolute inset-0 ${archiveBackground.fallbackClassName}`}>
+          <SectionBackground
+            src={archiveBackground.src}
+            priority
+            onLoad={() => reportLoaderImage(LOADER_ARCHIVE_ID)}
+            onError={() => reportLoaderImage(LOADER_ARCHIVE_ID, false)}
+          />
+        </div>
+      ) : null}
 
       <div
         data-loader-zoom
@@ -81,6 +95,8 @@ export function HeroLoader({
             priority
             sizes="(max-width: 767px) 179px, 17vw"
             className="object-fill"
+            onLoad={() => reportLoaderImage(LOADER_SHADOW_ID)}
+            onError={() => reportLoaderImage(LOADER_SHADOW_ID, false)}
           />
         </div>
 
@@ -99,8 +115,7 @@ export function HeroLoader({
                 visibility: index === 0 ? "visible" : "hidden",
               }}
             >
-              {/* unoptimized：与预加载共用同一原始 URL，进度 100% 时缓存必命中，
-                  避免优化器变体未就绪导致 Safari/慢网下材质空白 */}
+              {/* unoptimized：进度跟这一次显示请求走，避免再出一份优化器地址 */}
               <Image
                 src={material.src}
                 alt={index === 0 ? cardAlt : ""}
@@ -110,6 +125,8 @@ export function HeroLoader({
                 unoptimized
                 sizes="(max-width: 767px) 170px, 16vw"
                 className="size-full object-fill"
+                onLoad={() => reportLoaderImage(material.key)}
+                onError={() => reportLoaderImage(material.key, false)}
               />
             </div>
           ))}

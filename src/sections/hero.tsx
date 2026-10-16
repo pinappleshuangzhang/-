@@ -21,7 +21,7 @@ import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { HeroSubtitle } from "@/components/ui/hero-subtitle";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { useHeroPreloader } from "@/hooks/use-hero-preloader";
-import { HeroLoader, LOADER_ASSET_PATHS } from "@/sections/hero-loader";
+import { HeroLoader } from "@/sections/hero-loader";
 import archiveBoxImg from "../../public/hero/hero-loader-bg.webp";
 
 gsap.registerPlugin(useGSAP);
@@ -94,7 +94,7 @@ export function Hero() {
     getVideoSrcServerSnapshot,
   );
 
-  const preload = useHeroPreloader(videoSrc, LOADER_ASSET_PATHS, {
+  const preload = useHeroPreloader(videoSrc, {
     videoEnabled: SHOW_INTRO_VIDEO,
     timeoutMs: LOADER_FAILSAFE_MS,
   });
@@ -116,6 +116,8 @@ export function Hero() {
   const skipIntroVideoRef = useRef<(() => void) | null>(null);
   // 加载序幕只出现一次：退场动画结束后整体卸载，释放其 DOM 与图片内存
   const [loaderDismissed, setLoaderDismissed] = useState(false);
+  // 档案盒静帧只在加载层开始揭开时挂上，避免加载期间多下一次看不见的图
+  const [showArchiveStill, setShowArchiveStill] = useState(false);
   // 开场流程结束后档案盒首帧与视频层不再复用，一并卸载释放内存
   const [introDone, setIntroDone] = useState(false);
 
@@ -419,6 +421,7 @@ export function Hero() {
           gsap.set(firstFrameRef.current, { autoAlpha: 0 });
         } else {
           gsap.set(videoLayer, { autoAlpha: 0 });
+          setShowArchiveStill(true);
         }
         // 导航先在加载层下方就位，由双层上裁自然揭开，避免退场后再挂载造成闪现。
         setNavigationLocked(false);
@@ -577,16 +580,18 @@ export function Hero() {
             ref={firstFrameRef}
             className="invisible absolute inset-0 z-[25] hidden opacity-0 md:block motion-reduce:hidden"
           >
-            <Image
-              src={archiveBoxImg}
-              alt=""
-              fill
-              priority
-              unoptimized
-              placeholder="blur"
-              sizes="100vw"
-              className="object-cover"
-            />
+            {showArchiveStill ? (
+              <Image
+                src={archiveBoxImg}
+                alt=""
+                fill
+                priority
+                unoptimized
+                placeholder="blur"
+                sizes="100vw"
+                className="object-cover"
+              />
+            ) : null}
           </div>
 
           {/* 全屏视频层：手机播完定格尾帧；桌面再渐入静态尾帧 */}
