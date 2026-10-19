@@ -38,6 +38,7 @@ export function SurveyOpsArticle() {
           block={block}
           locale={locale}
           className={blockSpacing(block, index)}
+          revealDelay={imageRevealDelay(blocks, index)}
         />
       ))}
     </div>
@@ -48,6 +49,16 @@ function blockSpacing(block: OpsBlock, index: number) {
   if (index === 0) return "";
   if (block.kind === "prose" && (block.kicker || block.title)) return "mt-19";
   return "mt-14 max-md:mt-10";
+}
+
+/** 与前三篇作品图同一套上滑：首图 0.28s，其后每张错开 0.05s。 */
+function imageRevealDelay(blocks: OpsBlock[], index: number) {
+  let imageIndex = 0;
+  for (let i = 0; i < index; i += 1) {
+    if (blocks[i]?.kind === "image") imageIndex += 1;
+  }
+  if (imageIndex === 0) return "0.28";
+  return (0.5 + (imageIndex - 1) * 0.05).toFixed(2);
 }
 
 function blockKey(block: OpsBlock, index: number) {
@@ -61,22 +72,33 @@ function ArticleBlock({
   block,
   locale,
   className,
+  revealDelay,
 }: {
   block: OpsBlock;
   locale: "zh" | "en";
   className: string;
+  revealDelay: string;
 }) {
   if (block.kind === "image") {
     const src = locale === "en" ? block.srcEn : block.src;
     return (
-      <Image
-        src={src}
-        alt={block.alt}
-        width={1920}
-        height={1080}
-        sizes="(max-width: 767px) 94vw, 896px"
-        className={`h-auto w-full ${className}`}
-      />
+      <div
+        data-survey-keep=""
+        data-sd-media=""
+        data-sd-delay={revealDelay}
+        className={`overflow-hidden ${className}`}
+      >
+        <div data-sd-media-inner="" className="translate-y-[105%]">
+          <Image
+            src={src}
+            alt={block.alt}
+            width={1920}
+            height={1080}
+            sizes="(max-width: 767px) 94vw, 896px"
+            className="h-auto w-full"
+          />
+        </div>
+      </div>
     );
   }
 
