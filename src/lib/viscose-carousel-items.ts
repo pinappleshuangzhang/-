@@ -13,7 +13,7 @@ export type ViscoseCarouselItem = {
  */
 export const VISCOSE_SEED_INDEX = 0;
 
-/** 第五屏作品环：仅保留现有三张作品图。 */
+/** 第五屏作品环：四张作品图，环上按序重复。 */
 export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
   {
     id: "survey-a",
@@ -37,6 +37,14 @@ export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
     alt: "Easycash 数字品牌视觉重塑，深色品牌空间中的金属标识与绿色立体装置",
     title: "Easycash Digital Visual Reframing",
     discipline: "Web Interface",
+    year: "2026",
+  },
+  {
+    id: "survey-d",
+    src: "/archive-ga-004/ops-cover.webp",
+    alt: "Design AI Ops 实战笔记封面，黑底圆环中的白色标志与绿苹果",
+    title: "Design AI Ops Field Notes",
+    discipline: "Field Notes",
     year: "2026",
   },
 ];

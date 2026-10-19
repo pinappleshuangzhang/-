@@ -22,13 +22,15 @@ const INITIAL_TAB = 0;
  * 2 品牌设计：苹果时刻、未来创意、Easycash
  * 3 创意设计：苹果时刻、未来创意、Easycash
  * 4 动态设计：苹果时刻、未来创意
+ * 5 实战笔记：Design AI Ops
  */
 const MOBILE_TAB_WORKS: readonly number[][] = [
-  [0, 1, 2],
+  [0, 1, 2, 3],
   [0, 2],
   [0, 1, 2],
   [0, 1, 2],
   [0, 1],
+  [3],
 ];
 
 type ViscoseMobileGalleryProps = {
@@ -96,6 +98,7 @@ export function ViscoseMobileGallery({
     t("gallery.mobile.category.brand"),
     t("gallery.mobile.category.creative"),
     t("gallery.mobile.category.motion"),
+    t("gallery.mobile.category.notes"),
   ];
 
   return (

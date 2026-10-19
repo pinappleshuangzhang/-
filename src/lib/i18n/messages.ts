@@ -98,6 +98,7 @@ export type MessageKey =
   | "gallery.category.brand"
   | "gallery.category.product"
   | "gallery.category.website"
+  | "gallery.category.notes"
   | "gallery.category.visual"
   | "gallery.category.motion"
   | "gallery.mobile.category.all"
@@ -105,6 +106,7 @@ export type MessageKey =
   | "gallery.mobile.category.brand"
   | "gallery.mobile.category.creative"
   | "gallery.mobile.category.motion"
+  | "gallery.mobile.category.notes"
   | "gallery.dragHint"
   | "gallery.view"
   | "gallery.detail"
@@ -133,6 +135,7 @@ export type MessageKey =
   | "survey.tag.website"
   | "survey.tag.visual"
   | "survey.tag.motion"
+  | "survey.tag.notes"
   | "survey.media2Title"
   | "survey.media2Caption"
   | "survey.media2Alt"
@@ -193,6 +196,14 @@ export type MessageKey =
   | "survey.easycash.media6Title"
   | "survey.easycash.media6Caption"
   | "survey.easycash.media6Alt"
+  | "survey.ops.title"
+  | "survey.ops.description"
+  | "survey.ops.heroAlt"
+  | "survey.ops.media2Alt"
+  | "survey.ops.media3Alt"
+  | "survey.ops.media4Alt"
+  | "survey.ops.media5Alt"
+  | "survey.ops.media6Alt"
   | "survey.emptyWork"
   | "contact.aria"
   | "contact.cta"
@@ -323,6 +334,7 @@ const zh: Messages = {
   "gallery.category.brand": "苹果时刻：AI 创造力实验计划",
   "gallery.category.product": "未来创意 2026",
   "gallery.category.website": "Easycash 数字品牌视觉重塑",
+  "gallery.category.notes": "Design AI Ops实战笔记",
   "gallery.category.visual": "视觉设计",
   "gallery.category.motion": "动态设计",
   "gallery.mobile.category.all": "全部项目",
@@ -330,6 +342,7 @@ const zh: Messages = {
   "gallery.mobile.category.brand": "品牌设计",
   "gallery.mobile.category.creative": "创意设计",
   "gallery.mobile.category.motion": "动态设计",
+  "gallery.mobile.category.notes": "实战笔记",
   "gallery.dragHint": "拖拽",
   "gallery.view": "查看",
   "gallery.detail": "查看作品详情",
@@ -362,6 +375,7 @@ const zh: Messages = {
   "survey.tag.website": "网站设计",
   "survey.tag.visual": "视觉设计",
   "survey.tag.motion": "动态设计",
+  "survey.tag.notes": "实战笔记",
   "survey.media2Title": "苹果时刻",
   "survey.media2Caption":
     "以《创造亚当》重构“创造发生的瞬间”，让绿色苹果成为人与未知能力之间的媒介，将古典神话中的创造关系转译为 AI 时代关于能力、意识与创造权重新分配的隐喻。",
@@ -463,6 +477,21 @@ const zh: Messages = {
     "理财端延续整体品牌的拼贴、软质材质、贴纸与立体构成，同时通过蓝紫色主色和更偏安全、收益、稳定语义的物件组合形成独立识别。两套产品视觉在统一品牌框架下保持差异，让 Borrow 与 Wealth 不再只是功能不同，而拥有各自清晰的视觉性格与业务表达方式。",
   "survey.easycash.media6Alt":
     "蓝紫色 Easycash 品牌背景中展示四组理财业务 3D 视觉，由布料、金币、锁、卡片和品牌贴纸组成，用于表达安全、收益、服务和稳定资金支持。",
+  "survey.ops.title": "Design AI Ops实战笔记",
+  "survey.ops.description":
+    "当生成不再稀缺，设计还剩下什么？这篇笔记记录 Design AI Ops 如何把创作从重复执行，转成提问、判断、选择与整合。",
+  "survey.ops.heroAlt":
+    "Design AI Ops 实战笔记封面，黑底圆环中央是白色标志、绿苹果，以及“当生成不再稀缺，设计还剩下什么”。",
+  "survey.ops.media2Alt":
+    "古典人物与递出绿苹果的天使，对比工具出现前后：人从提出需求、负责执行，转向提问、判断、选择和整合。",
+  "survey.ops.media3Alt":
+    "Design AI Ops 示意图，人的角色从重复执行者转为方向判断者、任务拆解者、质量判断者与最终整合者。",
+  "survey.ops.media4Alt":
+    "设计工作三处转向：从制作页面到定义任务，从堆叠参考到建立判断，从交付文件到沉淀方法。",
+  "survey.ops.media5Alt":
+    "从重复执行系统转向判断与编排系统，呈现输入、任务、判断、执行、审查与沉淀的工作流。",
+  "survey.ops.media6Alt":
+    "苹果落下之后的笔记收束：设计留下的是判断、问题、结构、标准与方法。",
   "survey.emptyWork": "该类型暂无作品",
   "contact.aria": "与我们共同开启一份新调查",
   "contact.cta": "与我们共同开启一份新调查",
@@ -603,6 +632,7 @@ const en: Messages = {
   "gallery.category.brand": "The Apple Moment — AI Creativity Program",
   "gallery.category.product": "Future Creative 2026",
   "gallery.category.website": "Easycash Digital Visual Reframing",
+  "gallery.category.notes": "Design AI Ops Field Notes",
   "gallery.category.visual": "Visual Design",
   "gallery.category.motion": "Motion Graphics",
   "gallery.mobile.category.all": "All",
@@ -610,6 +640,7 @@ const en: Messages = {
   "gallery.mobile.category.brand": "Brand",
   "gallery.mobile.category.creative": "Creative",
   "gallery.mobile.category.motion": "Motion",
+  "gallery.mobile.category.notes": "Notes",
   "gallery.dragHint": "Drag",
   "gallery.view": "View",
   "gallery.detail": "View Work Details",
@@ -643,6 +674,7 @@ const en: Messages = {
   "survey.tag.website": "Website Design",
   "survey.tag.visual": "Visual Design",
   "survey.tag.motion": "Motion Design",
+  "survey.tag.notes": "Field Notes",
   "survey.media2Title": "The Apple Moment",
   "survey.media2Caption":
     "The Creation of Adam is recast as the instant of making. The green apple sits between the human and an unknown capability, turning a classical myth of creation into a metaphor for how AI redistributes ability, awareness, and the right to create.",
@@ -744,6 +776,21 @@ const en: Messages = {
     "The wealth management side continues collage, soft materials, stickers, and dimensional composition, while a blue-purple palette and safety-, return-, and stability-oriented objects form a distinct identity. Borrow and Wealth stay under one brand frame yet carry clear visual personalities.",
   "survey.easycash.media6Alt":
     "Four wealth-management 3D visuals on a blue-purple Easycash brand background, composed of fabric, coins, locks, cards, and brand stickers expressing safety, returns, service, and stable funding.",
+  "survey.ops.title": "Design AI Ops Field Notes",
+  "survey.ops.description":
+    "When making becomes weightless, what is left of design? These notes record how Design AI Ops shifts creation from repetition to questioning, judgment, choice, and integration.",
+  "survey.ops.heroAlt":
+    "Cover of the Design AI Ops field notes: a white mark and green apple inside a black ring, with the line “When making becomes weightless.”",
+  "survey.ops.media2Alt":
+    "A classical figure and an angel offering a green apple, contrasting work before and after the tool: from requesting and executing to questioning, judging, choosing, and integrating.",
+  "survey.ops.media3Alt":
+    "Diagram of Design AI Ops, shifting the human role from repetitive executor to director, task breaker, quality judge, and final integrator.",
+  "survey.ops.media4Alt":
+    "Three shifts in design work: from making pages to defining tasks, from stacking references to building judgment, and from delivering files to leaving methods.",
+  "survey.ops.media5Alt":
+    "A workflow moving from a system of repetition to a system of judgment and orchestration: input, tasks, judgment, execution, review, and residue.",
+  "survey.ops.media6Alt":
+    "Closing note after the apple falls: what remains of design is judgment, questions, structure, standards, and methods.",
   "survey.emptyWork": "No Work In This Category Yet",
   "contact.aria": "Start A New Survey With Us",
   "contact.cta": "Start A New Survey With Us",

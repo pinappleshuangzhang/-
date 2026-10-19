@@ -214,13 +214,14 @@ function WorkMedia({
   revealDelay: string;
   preloadVideo?: boolean;
 }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
+  const src = locale === "en" && item.srcEn ? item.srcEn : item.src;
   const alt = t(item.altKey);
   if (item.hover === "video") {
     return (
       <KeepHoverMedia
         hover="video"
-        src={item.src}
+        src={src}
         alt={alt}
         width={item.width}
         height={item.height}
@@ -237,7 +238,7 @@ function WorkMedia({
   return (
     <KeepHoverMedia
       hover="none"
-      src={item.src}
+      src={src}
       alt={alt}
       width={item.width}
       height={item.height}

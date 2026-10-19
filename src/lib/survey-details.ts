@@ -13,6 +13,8 @@ export type SurveyCategory = {
 
 export type SurveyMediaItem = {
   src: string;
+  /** 英文界面使用的替换图；不传则中英文共用 src */
+  srcEn?: string;
   altKey: MessageKey;
   width: number;
   height: number;
@@ -68,8 +70,8 @@ export const SURVEY_CATEGORY_BY_CODE: Record<
     code: "D",
     number: "004",
     letter: "( D )",
-    label: "Visual Design",
-    typeLabel: "( D Visual)",
+    label: "Field Notes",
+    typeLabel: "( D Notes)",
   },
   E: {
     code: "E",
@@ -84,6 +86,7 @@ export const SURVEY_CATEGORIES: SurveyCategory[] = [
   SURVEY_CATEGORY_BY_CODE.A,
   SURVEY_CATEGORY_BY_CODE.B,
   SURVEY_CATEGORY_BY_CODE.C,
+  SURVEY_CATEGORY_BY_CODE.D,
 ];
 
 /** 001 品牌设计：The Apple Moment，对照作品提交模版 / 交付文件夹 */
@@ -344,6 +347,73 @@ export const SURVEY_G_003: SurveyWork = {
   ],
 };
 
+/** 004 实战笔记：Design AI Ops，图内已含中英文，按语言切换 */
+export const SURVEY_G_004: SurveyWork = {
+  id: "g-004",
+  title: "Investigation Details_004",
+  typeLabel: "( D Notes)",
+  archivedLabel: "( 2026 Archived)",
+  activeCategory: "D",
+  duration: "一个月",
+  titleKey: "survey.ops.title",
+  descriptionKey: "survey.ops.description",
+  tagKeys: ["survey.tag.notes"],
+  media: [
+    {
+      src: "/archive-ga-004/ops-cover.webp",
+      altKey: "survey.ops.heroAlt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+    {
+      src: "/archive-ga-004/ops-02-cn.webp",
+      srcEn: "/archive-ga-004/ops-02-en.webp",
+      altKey: "survey.ops.media2Alt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+      showCaption: false,
+    },
+    {
+      src: "/archive-ga-004/ops-03-cn.webp",
+      srcEn: "/archive-ga-004/ops-03-en.webp",
+      altKey: "survey.ops.media3Alt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+      showCaption: false,
+    },
+    {
+      src: "/archive-ga-004/ops-04-cn.webp",
+      srcEn: "/archive-ga-004/ops-04-en.webp",
+      altKey: "survey.ops.media4Alt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+      showCaption: false,
+    },
+    {
+      src: "/archive-ga-004/ops-05-cn.webp",
+      srcEn: "/archive-ga-004/ops-05-en.webp",
+      altKey: "survey.ops.media5Alt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+      showCaption: false,
+    },
+    {
+      src: "/archive-ga-004/ops-06-cn.webp",
+      srcEn: "/archive-ga-004/ops-06-en.webp",
+      altKey: "survey.ops.media6Alt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+      showCaption: false,
+    },
+  ],
+};
+
 /** 各调查类型对应作品；尚无内容的类型为 null，详情页右侧留空 */
 export const SURVEY_WORK_BY_CATEGORY: Record<
   SurveyCategoryCode,
@@ -352,13 +422,13 @@ export const SURVEY_WORK_BY_CATEGORY: Record<
   A: SURVEY_G_001,
   B: SURVEY_G_002,
   C: SURVEY_G_003,
-  D: null,
+  D: SURVEY_G_004,
   E: null,
 };
 
-const SURVEY_CATEGORY_CODES: SurveyCategoryCode[] = ["A", "B", "C"];
+const SURVEY_CATEGORY_CODES: SurveyCategoryCode[] = ["A", "B", "C", "D"];
 
-/** 第五屏卡片序号映射到调查类型；环上多圈时按 3 取模 */
+/** 第五屏卡片序号映射到调查类型；环上多圈时按作品数取模 */
 export function surveyCodeFromCarouselIndex(index: number): SurveyCategoryCode {
   const count = SURVEY_CATEGORY_CODES.length;
   const normalized = ((index % count) + count) % count;

@@ -24,6 +24,13 @@ const PROJECT_SEQUENCE = [
     type: "Easycash 数字品牌视觉重塑",
     year: "2026",
   },
+  {
+    file: "archive-ga-004/ops-cover.webp",
+    name: "Design AI Ops实战笔记",
+    listLabel: "Design AI Ops Field Notes",
+    type: "Design AI Ops实战笔记",
+    year: "2026",
+  },
 ];
 
 // Twelve planes repeat the archive images around the ring.
