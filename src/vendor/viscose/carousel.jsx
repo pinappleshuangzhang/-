@@ -1715,7 +1715,8 @@ export default function Carousel({
         transitionToFinal();
         return true;
       }
-      // 入场未到 hold：记下这次下滑，圆环落地后立刻进第三阶段
+      // 展开中的微小抖动不记成一次下滑；刻意下滑仍在落地后进入第三阶段
+      if (Math.abs(deltaY) < 8) return false;
       pendingGoFinal = true;
       return true;
     };

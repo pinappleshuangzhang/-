@@ -144,9 +144,9 @@ function WorkContent({ work }: { work: SurveyWork }) {
   const laterDelays = ["0.5", "0.55", "0.6", "0.65", "0.7"];
 
   return (
-    <div className="flex flex-col gap-20 max-md:gap-9">
+    <div className="flex flex-col gap-14 max-md:gap-9">
       {first ? (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 md:gap-19">
           <WorkMedia item={first} revealDelay="0.28" />
           <WorkCaption
             title={t(work.titleKey)}
@@ -156,7 +156,7 @@ function WorkContent({ work }: { work: SurveyWork }) {
         </div>
       ) : null}
       {rest.map((item, index) => (
-        <div key={item.src} className="flex flex-col gap-6">
+        <div key={item.src} className="flex flex-col gap-6 md:gap-19">
           <WorkMedia
             item={item}
             revealDelay={laterDelays[index] ?? "0.7"}
@@ -197,9 +197,9 @@ function WorkCaption({
     >
       <div
         data-sd-media-inner
-        className="flex translate-y-[105%] flex-col gap-3"
+        className="flex translate-y-[105%] flex-col gap-3 md:gap-8"
       >
-        <p className="font-serif-sc text-20 font-medium leading-normal text-grey-400 max-md:font-bodoni max-md:text-18 max-md:leading-6 md:text-[length:calc(var(--su)*20)]">
+        <p className="font-serif-sc text-20 font-medium leading-normal text-grey-400 max-md:font-bodoni max-md:text-18 max-md:leading-6 md:text-[length:calc(var(--su)*28)] md:leading-[calc(var(--su)*36)]">
           {title}
         </p>
         <p className="font-serif-sc text-14 font-normal leading-5 text-grey-300 max-md:text-12 max-md:leading-6 md:text-[length:calc(var(--su)*14)] md:leading-[calc(var(--su)*20)]">

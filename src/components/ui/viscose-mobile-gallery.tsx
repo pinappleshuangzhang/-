@@ -56,7 +56,7 @@ function useMobileCards(items: ViscoseCarouselItem[]): ViscoseMobileCard[] {
 
 /**
  * 第五屏移动端只保留第三阶段。
- * 一类一件：大图+全文案（Figma 1183:525）；多件或「全部项目」：两列小卡（1269:1720）。
+ * 文章在「全部项目」里，和作品同一套两列小卡；只有一件时也占半行。
  */
 export function ViscoseMobileGallery({
   items,
@@ -109,7 +109,6 @@ export function ViscoseMobileGallery({
         cards={cards}
         heading={t("gallery.mobile.heading")}
         categoryLabels={categoryLabels}
-        viewDetailsLabel={t("gallery.mobile.viewDetails")}
         onPickTab={setTab}
         onOpenWork={onSelect}
       />

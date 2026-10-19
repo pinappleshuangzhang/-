@@ -15,6 +15,18 @@ import { VISCOSE_CAROUSEL_ITEMS } from "@/lib/viscose-carousel-items";
 
 type CarouselScrollHandler = (deltaY: number) => boolean;
 
+/** 小于 1px 视为触控板抖动，不单独触发进第三阶段 */
+const WHEEL_JITTER_PX = 1;
+/** 吃掉同一次下滑的后续惯性，避免连触或滑完又切屏 */
+const GESTURE_LOCK_MS = 500;
+const GESTURE_GAP_MS = 200;
+
+function normalizeWheelDeltaY(event: WheelEvent) {
+  if (event.deltaMode === 1) return event.deltaY * (100 / 6);
+  if (event.deltaMode === 2) return event.deltaY * window.innerHeight;
+  return event.deltaY;
+}
+
 /** 完整 Viscose Carousel 第五屏；点击卡片从右侧滑出作品详情抽屉。 */
 export function ArchiveGa004Viscose() {
   const isActive = useScreenActive();
@@ -58,6 +70,46 @@ export function ArchiveGa004Viscose() {
       return carouselScrollRef.current?.(deltaY) ?? false;
     });
   }, [detailsOpen, isActive, registerScrollInterceptor]);
+
+  // 早于分页器的 document capture：第二阶段第一下下滑就进第三阶段，
+  // 不等 8px / 200ms 累计。同一手势的惯性在这里吞掉。
+  useEffect(() => {
+    if (!isActive || detailsOpen) return;
+    let gestureActive = false;
+    let gestureUntil = 0;
+    let lastWheelAt = 0;
+
+    const onWheel = (event: WheelEvent) => {
+      const now = performance.now();
+      if (gestureActive) {
+        const gap = now - lastWheelAt;
+        if (gap < GESTURE_GAP_MS || now < gestureUntil) {
+          lastWheelAt = now;
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        gestureActive = false;
+      }
+
+      const deltaY = normalizeWheelDeltaY(event);
+      if (deltaY < WHEEL_JITTER_PX) return;
+
+      const consumed = carouselScrollRef.current?.(deltaY) ?? false;
+      if (!consumed) return;
+
+      gestureActive = true;
+      gestureUntil = now + GESTURE_LOCK_MS;
+      lastWheelAt = now;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    window.addEventListener("wheel", onWheel, { capture: true, passive: false });
+    return () => {
+      window.removeEventListener("wheel", onWheel, { capture: true });
+    };
+  }, [detailsOpen, isActive]);
 
   return (
     <ScreenShell

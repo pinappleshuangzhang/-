@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
 import { CopiedBubble, CopiedToast } from "@/components/ui/copied-bubble";
+import { FlipHoverButton } from "@/components/ui/flip-hover-button";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { ContactMachine } from "@/sections/contact-machine";
 import { SplitWords } from "@/components/ui/split-words";
@@ -14,7 +15,7 @@ const CONTACT_EMAIL = "grava.6.67430@gmail.com";
 const CONTACT_PHONE = "+86 13016116021";
 
 /**
- * 最后一屏：GA_ARCHIVE_004《开启一份新调查》。
+ * 最后一屏：ARCHIVE_GA_005《联系我们》。
  * 背景取件机由共享背景层提供，这里只承载调查文案与联系方式。
  * 图片进屏才挂载：六屏都叠在视口里，一进站就下会和开场视频抢带宽。
  */
@@ -87,7 +88,7 @@ export function ContactSurvey() {
                     alt=""
                     width={20}
                     height={20}
-                    className="size-4 shrink-0 md:size-[calc(var(--su)*20)]"
+                    className="size-4 shrink-0 translate-y-0.5 md:size-[calc(var(--su)*20)] md:translate-y-[calc(var(--su)*2)]"
                   />
                 ) : null
               }
@@ -108,7 +109,7 @@ export function ContactSurvey() {
                     alt=""
                     width={22}
                     height={20}
-                    className="h-4 w-[17px] shrink-0 md:h-[calc(var(--su)*20)] md:w-[calc(var(--su)*22)]"
+                    className="h-4 w-[17px] shrink-0 translate-y-px md:h-[calc(var(--su)*20)] md:w-[calc(var(--su)*22)] md:translate-y-[calc(var(--su)*1)]"
                   />
                 ) : null
               }
@@ -190,7 +191,7 @@ function SurveyIcon({ src, load }: { src: string; load: boolean }) {
   );
 }
 
-/** 联系方式：点击复制文本，上方弹出「已复制」气泡 */
+/** 联系方式：点击复制文本，上方弹出「已复制」气泡。悬停逐字翻滚，与导航相同。 */
 function ContactCopyButton({
   label,
   ariaLabel,
@@ -209,20 +210,22 @@ function ContactCopyButton({
   delay: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onCopy}
-      aria-live="polite"
-      aria-label={copied ? copiedLabel : ariaLabel}
+    <span
       data-sd-words
       data-sd-delay={delay}
-      className="relative flex items-end gap-2 font-serif-sc text-16 font-normal leading-[23px] text-grey-400 underline decoration-solid underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:gap-[calc(var(--su)*8)] md:text-[length:calc(var(--su)*16)] md:leading-[calc(var(--su)*26)]"
+      className="inline-flex items-center gap-2 md:gap-[calc(var(--su)*8)]"
     >
-      <CopiedBubble label={copiedLabel} visible={copied} />
       <span className="sd-word inline-flex shrink-0 opacity-0">{icon}</span>
-      <span className="sd-word inline-block whitespace-nowrap opacity-0">
-        {label}
-      </span>
-    </button>
+      <FlipHoverButton
+        label={label}
+        aria-label={copied ? copiedLabel : ariaLabel}
+        aria-live="polite"
+        showHoverMark={false}
+        onClick={onCopy}
+        className="sd-word font-serif-sc text-16 font-normal leading-[23px] text-grey-400 opacity-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2 md:text-[length:calc(var(--su)*16)] md:leading-[calc(var(--su)*26)] [&_[data-flip-in]]:underline [&_[data-flip-out]]:underline [&_[data-flip-in]]:decoration-solid [&_[data-flip-out]]:decoration-solid [&_[data-flip-in]]:underline-offset-2 [&_[data-flip-out]]:underline-offset-2"
+      >
+        <CopiedBubble label={copiedLabel} visible={copied} />
+      </FlipHoverButton>
+    </span>
   );
 }

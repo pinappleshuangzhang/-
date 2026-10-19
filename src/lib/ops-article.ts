@@ -115,7 +115,7 @@ export const OPS_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "image",
-    src: "/archive-ga-004/ops-04-en.webp",
+    src: "/archive-ga-004/ops-04-cn.webp",
     srcEn: "/archive-ga-004/ops-04-en.webp",
     alt: "从个人加速到团队共享方法的示意",
   },
@@ -138,7 +138,7 @@ export const OPS_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "image",
-    src: "/archive-ga-004/ops-05-en.webp",
+    src: "/archive-ga-004/ops-05-cn.webp",
     srcEn: "/archive-ga-004/ops-05-en.webp",
     alt: "设计工作三次转向的图示",
   },
@@ -178,7 +178,7 @@ export const OPS_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "image",
-    src: "/archive-ga-004/ops-06-en.webp",
+    src: "/archive-ga-004/ops-06-cn.webp",
     srcEn: "/archive-ga-004/ops-06-en.webp",
     alt: "苹果落下之后，设计留下判断、问题、结构与方法",
   },

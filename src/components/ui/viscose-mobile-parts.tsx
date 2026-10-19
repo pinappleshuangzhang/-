@@ -35,22 +35,6 @@ export function MobileWords({
   );
 }
 
-export function MobileArrowIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      className="shrink-0"
-    >
-      <path d="M7 17.5 17.5 7" stroke="currentColor" strokeWidth="1" />
-      <path d="M8.5 7h9v9" stroke="currentColor" strokeWidth="1" />
-    </svg>
-  );
-}
-
 type MobileCategoryChipsProps = {
   label: string;
   categoryLabels: string[];

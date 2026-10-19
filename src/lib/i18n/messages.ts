@@ -29,7 +29,7 @@ export type MessageKey =
   | "index.ga002"
   | "index.ga003"
   | "index.ga004"
-  | "index.ga006"
+  | "index.ga005"
   | "hero.title"
   | "hero.subtitle"
   | "hero.subtitleHighlight"
@@ -254,13 +254,13 @@ const zh: Messages = {
   "nav.title.ga003": "《成员记录》",
   "nav.title.ga004": "《视觉调查档案》",
   "nav.title.ga004.mobile": "《视觉调查档案》",
-  "nav.title.contact": "《开启一份新调查》",
+  "nav.title.contact": "《联系我们》",
   "screen.studio": "万有引力设计档案室",
   "screen.ga001": "档案 GA_001 什么是引力？",
   "screen.ga002": "档案 GA_002 组织记录",
   "screen.ga003": "档案 GA_003 成员记录",
   "screen.ga004": "档案 GA_004 视觉调查档案",
-  "screen.contact": "档案 GA_006 开启一份新调查",
+  "screen.contact": "档案 GA_005 联系我们",
   "index.heading": "档案目录 ARCHIVE INDEX",
   "index.nav": "档案目录",
   "index.ga000": "《档案室首页》",
@@ -268,7 +268,7 @@ const zh: Messages = {
   "index.ga002": "《组织记录》",
   "index.ga003": "《成员记录》",
   "index.ga004": "《视觉调查档案》",
-  "index.ga006": "《开启一份新调查》",
+  "index.ga005": "《联系我们》",
   "hero.title": "万有引力设计档案室",
   "hero.subtitle": "为品牌、产品与体验，建立被选择的引力",
   "hero.subtitleHighlight": "建立被选择的引力",
@@ -337,7 +337,7 @@ const zh: Messages = {
   "gallery.category.brand": "苹果时刻：AI 创造力实验计划",
   "gallery.category.product": "未来创意 2026",
   "gallery.category.website": "Easycash 数字品牌视觉重塑",
-  "gallery.category.notes": "Design AI Ops实战笔记",
+  "gallery.category.notes": "Design AI Ops 实战笔记",
   "gallery.category.visual": "视觉设计",
   "gallery.category.motion": "动态设计",
   "gallery.mobile.category.all": "全部项目",
@@ -483,7 +483,7 @@ const zh: Messages = {
     "理财端延续整体品牌的拼贴、软质材质、贴纸与立体构成，同时通过蓝紫色主色和更偏安全、收益、稳定语义的物件组合形成独立识别。两套产品视觉在统一品牌框架下保持差异，让 Borrow 与 Wealth 不再只是功能不同，而拥有各自清晰的视觉性格与业务表达方式。",
   "survey.easycash.media6Alt":
     "蓝紫色 Easycash 品牌背景中展示四组理财业务 3D 视觉，由布料、金币、锁、卡片和品牌贴纸组成，用于表达安全、收益、服务和稳定资金支持。",
-  "survey.ops.title": "Design AI Ops实战笔记",
+  "survey.ops.title": "Design AI Ops 实战笔记",
   "survey.ops.description":
     "2026 年上半年，我们在团队内部启动了一轮 Design AI Ops 实践。最初的目标很直接：跟上快速变化的 AI 能力，帮助成员拓展工作边界，也让散落在个人手里的尝试，逐渐转化为团队能够共同使用的能力。",
   "survey.ops.heroAlt":
@@ -544,13 +544,13 @@ const en: Messages = {
   "nav.title.ga003": "Member Record",
   "nav.title.ga004": "Visual Investigation Archive",
   "nav.title.ga004.mobile": "Investigation Archive",
-  "nav.title.contact": "Start A New Survey",
+  "nav.title.contact": "Contact Us",
   "screen.studio": "Universal Gravity Design Archive",
   "screen.ga001": "Archive GA_001 What Is Gravity?",
   "screen.ga002": "Archive GA_002 Organization Record",
   "screen.ga003": "Archive GA_003 Member Record",
   "screen.ga004": "Archive GA_004 Visual Investigation Archive",
-  "screen.contact": "Archive GA_006 Start A New Survey",
+  "screen.contact": "Archive GA_005 Contact Us",
   "index.heading": "Archive Index",
   "index.nav": "Archive Index",
   "index.ga000": "Archive Home",
@@ -558,7 +558,7 @@ const en: Messages = {
   "index.ga002": "Organization Record",
   "index.ga003": "Member Record",
   "index.ga004": "Visual Investigation Archive",
-  "index.ga006": "Start A New Survey",
+  "index.ga005": "Contact Us",
   "hero.title": "Grava Design Archive",
   "hero.subtitle":
     "We help brands, products, and experiences. Earn attention, preference, and trust",

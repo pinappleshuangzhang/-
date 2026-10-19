@@ -37,8 +37,8 @@ export const ARCHIVE_INDEX_ITEMS: ArchiveIndexItem[] = [
     screenKey: "archive-ga-004",
   },
   {
-    code: "GA_006",
-    titleKey: "index.ga006",
+    code: "GA_005",
+    titleKey: "index.ga005",
     screenKey: "contact",
   },
 ];

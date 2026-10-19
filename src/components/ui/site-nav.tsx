@@ -41,7 +41,7 @@ const NAV_CODE: Partial<Record<NavVariant, string>> = {
   "archive-ga-002": "ARCHIVE_GA_002",
   "archive-ga-003": "ARCHIVE_GA_003",
   "archive-ga-004": "GA_ARCHIVE_004",
-  contact: "GA_ARCHIVE_004",
+  contact: "ARCHIVE_GA_005",
 };
 
 /**

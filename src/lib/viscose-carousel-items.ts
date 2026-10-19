@@ -41,8 +41,8 @@ export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
   },
   {
     id: "survey-d",
-    src: "/archive-ga-004/ops-cover.webp",
-    alt: "Design AI Ops 实战笔记封面，黑底圆环中的白色标志与绿苹果",
+    src: "/archive-ga-004/ops-ring.webp",
+    alt: "钉在浅色墙面上的 Design AI Ops 铭牌，黑底圆环中央是白色标志与绿苹果",
     title: "Design AI Ops Field Notes",
     discipline: "Field Notes",
     year: "2026",

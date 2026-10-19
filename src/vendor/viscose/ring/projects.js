@@ -25,10 +25,10 @@ const PROJECT_SEQUENCE = [
     year: "2026",
   },
   {
-    file: "archive-ga-004/ops-cover.webp",
-    name: "Design AI Ops实战笔记",
+    file: "archive-ga-004/ops-ring.webp",
+    name: "Design AI Ops 实战笔记",
     listLabel: "Design AI Ops Field Notes",
-    type: "Design AI Ops实战笔记",
+    type: "Design AI Ops 实战笔记",
     year: "2026",
   },
 ];
