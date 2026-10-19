@@ -59,7 +59,7 @@ export function SurveyDrawerContent({
     return () => {
       tl.kill();
     };
-  }, [open, initialCode, reducedMotion]);
+  }, [open, initialCode, reducedMotion, locale]);
 
   return (
     <div
