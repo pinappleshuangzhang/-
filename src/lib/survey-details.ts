@@ -357,7 +357,12 @@ export const SURVEY_G_004: SurveyWork = {
   duration: "一个月",
   titleKey: "survey.ops.title",
   descriptionKey: "survey.ops.description",
-  tagKeys: ["survey.tag.notes"],
+  tagKeys: [
+    "survey.tag.observe",
+    "survey.tag.aiDesign",
+    "survey.tag.judgment",
+    "survey.tag.practice",
+  ],
   media: [
     {
       src: "/archive-ga-004/ops-cover.webp",

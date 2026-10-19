@@ -135,7 +135,10 @@ export type MessageKey =
   | "survey.tag.website"
   | "survey.tag.visual"
   | "survey.tag.motion"
-  | "survey.tag.notes"
+  | "survey.tag.observe"
+  | "survey.tag.aiDesign"
+  | "survey.tag.judgment"
+  | "survey.tag.practice"
   | "survey.media2Title"
   | "survey.media2Caption"
   | "survey.media2Alt"
@@ -375,7 +378,10 @@ const zh: Messages = {
   "survey.tag.website": "网站设计",
   "survey.tag.visual": "视觉设计",
   "survey.tag.motion": "动态设计",
-  "survey.tag.notes": "实战笔记",
+  "survey.tag.observe": "设计观察",
+  "survey.tag.aiDesign": "AI与设计",
+  "survey.tag.judgment": "判断",
+  "survey.tag.practice": "作品与实践",
   "survey.media2Title": "苹果时刻",
   "survey.media2Caption":
     "以《创造亚当》重构“创造发生的瞬间”，让绿色苹果成为人与未知能力之间的媒介，将古典神话中的创造关系转译为 AI 时代关于能力、意识与创造权重新分配的隐喻。",
@@ -479,7 +485,7 @@ const zh: Messages = {
     "蓝紫色 Easycash 品牌背景中展示四组理财业务 3D 视觉，由布料、金币、锁、卡片和品牌贴纸组成，用于表达安全、收益、服务和稳定资金支持。",
   "survey.ops.title": "Design AI Ops实战笔记",
   "survey.ops.description":
-    "当生成不再稀缺，设计还剩下什么？这篇笔记记录 Design AI Ops 如何把创作从重复执行，转成提问、判断、选择与整合。",
+    "2026 年上半年，我们在团队内部启动了一轮 Design AI Ops 实践。最初的目标很直接：跟上快速变化的 AI 能力，帮助成员拓展工作边界，也让散落在个人手里的尝试，逐渐转化为团队能够共同使用的能力。",
   "survey.ops.heroAlt":
     "Design AI Ops 实战笔记封面，黑底圆环中央是白色标志、绿苹果，以及“当生成不再稀缺，设计还剩下什么”。",
   "survey.ops.media2Alt":
@@ -674,7 +680,10 @@ const en: Messages = {
   "survey.tag.website": "Website Design",
   "survey.tag.visual": "Visual Design",
   "survey.tag.motion": "Motion Design",
-  "survey.tag.notes": "Field Notes",
+  "survey.tag.observe": "Design Observation",
+  "survey.tag.aiDesign": "AI and Design",
+  "survey.tag.judgment": "Judgment",
+  "survey.tag.practice": "Work and Practice",
   "survey.media2Title": "The Apple Moment",
   "survey.media2Caption":
     "The Creation of Adam is recast as the instant of making. The green apple sits between the human and an unknown capability, turning a classical myth of creation into a metaphor for how AI redistributes ability, awareness, and the right to create.",
@@ -778,7 +787,7 @@ const en: Messages = {
     "Four wealth-management 3D visuals on a blue-purple Easycash brand background, composed of fabric, coins, locks, cards, and brand stickers expressing safety, returns, service, and stable funding.",
   "survey.ops.title": "Design AI Ops Field Notes",
   "survey.ops.description":
-    "When making becomes weightless, what is left of design? These notes record how Design AI Ops shifts creation from repetition to questioning, judgment, choice, and integration.",
+    "In the first half of 2026, we started a Design AI Ops practice inside the team. The aim was direct: keep up with fast-changing AI capability, help people extend their work, and turn scattered personal experiments into a shared team ability.",
   "survey.ops.heroAlt":
     "Cover of the Design AI Ops field notes: a white mark and green apple inside a black ring, with the line “When making becomes weightless.”",
   "survey.ops.media2Alt":

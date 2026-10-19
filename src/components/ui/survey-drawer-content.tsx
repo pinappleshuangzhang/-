@@ -7,6 +7,7 @@ import {
   setSondavenVisible,
 } from "@/animations/sondaven-reveal";
 import { KeepHoverMedia } from "@/components/ui/keep-hover-media";
+import { SurveyOpsArticle } from "@/components/ui/survey-ops-article";
 import { SplitWords } from "@/components/ui/split-words";
 import {
   resolveWorkTags,
@@ -121,7 +122,11 @@ export function SurveyDrawerContent({
               tags={resolveWorkTags(activeWork.tagKeys, t)}
               label={t("survey.tagList")}
             />
-            <WorkContent work={activeWork} />
+            {activeWork.id === "g-004" ? (
+              <SurveyOpsArticle />
+            ) : (
+              <WorkContent work={activeWork} />
+            )}
           </div>
         ) : (
           <div className="min-h-[503px]" aria-live="polite">
