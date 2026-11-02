@@ -375,7 +375,7 @@ type HeroVideoSequenceOptions = {
 };
 
 /**
- * 从档案盒页起播开场视频；播完或跳过后切到尾帧并让标题入场。
+ * 从档案盒页起播开场视频；播完或跳过后停在视频尾帧，并让标题入场。
  */
 export function createHeroVideoSequence({
   video,
@@ -415,24 +415,9 @@ export function createHeroVideoSequence({
     if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
     const revealTitles = () => {
       if (killed) return;
-      const useStaticLastFrame =
-        Boolean(lastFrame) &&
-        window.matchMedia("(min-width: 768px)").matches;
-      // 桌面：定格视频尾帧后，静态尾帧 0→1 渐入，视频层同步淡出。
-      // 手机：无桌面静帧底图，继续定格在视频尾帧。
+      // 停在视频自己的尾帧，不再淡入档案室静图。
+      video.pause();
       gsap.set(videoLayer, { autoAlpha: 1 });
-      if (useStaticLastFrame && lastFrame) {
-        gsap.fromTo(
-          lastFrame,
-          { autoAlpha: 0 },
-          { autoAlpha: 1, duration: 2.3, ease: "power2.inOut" },
-        );
-        gsap.to(videoLayer, {
-          autoAlpha: 0,
-          duration: 2.3,
-          ease: "power2.inOut",
-        });
-      }
       hideTitles();
       if (titles) gsap.set(titles, { autoAlpha: 1 });
       onRevealStart?.();

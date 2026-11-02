@@ -144,8 +144,8 @@ export function defaultParams() {
     textOutAt: -0.5, // seconds relative to the ring landing; negative = early
     textOutTime: 0.7,
     textOutEase: "power2.in",
-    brandTextTime: 0.8,
-    brandBackgroundTime: 0.6,
+    brandTextTime: 1,
+    brandBackgroundTime: 0.8,
     brandBackgroundAt: 0.5,
     brandTextAt: 0.58, // 图片左边缘越过文字右边缘后开始揭示
 

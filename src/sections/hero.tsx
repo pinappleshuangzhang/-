@@ -21,13 +21,12 @@ import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { HeroSubtitle } from "@/components/ui/hero-subtitle";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { useHeroPreloader } from "@/hooks/use-hero-preloader";
-import { takeIntroAutoplay } from "@/lib/page-paths";
 import { HeroLoader } from "@/sections/hero-loader";
 import archiveBoxImg from "../../public/hero/hero-loader-bg.webp";
 
 gsap.registerPlugin(useGSAP);
 
-const DESKTOP_VIDEO_SRC = "/hero/hero-intro.mp4?v=202610151743";
+const DESKTOP_VIDEO_SRC = "/hero/hero-intro.mp4?v=202611021830";
 const MOBILE_VIDEO_SRC = "/hero/hero-mobile-intro.mp4?v=202611021642";
 /** 手机尾帧玻璃板上沿，相对 720×1280 画面 */
 const MOBILE_VIDEO_WIDTH = 720;
@@ -343,7 +342,6 @@ export function Hero() {
 
   useGSAP(
     (_, contextSafe) => {
-      const autoplayIntro = playedReplay === 0 && takeIntroAutoplay();
       const root = container.current;
       const loader = loaderRef.current;
       const videoLayer = videoLayerRef.current;
@@ -403,10 +401,7 @@ export function Hero() {
         setSondavenVisible(root);
         doneRef.current = true;
         setNavigationLocked(false);
-        // 桌面静态尾帧就位后卸掉视频节点。blob 留给回到首页时再播，不能在这里 revoke。
-        if (window.matchMedia("(min-width: 768px)").matches) {
-          setIntroDone(true);
-        }
+        // 视频停在尾帧，节点留着才能保住这一帧。blob 留给回到首页时再播，不能在这里 revoke。
       };
 
       const playStillFinale = contextSafe!(() => {
@@ -466,8 +461,6 @@ export function Hero() {
           root,
         }).eventCallback("onComplete", () => {
           setLoaderDismissed(true);
-          // 手机与桌面一致：停在首屏，等滑动再播。刷新自动播只留给桌面。
-          if (autoplayIntro && !isMobile) startIntroVideoRef.current?.();
         });
       });
 
@@ -630,7 +623,7 @@ export function Hero() {
             ) : null}
           </div>
 
-          {/* 全屏视频层：手机播完定格尾帧；桌面再渐入静态尾帧 */}
+          {/* 全屏视频层：播完停在视频尾帧 */}
           <div
             ref={videoLayerRef}
             className="invisible absolute inset-0 z-20 bg-white opacity-0"

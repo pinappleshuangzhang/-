@@ -19,8 +19,8 @@ type MobileMemberProfileProps = {
 
 /**
  * 第四屏移动端。银色边框在 member-record-mobile.webp（951×2048）里，
- * 背景用 object-cover object-top。网格盒落在同一裁切坐标系上，
- * 不跟安全区走——12 Pro 刘海和 14 Pro 灵动岛会把固定像素顶距拉开。
+ * 背景用 object-contain object-top，短视口整幅落进屏幕，底部不再被裁掉。
+ * 网格盒用同一套容纳盒，不跟安全区走。
  * 内沿取自图内暗槽：左 70、右 879、顶 232，底到图底。
  * 圆角用网格 viewBox 的 36：横半径相对宽、竖半径相对高，
  * 等比缩放后仍是正圆，和金属内沿贴合。
@@ -35,7 +35,7 @@ export function MemberRecordMobile() {
 
   return (
     <div className="absolute inset-0 z-10 md:hidden">
-      <div className="pointer-events-none absolute left-1/2 top-0 aspect-[951/2048] w-[max(100%,calc(100dvh*951/2048))] -translate-x-1/2">
+      <div className="pointer-events-none absolute left-1/2 top-0 aspect-[951/2048] w-[min(100%,calc(100dvh*951/2048))] -translate-x-1/2">
         <div
           data-member-grid
           className="absolute *:opacity-0"

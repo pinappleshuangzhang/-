@@ -82,42 +82,6 @@ function matchesSlug(slug: string, route: { slug: string; legacy: string[] }) {
   return route.slug === slug || route.legacy.includes(legacySlug(slug));
 }
 
-const REPLAY_INTRO_KEY = "grava-replay-intro";
-
-/** 浏览器刷新（不是前进后退，也不是第一次打开链接）。 */
-export function isPageReload() {
-  if (typeof performance === "undefined") return false;
-  const entry = performance.getEntriesByType("navigation")[0] as
-    | PerformanceNavigationTiming
-    | undefined;
-  if (entry) return entry.type === "reload";
-  const legacy = (
-    performance as Performance & { navigation?: { type: number } }
-  ).navigation;
-  return legacy?.type === 1;
-}
-
-let introAutoplay: boolean | null = null;
-
-/**
- * 这次文档是否要在加载幕揭开后直接播开场视频。
- * 刷新首页为 true；从其它地址刷新会先跳回 /，并靠 sessionStorage 把标记带过来。
- * 结果只算一次，避免 Strict Mode 重复挂载时把标记清掉。
- */
-export function takeIntroAutoplay() {
-  if (typeof window === "undefined") return false;
-  if (introAutoplay !== null) return introAutoplay;
-  let marked = false;
-  try {
-    marked = sessionStorage.getItem(REPLAY_INTRO_KEY) === "1";
-    if (marked) sessionStorage.removeItem(REPLAY_INTRO_KEY);
-  } catch {
-    marked = false;
-  }
-  introAutoplay = isPageReload() || marked;
-  return introAutoplay;
-}
-
 /** 认不出的地址返回 null，调用方回到进站加载幕。 */
 export function resolvePathname(pathname: string): PageLocation | null {
   const path = normalizePath(pathname);

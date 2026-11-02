@@ -56,7 +56,7 @@ export default async function RootLayout({
     <html lang={initialLocale === "zh" ? "zh-CN" : "en"}>
       <body className={`${notoSerifSC.variable} ${libreBodoni.variable}`}>
         <Script id="replay-intro-on-reload" strategy="beforeInteractive">
-          {`(function(){try{var nav=performance.getEntriesByType("navigation")[0];if(!nav||nav.type!=="reload"||location.pathname==="/")return;sessionStorage.setItem("grava-replay-intro","1");location.replace("/");}catch(e){}})();`}
+          {`(function(){try{var nav=performance.getEntriesByType("navigation")[0];if(!nav||nav.type!=="reload"||location.pathname==="/")return;location.replace("/");}catch(e){}})();`}
         </Script>
         <SmoothScrollProvider>
           <LocaleProvider initialLocale={initialLocale}>{children}</LocaleProvider>

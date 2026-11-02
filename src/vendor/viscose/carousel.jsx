@@ -1409,6 +1409,8 @@ export default function Carousel({
         gsap.set(brandStage, { opacity: 1 });
         gsap.set(brandBackground, { clipPath: "inset(0 100% 0 0)" });
         gsap.set(brandText, { clipPath: "inset(0 100% 0 0)" });
+        brandStage.style.removeProperty("--brand-bar-dx");
+        brandStage.style.removeProperty("--brand-bar-w");
       }
 
       const tl = gsap.timeline({ delay: 0.15 });
@@ -1503,6 +1505,23 @@ export default function Carousel({
           holdStart + 0.2,
         );
         return tl;
+      }
+
+      // 黑条只有这一次从左向右的擦入，终点就是左右各 20。时机不变。
+      if (brandStage && brandText) {
+        const BRAND_TEXT_DX = -104;
+        const BRAND_SIDE_PAD = 20;
+        const suNow = Math.min(window.innerWidth, 1680) / 1440 || 1;
+        const measured = brandText.getBoundingClientRect().width / suNow;
+        const textWidth = measured > 1 ? measured : 208;
+        brandStage.style.setProperty(
+          "--brand-bar-dx",
+          String(BRAND_TEXT_DX - BRAND_SIDE_PAD),
+        );
+        brandStage.style.setProperty(
+          "--brand-bar-w",
+          String(textWidth + BRAND_SIDE_PAD * 2),
+        );
       }
 
       // Absolute positions from here, so the stage can be dropped anywhere
@@ -2073,7 +2092,7 @@ export default function Carousel({
       <div
         ref={brandStageRef}
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-10 opacity-0 [--viscose-su:calc(min(100vw,1680px)/1440)] [--brand-anchor:50%] [--brand-text-dx:-104] [--brand-text-dy:-11] [--brand-font:18] [--brand-line:24] [--brand-bar-dx:-172] [--brand-bar-dy:-23] [--brand-bar-w:235] [--brand-bar-h:43] max-md:[--viscose-su:calc(100vw/390)] max-md:[--brand-anchor:0%] max-md:[--brand-text-dx:54] max-md:[--brand-text-dy:-10] max-md:[--brand-font:16] max-md:[--brand-line:20] max-md:[--brand-bar-dx:0] max-md:[--brand-bar-dy:-22] max-md:[--brand-bar-w:201]"
+        className="pointer-events-none absolute inset-0 z-10 opacity-0 [--viscose-su:calc(min(100vw,1680px)/1440)] [--brand-anchor:50%] [--brand-text-dx:-104] [--brand-text-dy:-11] [--brand-font:18] [--brand-line:24] [--brand-bar-dx:-124] [--brand-bar-dy:-23] [--brand-bar-w:248] [--brand-bar-h:43] max-md:[--viscose-su:calc(100vw/390)] max-md:[--brand-anchor:0%] max-md:[--brand-text-dx:54] max-md:[--brand-text-dy:-10] max-md:[--brand-font:16] max-md:[--brand-line:20] max-md:[--brand-bar-dx:0] max-md:[--brand-bar-dy:-22] max-md:[--brand-bar-w:201]"
       >
         <div
           className="absolute font-bodoni uppercase"
