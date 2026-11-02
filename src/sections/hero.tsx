@@ -21,13 +21,14 @@ import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { HeroSubtitle } from "@/components/ui/hero-subtitle";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { useHeroPreloader } from "@/hooks/use-hero-preloader";
+import { takeIntroAutoplay } from "@/lib/page-paths";
 import { HeroLoader } from "@/sections/hero-loader";
 import archiveBoxImg from "../../public/hero/hero-loader-bg.webp";
 
 gsap.registerPlugin(useGSAP);
 
 const DESKTOP_VIDEO_SRC = "/hero/hero-intro.mp4?v=202610151743";
-const MOBILE_VIDEO_SRC = "/hero/hero-mobile-intro.mp4?v=202610151743";
+const MOBILE_VIDEO_SRC = "/hero/hero-mobile-intro.mp4?v=202611021642";
 /** 手机尾帧玻璃板上沿，相对 720×1280 画面 */
 const MOBILE_VIDEO_WIDTH = 720;
 const MOBILE_VIDEO_HEIGHT = 1280;
@@ -103,9 +104,10 @@ export function Hero() {
   const videoSrcRef = useRef(DESKTOP_VIDEO_SRC);
   const { locale, t } = useLocale();
   // 分页器默认锁定；停在档案盒页后解锁，由滚动拦截器决定是否起播视频。
-  // 带后缀打开时不播加载幕，标题直接呈现。
+  // 带后缀打开时不播加载幕，标题直接呈现。从其他屏回到首页会重播整段开场。
   const {
     playIntro,
+    homeIntroReplay,
     setNavigationLocked,
     setIntroOverlayActive,
     registerScrollInterceptor,
@@ -123,8 +125,15 @@ export function Hero() {
   const [loaderDismissed, setLoaderDismissed] = useState(!playIntro);
   // 档案盒静帧只在加载层开始揭开时挂上，避免加载期间多下一次看不见的图
   const [showArchiveStill, setShowArchiveStill] = useState(false);
-  // 开场流程结束后档案盒首帧与视频层不再复用，一并卸载释放内存
+  // 开场流程结束后档案盒首帧与视频层先卸掉；回到首页时再挂上重播
   const [introDone, setIntroDone] = useState(!playIntro);
+  const [playedReplay, setPlayedReplay] = useState(0);
+  if (homeIntroReplay !== playedReplay) {
+    setPlayedReplay(homeIntroReplay);
+    setLoaderDismissed(false);
+    setIntroDone(false);
+    setShowArchiveStill(false);
+  }
 
   useLayoutEffect(() => {
     if (playIntro) return;
@@ -199,6 +208,18 @@ export function Hero() {
 
   const doneRef = useRef(false);
   const revealStartedRef = useRef(false);
+
+  useLayoutEffect(() => {
+    if (playedReplay === 0) return;
+    introPhaseRef.current = "loading";
+    doneRef.current = false;
+    revealStartedRef.current = false;
+    const titles = container.current?.querySelector<HTMLElement>(
+      "[data-hero-titles]",
+    );
+    if (titles) gsap.set(titles, { autoAlpha: 0 });
+    gsap.set([scrollHintRef.current, skipRef.current], { autoAlpha: 0 });
+  }, [playedReplay]);
 
   useEffect(() => {
     if (introPhaseRef.current !== "done") return;
@@ -322,6 +343,7 @@ export function Hero() {
 
   useGSAP(
     (_, contextSafe) => {
+      const autoplayIntro = playedReplay === 0 && takeIntroAutoplay();
       const root = container.current;
       const loader = loaderRef.current;
       const videoLayer = videoLayerRef.current;
@@ -381,11 +403,9 @@ export function Hero() {
         setSondavenVisible(root);
         doneRef.current = true;
         setNavigationLocked(false);
-        // 桌面静态尾帧已就位后卸载视频；手机继续保留视频尾帧定格。
+        // 桌面静态尾帧就位后卸掉视频节点。blob 留给回到首页时再播，不能在这里 revoke。
         if (window.matchMedia("(min-width: 768px)").matches) {
           setIntroDone(true);
-          const objectUrl = preloadRef.current.objectUrl;
-          if (objectUrl) URL.revokeObjectURL(objectUrl);
         }
       };
 
@@ -446,6 +466,8 @@ export function Hero() {
           root,
         }).eventCallback("onComplete", () => {
           setLoaderDismissed(true);
+          // 手机与桌面一致：停在首屏，等滑动再播。刷新自动播只留给桌面。
+          if (autoplayIntro && !isMobile) startIntroVideoRef.current?.();
         });
       });
 
@@ -577,7 +599,7 @@ export function Hero() {
         activeVideo?.kill();
       };
     },
-    { scope: container },
+    { dependencies: [playedReplay], scope: container },
   );
 
   const subtitle = t("hero.subtitle");

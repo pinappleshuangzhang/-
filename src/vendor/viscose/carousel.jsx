@@ -1411,12 +1411,12 @@ export default function Carousel({
         gsap.set(brandText, { clipPath: "inset(0 100% 0 0)" });
       }
 
-      const tl = gsap.timeline({ delay: 0.25 });
+      const tl = gsap.timeline({ delay: 0.15 });
 
       tl.fromTo(
         state,
         { progress: 0, launch: 0, spread: 0, spin: 0, shift: 0 },
-        { progress: 1, duration: 0.8, ease: "power2.out" },
+        { progress: 1, duration: 0.5, ease: "power2.out" },
       );
 
       // Formed and sitting at centre. It stays there until the counter lands,
@@ -1513,13 +1513,7 @@ export default function Carousel({
         { spread: 1, duration: params.spreadTime, ease: params.spreadEase },
         spreadStart,
       );
-      if (brandStage) {
-        tl.to(
-          brandStage,
-          { opacity: 0, duration: 0.4, ease: "power2.in" },
-          spreadStart + 0.2,
-        );
-      }
+      // 黑条和 Grava Design Studio 留到第二阶段，进入第三阶段再淡出。
 
       const textStart = spreadStart + params.textAt * params.spreadTime;
 
@@ -1572,6 +1566,8 @@ export default function Carousel({
       }
       tl.call(() => {
         if (disposed || gen !== entryGen) return;
+        // 展开尾巴里已经滑进第三阶段时，不要再把自动旋转打开。
+        if (stagePhase !== "entry") return;
         // Safari：停留阶段不自动旋转。旋转让渲染循环永不停帧，
         // 全屏 SDF 着色器 + 三层背景合成把 Metal 转译的 WebGL 压满；
         // 静止后循环自动停帧（见 step 尾部 busy 判定），开销归零。
@@ -1581,6 +1577,7 @@ export default function Carousel({
       }, undefined, ringLanded);
       tl.call(() => {
         if (disposed || gen !== entryGen) return;
+        if (stagePhase !== "entry") return;
         stagePhase = "hold";
         if (pendingGoFinal) {
           pendingGoFinal = false;
@@ -1654,6 +1651,13 @@ export default function Carousel({
           0,
         );
       }
+      if (brandStage) {
+        finalTl.to(
+          brandStage,
+          { opacity: 0, duration: 0.4, ease: "power2.in" },
+          0,
+        );
+      }
       finalTl.to(
         state,
         {
@@ -1707,15 +1711,21 @@ export default function Carousel({
       }
     };
 
+    // power2.out 的后段圆环已经看起来张开，但 stagePhase 仍是 entry。
+    // 最后一张牌在 spread≈0.97 到位，0.9 时视觉上已是整圈。
+    const RING_VISUALLY_OPEN = 0.9;
+
     const handleStageScroll = (deltaY) => {
       ensureLoop();
       if (stagePhase === "transitioning") return true;
       if (deltaY <= 0 || stagePhase === "final") return false;
-      if (stagePhase === "hold") {
+      if (stagePhase === "hold" || state.spread >= RING_VISUALLY_OPEN) {
+        // 外层已滤掉 <1px 抖动。张开后一次下滑直接进第三阶段，不等 8px。
+        if (stagePhase !== "hold") stagePhase = "hold";
         transitionToFinal();
         return true;
       }
-      // 展开中的微小抖动不记成一次下滑；刻意下滑仍在落地后进入第三阶段
+      // 展开前半段的微小抖动不记成一次下滑；刻意下滑仍在落地后进入第三阶段
       if (Math.abs(deltaY) < 8) return false;
       pendingGoFinal = true;
       return true;

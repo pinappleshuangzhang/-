@@ -245,6 +245,11 @@ html[data-section-pager] body {
   overscroll-behavior: none;
 }
 
+/* iOS 把 video 提升成独立合成层，祖先的 visibility:hidden 压不住，会浮到每一屏上。 */
+[data-pager-screen].invisible video {
+  display: none;
+}
+
 /* 屏间切换幕布：盖在全部固定 UI 之上，不拦截指针 */
 canvas[data-ascii-curtain] {
   position: fixed;

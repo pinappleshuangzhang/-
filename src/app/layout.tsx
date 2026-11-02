@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Libre_Bodoni, Noto_Serif_SC } from "next/font/google";
 import { cookies } from "next/headers";
 import { LocaleProvider } from "@/components/providers/locale-provider";
@@ -54,6 +55,9 @@ export default async function RootLayout({
   return (
     <html lang={initialLocale === "zh" ? "zh-CN" : "en"}>
       <body className={`${notoSerifSC.variable} ${libreBodoni.variable}`}>
+        <Script id="replay-intro-on-reload" strategy="beforeInteractive">
+          {`(function(){try{var nav=performance.getEntriesByType("navigation")[0];if(!nav||nav.type!=="reload"||location.pathname==="/")return;sessionStorage.setItem("grava-replay-intro","1");location.replace("/");}catch(e){}})();`}
+        </Script>
         <SmoothScrollProvider>
           <LocaleProvider initialLocale={initialLocale}>{children}</LocaleProvider>
         </SmoothScrollProvider>

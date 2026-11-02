@@ -95,7 +95,7 @@ export function defaultParams() {
 
     // -- entry timing ----------------------------------------------------
     stagger: 0.34,
-    launchTime: 1.95,
+    launchTime: 1.3,
     spreadEase: "power2.out",
     spreadTime: 3.6,
     backgroundInDelay: 0.6, // 工作室名称淡出完成后立即开始显现
@@ -144,8 +144,8 @@ export function defaultParams() {
     textOutAt: -0.5, // seconds relative to the ring landing; negative = early
     textOutTime: 0.7,
     textOutEase: "power2.in",
-    brandTextTime: 1.2,
-    brandBackgroundTime: 0.9,
+    brandTextTime: 0.8,
+    brandBackgroundTime: 0.6,
     brandBackgroundAt: 0.5,
     brandTextAt: 0.58, // 图片左边缘越过文字右边缘后开始揭示
 

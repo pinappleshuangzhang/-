@@ -3,7 +3,7 @@ export function segmentWords(text: string): string[] {
   const attachClosingPunctuation = (segments: string[]) =>
     segments.reduce<string[]>((words, segment) => {
       if (
-        /^[，。！？；：、】【）》〉〕］｝”’]+$/u.test(segment) &&
+        /^[，。！？；：、—】【）》〉〕］｝”’]+$/u.test(segment) &&
         words.length > 0
       ) {
         words[words.length - 1] += segment;
@@ -30,28 +30,42 @@ export function SplitWords({
 }: {
   text: string;
   animated?: boolean;
-  /** 词间用普通空格，允许按容器宽度折行 */
+  /** 按容器折行；原文有空格的词之间留间距，中文词紧挨 */
   wrap?: boolean;
 }) {
   const segments = segmentWords(text);
   if (wrap) {
-    const words = segments.filter((word) => word.trim() !== "");
     const isLexical = (value: string) => /[\p{L}\p{N}]/u.test(value);
+    const words: { text: string; gapAfter: boolean }[] = [];
+    let pendingSpace = false;
+    for (const segment of segments) {
+      if (segment.trim() === "") {
+        pendingSpace = true;
+        continue;
+      }
+      const previous = words[words.length - 1];
+      if (
+        previous &&
+        pendingSpace &&
+        isLexical(previous.text) &&
+        isLexical(segment)
+      ) {
+        previous.gapAfter = true;
+      }
+      words.push({ text: segment, gapAfter: false });
+      pendingSpace = false;
+    }
     return (
       <>
-        {words.map((word, index) => {
-          const next = words[index + 1];
-          const gap = next !== undefined && isLexical(word) && isLexical(next);
-          return (
-            <span
-              key={`${word}-${index}`}
-              aria-hidden="true"
-              className={`sd-word inline-block ${gap ? "mr-[0.25em]" : ""} ${animated ? "opacity-0" : ""}`}
-            >
-              {word}
-            </span>
-          );
-        })}
+        {words.map((word, index) => (
+          <span
+            key={`${word.text}-${index}`}
+            aria-hidden="true"
+            className={`sd-word inline-block ${word.gapAfter ? "mr-[0.25em]" : ""} ${animated ? "opacity-0" : ""}`}
+          >
+            {word.text}
+          </span>
+        ))}
       </>
     );
   }

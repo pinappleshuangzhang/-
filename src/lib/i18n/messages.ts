@@ -82,6 +82,10 @@ export type MessageKey =
   | "member.imageAlt"
   | "member.investigator"
   | "member.namePrefix"
+  | "member.name01"
+  | "member.name02"
+  | "member.name03"
+  | "member.name04"
   | "member.direction"
   | "member.role01"
   | "member.role02"
@@ -266,8 +270,8 @@ const zh: Messages = {
   "nav.title.ga001": "《什么是引力？》",
   "nav.title.ga002": "《组织记录》",
   "nav.title.ga003": "《成员记录》",
-  "nav.title.ga004": "《视觉调查档案》",
-  "nav.title.ga004.mobile": "《视觉调查档案》",
+  "nav.title.ga004": "《作品调查记录》",
+  "nav.title.ga004.mobile": "《作品调查记录》",
   "nav.title.contact": "《联系我们》",
   "screen.studio": "万有引力设计档案室",
   "screen.ga001": "档案 GA_001 什么是引力？",
@@ -281,7 +285,7 @@ const zh: Messages = {
   "index.ga001": "《什么是引力？》",
   "index.ga002": "《组织记录》",
   "index.ga003": "《成员记录》",
-  "index.ga004": "《视觉调查档案》",
+  "index.ga004": "《作品调查记录》",
   "index.ga005": "《联系我们》",
   "hero.title": "万有引力设计档案室",
   "hero.subtitle": "为品牌、产品与体验，建立被选择的引力",
@@ -335,6 +339,10 @@ const zh: Messages = {
   "member.imageAlt": "摆放白色书籍与雕塑半身像的成员档案展柜",
   "member.investigator": "调查员",
   "member.namePrefix": "姓名_",
+  "member.name01": "Jianan",
+  "member.name02": "Yang",
+  "member.name03": "陆78",
+  "member.name04": "Shuang",
   "member.direction": "调查方向_产品与用户体验",
   "member.role01": "定向者",
   "member.role02": "构建者",
@@ -574,8 +582,8 @@ const en: Messages = {
   "nav.title.ga001": "What Is Gravity?",
   "nav.title.ga002": "Organization Record",
   "nav.title.ga003": "Member Record",
-  "nav.title.ga004": "Visual Investigation Archive",
-  "nav.title.ga004.mobile": "Investigation Archive",
+  "nav.title.ga004": "Work Investigation Record",
+  "nav.title.ga004.mobile": "Work Investigation Record",
   "nav.title.contact": "Contact Us",
   "screen.studio": "Universal Gravity Design Archive",
   "screen.ga001": "Archive GA_001 What Is Gravity?",
@@ -589,7 +597,7 @@ const en: Messages = {
   "index.ga001": "What Is Gravity?",
   "index.ga002": "Organization Record",
   "index.ga003": "Member Record",
-  "index.ga004": "Visual Investigation Archive",
+  "index.ga004": "Work Investigation Record",
   "index.ga005": "Contact Us",
   "hero.title": "Grava Design Archive",
   "hero.subtitle":
@@ -653,6 +661,10 @@ const en: Messages = {
     "Member Archive Display With White Books And A Sculpted Bust",
   "member.investigator": "Investigator",
   "member.namePrefix": "Name _ ",
+  "member.name01": "Jianan",
+  "member.name02": "Yang",
+  "member.name03": "Joe",
+  "member.name04": "Shuang",
   "member.direction": "Focus_Product & User Experience",
   "member.role01": "Navigator",
   "member.role02": "Builder",

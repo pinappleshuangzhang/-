@@ -18,80 +18,99 @@ type MobileMemberProfileProps = {
 };
 
 /**
- * Figma 926:2358（390×844）：第四屏移动端第一阶段。
- * 390×844 仅作为横向坐标与银色边框锚点基准；网格正文使用实际
- * 动态视口高度，在短屏上压缩纵向间距，不缩放文字和交互元素。
+ * 第四屏移动端。银色边框在 member-record-mobile.webp（951×2048）里，
+ * 背景用 object-cover object-top。网格盒落在同一裁切坐标系上，
+ * 不跟安全区走——12 Pro 刘海和 14 Pro 灵动岛会把固定像素顶距拉开。
+ * 内沿取自图内暗槽：左 70、右 879、顶 232，底到图底。
+ * 圆角用网格 viewBox 的 36：横半径相对宽、竖半径相对高，
+ * 等比缩放后仍是正圆，和金属内沿贴合。
  */
+const FRAME_CORNER = {
+  borderRadius:
+    "calc(100% * 36 / 331) calc(100% * 36 / 331) 0 0 / calc(100% * 36 / 747) calc(100% * 36 / 747) 0 0",
+} as const;
+
 export function MemberRecordMobile() {
   const { t } = useLocale();
 
   return (
     <div className="absolute inset-0 z-10 md:hidden">
-      <div
-        data-member-grid
-        className="pointer-events-none absolute inset-x-[7.949%] bottom-[env(safe-area-inset-bottom)] top-[max(calc(env(safe-area-inset-top)+52px),24.872vw,11.493dvh)] *:opacity-0"
-      >
+      <div className="pointer-events-none absolute left-1/2 top-0 aspect-[951/2048] w-[max(100%,calc(100dvh*951/2048))] -translate-x-1/2">
         <div
-          data-member-overlay
-          aria-hidden="true"
-            className="absolute inset-0 rounded-t-rl-32 rounded-b-none backdrop-blur-[4px]"
-        />
-        <div
-          data-member-mask
-          className="absolute inset-0 overflow-hidden rounded-t-rl-32 rounded-b-none"
+          data-member-grid
+          className="absolute *:opacity-0"
+          style={{
+            left: "calc(100% * 70 / 951)",
+            top: "calc(100% * 232 / 2048)",
+            width: "calc(100% * 809 / 951)",
+            height: "calc(100% * 1816 / 2048)",
+          }}
         >
-          <Image
-            src="/archive/member-record-grid-mobile.svg"
-            alt=""
-            fill
-            sizes="84.87vw"
-            unoptimized
-            className="h-full w-full object-fill [clip-path:inset(1px)]"
-          />
-          <span
+          <div
+            data-member-overlay
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-t-rl-32 rounded-b-none border border-white"
+            className="absolute inset-0 backdrop-blur-[4px]"
+            style={FRAME_CORNER}
           />
-          <MobileMemberProfile
-            identifier="01"
-            name="South"
-            role={t("member.role01")}
-            direction={t("member.direction01")}
-            center="calc(17.47% - 100% * 20 / 747)"
-            left="4.834%"
-            right="calc(18.7% + 16px)"
-            fillClassName="left-[0.604%] top-[0.268%] h-[34.404%] w-[76.888%]"
-          />
-          <MobileMemberProfile
-            identifier="02"
-            name="Sheep"
-            role={t("member.role02")}
-            direction={t("member.direction02")}
-            center="41.132%"
-            left="4.834%"
-            right="calc(13.2% + 16px)"
-            fillClassName="left-[0.604%] top-[26.506%] h-[29.251%] w-[101.662%]"
-          />
-          <MobileMemberProfile
-            identifier="03"
-            name="Joe"
-            role={t("member.role03")}
-            direction={t("member.direction03")}
-            center="66.131%"
-            left="27.493%"
-            right="calc(0.6% + 16px)"
-            fillClassName="left-[17.825%] top-[52.878%] h-[26.506%] w-[81.571%]"
-          />
-          <MobileMemberProfile
-            identifier="04"
-            name="Pineapple"
-            role={t("member.role04")}
-            direction={t("member.direction04")}
-            center="88.454%"
-            left="4.834%"
-            right="calc(0.6% + 16px)"
-            fillClassName="left-[0.302%] top-[77.175%] h-[22.557%] w-[99.094%]"
-          />
+          <div
+            data-member-mask
+            className="absolute inset-0 overflow-hidden"
+            style={FRAME_CORNER}
+          >
+            <Image
+              src="/archive/member-record-grid-mobile.svg"
+              alt=""
+              fill
+              sizes="85vw"
+              unoptimized
+              className="h-full w-full object-fill"
+            />
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 border border-white"
+              style={FRAME_CORNER}
+            />
+            <MobileMemberProfile
+              identifier="01"
+              name={t("member.name01")}
+              role={t("member.role01")}
+              direction={t("member.direction01")}
+              center="calc(17.47% - 100% * 20 / 747)"
+              left="4.834%"
+              right="calc(18.7% + 16px)"
+              fillClassName="left-[0.604%] top-[0.268%] h-[34.404%] w-[76.888%]"
+            />
+            <MobileMemberProfile
+              identifier="02"
+              name={t("member.name02")}
+              role={t("member.role02")}
+              direction={t("member.direction02")}
+              center="41.132%"
+              left="4.834%"
+              right="calc(13.2% + 16px)"
+              fillClassName="left-[0.604%] top-[26.506%] h-[29.251%] w-[101.662%]"
+            />
+            <MobileMemberProfile
+              identifier="03"
+              name={t("member.name03")}
+              role={t("member.role03")}
+              direction={t("member.direction03")}
+              center="66.131%"
+              left="27.493%"
+              right="calc(0.6% + 16px)"
+              fillClassName="left-[17.825%] top-[52.878%] h-[26.506%] w-[81.571%]"
+            />
+            <MobileMemberProfile
+              identifier="04"
+              name={t("member.name04")}
+              role={t("member.role04")}
+              direction={t("member.direction04")}
+              center="88.454%"
+              left="4.834%"
+              right="calc(0.6% + 16px)"
+              fillClassName="left-[0.302%] top-[77.175%] h-[22.557%] w-[99.094%]"
+            />
+          </div>
         </div>
       </div>
     </div>

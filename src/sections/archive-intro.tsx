@@ -151,6 +151,10 @@ export function ArchiveIntro() {
   if (!navigationLocked && isActive && !videoAllowed) {
     setVideoAllowed(true);
   }
+  // 离屏卸掉 video 元素。只靠 invisible，iPhone 仍会把它画在别的屏上。
+  if (!isActive && videoReady) {
+    setVideoReady(false);
+  }
 
   // 书内文案由本屏自己入场，并排除整屏统一入场，避免重复点亮。
   useGSAP(
@@ -230,8 +234,13 @@ export function ArchiveIntro() {
     };
   }, [isActive, isMobileViewport, reducedMotion, videoReady]);
 
-  const showVideo = videoAllowed && !reducedMotion && !videoFailed;
+  const showVideo = videoAllowed && isActive && !reducedMotion && !videoFailed;
   const showPoster = !showVideo || !videoReady;
+  // 占位图和视频必须同一块裁切，否则首帧替换时文件夹会跳一下。
+  // max-w-none 抵消 Tailwind 对 video/img 的 max-width:100%，否则左边外移、右边被卡住。
+  const mediaClass = isMobileViewport
+    ? "absolute left-[-2.31%] top-[-0.75%] h-[101.50%] w-[103.75%] max-w-none object-fill"
+    : "absolute left-[-2.91%] top-[-0.97%] h-[101.58%] w-[104.41%] max-w-none object-fill";
 
   return (
     <ScreenShell ref={container}>
@@ -266,23 +275,11 @@ export function ArchiveIntro() {
             <Image src="/archive/folder-shadow.svg" alt="" fill sizes="60vw" />
           </span>
 
-          {/* 桌面向内收 1px 去黑边；手机不用矩形裁切，避免顶/底切到标签 */}
+          {/* 桌面向内收 1px 去黑边；手机不用矩形裁切，避免顶/底切到标签。
+              占位图与视频共用同一裁切框（桌面 1112×834 内容区 x31..1096,y8..829；
+              手机 1080×810 内容区 x24..1065,y6..804），避免首帧替换时位移。 */}
           <div className="absolute inset-0 overflow-hidden max-md:overflow-visible">
             <div className="absolute -inset-px max-md:inset-0">
-              {/* 静态占位（视频首帧就绪前 / 降级时显示） */}
-              {showPoster && (
-                <Image
-                  src={archiveFolderImg}
-                  alt={t("intro.folderAlt")}
-                  fill
-                  placeholder="blur"
-                  sizes="(min-width: 768px) calc(100vw * 563 / 1440), 80vw"
-                  className="object-contain"
-                />
-              )}
-
-              {/* 擦拭视频：桌面按 1112x834 / x31..1096,y8..829；
-                  手机按 1080x810 / x24..1065,y6..804 */}
               {showVideo && (
                 <AlphaScrubVideo
                   ref={videoHandleRef}
@@ -298,12 +295,22 @@ export function ArchiveIntro() {
                   }
                   onFirstFrame={() => setVideoReady(true)}
                   onError={() => setVideoFailed(true)}
-                  className={
-                    isMobileViewport
-                      ? "absolute left-[-2.31%] top-[-0.75%] h-[101.50%] w-[103.75%]"
-                      : "absolute left-[-2.91%] top-[-0.97%] h-[101.58%] w-[104.41%]"
-                  }
+                  className={mediaClass}
                 />
+              )}
+
+              {/* 盖在视频上面，直到首帧真正画出来再撤，避免空视频闪一下 */}
+              {showPoster && (
+                <span className={`z-10 ${mediaClass}`}>
+                  <Image
+                    src={archiveFolderImg}
+                    alt={t("intro.folderAlt")}
+                    fill
+                    priority
+                    sizes="(min-width: 768px) calc(100vw * 563 / 1440), 80vw"
+                    className="max-w-none object-fill"
+                  />
+                </span>
               )}
             </div>
           </div>

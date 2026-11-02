@@ -94,6 +94,11 @@ type SectionPagerValue = {
   setNavigationLocked: (locked: boolean) => void;
   /** 仅根路径 / 播放加载幕；带后缀的分享链接直接进入对应屏 */
   playIntro: boolean;
+  /**
+   * 从其他屏回到首页时递增。Hero 据此重播加载幕与开场，
+   * 直接打开首页或分享链接不会变。
+   */
+  homeIntroReplay: number;
   /** 视觉调查档案里打开的作品；null 表示抽屉关闭 */
   workRouteIndex: number | null;
   setWorkRouteIndex: (workIndex: number | null) => void;
@@ -170,6 +175,7 @@ export function SectionPagerProvider({
   const [navigationLocked, setNavigationLockedState] = useState(playIntro);
   // 根路径才盖加载幕；分享链接直接看到目标屏
   const [introOverlayActive, setIntroOverlayActive] = useState(playIntro);
+  const [homeIntroReplay, setHomeIntroReplay] = useState(0);
 
   const indexRef = useRef(index);
   const phaseRef = useRef(phase);
@@ -295,12 +301,20 @@ export function SectionPagerProvider({
   const handleCoverComplete = useCallback(() => {
     const target = pendingIndexRef.current;
     if (target !== null) {
+      const previousIndex = indexRef.current;
       pendingIndexRef.current = null;
       indexRef.current = target;
       setIndex(target);
       // 切出视觉调查档案时收起作品地址，后退再进时由历史记录重新打开
       if (screenKeysRef.current[target] !== GALLERY_SCREEN_KEY) {
         setWorkRouteIndex(null);
+      }
+      // 从其他屏回到首页：幕布还盖着时重开加载幕，揭开后从头播开场
+      if (target === 0 && previousIndex !== 0) {
+        lockedRef.current = true;
+        setNavigationLockedState(true);
+        setIntroOverlayActive(true);
+        setHomeIntroReplay((value) => value + 1);
       }
     }
     const action = pendingActionRef.current;
@@ -656,6 +670,7 @@ export function SectionPagerProvider({
       goToPrevScreen,
       setNavigationLocked,
       playIntro,
+      homeIntroReplay,
       workRouteIndex,
       setWorkRouteIndex,
       introOverlayActive,
@@ -675,6 +690,7 @@ export function SectionPagerProvider({
       goToPrevScreen,
       setNavigationLocked,
       playIntro,
+      homeIntroReplay,
       workRouteIndex,
       introOverlayActive,
       runWithCurtain,

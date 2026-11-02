@@ -87,11 +87,25 @@ export const AlphaScrubVideo = forwardRef<
     if (!video) return;
 
     let firstFrameDone = false;
+    let fallbackTimer = 0;
+    const markReady = () => {
+      if (firstFrameDone) return;
+      firstFrameDone = true;
+      window.clearTimeout(fallbackTimer);
+      onFirstFrame?.();
+    };
+    // loadeddata 只说明帧已解码，还没画上屏幕。等真正提交一帧再撤占位图，
+    // 否则会闪一帧空白。暂停时部分浏览器不派发 requestVideoFrameCallback，先静音播一下。
     const onLoadedData = () => {
-      if (!firstFrameDone) {
-        firstFrameDone = true;
-        onFirstFrame?.();
+      fallbackTimer = window.setTimeout(markReady, 500);
+      if (typeof video.requestVideoFrameCallback === "function") {
+        video.requestVideoFrameCallback(() => markReady());
+        if (video.paused) {
+          void video.play().catch(() => markReady());
+        }
+        return;
       }
+      requestAnimationFrame(() => markReady());
     };
     const onVideoError = () => {
       console.warn("[alpha-scrub-video] 视频加载失败:", video.error?.message);
@@ -102,6 +116,7 @@ export const AlphaScrubVideo = forwardRef<
     video.load();
 
     return () => {
+      window.clearTimeout(fallbackTimer);
       video.removeEventListener("loadeddata", onLoadedData);
       video.removeEventListener("error", onVideoError);
     };

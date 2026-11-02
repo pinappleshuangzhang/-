@@ -204,28 +204,28 @@ export function MemberRecord() {
           <div data-member-mask className="absolute inset-0">
             <MemberProfile
               identifier="01"
-              name="South"
+              name={t("member.name01")}
               role={t("member.role01")}
               direction={t("member.direction01")}
               {...MEMBER_TEXT_LAYOUT["01"]}
             />
             <MemberProfile
               identifier="02"
-              name="Sheep"
+              name={t("member.name02")}
               role={t("member.role02")}
               direction={t("member.direction02")}
               {...MEMBER_TEXT_LAYOUT["02"]}
             />
             <MemberProfile
               identifier="03"
-              name="Joe"
+              name={t("member.name03")}
               role={t("member.role03")}
               direction={t("member.direction03")}
               {...MEMBER_TEXT_LAYOUT["03"]}
             />
             <MemberProfile
               identifier="04"
-              name="Pineapple"
+              name={t("member.name04")}
               role={t("member.role04")}
               direction={t("member.direction04")}
               {...MEMBER_TEXT_LAYOUT["04"]}
