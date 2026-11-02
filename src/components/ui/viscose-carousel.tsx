@@ -128,6 +128,8 @@ export function ViscoseCarousel({
             t("gallery.category.product"),
             t("gallery.category.website"),
             t("gallery.category.notes"),
+            t("gallery.category.anniversary"),
+            t("gallery.category.region"),
           ]}
           categoryFontClass={locale === "zh" ? "font-serif-sc" : "font-bodoni"}
           categoryPrefix={t("survey.detailTitle")}

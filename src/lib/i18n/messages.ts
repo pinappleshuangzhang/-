@@ -99,6 +99,8 @@ export type MessageKey =
   | "gallery.category.product"
   | "gallery.category.website"
   | "gallery.category.notes"
+  | "gallery.category.anniversary"
+  | "gallery.category.region"
   | "gallery.category.visual"
   | "gallery.category.motion"
   | "gallery.mobile.category.all"
@@ -139,6 +141,12 @@ export type MessageKey =
   | "survey.tag.aiDesign"
   | "survey.tag.judgment"
   | "survey.tag.practice"
+  | "survey.tag.aiAssist"
+  | "survey.tag.brandVisual"
+  | "survey.tag.visualSystem"
+  | "survey.tag.crossMarket"
+  | "survey.tag.modular"
+  | "survey.tag.multiMarket"
   | "survey.media2Title"
   | "survey.media2Caption"
   | "survey.media2Alt"
@@ -207,6 +215,12 @@ export type MessageKey =
   | "survey.ops.media4Alt"
   | "survey.ops.media5Alt"
   | "survey.ops.media6Alt"
+  | "survey.anniversary.title"
+  | "survey.anniversary.description"
+  | "survey.anniversary.heroAlt"
+  | "survey.region.title"
+  | "survey.region.description"
+  | "survey.region.heroAlt"
   | "survey.emptyWork"
   | "contact.aria"
   | "contact.cta"
@@ -338,6 +352,8 @@ const zh: Messages = {
   "gallery.category.product": "未来创意 2026",
   "gallery.category.website": "Easycash 数字品牌视觉重塑",
   "gallery.category.notes": "Design AI Ops 实战笔记",
+  "gallery.category.anniversary": "Easycash 9周年视觉系统",
+  "gallery.category.region": "金融网站跨地区架构",
   "gallery.category.visual": "视觉设计",
   "gallery.category.motion": "动态设计",
   "gallery.mobile.category.all": "全部项目",
@@ -382,6 +398,12 @@ const zh: Messages = {
   "survey.tag.aiDesign": "AI与设计",
   "survey.tag.judgment": "判断",
   "survey.tag.practice": "作品与实践",
+  "survey.tag.aiAssist": "AI辅助设计",
+  "survey.tag.brandVisual": "品牌视觉",
+  "survey.tag.visualSystem": "视觉系统",
+  "survey.tag.crossMarket": "跨地区网站重构",
+  "survey.tag.modular": "模块化架构",
+  "survey.tag.multiMarket": "多地区业务复用",
   "survey.media2Title": "苹果时刻",
   "survey.media2Caption":
     "以《创造亚当》重构“创造发生的瞬间”，让绿色苹果成为人与未知能力之间的媒介，将古典神话中的创造关系转译为 AI 时代关于能力、意识与创造权重新分配的隐喻。",
@@ -498,6 +520,16 @@ const zh: Messages = {
     "从重复执行系统转向判断与编排系统，呈现输入、任务、判断、执行、审查与沉淀的工作流。",
   "survey.ops.media6Alt":
     "苹果落下之后的笔记收束：设计留下的是判断、问题、结构、标准与方法。",
+  "survey.anniversary.title": "Easycash 9周年视觉系统",
+  "survey.anniversary.description":
+    "本次视觉设计围绕 Easycash 9 周年主题“Easycash 9 Years Moving Forward Together”（与你一同前行）展开。",
+  "survey.anniversary.heroAlt":
+    "文章封面以笔记本电脑样机展示 Easycash 九周年羽毛球场主题首页，画面中包含“9TH Anniversary”“2026”字样与品牌标识元素。",
+  "survey.region.title": "金融网站跨地区架构",
+  "survey.region.description":
+    "本次重构建立了一套支持多地区业务的网站通用架构，覆盖页面结构、视觉与交互、设计组件、开发模块及文案内容交付规则。各地区基于公共基础完成品牌、业务与本地内容适配。",
+  "survey.region.heroAlt":
+    "金融网站跨地区架构封面，地面上排列色板、变量、组件列表、笔记本电脑与手机界面。",
   "survey.emptyWork": "该类型暂无作品",
   "contact.aria": "与我们共同开启一份新调查",
   "contact.cta": "与我们共同开启一份新调查",
@@ -639,6 +671,8 @@ const en: Messages = {
   "gallery.category.product": "Future Creative 2026",
   "gallery.category.website": "Easycash Digital Visual Reframing",
   "gallery.category.notes": "Design AI Ops Field Notes",
+  "gallery.category.anniversary": "Easycash 9th Anniversary Visual System",
+  "gallery.category.region": "Shared Website Architecture",
   "gallery.category.visual": "Visual Design",
   "gallery.category.motion": "Motion Graphics",
   "gallery.mobile.category.all": "All",
@@ -684,6 +718,12 @@ const en: Messages = {
   "survey.tag.aiDesign": "AI and Design",
   "survey.tag.judgment": "Judgment",
   "survey.tag.practice": "Work and Practice",
+  "survey.tag.aiAssist": "AI-Assisted Design",
+  "survey.tag.brandVisual": "Brand Visual Design",
+  "survey.tag.visualSystem": "Visual Systems",
+  "survey.tag.crossMarket": "Cross-Market Website Rebuild",
+  "survey.tag.modular": "Modular Architecture",
+  "survey.tag.multiMarket": "Multi-Market Reuse",
   "survey.media2Title": "The Apple Moment",
   "survey.media2Caption":
     "The Creation of Adam is recast as the instant of making. The green apple sits between the human and an unknown capability, turning a classical myth of creation into a metaphor for how AI redistributes ability, awareness, and the right to create.",
@@ -800,6 +840,16 @@ const en: Messages = {
     "A workflow moving from a system of repetition to a system of judgment and orchestration: input, tasks, judgment, execution, review, and residue.",
   "survey.ops.media6Alt":
     "Closing note after the apple falls: what remains of design is judgment, questions, structure, standards, and methods.",
+  "survey.anniversary.title": "Easycash 9th Anniversary Visual System",
+  "survey.anniversary.description":
+    "This visual design was developed around Easycash’s 9th anniversary theme, “Easycash 9 Years Moving Forward Together.”",
+  "survey.anniversary.heroAlt":
+    "Article cover: a laptop mockup of the Easycash 9th anniversary badminton-court homepage, with “9TH Anniversary,” “2026,” and brand marks.",
+  "survey.region.title": "Shared Website Architecture",
+  "survey.region.description":
+    "This rebuild established a shared website architecture for businesses across markets. It covers page structure, visual design and interaction, design components, development modules, and the rules for delivering copy. Each market adapts brand, business, and local content on that common base.",
+  "survey.region.heroAlt":
+    "Cover of the shared website architecture, with color swatches, variables, a component list, a laptop, and a phone arranged on the ground.",
   "survey.emptyWork": "No Work In This Category Yet",
   "contact.aria": "Start A New Survey With Us",
   "contact.cta": "Start A New Survey With Us",

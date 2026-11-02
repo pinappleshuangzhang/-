@@ -1,15 +1,22 @@
 "use client";
 
-import Image from "next/image";
 import { useLocale } from "@/components/providers/locale-provider";
+import { SurveyArticleMedia } from "@/components/ui/survey-article-media";
 import {
   OPS_ARTICLE_EN,
   OPS_ARTICLE_ZH,
   type OpsBlock,
 } from "@/lib/ops-article";
 
+type SurveyOpsArticleProps = {
+  blocksZh?: OpsBlock[];
+  blocksEn?: OpsBlock[];
+};
+
 const kickerClass =
   "font-bodoni text-12 font-normal leading-normal text-grey-300 md:text-[length:calc(var(--su)*12)]";
+const kickerClassZh =
+  "font-serif-sc text-12 font-normal leading-normal text-grey-300 md:text-[length:calc(var(--su)*12)]";
 const titleClass =
   "font-serif-sc text-28 font-medium leading-[36px] text-grey-400 max-md:font-bodoni max-md:text-18 max-md:leading-6 md:text-[length:calc(var(--su)*28)] md:leading-[calc(var(--su)*36)]";
 const subtitleClass =
@@ -26,9 +33,12 @@ const pointTitleClass =
  * 手机端标题与编号小标题 18 / Medium Bodoni，正文 12 / Regular，与前面作品说明一致。
  * 普通块间距 56（手机 40）。大标题与上方正文 76，与下方正文 32。小标题与正文 12。
  */
-export function SurveyOpsArticle() {
+export function SurveyOpsArticle({
+  blocksZh = OPS_ARTICLE_ZH,
+  blocksEn = OPS_ARTICLE_EN,
+}: SurveyOpsArticleProps) {
   const { locale } = useLocale();
-  const blocks = locale === "en" ? OPS_ARTICLE_EN : OPS_ARTICLE_ZH;
+  const blocks = locale === "en" ? blocksEn : blocksZh;
 
   return (
     <div data-survey-keep="" className="flex w-full flex-col">
@@ -38,7 +48,7 @@ export function SurveyOpsArticle() {
           block={block}
           locale={locale}
           className={blockSpacing(block, index)}
-          revealDelay={imageRevealDelay(blocks, index)}
+          imageIndex={imageCountBefore(blocks, index)}
         />
       ))}
     </div>
@@ -51,54 +61,63 @@ function blockSpacing(block: OpsBlock, index: number) {
   return "mt-14 max-md:mt-10";
 }
 
-/** 与前三篇作品图同一套上滑：首图 0.28s，其后每张错开 0.05s。 */
-function imageRevealDelay(blocks: OpsBlock[], index: number) {
-  let imageIndex = 0;
+function imageCountBefore(blocks: OpsBlock[], index: number) {
+  let count = 0;
   for (let i = 0; i < index; i += 1) {
-    if (blocks[i]?.kind === "image") imageIndex += 1;
+    const block = blocks[i];
+    if (!block) continue;
+    if (block.kind === "image") count += 1;
+    if (block.kind === "points") {
+      count += block.items.filter((item) => item.image).length;
+    }
   }
-  if (imageIndex === 0) return "0.28";
+  return count;
+}
+
+/** 与前三篇作品图同一套上滑：首图 0.28s，其后每张错开 0.05s。 */
+function delayForImage(imageIndex: number) {
+  if (imageIndex <= 0) return "0.28";
   return (0.5 + (imageIndex - 1) * 0.05).toFixed(2);
 }
 
 function blockKey(block: OpsBlock, index: number) {
-  if (block.kind === "image") return block.src;
-  if (block.kind === "prose") return block.kicker ?? block.paragraphs[0] ?? String(index);
-  if (block.kind === "questions") return block.items[0] ?? String(index);
-  return block.items[0]?.title ?? String(index);
+  if (block.kind === "image") return `${index}-${block.src}`;
+  if (block.kind === "prose") {
+    return `${index}-${block.kicker ?? block.paragraphs[0] ?? "prose"}`;
+  }
+  if (block.kind === "questions") return `${index}-${block.items[0] ?? "questions"}`;
+  return `${index}-${block.items[0]?.title ?? block.kind}`;
+}
+
+function pointImageOffsets(items: { image?: unknown }[]) {
+  return items.reduce<number[]>((offsets, _item, index) => {
+    if (index === 0) return [0];
+    const previous = offsets[index - 1] ?? 0;
+    const previousHasImage = items[index - 1]?.image != null;
+    return [...offsets, previous + (previousHasImage ? 1 : 0)];
+  }, []);
 }
 
 function ArticleBlock({
   block,
   locale,
   className,
-  revealDelay,
+  imageIndex,
 }: {
   block: OpsBlock;
   locale: "zh" | "en";
   className: string;
-  revealDelay: string;
+  imageIndex: number;
 }) {
   if (block.kind === "image") {
     const src = locale === "en" ? block.srcEn : block.src;
     return (
-      <div
-        data-survey-keep=""
-        data-sd-media=""
-        data-sd-delay={revealDelay}
-        className={`overflow-hidden ${className}`}
-      >
-        <div data-sd-media-inner="" className="translate-y-[105%]">
-          <Image
-            src={src}
-            alt={block.alt}
-            width={1920}
-            height={1080}
-            sizes="(max-width: 767px) 94vw, 896px"
-            className="h-auto w-full"
-          />
-        </div>
-      </div>
+      <SurveyArticleMedia
+        src={src}
+        alt={block.alt}
+        revealDelay={delayForImage(imageIndex)}
+        className={className}
+      />
     );
   }
 
@@ -118,7 +137,32 @@ function ArticleBlock({
     );
   }
 
-  if (block.kind === "shifts") {
+  if (block.kind === "points") {
+    const offsets = pointImageOffsets(block.items);
+    return (
+      <div className={`flex flex-col gap-5 ${className}`}>
+        {block.items.map((item, itemIndex) => (
+          <div key={`${itemIndex}-${item.title}`} className="flex flex-col gap-3">
+            <p className={pointTitleClass}>{item.title}</p>
+            {item.paragraphs.map((paragraph) => (
+              <p key={paragraph} className={bodyClass}>
+                {paragraph}
+              </p>
+            ))}
+            {item.image ? (
+              <SurveyArticleMedia
+                src={locale === "en" ? item.image.srcEn : item.image.src}
+                alt={item.image.alt}
+                revealDelay={delayForImage(imageIndex + (offsets[itemIndex] ?? 0))}
+              />
+            ) : null}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (block.kind === "shifts" || block.kind === "steps") {
     return (
       <div className={`flex flex-col gap-5 ${className}`}>
         {block.items.map((item) => (
@@ -127,21 +171,26 @@ function ArticleBlock({
             <p className={bodyClass}>{item.body}</p>
           </div>
         ))}
-        {block.outro.map((paragraph) => (
-          <p key={paragraph} className={bodyClass}>
-            {paragraph}
-          </p>
-        ))}
+        {block.kind === "shifts"
+          ? block.outro.map((paragraph) => (
+              <p key={paragraph} className={bodyClass}>
+                {paragraph}
+              </p>
+            ))
+          : null}
       </div>
     );
   }
 
   const showSubtitle = block.subtitle && block.subtitle !== block.title;
+  const kickerHasHan = block.kicker ? /[\u3400-\u9fff]/.test(block.kicker) : false;
   return (
     <div className={`flex flex-col gap-8 ${className}`}>
       {block.kicker || block.title ? (
         <div className="flex flex-col gap-3">
-          {block.kicker ? <p className={kickerClass}>{block.kicker}</p> : null}
+          {block.kicker ? (
+            <p className={kickerHasHan ? kickerClassZh : kickerClass}>{block.kicker}</p>
+          ) : null}
           {block.title ? (
             <div className="flex flex-col gap-2">
               <h2 className={titleClass}>{block.title}</h2>
@@ -150,13 +199,29 @@ function ArticleBlock({
           ) : null}
         </div>
       ) : null}
+      {block.paragraphs.length > 0 || block.bullets || block.tail?.length ? (
       <div className="flex flex-col gap-5">
         {block.paragraphs.map((paragraph) => (
           <p key={paragraph} className={bodyClass}>
             {paragraph}
           </p>
         ))}
+        {block.bullets ? (
+          <ul className="flex flex-col gap-5">
+            {block.bullets.map((item) => (
+              <li key={item} className={bodyClass}>
+                {item}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {block.tail?.map((paragraph) => (
+          <p key={paragraph} className={bodyClass}>
+            {paragraph}
+          </p>
+        ))}
       </div>
+      ) : null}
     </div>
   );
 }

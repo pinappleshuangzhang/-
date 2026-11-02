@@ -419,7 +419,60 @@ export const SURVEY_G_004: SurveyWork = {
   ],
 };
 
-/** 各调查类型对应作品；尚无内容的类型为 null，详情页右侧留空 */
+/** 005 实战笔记：Easycash 9 周年视觉系统，与 004 同为文章 */
+export const SURVEY_G_005: SurveyWork = {
+  id: "g-005",
+  title: "Investigation Details_005",
+  typeLabel: "( D Notes)",
+  archivedLabel: "( 2026 Archived)",
+  activeCategory: "D",
+  duration: "一个月",
+  titleKey: "survey.anniversary.title",
+  descriptionKey: "survey.anniversary.description",
+  tagKeys: [
+    "survey.tag.aiAssist",
+    "survey.tag.brandVisual",
+    "survey.tag.visualSystem",
+  ],
+  media: [
+    {
+      src: "/archive-ga-004/anniversary-01-cn.webp",
+      srcEn: "/archive-ga-004/anniversary-01-en.webp",
+      altKey: "survey.anniversary.heroAlt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+  ],
+};
+
+/** 006 实战笔记：金融网站跨地区架构，与 004、005 同为文章 */
+export const SURVEY_G_006: SurveyWork = {
+  id: "g-006",
+  title: "Investigation Details_006",
+  typeLabel: "( D Notes)",
+  archivedLabel: "( 2026 Archived)",
+  activeCategory: "D",
+  duration: "一个月",
+  titleKey: "survey.region.title",
+  descriptionKey: "survey.region.description",
+  tagKeys: [
+    "survey.tag.crossMarket",
+    "survey.tag.modular",
+    "survey.tag.multiMarket",
+  ],
+  media: [
+    {
+      src: "/archive-ga-004/region-01.webp",
+      altKey: "survey.region.heroAlt",
+      width: 1920,
+      height: 1080,
+      hover: "none",
+    },
+  ],
+};
+
+/** 各调查类型对应的代表作品；尚无内容的类型为 null */
 export const SURVEY_WORK_BY_CATEGORY: Record<
   SurveyCategoryCode,
   SurveyWork | null
@@ -431,11 +484,18 @@ export const SURVEY_WORK_BY_CATEGORY: Record<
   E: null,
 };
 
-const SURVEY_CATEGORY_CODES: SurveyCategoryCode[] = ["A", "B", "C", "D"];
+/** 第五屏作品顺序，与长廊环、右侧列表一致 */
+export const SURVEY_WORKS: SurveyWork[] = [
+  SURVEY_G_001,
+  SURVEY_G_002,
+  SURVEY_G_003,
+  SURVEY_G_004,
+  SURVEY_G_005,
+  SURVEY_G_006,
+];
 
-/** 第五屏卡片序号映射到调查类型；环上多圈时按作品数取模 */
-export function surveyCodeFromCarouselIndex(index: number): SurveyCategoryCode {
-  const count = SURVEY_CATEGORY_CODES.length;
-  const normalized = ((index % count) + count) % count;
-  return SURVEY_CATEGORY_CODES[normalized] ?? "A";
+/** 第五屏卡片序号映射到作品；环上重复时按作品数取模 */
+export function surveyWorkIndexFromCarouselIndex(index: number): number {
+  const count = SURVEY_WORKS.length;
+  return ((index % count) + count) % count;
 }

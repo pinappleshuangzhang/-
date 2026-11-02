@@ -31,6 +31,20 @@ const PROJECT_SEQUENCE = [
     type: "Design AI Ops 实战笔记",
     year: "2026",
   },
+  {
+    file: "archive-ga-004/anniversary-ring.webp",
+    name: "Easycash 9周年视觉系统",
+    listLabel: "Easycash 9th Anniversary Visual System",
+    type: "Easycash 9周年视觉系统",
+    year: "2026",
+  },
+  {
+    file: "archive-ga-004/region-ring.webp",
+    name: "金融网站跨地区架构",
+    listLabel: "Shared Website Architecture",
+    type: "金融网站跨地区架构",
+    year: "2026",
+  },
 ];
 
 // Twelve planes repeat the archive images around the ring.

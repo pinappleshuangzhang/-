@@ -13,7 +13,7 @@ export type ViscoseCarouselItem = {
  */
 export const VISCOSE_SEED_INDEX = 0;
 
-/** 第五屏作品环：四张作品图，环上按序重复。 */
+/** 第五屏作品环：六张作品图，环上按序重复。 */
 export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
   {
     id: "survey-a",
@@ -44,6 +44,22 @@ export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
     src: "/archive-ga-004/ops-ring.webp",
     alt: "钉在浅色墙面上的 Design AI Ops 铭牌，黑底圆环中央是白色标志与绿苹果",
     title: "Design AI Ops Field Notes",
+    discipline: "Field Notes",
+    year: "2026",
+  },
+  {
+    id: "survey-e",
+    src: "/archive-ga-004/anniversary-ring.webp",
+    alt: "钉在浅色墙面上的 Easycash 九周年铭牌，笔记本电脑展示羽毛球场主题首页",
+    title: "Easycash 9th Anniversary Visual System",
+    discipline: "Field Notes",
+    year: "2026",
+  },
+  {
+    id: "survey-f",
+    src: "/archive-ga-004/region-ring.webp",
+    alt: "钉在浅色墙面上的金融网站架构铭牌，画面中有色板、变量、组件列表、笔记本电脑与手机界面",
+    title: "Shared Website Architecture",
     discipline: "Field Notes",
     year: "2026",
   },

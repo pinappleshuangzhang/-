@@ -40,6 +40,8 @@ function readDelay(el: HTMLElement): number {
 type SondavenRevealOptions = {
   /** 跳过位于这些祖先容器内的节点 */
   exclude?: string;
+  /** 返回 true 的图片不进开场时间轴，保持在下方，等进入视口再滑入 */
+  deferMedia?: (el: HTMLElement) => boolean;
 };
 
 function collectTargets(
@@ -104,6 +106,7 @@ export function playSondavenReveal(
   }
 
   for (const el of collectTargets(root, "[data-sd-media]", options)) {
+    if (options?.deferMedia?.(el)) continue;
     const inner = el.querySelector<HTMLElement>("[data-sd-media-inner]");
     if (!inner) continue;
     tl.fromTo(
@@ -115,6 +118,46 @@ export function playSondavenReveal(
   }
 
   return tl;
+}
+
+/** 单张图片从下往上滑入，时长与开场媒体一致 */
+function slideMediaIn(inner: HTMLElement) {
+  gsap.killTweensOf(inner);
+  return gsap.fromTo(inner, MEDIA_HIDDEN, {
+    ...MEDIA_VISIBLE,
+    duration: DUR_L,
+    ease: EASE,
+  });
+}
+
+/**
+ * 抽屉里视口以下的图片先停在裁切区下方，滚进滚动容器后再滑入。
+ * 返回清理函数。
+ */
+export function observeDeferredDrawerMedia(
+  frames: HTMLElement[],
+  scroller: HTMLElement | null,
+): () => void {
+  const tweens: gsap.core.Tween[] = [];
+  if (!scroller || frames.length === 0) return () => undefined;
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const inner = entry.target.querySelector<HTMLElement>(
+          "[data-sd-media-inner]",
+        );
+        if (inner) tweens.push(slideMediaIn(inner));
+        observer.unobserve(entry.target);
+      }
+    },
+    { root: scroller, rootMargin: "0px 0px 80px 0px", threshold: 0 },
+  );
+  for (const frame of frames) observer.observe(frame);
+  return () => {
+    observer.disconnect();
+    for (const tween of tweens) tween.kill();
+  };
 }
 
 /** 空列表跳过，避免 GSAP 对空 NodeList 抛 “target not found” 警告 */

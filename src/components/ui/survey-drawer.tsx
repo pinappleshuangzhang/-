@@ -15,7 +15,6 @@ import { SurveyDrawerContent } from "@/components/ui/survey-drawer-content";
 import { useCloseCursor } from "@/hooks/use-close-cursor";
 import { useOverlayScroller } from "@/hooks/use-overlay-scroller";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import type { SurveyCategoryCode } from "@/lib/survey-details";
 
 const KEY_SCROLL_DELTA = 120;
 const PAGE_SCROLL_DELTA = 240;
@@ -39,7 +38,7 @@ function resetHorizontalScroll(start: HTMLElement | null) {
 
 type SurveyDrawerProps = {
   open: boolean;
-  initialCode: SurveyCategoryCode;
+  workIndex: number;
   scrollHandlerRef: MutableRefObject<((deltaY: number) => boolean) | null>;
   onClose: () => void;
   /** 抽屉挂载期间通知外层：长廊需保持模糊，直到离场动画结束 */
@@ -52,7 +51,7 @@ type SurveyDrawerProps = {
  */
 export function SurveyDrawer({
   open,
-  initialCode,
+  workIndex,
   scrollHandlerRef,
   onClose,
   onPresenceChange,
@@ -251,7 +250,7 @@ export function SurveyDrawer({
         >
           <SurveyDrawerContent
             open={open}
-            initialCode={initialCode}
+            workIndex={workIndex}
             titleId={titleId}
           />
         </div>

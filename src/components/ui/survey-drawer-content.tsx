@@ -2,12 +2,19 @@
 
 import { useLayoutEffect, useRef } from "react";
 import {
+  observeDeferredDrawerMedia,
   playSondavenReveal,
   setSondavenHidden,
   setSondavenVisible,
 } from "@/animations/sondaven-reveal";
 import { KeepHoverMedia } from "@/components/ui/keep-hover-media";
 import { SurveyOpsArticle } from "@/components/ui/survey-ops-article";
+import {
+  ANNIVERSARY_ARTICLE_EN,
+  ANNIVERSARY_ARTICLE_ZH,
+} from "@/lib/anniversary-article";
+import { REGION_ARTICLE_EN, REGION_ARTICLE_ZH } from "@/lib/region-article";
+import { OPS_ARTICLE_EN, OPS_ARTICLE_ZH, type OpsBlock } from "@/lib/ops-article";
 import { SplitWords } from "@/components/ui/split-words";
 import {
   resolveWorkTags,
@@ -18,15 +25,20 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import {
   SURVEY_CATEGORY_BY_CODE,
   SURVEY_G_001,
-  SURVEY_WORK_BY_CATEGORY,
-  type SurveyCategoryCode,
+  SURVEY_WORKS,
   type SurveyMediaItem,
   type SurveyWork,
 } from "@/lib/survey-details";
 
+const ARTICLE_BLOCKS: Record<string, { zh: OpsBlock[]; en: OpsBlock[] }> = {
+  "g-004": { zh: OPS_ARTICLE_ZH, en: OPS_ARTICLE_EN },
+  "g-005": { zh: ANNIVERSARY_ARTICLE_ZH, en: ANNIVERSARY_ARTICLE_EN },
+  "g-006": { zh: REGION_ARTICLE_ZH, en: REGION_ARTICLE_EN },
+};
+
 type SurveyDrawerContentProps = {
   open: boolean;
-  initialCode: SurveyCategoryCode;
+  workIndex: number;
   titleId: string;
 };
 
@@ -35,17 +47,21 @@ type SurveyDrawerContentProps = {
  */
 export function SurveyDrawerContent({
   open,
-  initialCode,
+  workIndex,
   titleId,
 }: SurveyDrawerContentProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
   const { locale, t } = useLocale();
-  const activeCategory = SURVEY_CATEGORY_BY_CODE[initialCode];
-  const activeWork = SURVEY_WORK_BY_CATEGORY[initialCode];
-  const heading = `Investigation Details_${activeCategory.number}`;
+  const activeWork = SURVEY_WORKS[workIndex] ?? SURVEY_WORKS[0];
+  const activeCategory = activeWork
+    ? SURVEY_CATEGORY_BY_CODE[activeWork.activeCategory]
+    : SURVEY_CATEGORY_BY_CODE.A;
+  const detailNumber = String(workIndex + 1).padStart(3, "0");
+  const heading = `Investigation Details_${detailNumber}`;
   // 手机版标题跟随语言（Figma 1008-561 为「调查详情_003」），桌面版固定英文
-  const mobileHeading = `${t("survey.detailTitle")}_${activeCategory.number}`;
+  const mobileHeading = `${t("survey.detailTitle")}_${detailNumber}`;
+  const article = activeWork ? ARTICLE_BLOCKS[activeWork.id] : undefined;
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -55,11 +71,24 @@ export function SurveyDrawerContent({
       return;
     }
     setSondavenHidden(root);
-    const tl = playSondavenReveal(root);
+    const scroller = root.closest<HTMLElement>("[data-survey-scroller]");
+    const deferred: HTMLElement[] = [];
+    const tl = playSondavenReveal(root, {
+      deferMedia: (frame) => {
+        if (!scroller || !frame.querySelector("img")) return false;
+        const below =
+          frame.getBoundingClientRect().top >=
+          scroller.getBoundingClientRect().bottom - 8;
+        if (below) deferred.push(frame);
+        return below;
+      },
+    });
+    const stopDeferred = observeDeferredDrawerMedia(deferred, scroller);
     return () => {
       tl.kill();
+      stopDeferred();
     };
-  }, [open, initialCode, reducedMotion, locale]);
+  }, [open, workIndex, reducedMotion, locale]);
 
   return (
     <div
@@ -122,8 +151,8 @@ export function SurveyDrawerContent({
               tags={resolveWorkTags(activeWork.tagKeys, t)}
               label={t("survey.tagList")}
             />
-            {activeWork.id === "g-004" ? (
-              <SurveyOpsArticle />
+            {article ? (
+              <SurveyOpsArticle blocksZh={article.zh} blocksEn={article.en} />
             ) : (
               <WorkContent work={activeWork} />
             )}

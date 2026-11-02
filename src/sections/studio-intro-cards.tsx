@@ -72,7 +72,7 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
               aria-label={`${t("studioIntro.card1Title")} ${t("studioIntro.card1Body")}`}
               className={
                 isEn
-                  ? "absolute left-[calc(var(--su)*115)] top-[calc(var(--su)*122)] w-[calc(var(--su)*433)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*23)] text-grey-400"
+                  ? "absolute left-[calc(var(--su)*115)] top-[calc(var(--su)*122)] w-[calc(var(--su)*433)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*25)] text-grey-400"
                   : "absolute left-[calc(var(--su)*170)] top-[calc(var(--su)*117)] font-serif-sc text-[length:calc(var(--su)*14)] leading-[calc(var(--su)*23)] text-grey-400"
               }
             >
@@ -80,7 +80,7 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
                 text={t("studioIntro.card1Title")}
                 className={
                   isEn
-                    ? undefined
+                    ? "text-[length:calc(var(--su)*16)] leading-[calc(var(--su)*25)]"
                     : "text-[length:calc(var(--su)*16)] leading-[calc(var(--su)*26)]"
                 }
               />
@@ -157,7 +157,7 @@ export const StudioIntroCards = forwardRef<HTMLDivElement>(
                 className={
                   isEn
                     ? "text-[length:calc(var(--su)*16)] leading-[calc(var(--su)*25)]"
-                    : undefined
+                    : "text-[length:calc(var(--su)*16)] leading-[calc(var(--su)*26)]"
                 }
               />
               <RevealLine text={t("studioIntro.card2Body1")} />

@@ -10,7 +10,7 @@ import { ScreenShell } from "@/components/ui/screen-shell";
 import { SurveyDrawer } from "@/components/ui/survey-drawer";
 import { ViscoseCarousel } from "@/components/ui/viscose-carousel";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { surveyCodeFromCarouselIndex, type SurveyCategoryCode } from "@/lib/survey-details";
+import { surveyWorkIndexFromCarouselIndex } from "@/lib/survey-details";
 import { VISCOSE_CAROUSEL_ITEMS } from "@/lib/viscose-carousel-items";
 
 type CarouselScrollHandler = (deltaY: number) => boolean;
@@ -31,7 +31,8 @@ function normalizeWheelDeltaY(event: WheelEvent) {
 export function ArchiveGa004Viscose() {
   const isActive = useScreenActive();
   const reducedMotion = useReducedMotion();
-  const { phase, registerScrollInterceptor } = useSectionPager();
+  const { phase, registerScrollInterceptor, workRouteIndex, setWorkRouteIndex } =
+    useSectionPager();
   // 首次 idle 后记住：回切时幕布揭开阶段就要露出终态，不能再等 idle 或重播入场
   const [introSettled, setIntroSettled] = useState(false);
   if (isActive && phase === "idle" && !introSettled) {
@@ -40,25 +41,26 @@ export function ArchiveGa004Viscose() {
   const carouselActive = isActive && (introSettled || phase === "idle");
   const detailsScrollRef = useRef<((deltaY: number) => boolean) | null>(null);
   const carouselScrollRef = useRef<CarouselScrollHandler | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [detailsCode, setDetailsCode] = useState<SurveyCategoryCode>("C");
+  const [workIndex, setWorkIndex] = useState(workRouteIndex ?? 0);
+  if (workRouteIndex !== null && workIndex !== workRouteIndex) {
+    setWorkIndex(workRouteIndex);
+  }
+  const detailsOpen = isActive && workRouteIndex !== null;
   const [coverPresent, setCoverPresent] = useState(false);
   const { t } = useLocale();
 
-  useEffect(() => {
-    if (isActive) return;
-    const frame = window.requestAnimationFrame(() => setDetailsOpen(false));
-    return () => window.cancelAnimationFrame(frame);
-  }, [isActive]);
-
-  const openDetails = useCallback((index: number) => {
-    setDetailsCode(surveyCodeFromCarouselIndex(index));
-    setDetailsOpen(true);
-  }, []);
+  const openDetails = useCallback(
+    (carouselIndex: number) => {
+      const next = surveyWorkIndexFromCarouselIndex(carouselIndex);
+      setWorkIndex(next);
+      setWorkRouteIndex(next);
+    },
+    [setWorkRouteIndex],
+  );
 
   const closeDetails = useCallback(() => {
-    setDetailsOpen(false);
-  }, []);
+    setWorkRouteIndex(null);
+  }, [setWorkRouteIndex]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -129,7 +131,7 @@ export function ArchiveGa004Viscose() {
       />
       <SurveyDrawer
         open={detailsOpen}
-        initialCode={detailsCode}
+        workIndex={workIndex}
         scrollHandlerRef={detailsScrollRef}
         onPresenceChange={setCoverPresent}
         onClose={closeDetails}

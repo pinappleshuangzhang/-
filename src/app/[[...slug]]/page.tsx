@@ -56,10 +56,19 @@ const SCREENS: PagerScreen[] = [
   },
 ];
 
-export default function Home() {
+type HomeProps = {
+  params: Promise<{ slug?: string[] }>;
+};
+
+export default async function Home({ params }: HomeProps) {
+  const { slug } = await params;
+  const initialPath = slug?.length
+    ? `/${slug.map((part) => decodeURIComponent(part)).join("/")}`
+    : "/";
+
   return (
     <main>
-      <SectionPagerProvider screens={SCREENS}>
+      <SectionPagerProvider screens={SCREENS} initialPath={initialPath}>
         <PageChrome />
       </SectionPagerProvider>
     </main>

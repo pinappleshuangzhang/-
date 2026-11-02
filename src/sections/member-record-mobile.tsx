@@ -3,18 +3,17 @@
 import Image from "next/image";
 import { useLocale } from "@/components/providers/locale-provider";
 import { MEMBER_PROFILE_ACTIONS_VISIBLE } from "@/lib/member-record-cells";
-import { memberTextLayout } from "@/lib/member-record-profile-layout";
 
 type MobileMemberProfileProps = {
   identifier: string;
   name: string;
   role: string;
   direction: string;
-  headerClassName: string;
-  dividerClassName: string;
-  nameClassName: string;
-  directionClassName: string;
-  actionsClassName: string;
+  /** 文字块中线，取格子在 331×747 网格里的垂直中心，随格子拉伸 */
+  center: string;
+  left: string;
+  /** 右缘停在白线内侧，英文在此宽度内折行 */
+  right: string;
   fillClassName: string;
 };
 
@@ -58,22 +57,9 @@ export function MemberRecordMobile() {
             name="South"
             role={t("member.role01")}
             direction={t("member.direction01")}
-            {...memberTextLayout(
-              {
-                headerClassName: "left-[4.834%] top-[calc(12.249%-46px)]",
-                dividerClassName: "left-[4.834%] top-[calc(16.667%-46px)]",
-                nameClassName: "left-[4.834%] top-[calc(18.809%-46px)]",
-                directionClassName: "left-[4.834%] top-[calc(22.691%-46px)]",
-                actionsClassName: "left-[4.834%] top-[21.82%]",
-              },
-              {
-                headerClassName: "left-[4.834%] top-[calc(12.249%-46px)]",
-                dividerClassName: "left-[4.834%] top-[calc(16.667%-46px)]",
-                nameClassName: "left-[4.834%] top-[calc(18.809%-46px)]",
-                directionClassName: "left-[4.834%] top-[calc(22.691%-46px)]",
-                actionsClassName: "left-[4.834%] top-[21.82%]",
-              },
-            )}
+            center="17.47%"
+            left="4.834%"
+            right="calc(18.7% + 16px)"
             fillClassName="left-[0.604%] top-[0.268%] h-[34.404%] w-[76.888%]"
           />
           <MobileMemberProfile
@@ -81,22 +67,9 @@ export function MemberRecordMobile() {
             name="Sheep"
             role={t("member.role02")}
             direction={t("member.direction02")}
-            {...memberTextLayout(
-              {
-                headerClassName: "left-[4.834%] top-[calc(35.911%-18px)]",
-                dividerClassName: "left-[4.834%] top-[calc(40.329%-18px)]",
-                nameClassName: "left-[4.834%] top-[calc(42.471%-18px)]",
-                directionClassName: "left-[4.834%] top-[calc(46.353%-18px)]",
-                actionsClassName: "left-[4.834%] top-[47.523%]",
-              },
-              {
-                headerClassName: "left-[4.834%] top-[calc(35.911%-18px)]",
-                dividerClassName: "left-[4.834%] top-[calc(40.329%-18px)]",
-                nameClassName: "left-[4.834%] top-[calc(42.471%-18px)]",
-                directionClassName: "left-[4.834%] top-[calc(46.353%-18px)]",
-                actionsClassName: "left-[4.834%] top-[47.523%]",
-              },
-            )}
+            center="41.132%"
+            left="4.834%"
+            right="calc(13.2% + 16px)"
             fillClassName="left-[0.604%] top-[26.506%] h-[29.251%] w-[101.662%]"
           />
           <MobileMemberProfile
@@ -104,22 +77,9 @@ export function MemberRecordMobile() {
             name="Joe"
             role={t("member.role03")}
             direction={t("member.direction03")}
-            {...memberTextLayout(
-              {
-                headerClassName: "left-[27.493%] top-[calc(60.91%-11px)]",
-                dividerClassName: "left-[27.493%] top-[calc(65.328%-11px)]",
-                nameClassName: "left-[27.493%] top-[calc(67.47%-11px)]",
-                directionClassName: "left-[27.493%] top-[calc(71.352%-11px)]",
-                actionsClassName: "left-[27.493%] top-[73.226%]",
-              },
-              {
-                headerClassName: "left-[27.493%] top-[calc(60.91%-11px)]",
-                dividerClassName: "left-[27.493%] top-[calc(65.328%-11px)]",
-                nameClassName: "left-[27.493%] top-[calc(67.47%-11px)]",
-                directionClassName: "left-[27.493%] top-[calc(71.352%-11px)]",
-                actionsClassName: "left-[27.493%] top-[73.226%]",
-              },
-            )}
+            center="66.131%"
+            left="27.493%"
+            right="calc(0.6% + 16px)"
             fillClassName="left-[17.825%] top-[52.878%] h-[26.506%] w-[81.571%]"
           />
           <MobileMemberProfile
@@ -127,22 +87,9 @@ export function MemberRecordMobile() {
             name="Pineapple"
             role={t("member.role04")}
             direction={t("member.direction04")}
-            {...memberTextLayout(
-              {
-                headerClassName: "left-[4.834%] top-[calc(83.233%-18px)]",
-                dividerClassName: "left-[4.834%] top-[calc(87.651%-18px)]",
-                nameClassName: "left-[4.834%] top-[calc(89.793%-18px)]",
-                directionClassName: "left-[4.834%] top-[calc(93.675%-18px)]",
-                actionsClassName: "left-[4.834%] top-[95.85%]",
-              },
-              {
-                headerClassName: "left-[4.834%] top-[calc(83.233%-18px)]",
-                dividerClassName: "left-[4.834%] top-[calc(87.651%-18px)]",
-                nameClassName: "left-[4.834%] top-[calc(89.793%-18px)]",
-                directionClassName: "left-[4.834%] top-[calc(93.675%-18px)]",
-                actionsClassName: "left-[4.834%] top-[95.85%]",
-              },
-            )}
+            center="88.454%"
+            left="4.834%"
+            right="calc(0.6% + 16px)"
             fillClassName="left-[0.302%] top-[77.175%] h-[22.557%] w-[99.094%]"
           />
         </div>
@@ -156,25 +103,17 @@ function MobileMemberProfile({
   name,
   role,
   direction,
-  headerClassName,
-  dividerClassName,
-  nameClassName,
-  directionClassName,
-  actionsClassName,
+  center,
+  left,
+  right,
   fillClassName,
 }: MobileMemberProfileProps) {
   const { locale, t } = useLocale();
   const separator = locale === "en" ? " _ " : "_";
   const idLabel = `${separator}${identifier}${separator}`;
-  // 调查方向右缘距格子白线 16px：01/02 按斜边在该行的位置，03/04 按右边框。
-  const enDirectionRight =
-    identifier === "01"
-      ? "right-[calc(18.7%+16px)]"
-      : identifier === "02"
-        ? "right-[calc(13.2%+16px)]"
-        : "right-[calc(0.6%+16px)]";
-  const enDirectionWrap =
-    identifier === "04" ? "whitespace-pre-line" : "";
+  const header = `${t("member.investigator")}${idLabel}${role}`;
+  // 整块中线对齐格子。行距沿用原稿：标题到虚线 4.418%，虚线到姓名 2.142%，姓名到方向 3.882%（相对网格高度）。
+  const anchor = `calc(${center} - (10.442% + 18px) / 2)`;
 
   return (
     <div
@@ -187,40 +126,35 @@ function MobileMemberProfile({
         aria-label={`${name} ${t("member.investigator")}`}
         className={`pointer-events-auto absolute bg-transparent focus-visible:ring-2 focus-visible:ring-grey-300 ${fillClassName}`}
       />
-      <p
-        className={`absolute z-10 whitespace-nowrap ${headerClassName}`}
-      >
-        {t("member.investigator")}
-        <span>{idLabel}</span>
-        {role}
+      <p className="absolute z-10 whitespace-nowrap" style={{ top: anchor, left }}>
+        {header}
       </p>
       <span
-        className={`absolute z-10 border-t border-dashed border-white/30 ${dividerClassName}`}
+        className="absolute z-10 border-t border-dashed border-white/30"
+        style={{ top: `calc(${anchor} + 4.418%)`, left }}
         aria-hidden="true"
       >
-        <span className="invisible whitespace-nowrap">
-          {t("member.investigator")}
-          <span>{idLabel}</span>
-          {role}
-        </span>
+        <span className="invisible whitespace-nowrap">{header}</span>
       </span>
-      <p
-        className={`absolute z-10 whitespace-nowrap ${nameClassName}`}
-      >
+      <p className="absolute z-10 whitespace-nowrap" style={{ top: `calc(${anchor} + 6.56%)`, left }}>
         {t("member.namePrefix")}
         {name}
       </p>
       <p
         className={`absolute z-10 ${
-          locale === "en"
-            ? `${enDirectionRight} ${enDirectionWrap}`
-            : "whitespace-nowrap"
-        } ${directionClassName}`}
+          locale === "en" ? "whitespace-pre-line" : "whitespace-nowrap"
+        }`}
+        style={{
+          top: `calc(${anchor} + 10.442%)`,
+          left,
+          maxWidth: `calc(100% - ${left} - ${right})`,
+        }}
       >
         {direction}
       </p>
       <div
-        className={`absolute z-10 flex items-center gap-4 whitespace-nowrap ${actionsClassName} ${MEMBER_PROFILE_ACTIONS_VISIBLE ? "" : "hidden"}`}
+        className={`absolute z-10 flex items-center gap-4 whitespace-nowrap ${MEMBER_PROFILE_ACTIONS_VISIBLE ? "" : "hidden"}`}
+        style={{ top: `calc(${anchor} + 14.324%)`, left }}
       >
         <MobileProfileAction label={t("member.portfolio")} />
         <MobileProfileAction label={t("member.contactMe")} />

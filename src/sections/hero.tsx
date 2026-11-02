@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -102,24 +102,38 @@ export function Hero() {
   // GSAP 闭包只建一次，播放地址走 ref，避免闭包钉死在首帧的空地址上。
   const videoSrcRef = useRef(DESKTOP_VIDEO_SRC);
   const { locale, t } = useLocale();
-  // 分页器默认锁定；停在档案盒页后解锁，由滚动拦截器决定是否起播视频
-  const { setNavigationLocked, setIntroOverlayActive, registerScrollInterceptor } =
-    useSectionPager();
+  // 分页器默认锁定；停在档案盒页后解锁，由滚动拦截器决定是否起播视频。
+  // 带后缀打开时不播加载幕，标题直接呈现。
+  const {
+    playIntro,
+    setNavigationLocked,
+    setIntroOverlayActive,
+    registerScrollInterceptor,
+  } = useSectionPager();
   const firstFrameRef = useRef<HTMLDivElement>(null);
   const titleZoneRef = useRef<HTMLDivElement>(null);
   const scrollHintRef = useRef<HTMLButtonElement>(null);
   const skipRef = useRef<HTMLButtonElement>(null);
   const introPhaseRef = useRef<"loading" | "holding" | "playing" | "done">(
-    "loading",
+    playIntro ? "loading" : "done",
   );
   const startIntroVideoRef = useRef<(() => void) | null>(null);
   const skipIntroVideoRef = useRef<(() => void) | null>(null);
   // 加载序幕只出现一次：退场动画结束后整体卸载，释放其 DOM 与图片内存
-  const [loaderDismissed, setLoaderDismissed] = useState(false);
+  const [loaderDismissed, setLoaderDismissed] = useState(!playIntro);
   // 档案盒静帧只在加载层开始揭开时挂上，避免加载期间多下一次看不见的图
   const [showArchiveStill, setShowArchiveStill] = useState(false);
   // 开场流程结束后档案盒首帧与视频层不再复用，一并卸载释放内存
-  const [introDone, setIntroDone] = useState(false);
+  const [introDone, setIntroDone] = useState(!playIntro);
+
+  useLayoutEffect(() => {
+    if (playIntro) return;
+    const root = container.current;
+    if (!root) return;
+    setSondavenVisible(root);
+    const titles = root.querySelector<HTMLElement>("[data-hero-titles]");
+    if (titles) gsap.set(titles, { autoAlpha: 1 });
+  }, [playIntro]);
 
   useEffect(() => {
     preloadRef.current = preload;
@@ -613,7 +627,10 @@ export function Hero() {
       )}
 
       {/* 最终首屏内容：Figma 884:2070，标题组与目录左侧光学对齐 */}
-      <div data-hero-titles className="invisible absolute inset-0 z-30 opacity-0">
+      <div
+        data-hero-titles
+        className={`absolute inset-0 z-30 ${playIntro ? "invisible opacity-0" : ""}`}
+      >
         {/* 红框：导航下沿到玻璃板上沿（尾帧约 27%）。标题整组在框内居中 */}
         <div
           ref={titleZoneRef}

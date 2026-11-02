@@ -19,10 +19,15 @@ import {
 import { AsciiCurtain } from "@/components/effects/ascii-curtain";
 import { useLocale } from "@/components/providers/locale-provider";
 import { SharedSectionBackgrounds } from "@/components/ui/shared-section-backgrounds";
+import { usePagePathSync } from "@/hooks/use-page-path";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import type { CurtainPhase } from "@/lib/ascii-curtain";
 import type { MessageKey } from "@/lib/i18n/messages";
 import type { NavVariant } from "@/lib/nav-variants";
+import {
+  resolvePathname,
+  screenIndexForLocation,
+} from "@/lib/page-paths";
 import type { SectionBackgroundKey } from "@/lib/section-backgrounds";
 
 /** 滚轮累计阈值（换算为像素后）；过低易误触，过高则 Safari 行模式/短手势切不动 */
@@ -87,6 +92,11 @@ type SectionPagerValue = {
   goToPrevScreen: () => void;
   /** 首屏序幕等场景下暂时禁止切屏 */
   setNavigationLocked: (locked: boolean) => void;
+  /** 仅根路径 / 播放加载幕；带后缀的分享链接直接进入对应屏 */
+  playIntro: boolean;
+  /** 视觉调查档案里打开的作品；null 表示抽屉关闭 */
+  workRouteIndex: number | null;
+  setWorkRouteIndex: (workIndex: number | null) => void;
   /**
    * 不切换屏幕，但走一次完整的幕布过场：
    * 幕布铺满视口时执行 onCovered（如重置首屏序幕），随后幕布消散。
@@ -123,6 +133,8 @@ export function useSectionPager() {
 
 type SectionPagerProviderProps = {
   screens: PagerScreen[];
+  /** 服务端读到的首个地址，决定从哪一屏、哪件作品开始 */
+  initialPath?: string;
   /** 全局固定 UI（导航、切屏提示等），渲染在分屏舞台之上 */
   children?: ReactNode;
 };
@@ -131,17 +143,33 @@ type SectionPagerProviderProps = {
  * 整屏分页：页面不滚动，滚轮、键盘与触摸都被接管为“切一屏”。
  * 每次切屏先由 ASCII 幕布铺满视口，铺满后替换分屏内容，再让幕布消散。
  */
+const GALLERY_SCREEN_KEY = "archive-ga-004";
+
 export function SectionPagerProvider({
   screens,
+  initialPath = "/",
   children,
 }: SectionPagerProviderProps) {
   const reducedMotion = useReducedMotion();
   const { locale, t } = useLocale();
-  const [index, setIndex] = useState(0);
+  const initialLocation = resolvePathname(initialPath);
+  const playIntro =
+    initialLocation === null || initialLocation.type === "intro";
+  const initialWork =
+    initialLocation?.type === "work" ? initialLocation.workIndex : null;
+  const [index, setIndex] = useState(() =>
+    screenIndexForLocation(
+      initialLocation,
+      screens.map((screen) => screen.key),
+    ),
+  );
+  const [workRouteIndex, setWorkRouteIndex] = useState<number | null>(
+    initialWork,
+  );
   const [phase, setPhase] = useState<CurtainPhase>("idle");
-  const [navigationLocked, setNavigationLockedState] = useState(true);
-  // 首屏序幕遮罩一开始就在场，由 Hero 在遮罩卸载时置 false
-  const [introOverlayActive, setIntroOverlayActive] = useState(true);
+  const [navigationLocked, setNavigationLockedState] = useState(playIntro);
+  // 根路径才盖加载幕；分享链接直接看到目标屏
+  const [introOverlayActive, setIntroOverlayActive] = useState(playIntro);
 
   const indexRef = useRef(index);
   const phaseRef = useRef(phase);
@@ -149,14 +177,16 @@ export function SectionPagerProvider({
   const pendingIndexRef = useRef<number | null>(null);
   // 幕布铺满时要执行的屏内动作（不换屏，如重播首屏序幕）
   const pendingActionRef = useRef<(() => void) | null>(null);
-  // 首屏序幕先占住锁，序幕结束时再放行
-  const lockedRef = useRef(true);
+  // 根路径的加载幕先占住锁，序幕结束时再放行；分享链接一开始就能翻页
+  const lockedRef = useRef(playIntro);
   const cooldownUntilRef = useRef(0);
   const stageRef = useRef<HTMLDivElement>(null);
+  const screenKeysRef = useRef(screens.map((screen) => screen.key));
 
   useEffect(() => {
     countRef.current = screens.length;
-  }, [screens.length]);
+    screenKeysRef.current = screens.map((screen) => screen.key);
+  }, [screens]);
 
   useEffect(() => {
     indexRef.current = index;
@@ -217,6 +247,16 @@ export function SectionPagerProvider({
     setPhase("cover");
   }, []);
 
+  usePagePathSync({
+    screens,
+    index,
+    workRouteIndex,
+    setWorkRouteIndex,
+    introOverlayActive,
+    playIntro,
+    goToScreen,
+  });
+
   const runWithCurtain = useCallback((onCovered: () => void) => {
     if (phaseRef.current !== "idle") return false;
     if (performance.now() < cooldownUntilRef.current) return false;
@@ -258,6 +298,10 @@ export function SectionPagerProvider({
       pendingIndexRef.current = null;
       indexRef.current = target;
       setIndex(target);
+      // 切出视觉调查档案时收起作品地址，后退再进时由历史记录重新打开
+      if (screenKeysRef.current[target] !== GALLERY_SCREEN_KEY) {
+        setWorkRouteIndex(null);
+      }
     }
     const action = pendingActionRef.current;
     if (action) {
@@ -611,6 +655,9 @@ export function SectionPagerProvider({
       goToNextScreen,
       goToPrevScreen,
       setNavigationLocked,
+      playIntro,
+      workRouteIndex,
+      setWorkRouteIndex,
       introOverlayActive,
       setIntroOverlayActive,
       runWithCurtain,
@@ -627,6 +674,8 @@ export function SectionPagerProvider({
       goToNextScreen,
       goToPrevScreen,
       setNavigationLocked,
+      playIntro,
+      workRouteIndex,
       introOverlayActive,
       runWithCurtain,
       registerTopOverscroll,

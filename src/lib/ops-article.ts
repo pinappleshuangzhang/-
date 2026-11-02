@@ -11,6 +11,10 @@ export type OpsProse = {
   title?: string;
   subtitle?: string;
   paragraphs: string[];
+  /** 插在段落之后的列表，仍属于同一标题块 */
+  bullets?: string[];
+  /** 列表之后、配图之前的段落 */
+  tail?: string[];
 };
 
 export type OpsQuestions = {
@@ -26,7 +30,34 @@ export type OpsShifts = {
   outro: string[];
 };
 
-export type OpsBlock = OpsImage | OpsProse | OpsQuestions | OpsShifts;
+export type OpsSteps = {
+  kind: "steps";
+  items: { title: string; body: string }[];
+};
+
+export type OpsPointImage = {
+  src: string;
+  srcEn: string;
+  alt: string;
+};
+
+/** 小节内的小标题、正文，以及紧跟其后的配图 */
+export type OpsPoints = {
+  kind: "points";
+  items: {
+    title: string;
+    paragraphs: string[];
+    image?: OpsPointImage;
+  }[];
+};
+
+export type OpsBlock =
+  | OpsImage
+  | OpsProse
+  | OpsQuestions
+  | OpsShifts
+  | OpsSteps
+  | OpsPoints;
 
 const cover = "/archive-ga-004/ops-cover.webp";
 

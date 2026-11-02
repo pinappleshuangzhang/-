@@ -7,30 +7,27 @@ import {
   type ViscoseMobileStageHandle,
 } from "@/components/ui/viscose-mobile-stage";
 import type { ViscoseMobileCard } from "@/components/ui/viscose-mobile-work-grid";
-import {
-  SURVEY_CATEGORIES,
-  SURVEY_WORK_BY_CATEGORY,
-} from "@/lib/survey-details";
+import { SURVEY_WORKS } from "@/lib/survey-details";
 import type { ViscoseCarouselItem } from "@/lib/viscose-carousel-items";
 
 /** chip 0 = 全部项目，1–4 = 网站 / 品牌 / 创意 / 动态；进入作品屏默认全部项目 */
 const INITIAL_TAB = 0;
 
 /**
- * 作品归属（categoryIndex：0 苹果时刻 / 1 未来创意 / 2 Easycash）：
+ * 作品归属（0 苹果时刻 / 1 未来创意 / 2 Easycash / 3 实战笔记 / 4 九周年 / 5 跨地区架构）：
  * 1 网站设计：苹果时刻、Easycash
  * 2 品牌设计：苹果时刻、未来创意、Easycash
  * 3 创意设计：苹果时刻、未来创意、Easycash
  * 4 动态设计：苹果时刻、未来创意
- * 5 实战笔记：Design AI Ops
+ * 5 实战笔记：Design AI Ops、Easycash 9 周年、金融网站跨地区架构
  */
 const MOBILE_TAB_WORKS: readonly number[][] = [
-  [0, 1, 2, 3],
+  [0, 1, 2, 3, 4, 5],
   [0, 2],
   [0, 1, 2],
   [0, 1, 2],
   [0, 1],
-  [3],
+  [3, 4, 5],
 ];
 
 type ViscoseMobileGalleryProps = {
@@ -42,8 +39,7 @@ type ViscoseMobileGalleryProps = {
 function useMobileCards(items: ViscoseCarouselItem[]): ViscoseMobileCard[] {
   const { t } = useLocale();
   return items.map((item, categoryIndex) => {
-    const category = SURVEY_CATEGORIES[categoryIndex];
-    const work = category ? SURVEY_WORK_BY_CATEGORY[category.code] : null;
+    const work = SURVEY_WORKS[categoryIndex] ?? null;
     return {
       title: work ? t(work.titleKey) : item.title,
       description: work ? t(work.descriptionKey) : "",
