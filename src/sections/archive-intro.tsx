@@ -142,7 +142,7 @@ export function ArchiveIntro() {
     getMobileViewportServerSnapshot,
   );
   const isActive = useScreenActive();
-  const { navigationLocked } = useSectionPager();
+  const { navigationLocked, phase } = useSectionPager();
   const { t, locale } = useLocale();
   const isEnglish = locale === "en";
 
@@ -168,7 +168,13 @@ export function ArchiveIntro() {
         setSondavenVisible(copy);
         return;
       }
+      // 切屏时 isActive 在幕布底下就变了。等幕布揭完再逐词，否则揭开时字已经在场上。
       if (!isActive) {
+        hasPlayedCopyEntranceRef.current = false;
+        setSondavenHidden(copy);
+        return;
+      }
+      if (phase !== "idle") {
         if (!hasPlayedCopyEntranceRef.current) setSondavenHidden(copy);
         return;
       }
@@ -181,7 +187,7 @@ export function ArchiveIntro() {
       playSondavenReveal(copy);
     },
     {
-      dependencies: [isActive, isMobileViewport, reducedMotion, locale],
+      dependencies: [isActive, phase, isMobileViewport, reducedMotion, locale],
       scope: container,
     },
   );

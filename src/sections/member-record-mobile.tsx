@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useLayoutEffect, useRef } from "react";
 import { useLocale } from "@/components/providers/locale-provider";
 import { MEMBER_PROFILE_ACTIONS_VISIBLE } from "@/lib/member-record-cells";
 
@@ -19,11 +20,12 @@ type MobileMemberProfileProps = {
 
 /**
  * 第四屏移动端。银色边框在 member-record-mobile.webp（951×2048）里，
- * 背景用 object-contain object-top，短视口整幅落进屏幕，底部不再被裁掉。
- * 网格盒用同一套容纳盒，不跟安全区走。
+ * 背景用 object-cover object-top。网格盒落在同一裁切坐标系上，
+ * 不跟安全区走——12 Pro 刘海和 14 Pro 灵动岛会把固定像素顶距拉开。
  * 内沿取自图内暗槽：左 70、右 879、顶 232，底到图底。
+ * 短视口里裁切盒比屏幕高，网格高度收到可视区域底边，四格一起压进屏幕。
  * 圆角用网格 viewBox 的 36：横半径相对宽、竖半径相对高，
- * 等比缩放后仍是正圆，和金属内沿贴合。
+ * 整机比例下仍是正圆，和金属内沿贴合。
  */
 const FRAME_CORNER = {
   borderRadius:
@@ -35,7 +37,7 @@ export function MemberRecordMobile() {
 
   return (
     <div className="absolute inset-0 z-10 md:hidden">
-      <div className="pointer-events-none absolute left-1/2 top-0 aspect-[951/2048] w-[min(100%,calc(100dvh*951/2048))] -translate-x-1/2">
+      <div className="pointer-events-none absolute left-1/2 top-0 aspect-[951/2048] w-[max(100%,calc(100dvh*951/2048))] -translate-x-1/2">
         <div
           data-member-grid
           className="absolute *:opacity-0"
@@ -44,6 +46,7 @@ export function MemberRecordMobile() {
             top: "calc(100% * 232 / 2048)",
             width: "calc(100% * 809 / 951)",
             height: "calc(100% * 1816 / 2048)",
+            maxHeight: "calc(100dvh - 100% * 232 / 2048)",
           }}
         >
           <div
@@ -128,14 +131,62 @@ function MobileMemberProfile({
   fillClassName,
 }: MobileMemberProfileProps) {
   const { locale, t } = useLocale();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const directionRef = useRef<HTMLParagraphElement>(null);
   const separator = locale === "en" ? " _ " : "_";
   const idLabel = `${separator}${identifier}${separator}`;
   const header = `${t("member.investigator")}${idLabel}${role}`;
   // 整块中线对齐格子。行距沿用原稿：标题到虚线 4.418%，虚线到姓名 2.142%，姓名到方向 3.882%（相对网格高度）。
   const anchor = `calc(${center} - (10.442% + 18px) / 2)`;
 
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    const directionEl = directionRef.current;
+    if (!root || !directionEl) return;
+
+    const fitDirection = () => {
+      directionEl.style.maxHeight = "";
+      directionEl.style.overflow = "";
+      const lineHeight = Number.parseFloat(
+        getComputedStyle(directionEl).lineHeight,
+      );
+      if (!Number.isFinite(lineHeight) || lineHeight <= 0) return;
+      if (directionEl.scrollHeight <= lineHeight + 1) return;
+
+      const secondLineBottom =
+        directionEl.getBoundingClientRect().top + lineHeight * 2;
+      const gridBottom =
+        root.closest("[data-member-grid]")?.getBoundingClientRect().bottom ??
+        Number.POSITIVE_INFINITY;
+      const cellBottom =
+        root.querySelector("button")?.getBoundingClientRect().bottom ??
+        Number.POSITIVE_INFINITY;
+      const nextHeader = root.nextElementSibling?.querySelector("p");
+      const nextTop =
+        nextHeader?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
+      if (secondLineBottom > Math.min(gridBottom, cellBottom, nextTop) - 1) {
+        directionEl.style.maxHeight = `${lineHeight}px`;
+        directionEl.style.overflow = "hidden";
+      }
+    };
+
+    fitDirection();
+    const grid = root.closest("[data-member-grid]");
+    const observer = new ResizeObserver(fitDirection);
+    if (grid) observer.observe(grid);
+    let cancelled = false;
+    void document.fonts.ready.then(() => {
+      if (!cancelled) fitDirection();
+    });
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, [direction, locale]);
+
   return (
     <div
+      ref={rootRef}
       className={`group pointer-events-none absolute inset-0 font-serif-sc text-12 leading-[18px] text-white ${
         locale === "en" ? "font-normal" : "font-light"
       }`}
@@ -160,6 +211,7 @@ function MobileMemberProfile({
         {name}
       </p>
       <p
+        ref={directionRef}
         className={`absolute z-10 ${
           locale === "en" ? "whitespace-pre-line" : "whitespace-nowrap"
         }`}

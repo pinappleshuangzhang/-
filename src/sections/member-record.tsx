@@ -184,7 +184,7 @@ export function MemberRecord() {
           fill
           sizes="100vw"
           unoptimized
-          className="object-contain object-top"
+          className="object-cover object-top"
         />
         <MemberRecordMobile />
       </div>
