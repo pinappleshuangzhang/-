@@ -17,7 +17,7 @@ type ViscoseMobileWorkGridProps = {
 
 /**
  * 一类多件 / 所有项目：两列小卡（Figma 1269:1720）。
- * 图 177×111（1.6:1），标题 12 衬线，简介 10 / 三行截断。
+ * 图 177×111（1.6:1）。标题固定两行高，简介因此同一水平线起排，并最多三行。
  */
 export function ViscoseMobileWorkGrid({
   cards,
@@ -50,7 +50,7 @@ export function ViscoseMobileWorkGrid({
               data-mobile-copy=""
               className="flex w-full flex-col items-start gap-2 opacity-0"
             >
-              <span className="font-bodoni text-12 font-medium capitalize leading-normal text-grey-400">
+              <span className="line-clamp-2 h-9 w-full font-bodoni text-12 font-medium capitalize leading-[18px] text-grey-400">
                 {card.title}
               </span>
               {card.description ? (

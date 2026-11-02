@@ -222,7 +222,7 @@ function WorkCaption({
       data-survey-keep=""
       data-sd-media
       data-sd-delay={revealDelay}
-      className={`overflow-hidden ${className ?? ""}`}
+      className={`cursor-auto overflow-hidden ${className ?? ""}`}
     >
       <div
         data-sd-media-inner

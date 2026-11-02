@@ -123,7 +123,7 @@ function ArticleBlock({
 
   if (block.kind === "questions") {
     return (
-      <div className={`flex flex-col gap-5 ${className}`}>
+      <div className={`flex cursor-auto flex-col gap-5 ${className}`}>
         <p className={bodyClass}>{block.intro}</p>
         <div className="flex flex-col">
           {block.items.map((item) => (
@@ -140,7 +140,7 @@ function ArticleBlock({
   if (block.kind === "points") {
     const offsets = pointImageOffsets(block.items);
     return (
-      <div className={`flex flex-col gap-5 ${className}`}>
+      <div className={`flex cursor-auto flex-col gap-5 ${className}`}>
         {block.items.map((item, itemIndex) => (
           <div key={`${itemIndex}-${item.title}`} className="flex flex-col gap-3">
             <p className={pointTitleClass}>{item.title}</p>
@@ -164,7 +164,7 @@ function ArticleBlock({
 
   if (block.kind === "shifts" || block.kind === "steps") {
     return (
-      <div className={`flex flex-col gap-5 ${className}`}>
+      <div className={`flex cursor-auto flex-col gap-5 ${className}`}>
         {block.items.map((item) => (
           <div key={item.title} className="flex flex-col gap-3">
             <p className={pointTitleClass}>{item.title}</p>
@@ -185,7 +185,7 @@ function ArticleBlock({
   const showSubtitle = block.subtitle && block.subtitle !== block.title;
   const kickerHasHan = block.kicker ? /[\u3400-\u9fff]/.test(block.kicker) : false;
   return (
-    <div className={`flex flex-col gap-8 ${className}`}>
+    <div className={`flex cursor-auto flex-col gap-8 ${className}`}>
       {block.kicker || block.title ? (
         <div className="flex flex-col gap-3">
           {block.kicker ? (

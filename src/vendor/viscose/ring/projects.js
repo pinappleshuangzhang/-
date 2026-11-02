@@ -40,9 +40,9 @@ const PROJECT_SEQUENCE = [
   },
   {
     file: "archive-ga-004/region-ring.webp",
-    name: "金融网站跨地区架构",
-    listLabel: "Shared Website Architecture",
-    type: "金融网站跨地区架构",
+    name: "金融产品网站重构，打造跨地区通用架构",
+    listLabel: "A Shared Architecture Across Markets",
+    type: "金融产品网站重构，打造跨地区通用架构",
     year: "2026",
   },
 ];

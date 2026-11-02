@@ -59,7 +59,7 @@ export const VISCOSE_CAROUSEL_ITEMS: ViscoseCarouselItem[] = [
     id: "survey-f",
     src: "/archive-ga-004/region-ring.webp",
     alt: "钉在浅色墙面上的金融网站架构铭牌，画面中有色板、变量、组件列表、笔记本电脑与手机界面",
-    title: "Shared Website Architecture",
+    title: "A Shared Architecture Across Markets",
     discipline: "Field Notes",
     year: "2026",
   },

@@ -57,7 +57,7 @@ export function MemberRecordMobile() {
             name="South"
             role={t("member.role01")}
             direction={t("member.direction01")}
-            center="17.47%"
+            center="calc(17.47% - 100% * 20 / 747)"
             left="4.834%"
             right="calc(18.7% + 16px)"
             fillClassName="left-[0.604%] top-[0.268%] h-[34.404%] w-[76.888%]"

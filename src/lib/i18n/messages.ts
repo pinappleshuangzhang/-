@@ -353,7 +353,7 @@ const zh: Messages = {
   "gallery.category.website": "Easycash 数字品牌视觉重塑",
   "gallery.category.notes": "Design AI Ops 实战笔记",
   "gallery.category.anniversary": "Easycash 9周年视觉系统",
-  "gallery.category.region": "金融网站跨地区架构",
+  "gallery.category.region": "金融产品网站重构，打造跨地区通用架构",
   "gallery.category.visual": "视觉设计",
   "gallery.category.motion": "动态设计",
   "gallery.mobile.category.all": "全部项目",
@@ -525,7 +525,7 @@ const zh: Messages = {
     "本次视觉设计围绕 Easycash 9 周年主题“Easycash 9 Years Moving Forward Together”（与你一同前行）展开。",
   "survey.anniversary.heroAlt":
     "文章封面以笔记本电脑样机展示 Easycash 九周年羽毛球场主题首页，画面中包含“9TH Anniversary”“2026”字样与品牌标识元素。",
-  "survey.region.title": "金融网站跨地区架构",
+  "survey.region.title": "金融产品网站重构，打造跨地区通用架构",
   "survey.region.description":
     "本次重构建立了一套支持多地区业务的网站通用架构，覆盖页面结构、视觉与交互、设计组件、开发模块及文案内容交付规则。各地区基于公共基础完成品牌、业务与本地内容适配。",
   "survey.region.heroAlt":
@@ -672,7 +672,7 @@ const en: Messages = {
   "gallery.category.website": "Easycash Digital Visual Reframing",
   "gallery.category.notes": "Design AI Ops Field Notes",
   "gallery.category.anniversary": "Easycash 9th Anniversary Visual System",
-  "gallery.category.region": "Shared Website Architecture",
+  "gallery.category.region": "A Shared Architecture Across Markets",
   "gallery.category.visual": "Visual Design",
   "gallery.category.motion": "Motion Graphics",
   "gallery.mobile.category.all": "All",
@@ -845,7 +845,7 @@ const en: Messages = {
     "This visual design was developed around Easycash’s 9th anniversary theme, “Easycash 9 Years Moving Forward Together.”",
   "survey.anniversary.heroAlt":
     "Article cover: a laptop mockup of the Easycash 9th anniversary badminton-court homepage, with “9TH Anniversary,” “2026,” and brand marks.",
-  "survey.region.title": "Shared Website Architecture",
+  "survey.region.title": "A Shared Architecture Across Markets",
   "survey.region.description":
     "This rebuild established a shared website architecture for businesses across markets. It covers page structure, visual design and interaction, design components, development modules, and the rules for delivering copy. Each market adapts brand, business, and local content on that common base.",
   "survey.region.heroAlt":
