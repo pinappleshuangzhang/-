@@ -1,16 +1,24 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { useLocale } from "@/components/providers/locale-provider";
 import { useScreenActive } from "@/components/providers/section-pager-provider";
 import { CopiedBubble, CopiedToast } from "@/components/ui/copied-bubble";
 import { FlipHoverButton } from "@/components/ui/flip-hover-button";
+import { pickSource } from "@/components/effects/alpha-scrub-video";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { ContactMachine } from "@/sections/contact-machine";
 import { SplitWords } from "@/components/ui/split-words";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { useCopyTarget } from "@/lib/copy-text";
 
+const ICON_1_WEBM = "/contact-survey/survey-icon-1-alpha.webm";
+const ICON_1_HEVC = "/contact-survey/survey-icon-1-alpha-hevc.mp4";
+const ICON_2_WEBM = "/contact-survey/survey-icon-2-alpha.webm";
+const ICON_2_HEVC = "/contact-survey/survey-icon-2-alpha-hevc.mp4";
+const ICON_3_WEBM = "/contact-survey/survey-icon-3-alpha.webm";
+const ICON_3_HEVC = "/contact-survey/survey-icon-3-alpha-hevc.mp4";
 const CONTACT_EMAIL = "grava.6.67430@gmail.com";
 const CONTACT_PHONE = "+86 13016116021";
 
@@ -54,18 +62,24 @@ export function ContactSurvey() {
               <SurveyIcon
                 src="/contact-survey/survey-icon-1.webp"
                 load={mediaReady}
+                webm={ICON_1_WEBM}
+                hevc={ICON_1_HEVC}
               />
             </SurveyLine>
             <SurveyLine delay="0.35" after={t("contactSurvey.line2")}>
               <SurveyIcon
                 src="/contact-survey/survey-icon-2.webp"
                 load={mediaReady}
+                webm={ICON_2_WEBM}
+                hevc={ICON_2_HEVC}
               />
             </SurveyLine>
             <SurveyLine delay="0.4" before={t("contactSurvey.line3")}>
               <SurveyIcon
                 src="/contact-survey/survey-icon-3.webp"
                 load={mediaReady}
+                webm={ICON_3_WEBM}
+                hevc={ICON_3_HEVC}
               />
             </SurveyLine>
             <SurveyLine delay="0.45" before={t("contactSurvey.line4")} />
@@ -162,20 +176,79 @@ function SurveyLine({
   );
 }
 
-/** 括号内的图标插槽：图标可超出行高，不参与行盒撑高 */
-function GapSlot({ children }: { children: ReactNode }) {
+/** 括号内的图标插槽：图标可超出行高，不参与行盒撑高。raised 时压过同一屏的正文。 */
+function GapSlot({
+  children,
+  raised = false,
+}: {
+  children: ReactNode;
+  raised?: boolean;
+}) {
   return (
-    <span className="sd-word relative inline-block h-[1em] w-7 align-middle opacity-0 md:w-[calc(var(--su)*36)]">
+    <span
+      className={`sd-word relative inline-block h-[1em] w-7 align-middle opacity-0 md:w-[calc(var(--su)*36)] ${raised ? "z-20" : ""}`}
+    >
       {children}
     </span>
   );
 }
 
-/** 括号内图标：源图 108×108，移动端 26，桌面稿面 28 */
-function SurveyIcon({ src, load }: { src: string; load: boolean }) {
+/** 括号内图标：源图 108×108，移动端 26，桌面稿面 28。传入动图时，悬停从静帧尺寸放大到 1.5 倍并渐显。 */
+function SurveyIcon({
+  src,
+  load,
+  webm,
+  hevc,
+}: {
+  src: string;
+  load: boolean;
+  webm?: string;
+  hevc?: string;
+}) {
+  const reduced = useReducedMotion();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [hover, setHover] = useState(false);
+  const showMotion = hover && Boolean(webm) && !reduced;
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !webm || !hevc) return;
+    const next = pickSource(webm, hevc);
+    if (video.src.endsWith(next)) return;
+    video.src = next;
+  }, [load, webm, hevc]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (showMotion) {
+      if (video.readyState > 0) video.currentTime = 0;
+      void video.play().catch(() => {});
+      return;
+    }
+    video.pause();
+    const reset = () => {
+      if (video.readyState > 0) video.currentTime = 0;
+    };
+    if (reduced) {
+      reset();
+      return;
+    }
+    const onEnd = (event: TransitionEvent) => {
+      if (event.propertyName !== "opacity") return;
+      reset();
+    };
+    video.addEventListener("transitionend", onEnd);
+    return () => video.removeEventListener("transitionend", onEnd);
+  }, [showMotion, reduced]);
+
   return (
-    <GapSlot>
-      <span className="absolute left-1/2 top-1/2 block size-[26px] -translate-x-1/2 -translate-y-1/2 md:size-[calc(var(--su)*28)]">
+    <GapSlot raised={Boolean(webm)}>
+      <span
+        className="absolute left-1/2 top-1/2 block size-[26px] -translate-x-1/2 -translate-y-1/2 md:size-[calc(var(--su)*28)]"
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+      >
         {load ? (
           <Image
             src={src}
@@ -183,7 +256,21 @@ function SurveyIcon({ src, load }: { src: string; load: boolean }) {
             fill
             unoptimized
             sizes="(max-width: 767px) 26px, 28px"
-            className="object-contain"
+            className={`object-contain transition-opacity duration-500 ease-out motion-reduce:transition-none ${
+              showMotion ? "opacity-0" : hover && webm ? "scale-[1.5]" : ""
+            }`}
+          />
+        ) : null}
+        {load && webm && hevc ? (
+          <video
+            ref={videoRef}
+            className={`absolute top-1/2 left-1/2 z-10 size-full max-w-none origin-center -translate-x-1/2 -translate-y-1/2 object-contain transition-[opacity,scale] duration-500 ease-out motion-reduce:transition-none ${
+              showMotion ? "scale-150 opacity-100" : "pointer-events-none scale-100 opacity-0"
+            }`}
+            muted
+            playsInline
+            loop
+            preload="none"
           />
         ) : null}
       </span>

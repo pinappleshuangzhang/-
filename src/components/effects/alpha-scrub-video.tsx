@@ -29,7 +29,7 @@ type AlphaScrubVideoProps = {
 };
 
 /** WebKit（Safari 与所有 iOS 浏览器）不支持 VP9 alpha，走 HEVC；其余走 WebM */
-function pickSource(srcWebm: string, srcHevc: string): string {
+export function pickSource(srcWebm: string, srcHevc: string): string {
   if (typeof navigator === "undefined") return srcWebm;
   const ua = navigator.userAgent;
   const isIos =

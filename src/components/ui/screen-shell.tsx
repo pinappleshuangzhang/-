@@ -11,7 +11,7 @@ export const ScreenShell = forwardRef<HTMLElement, ScreenShellProps>(
     return (
       <section
         ref={ref}
-        className={`relative h-[100dvh] min-h-0 overflow-hidden md:h-full md:min-h-[700px] ${className ?? ""}`}
+        className={`relative h-[100dvh] min-h-0 overflow-hidden md:h-full ${className ?? ""}`}
         {...props}
       >
         {children}

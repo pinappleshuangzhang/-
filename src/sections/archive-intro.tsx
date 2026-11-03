@@ -142,7 +142,7 @@ export function ArchiveIntro() {
     getMobileViewportServerSnapshot,
   );
   const isActive = useScreenActive();
-  const { navigationLocked, phase } = useSectionPager();
+  const { navigationLocked } = useSectionPager();
   const { t, locale } = useLocale();
   const isEnglish = locale === "en";
 
@@ -168,26 +168,21 @@ export function ArchiveIntro() {
         setSondavenVisible(copy);
         return;
       }
-      // 切屏时 isActive 在幕布底下就变了。等幕布揭完再逐词，否则揭开时字已经在场上。
       if (!isActive) {
         hasPlayedCopyEntranceRef.current = false;
         setSondavenHidden(copy);
         return;
       }
-      if (phase !== "idle") {
-        if (!hasPlayedCopyEntranceRef.current) setSondavenHidden(copy);
-        return;
-      }
-      if (hasPlayedCopyEntranceRef.current) {
-        setSondavenVisible(copy);
-        return;
-      }
+      if (hasPlayedCopyEntranceRef.current) return;
 
+      // 跟切屏同一时刻起播。不要等幕布 phase 回到 idle：
+      // Safari 画幕布会卡住主线程，idle 来得晚，字就会空一截。
+      // phase 也不能放进 dependencies，否则揭完幕布时 useGSAP 会把这条时间轴回滚掉。
       hasPlayedCopyEntranceRef.current = true;
       playSondavenReveal(copy);
     },
     {
-      dependencies: [isActive, phase, isMobileViewport, reducedMotion, locale],
+      dependencies: [isActive, isMobileViewport, reducedMotion, locale],
       scope: container,
     },
   );
