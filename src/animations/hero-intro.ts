@@ -372,10 +372,12 @@ type HeroVideoSequenceOptions = {
   onRevealStart?: () => void;
   onComplete: () => void;
   onFallback: () => void;
+  /** 桌面尾静帧渐入完成，可以卸掉视频层 */
+  onLastFrameIn?: () => void;
 };
 
 /**
- * 从档案盒页起播开场视频；播完或跳过后停在视频尾帧，并让标题入场。
+ * 从档案盒页起播开场视频；播完或跳过后渐入尾静帧，并让标题入场。
  */
 export function createHeroVideoSequence({
   video,
@@ -387,6 +389,7 @@ export function createHeroVideoSequence({
   onRevealStart,
   onComplete,
   onFallback,
+  onLastFrameIn,
 }: HeroVideoSequenceOptions): {
   prepare: () => void;
   showFirstFrame: (onReady: () => void) => void;
@@ -398,6 +401,7 @@ export function createHeroVideoSequence({
   let phase: "pre" | "playing" | "done" = "pre";
   let startFrame = 0;
   let firstFrameFade: gsap.core.Tween | null = null;
+  let lastFrameFade: gsap.core.Tween | null = null;
   const lastFrame = document.querySelector<HTMLElement>(
     '[data-shared-bg="studio"]',
   );
@@ -415,9 +419,28 @@ export function createHeroVideoSequence({
     if (firstFrame) gsap.set(firstFrame, { autoAlpha: 0 });
     const revealTitles = () => {
       if (killed) return;
-      // 停在视频自己的尾帧，不再淡入档案室静图。
+      const useStaticLastFrame =
+        Boolean(lastFrame) &&
+        window.matchMedia("(min-width: 768px)").matches;
+      // 桌面：先停在视频尾帧，再把尾静帧渐入，视频同步淡出。
+      // 手机没有这张底图，继续停在视频尾帧。
       video.pause();
       gsap.set(videoLayer, { autoAlpha: 1 });
+      if (useStaticLastFrame && lastFrame) {
+        gsap.fromTo(
+          lastFrame,
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: 2.3, ease: "power2.inOut" },
+        );
+        lastFrameFade = gsap.to(videoLayer, {
+          autoAlpha: 0,
+          duration: 2.3,
+          ease: "power2.inOut",
+          onComplete: () => {
+            if (!killed) onLastFrameIn?.();
+          },
+        });
+      }
       hideTitles();
       if (titles) gsap.set(titles, { autoAlpha: 1 });
       onRevealStart?.();
@@ -538,6 +561,7 @@ export function createHeroVideoSequence({
       killed = true;
       if (startFrame) window.cancelAnimationFrame(startFrame);
       firstFrameFade?.kill();
+      lastFrameFade?.kill();
       video.removeEventListener("loadeddata", playNow);
       video.removeEventListener("error", onError);
       video.removeEventListener("ended", onEnded);

@@ -401,7 +401,13 @@ export function Hero() {
         setSondavenVisible(root);
         doneRef.current = true;
         setNavigationLocked(false);
-        // 视频停在尾帧，节点留着才能保住这一帧。blob 留给回到首页时再播，不能在这里 revoke。
+        // blob 留给回到首页时再播，不能在这里 revoke。
+      };
+
+      const releaseDesktopVideo = () => {
+        if (window.matchMedia("(min-width: 768px)").matches) {
+          setIntroDone(true);
+        }
       };
 
       const playStillFinale = contextSafe!(() => {
@@ -415,7 +421,10 @@ export function Hero() {
           lastFrame,
           root,
           onRevealStart: () => setNavigationLocked(false),
-        }).eventCallback("onComplete", finish);
+        }).eventCallback("onComplete", () => {
+          finish();
+          releaseDesktopVideo();
+        });
       });
 
       const skipToArchiveRoom = contextSafe!(() => {
@@ -488,6 +497,7 @@ export function Hero() {
             onRevealStart: () => fadeCornerAction(skipRef.current, false, 0.4),
             onComplete: finish,
             onFallback: playStillFinale,
+            onLastFrameIn: releaseDesktopVideo,
           });
           activeVideo.prepare();
         }
@@ -522,6 +532,7 @@ export function Hero() {
         if (titles) gsap.set(titles, { autoAlpha: 1 });
         setSondavenVisible(root);
         finish();
+        releaseDesktopVideo();
         return;
       }
 
@@ -623,7 +634,7 @@ export function Hero() {
             ) : null}
           </div>
 
-          {/* 全屏视频层：播完停在视频尾帧 */}
+          {/* 全屏视频层：播完后桌面渐入尾静帧，手机停在视频尾帧 */}
           <div
             ref={videoLayerRef}
             className="invisible absolute inset-0 z-20 bg-white opacity-0"
