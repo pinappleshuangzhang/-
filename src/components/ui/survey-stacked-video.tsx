@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { SurveyEnlargeableImage } from "@/components/ui/survey-enlargeable-image";
 import { SurveyVideoLightbox } from "@/components/ui/survey-video-lightbox";
 
 type SurveyStackedVideoProps = {
@@ -49,7 +50,7 @@ export function SurveyStackedVideo({
           data-sd-media-inner
           className={`relative translate-y-[105%] ${innerClassName ?? ""}`}
         >
-          <Image
+          <SurveyEnlargeableImage
             src={src}
             alt={alt}
             width={width}

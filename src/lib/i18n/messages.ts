@@ -135,6 +135,7 @@ export type MessageKey =
   | "survey.heroAlt"
   | "survey.heroPreview"
   | "survey.videoExpand"
+  | "survey.imageExpand"
   | "survey.tagList"
   | "survey.tag.event"
   | "survey.tag.brand"
@@ -396,6 +397,7 @@ const zh: Messages = {
     "The Apple Moment 活动视觉系统，以黑白经典艺术图像、绿色苹果和系列数字页面组成统一视觉叙事。",
   "survey.heroPreview": "悬停或聚焦时播放预览视频",
   "survey.videoExpand": "点击查看视频",
+  "survey.imageExpand": "点击放大图片",
   "survey.tagList": "作品类型",
   "survey.tag.event": "活动策划",
   "survey.tag.brand": "品牌设计",
@@ -720,6 +722,7 @@ const en: Messages = {
     "The Apple Moment visual system: black-and-white classical images, a green apple, and a series of digital pages in one narrative.",
   "survey.heroPreview": "Hover Or Focus To Play A Preview Video",
   "survey.videoExpand": "Tap To Watch",
+  "survey.imageExpand": "Click To Enlarge",
   "survey.tagList": "Work Types",
   "survey.tag.event": "Event Planning",
   "survey.tag.brand": "Brand Design",

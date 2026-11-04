@@ -10,6 +10,7 @@ import { pickSource } from "@/components/effects/alpha-scrub-video";
 import { ScreenShell } from "@/components/ui/screen-shell";
 import { ContactMachine } from "@/sections/contact-machine";
 import { SplitWords } from "@/components/ui/split-words";
+import { useDesktopMedia } from "@/hooks/use-desktop-media";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { useCopyTarget } from "@/lib/copy-text";
 
@@ -193,7 +194,7 @@ function GapSlot({
   );
 }
 
-/** 括号内图标：源图 108×108，移动端 26，桌面稿面 28。传入动图时，悬停从静帧尺寸放大到 1.5 倍并渐显。 */
+/** 括号内图标：源图 108×108，移动端 26，桌面稿面 28。桌面悬停时动图从静帧放大到 1.5 倍并渐显；移动端只留静帧。 */
 function SurveyIcon({
   src,
   load,
@@ -205,10 +206,12 @@ function SurveyIcon({
   webm?: string;
   hevc?: string;
 }) {
+  const isDesktop = useDesktopMedia();
   const reduced = useReducedMotion();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hover, setHover] = useState(false);
-  const showMotion = hover && Boolean(webm) && !reduced;
+  const motion = isDesktop && Boolean(webm) && Boolean(hevc);
+  const showMotion = hover && motion && !reduced;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -216,7 +219,7 @@ function SurveyIcon({
     const next = pickSource(webm, hevc);
     if (video.src.endsWith(next)) return;
     video.src = next;
-  }, [load, webm, hevc]);
+  }, [load, motion, webm, hevc]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -243,7 +246,7 @@ function SurveyIcon({
   }, [showMotion, reduced]);
 
   return (
-    <GapSlot raised={Boolean(webm)}>
+    <GapSlot raised={motion}>
       <span
         className="absolute left-1/2 top-1/2 block size-[26px] -translate-x-1/2 -translate-y-1/2 md:size-[calc(var(--su)*28)]"
         onMouseEnter={() => setHover(true)}
@@ -257,11 +260,11 @@ function SurveyIcon({
             unoptimized
             sizes="(max-width: 767px) 26px, 28px"
             className={`object-contain transition-opacity duration-500 ease-out motion-reduce:transition-none ${
-              showMotion ? "opacity-0" : hover && webm ? "scale-[1.5]" : ""
+              showMotion ? "opacity-0" : hover && motion ? "scale-[1.5]" : ""
             }`}
           />
         ) : null}
-        {load && webm && hevc ? (
+        {load && motion ? (
           <video
             ref={videoRef}
             className={`absolute top-1/2 left-1/2 z-10 size-full max-w-none origin-center -translate-x-1/2 -translate-y-1/2 object-contain transition-[opacity,scale] duration-500 ease-out motion-reduce:transition-none ${

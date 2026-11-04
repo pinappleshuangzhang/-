@@ -156,6 +156,7 @@ export function SurveyDrawer({
     resetHorizontalScroll(rootRef.current?.parentElement ?? null);
 
     const consumeScroll = (deltaY: number) => {
+      if (document.querySelector("[data-survey-lightbox]")) return true;
       const el = scrollerRef.current;
       if (!el) return true;
       el.scrollTop += deltaY;
@@ -165,8 +166,8 @@ export function SurveyDrawer({
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (document.querySelector("[data-survey-lightbox]")) return;
       if (event.key === "Escape") {
-        if (document.querySelector("[data-survey-video-lightbox]")) return;
         event.preventDefault();
         onClose();
         return;

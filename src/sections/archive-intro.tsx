@@ -6,11 +6,6 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { createCornerTitleSweep } from "@/animations/archive-ga-004-title-sweep";
 import {
-  playSondavenReveal,
-  setSondavenHidden,
-  setSondavenVisible,
-} from "@/animations/sondaven-reveal";
-import {
   AlphaScrubVideo,
   type AlphaScrubVideoHandle,
 } from "@/components/effects/alpha-scrub-video";
@@ -128,7 +123,6 @@ export function ArchiveIntro() {
   const container = useRef<HTMLElement>(null);
   const cornerTitlesRef = useRef<HTMLDivElement>(null);
   const videoHandleRef = useRef<AlphaScrubVideoHandle>(null);
-  const hasPlayedCopyEntranceRef = useRef(false);
 
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
@@ -157,35 +151,45 @@ export function ArchiveIntro() {
   }
 
   // 书内文案由本屏自己入场，并排除整屏统一入场，避免重复点亮。
-  useGSAP(
-    () => {
-      const copy = container.current?.querySelector<HTMLElement>(
-        "[data-intro-copy]",
-      );
-      if (!copy) return;
+  // 用 CSS 过渡而不是 GSAP：幕布在主线程上画满屏字符时，GSAP 逐词会跟着掉帧。
+  useEffect(() => {
+    const copy = container.current?.querySelector<HTMLElement>(
+      "[data-intro-copy]",
+    );
+    if (!copy) return;
 
-      if (reducedMotion) {
-        setSondavenVisible(copy);
-        return;
+    const words = Array.from(copy.querySelectorAll<HTMLElement>(".sd-word"));
+    const snapHidden = () => {
+      for (const word of words) {
+        word.style.transition = "none";
+        word.style.transitionDelay = "";
       }
-      if (!isActive) {
-        hasPlayedCopyEntranceRef.current = false;
-        setSondavenHidden(copy);
-        return;
-      }
-      if (hasPlayedCopyEntranceRef.current) return;
+      delete copy.dataset.revealed;
+    };
 
-      // 跟切屏同一时刻起播。不要等幕布 phase 回到 idle：
-      // Safari 画幕布会卡住主线程，idle 来得晚，字就会空一截。
-      // phase 也不能放进 dependencies，否则揭完幕布时 useGSAP 会把这条时间轴回滚掉。
-      hasPlayedCopyEntranceRef.current = true;
-      playSondavenReveal(copy);
-    },
-    {
-      dependencies: [isActive, isMobileViewport, reducedMotion, locale],
-      scope: container,
-    },
-  );
+    snapHidden();
+    if (!isActive) return;
+    if (reducedMotion) {
+      copy.dataset.revealed = "true";
+      return;
+    }
+
+    copy.querySelectorAll<HTMLElement>("[data-sd-words]").forEach((group) => {
+      const groupWords = words.filter((word) => group.contains(word));
+      const order = gsap.utils.shuffle(groupWords.map((_, index) => index));
+      const delay = Number.parseFloat(group.dataset.sdDelay ?? "0");
+      const base = Number.isFinite(delay) ? delay : 0;
+      groupWords.forEach((word, index) => {
+        const offset = order[index] ?? index;
+        word.style.transition = "";
+        word.style.transitionDelay = `${base + offset * 0.04}s`;
+      });
+    });
+    const frame = requestAnimationFrame(() => {
+      copy.dataset.revealed = "true";
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isActive, isMobileViewport, reducedMotion, locale]);
 
   // 页面角标大字与第六屏 DESIGN / WORKS 共用横穿后回位的出场节奏。
   useGSAP(
@@ -215,7 +219,6 @@ export function ArchiveIntro() {
     videoHandleRef.current?.pause();
 
     if (!isActive) {
-      hasPlayedCopyEntranceRef.current = false;
       videoHandleRef.current?.seekTo(0);
       return;
     }

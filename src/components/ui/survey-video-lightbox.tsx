@@ -87,6 +87,7 @@ export function SurveyVideoLightbox({
   return createPortal(
     <div
       data-survey-video-lightbox=""
+      data-survey-lightbox=""
       data-survey-keep=""
       className="fixed inset-0 z-50 overflow-hidden bg-grey-400"
     >

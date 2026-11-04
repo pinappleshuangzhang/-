@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SurveyEnlargeableImage } from "@/components/ui/survey-enlargeable-image";
 
 type SurveyArticleMediaProps = {
   src: string;
@@ -22,7 +22,7 @@ export function SurveyArticleMedia({
       className={`overflow-hidden ${className}`}
     >
       <div data-sd-media-inner="" className="translate-y-[105%]">
-        <Image
+        <SurveyEnlargeableImage
           src={src}
           alt={alt}
           width={1920}

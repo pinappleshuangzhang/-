@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useLayoutEffect, useRef, type ReactNode } from "react";
-import Image from "next/image";
 import gsap from "gsap";
+import { SurveyEnlargeableImage } from "@/components/ui/survey-enlargeable-image";
 import { SurveyStackedVideo } from "@/components/ui/survey-stacked-video";
 import { useDesktopMedia } from "@/hooks/use-desktop-media";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
@@ -135,7 +135,7 @@ function StaticKeepMedia({
       className={className}
       innerClassName={innerClassName}
     >
-      <Image
+      <SurveyEnlargeableImage
         src={src}
         alt={alt}
         width={width}
@@ -149,6 +149,7 @@ function StaticKeepMedia({
 
 function VideoKeepMedia({
   src,
+  alt,
   width,
   height,
   sizes = "896px",
@@ -263,9 +264,9 @@ function VideoKeepMedia({
         syncPlayback();
       }}
     >
-      <Image
+      <SurveyEnlargeableImage
         src={src}
-        alt=""
+        alt={alt}
         width={width}
         height={height}
         sizes={sizes}
