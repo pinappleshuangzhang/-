@@ -4,21 +4,21 @@
 // numbering together; nothing else needs touching.
 const PROJECT_SEQUENCE = [
   {
-    file: "archive-ga-004/work-01-hover-v5.webp",
-    name: "苹果时刻：AI 创造力实验计划",
-    listLabel: "Brand Design",
-    type: "苹果时刻：AI 创造力实验计划",
+    file: "archive-ga-004/work-01-ring.webp",
+    name: "苹果时刻：AI 创意设计实践",
+    listLabel: "The Apple Moment: AI Creative Design Practice",
+    type: "苹果时刻：AI 创意设计实践",
     year: "2026",
   },
   {
     file: "archive-ga-004/work-02-hover-v5.webp",
-    name: "未来创意 2026",
+    name: "未来创意 2030",
     listLabel: "Product Design",
-    type: "未来创意 2026",
+    type: "未来创意 2030",
     year: "2026",
   },
   {
-    file: "archive-ga-004/work-03-hover-v5.webp",
+    file: "archive-ga-004/work-03-ring.webp",
     name: "Easycash 数字品牌视觉重塑",
     listLabel: "Easycash Digital Visual Reframing",
     type: "Easycash 数字品牌视觉重塑",
@@ -40,9 +40,9 @@ const PROJECT_SEQUENCE = [
   },
   {
     file: "archive-ga-004/region-ring.webp",
-    name: "金融产品网站重构，打造跨地区通用架构",
-    listLabel: "A Shared Architecture Across Markets",
-    type: "金融产品网站重构，打造跨地区通用架构",
+    name: "跨地区金融网站重构：通用架构设计实践",
+    listLabel: "Cross-Market Rebuild: Shared Architecture Practice",
+    type: "跨地区金融网站重构：通用架构设计实践",
     year: "2026",
   },
 ];

@@ -17,7 +17,6 @@ export const ANNIVERSARY_ARTICLE_ZH: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "00 / 项目引言 · INTRODUCTION",
     title: "让“9”成为入口：Easycash 9周年视觉系统设计复盘",
     subtitle:
       "Turning “9” into an Entrance: A Review of Easycash’s 9th Anniversary Visual System",
@@ -29,7 +28,6 @@ export const ANNIVERSARY_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "01 / 空间概念 · SPATIAL CONCEPT",
     title: "让周年符号拥有空间身份",
     subtitle: "Giving the Anniversary Symbol a Spatial Identity",
     paragraphs: [
@@ -45,7 +43,6 @@ export const ANNIVERSARY_ARTICLE_ZH: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "02 / 同一个形状，四种空间叙事 · FOUR SPATIAL NARRATIVES",
     title: "Sports：进入赛场的通道",
     subtitle: "Sports: An Entrance to the Court",
     paragraphs: [
@@ -59,7 +56,6 @@ export const ANNIVERSARY_ARTICLE_ZH: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "02 / 同一个形状，四种空间叙事 · FOUR SPATIAL NARRATIVES",
     title: "Life：看见日常生活的窗口",
     subtitle: "Life: A Window into Everyday Living",
     paragraphs: [
@@ -73,7 +69,6 @@ export const ANNIVERSARY_ARTICLE_ZH: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "02 / 同一个形状，四种空间叙事 · FOUR SPATIAL NARRATIVES",
     title: "Anti-fraud：具有防护意味的安全关口",
     subtitle: "Anti-fraud: A Checkpoint Suggesting Protection",
     paragraphs: [
@@ -87,7 +82,6 @@ export const ANNIVERSARY_ARTICLE_ZH: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "02 / 同一个形状，四种空间叙事 · FOUR SPATIAL NARRATIVES",
     title: "MOJANG：进入金融知识的学习空间",
     subtitle: "MOJANG: An Entrance to Financial Learning",
     paragraphs: [
@@ -101,7 +95,6 @@ export const ANNIVERSARY_ARTICLE_ZH: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "03 / 视觉系统 · VISUAL SYSTEM",
     title: "用四个层次组织视觉系统",
     subtitle: "Organizing the Visual System in Four Layers",
     paragraphs: ["整套画面可以归纳为四个相互配合的层次。"],
@@ -128,7 +121,6 @@ export const ANNIVERSARY_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "04 / 制作流程 · PRODUCTION WORKFLOW",
     title: "以结构为基准的 AI 辅助制作",
     subtitle: "AI-Assisted Production Guided by Structure",
     paragraphs: [
@@ -172,7 +164,6 @@ export const ANNIVERSARY_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "05 / 设计思考 · REFLECTION",
     title: "让生成能力服务于设计判断",
     subtitle: "Directing Generation through Design Judgment",
     paragraphs: [
@@ -190,7 +181,6 @@ export const ANNIVERSARY_ARTICLE_EN: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "00 / Introduction",
     title:
       "Turning “9” into an Entrance: A Review of Easycash’s 9th Anniversary Visual System",
     subtitle:
@@ -203,7 +193,6 @@ export const ANNIVERSARY_ARTICLE_EN: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "01 / Spatial Concept",
     title: "Giving the Anniversary Symbol a Spatial Identity",
     subtitle: "Giving the Anniversary Symbol a Spatial Identity",
     paragraphs: [
@@ -219,7 +208,6 @@ export const ANNIVERSARY_ARTICLE_EN: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "02 / Four Spatial Narratives",
     title: "Sports: An Entrance to the Court",
     subtitle: "Sports: An Entrance to the Court",
     paragraphs: [
@@ -233,7 +221,6 @@ export const ANNIVERSARY_ARTICLE_EN: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "02 / Four Spatial Narratives",
     title: "Life: A Window into Everyday Living",
     subtitle: "Life: A Window into Everyday Living",
     paragraphs: [
@@ -247,7 +234,6 @@ export const ANNIVERSARY_ARTICLE_EN: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "02 / Four Spatial Narratives",
     title: "Anti-fraud: A Checkpoint Suggesting Protection",
     subtitle: "Anti-fraud: A Checkpoint Suggesting Protection",
     paragraphs: [
@@ -261,7 +247,6 @@ export const ANNIVERSARY_ARTICLE_EN: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "02 / Four Spatial Narratives",
     title: "MOJANG: An Entrance to Financial Learning",
     subtitle: "MOJANG: An Entrance to Financial Learning",
     paragraphs: [
@@ -275,7 +260,6 @@ export const ANNIVERSARY_ARTICLE_EN: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "03 / Visual System",
     title: "Organizing the Visual System in Four Layers",
     subtitle: "Organizing the Visual System in Four Layers",
     paragraphs: ["The compositions can be organized into four interrelated layers."],
@@ -302,7 +286,6 @@ export const ANNIVERSARY_ARTICLE_EN: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "04 / Production Workflow",
     title: "AI-Assisted Production Guided by Structure",
     subtitle: "AI-Assisted Production Guided by Structure",
     paragraphs: [
@@ -346,7 +329,6 @@ export const ANNIVERSARY_ARTICLE_EN: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "05 / Reflection",
     title: "Directing Generation through Design Judgment",
     subtitle: "Directing Generation through Design Judgment",
     paragraphs: [

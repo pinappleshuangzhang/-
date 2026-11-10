@@ -193,10 +193,10 @@ export function defaultParams() {
     lag: 0.3, // cursor smoothing, per 60fps frame
     melt: 34, // px added to the ring's own blend at the cursor
     meltReach: 260, // px the softening and the wake carry
-    reach: 1.7, // lean and swell falloff, in plane long edges
-    swell: 0.09,
-    pull: 26, // px a plane leans toward the cursor
-    grab: 0.14, // how fast a plane takes up a lean, per 60fps frame
+    reach: 2.4, // lean and swell falloff, in plane long edges
+    swell: 0.2,
+    pull: 72, // px a plane leans toward the cursor
+    grab: 0.22, // how fast a plane takes up a lean, per 60fps frame
     release: 0.06, // and how slowly it lets go — asymmetric on purpose
     web: 0.2, // hovered thread width, as a fraction of the facing edge
     webReach: 1.15,
@@ -206,8 +206,8 @@ export function defaultParams() {
 
     // How the cards either side of the hovered one get out of its way. The
     // pointer block above answers to the cursor; these answer to the card.
-    sideScale: 0.035,
-    sidePush: 17, // px
+    sideScale: 0.06,
+    sidePush: 28, // px
     sideDim: 0.15,
     sideReach: 2.4, // in plane long edges, measured from the hovered card
 

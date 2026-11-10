@@ -1,12 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { SectionBackground } from "@/components/ui/section-background";
 import { useDesktopMedia } from "@/hooks/use-desktop-media";
 import {
   SECTION_BACKGROUNDS,
   type SectionBackgroundKey,
 } from "@/lib/section-backgrounds";
+import {
+  getStudioFramePhase,
+  getStudioFrameServerPhase,
+  markStudioFrameSettled,
+  subscribeStudioFrame,
+} from "@/lib/studio-frame-ready";
 
 type SharedSectionBackgroundsProps = {
   active: SectionBackgroundKey | null;
@@ -64,11 +70,20 @@ function SharedBackgroundLayer({
   screenIndex: number;
 }) {
   const config = SECTION_BACKGROUNDS[backgroundKey];
-  // 尾帧在加载层下面看不见；档案背景要等离开首屏。挂上之后保持，避免来回卸载。
+  const studioPhase = useSyncExternalStore(
+    subscribeStudioFrame,
+    getStudioFramePhase,
+    getStudioFrameServerPhase,
+  );
+  // 尾帧在加载层下面看不见；失败或超时要揭开时才提前允许下载。档案背景要等离开首屏。
+  const studioHeld =
+    backgroundKey === "studio" &&
+    introOverlayActive &&
+    studioPhase === "blocked";
   const blocked =
     (Boolean(config.desktopOnly) && !isDesktop) ||
-    (introOverlayActive &&
-      (backgroundKey === "studio" || backgroundKey === "archive")) ||
+    (introOverlayActive && backgroundKey === "archive") ||
+    studioHeld ||
     (backgroundKey === "archive" && screenIndex === 0);
   const wantsImage =
     !blocked &&
@@ -93,6 +108,12 @@ function SharedBackgroundLayer({
           unoptimized={config.unoptimized}
           quality={config.quality}
           imageClassName={config.imageClassName}
+          onLoad={
+            backgroundKey === "studio" ? markStudioFrameSettled : undefined
+          }
+          onError={
+            backgroundKey === "studio" ? markStudioFrameSettled : undefined
+          }
         />
       )}
     </div>

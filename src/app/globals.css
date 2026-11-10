@@ -116,6 +116,33 @@ body {
   cursor: pointer;
 }
 
+/* 抽屉里的图片和文字用系统箭头。上面的 button pointer 不在层叠层里，工具类压不过。 */
+[data-survey-drawer] [data-survey-keep] {
+  cursor: default;
+}
+
+/* 动态光标启用时藏起系统指针；表单控件仍用文本光标。触控与窄屏不套用。 */
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  html[data-magnetic-cursor],
+  html[data-magnetic-cursor] body,
+  html[data-magnetic-cursor] body * {
+    cursor: none !important;
+  }
+
+  html[data-magnetic-cursor] :is(input, textarea, select, [contenteditable="true"]),
+  html[data-magnetic-cursor] :is(input, textarea, select, [contenteditable="true"]) * {
+    cursor: auto !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-magnetic-cursor],
+  html[data-magnetic-cursor] body,
+  html[data-magnetic-cursor] body * {
+    cursor: auto !important;
+  }
+}
+
 /**
  * 稿面覆盖层：按 1440×800 画板做 cover 缩放，内容与全出血背景同步放大并同样裁切。
  * 用于「屏内元素必须始终压在背景实物同一位置」的分屏（联系屏取件机）；
@@ -263,6 +290,11 @@ html[data-section-pager] body {
 [data-intro-copy][data-revealed] .sd-word {
   opacity: 1;
   transform: translate3d(0, 0, 0);
+}
+
+/* 入场结束后交给 GSAP 逐词吸附，关掉过渡，避免和 quickTo 抢 transform。 */
+[data-intro-copy][data-magnet] .sd-word {
+  transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

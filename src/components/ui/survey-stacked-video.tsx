@@ -12,6 +12,7 @@ type SurveyStackedVideoProps = {
   height: number;
   sizes?: string;
   revealDelay: string;
+  className?: string;
   innerClassName?: string;
   videoSrc: string;
   expandLabel: string;
@@ -31,6 +32,7 @@ export function SurveyStackedVideo({
   height,
   sizes = "94vw",
   revealDelay,
+  className,
   innerClassName,
   videoSrc,
   expandLabel,
@@ -39,7 +41,7 @@ export function SurveyStackedVideo({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex w-full flex-col gap-3">
+    <div className={`flex w-full flex-col gap-3 ${className ?? ""}`}>
       <div
         data-survey-keep=""
         data-sd-media
@@ -68,7 +70,8 @@ export function SurveyStackedVideo({
         data-sd-delay={revealDelay}
         aria-label={expandLabel}
         onClick={() => setOpen(true)}
-        className={`${frameClass} cursor-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2`}
+        className={`${frameClass} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2`}
+        style={{ cursor: "default" }}
       >
         <span
           data-sd-media-inner

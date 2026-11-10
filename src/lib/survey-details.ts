@@ -19,12 +19,14 @@ export type SurveyMediaItem = {
   width: number;
   height: number;
   innerClassName?: string;
+  /** 入场动画把图片裁在框外时，先请求图片 */
+  eager?: boolean;
   titleKey?: MessageKey;
   captionKey?: MessageKey;
   showCaption?: boolean;
 } & (
   | { hover: "none" }
-  | { hover: "video"; videoSrc: string }
+  | { hover: "video"; videoSrc: string; playWhenVisible?: boolean }
 );
 
 export type SurveyWork = {
@@ -89,7 +91,25 @@ export const SURVEY_CATEGORIES: SurveyCategory[] = [
   SURVEY_CATEGORY_BY_CODE.D,
 ];
 
-/** 001 品牌设计：The Apple Moment，对照作品提交模版 / 交付文件夹 */
+function appleStill(
+  file: string,
+  altKey: MessageKey,
+  section?: { titleKey: MessageKey; captionKey?: MessageKey } | "continue",
+): SurveyMediaItem {
+  const base = {
+    src: `/archive-ga-004/${file}`,
+    altKey,
+    width: 1920,
+    height: 1080,
+    hover: "none" as const,
+  };
+  if (!section || section === "continue") return { ...base, showCaption: false };
+  return section.captionKey
+    ? { ...base, titleKey: section.titleKey, captionKey: section.captionKey }
+    : { ...base, titleKey: section.titleKey };
+}
+
+/** 001 品牌设计：The Apple Moment。封面下按 1–3+、4–5、6–7、8–9、10–11、12–14、15–20 分段。 */
 export const SURVEY_G_001: SurveyWork = {
   id: "g-001",
   title: "Investigation Details_001",
@@ -106,92 +126,100 @@ export const SURVEY_G_001: SurveyWork = {
     "survey.tag.motion",
   ],
   media: [
-    {
-      src: "/archive-ga-004/survey-1.webp",
-      altKey: "survey.heroAlt",
-      width: 1920,
-      height: 1080,
-      hover: "none",
-      innerClassName: "bg-white",
-    },
-    {
-      src: "/archive-ga-004/survey-2.webp",
-      altKey: "survey.media2Alt",
+    appleStill("apple-cover.webp", "survey.apple.coverAlt"),
+    appleStill("apple-01.webp", "survey.apple.01Alt", {
       titleKey: "survey.media2Title",
       captionKey: "survey.media2Caption",
+    }),
+    appleStill("apple-02.webp", "survey.apple.02Alt", "continue"),
+    appleStill("apple-03-v2.webp", "survey.apple.03Alt", "continue"),
+    appleStill("apple-03b.webp", "survey.apple.03bAlt", "continue"),
+    {
+      src: "/archive-ga-004/apple-stage.webp",
+      altKey: "survey.apple.stageAlt",
       width: 1920,
       height: 1080,
       hover: "video",
       videoSrc: "/archive-ga-004/survey-2-hover.mp4",
+      playWhenVisible: true,
+      showCaption: false,
     },
-    {
-      src: "/archive-ga-004/survey-3.webp",
-      altKey: "survey.media3Alt",
+    appleStill("apple-04.webp", "survey.apple.04Alt", {
       titleKey: "survey.media3Title",
       captionKey: "survey.media3Caption",
+    }),
+    appleStill("apple-05-v2.webp", "survey.apple.05Alt", "continue"),
+    {
+      src: "/archive-ga-004/apple-stage.webp",
+      altKey: "survey.apple.stageAlt",
       width: 1920,
       height: 1080,
       hover: "video",
       videoSrc: "/archive-ga-004/survey-3-hover.mp4",
+      playWhenVisible: true,
+      showCaption: false,
     },
-    {
-      src: "/archive-ga-004/survey-4.webp",
-      altKey: "survey.media4Alt",
+    appleStill("apple-06.webp", "survey.apple.06Alt", {
       titleKey: "survey.media4Title",
       captionKey: "survey.media4Caption",
+    }),
+    appleStill("apple-07.webp", "survey.apple.07Alt", "continue"),
+    {
+      src: "/archive-ga-004/apple-stage.webp",
+      altKey: "survey.apple.stageAlt",
       width: 1920,
       height: 1080,
       hover: "video",
-      videoSrc: "/archive-ga-004/survey-4-hover.mp4",
+      videoSrc: "/archive-ga-004/survey-rewatch-v3.mp4",
+      playWhenVisible: true,
+      showCaption: false,
     },
-    {
-      src: "/archive-ga-004/survey-5.webp",
-      altKey: "survey.media5Alt",
+    appleStill("apple-08.webp", "survey.apple.08Alt", {
       titleKey: "survey.media5Title",
       captionKey: "survey.media5Caption",
+    }),
+    appleStill("apple-09.webp", "survey.apple.09Alt", "continue"),
+    appleStill("apple-10.webp", "survey.apple.10Alt", "continue"),
+    appleStill("apple-11.webp", "survey.apple.11Alt", "continue"),
+    {
+      src: "/archive-ga-004/apple-stage.webp",
+      altKey: "survey.apple.stageAlt",
       width: 1920,
       height: 1080,
       hover: "video",
-      videoSrc: "/archive-ga-004/survey-5-hover.mp4",
+      videoSrc: "/archive-ga-004/survey-os.mp4",
+      playWhenVisible: true,
+      showCaption: false,
     },
-    {
-      src: "/archive-ga-004/survey-6-v2.webp",
-      altKey: "survey.media6Alt",
+    appleStill("apple-12.webp", "survey.apple.12Alt", {
       titleKey: "survey.media6Title",
       captionKey: "survey.media6Caption",
-      width: 1024,
-      height: 576,
+    }),
+    appleStill("apple-13.webp", "survey.apple.13Alt", "continue"),
+    appleStill("apple-14.webp", "survey.apple.14Alt", "continue"),
+    {
+      src: "/archive-ga-004/apple-stage.webp",
+      altKey: "survey.apple.stageAlt",
+      width: 1920,
+      height: 1080,
       hover: "video",
-      videoSrc: "/archive-ga-004/survey-6-hover.mp4",
-    },
-    {
-      src: "/archive-ga-004/survey-7.webp",
-      altKey: "survey.media7Alt",
-      width: 1920,
-      height: 1080,
-      hover: "none",
+      videoSrc: "/archive-ga-004/survey-system.mp4",
+      playWhenVisible: true,
       showCaption: false,
     },
-    {
-      src: "/archive-ga-004/survey-8-v2.webp",
-      altKey: "survey.media8Alt",
-      width: 1920,
-      height: 1080,
-      hover: "none",
-      showCaption: false,
-    },
-    {
-      src: "/archive-ga-004/survey-9-v2.webp",
-      altKey: "survey.media9Alt",
-      width: 1920,
-      height: 1080,
-      hover: "none",
-      showCaption: false,
-    },
+    appleStill("apple-15.webp", "survey.apple.15Alt", {
+      titleKey: "survey.apple.sceneTitle",
+      captionKey: "survey.apple.sceneCaption",
+    }),
+    appleStill("apple-16.webp", "survey.apple.16Alt", "continue"),
+    appleStill("apple-17.webp", "survey.apple.17Alt", "continue"),
+    appleStill("apple-18.webp", "survey.apple.18Alt", "continue"),
+    appleStill("apple-19.webp", "survey.apple.19Alt", "continue"),
+    appleStill("apple-20.webp", "survey.apple.20Alt", "continue"),
   ],
 };
 
-/** 002 产品设计：Future Creative 2026 */
+/** 002 产品设计：Future Creative 2030 */
 export const SURVEY_G_002: SurveyWork = {
   id: "g-002",
   title: "Investigation Details_002",
@@ -201,13 +229,13 @@ export const SURVEY_G_002: SurveyWork = {
   duration: "一个月",
   titleKey: "survey.future.title",
   descriptionKey: "survey.future.description",
-  tagKeys: ["survey.tag.visual", "survey.tag.motion"],
+  tagKeys: ["survey.tag.visual", "survey.tag.motion", "survey.tag.explore"],
   media: [
     {
-      src: "/archive-ga-004/future-hero.webp",
+      src: "/archive-ga-004/future-gallery-02.webp",
       altKey: "survey.future.heroAlt",
-      width: 1920,
-      height: 1080,
+      width: 1024,
+      height: 576,
       hover: "none",
     },
     {
@@ -220,12 +248,12 @@ export const SURVEY_G_002: SurveyWork = {
       hover: "none",
     },
     {
-      src: "/archive-ga-004/future-gallery-02.webp",
+      src: "/archive-ga-004/future-hero.webp",
       altKey: "survey.future.media2Alt",
       titleKey: "survey.future.media2Title",
       captionKey: "survey.future.media2Caption",
-      width: 1024,
-      height: 576,
+      width: 1920,
+      height: 1080,
       hover: "none",
     },
     {
@@ -268,7 +296,42 @@ export const SURVEY_G_002: SurveyWork = {
   ],
 };
 
-/** 003 网站设计：Easycash 数字品牌视觉重塑 */
+/** 封面海报作底，视频进入画面后在海报中央播放。 */
+function easycashClip(file: string, altKey: MessageKey): SurveyMediaItem {
+  return {
+    src: "/archive-ga-004/easycash-hero-v3.webp",
+    altKey,
+    width: 1920,
+    height: 1080,
+    hover: "video",
+    videoSrc: `/archive-ga-004/${file}`,
+    playWhenVisible: true,
+    showCaption: false,
+  };
+}
+
+function easycashStill(
+  file: string,
+  altKey: MessageKey,
+  section?: { titleKey: MessageKey; captionKey?: MessageKey; eager?: boolean },
+): SurveyMediaItem {
+  const base = {
+    src: `/archive-ga-004/${file}`,
+    altKey,
+    width: 1920,
+    height: 1080,
+    hover: "none" as const,
+    eager: section?.eager,
+  };
+  if (!section) return { ...base, showCaption: false };
+  return {
+    ...base,
+    titleKey: section.titleKey,
+    ...(section.captionKey ? { captionKey: section.captionKey } : {}),
+  };
+}
+
+/** 003 网站设计：Easycash 数字品牌视觉重塑。封面下是标题与概述，其后为首页、产品、反欺诈、品牌信任。 */
 export const SURVEY_G_003: SurveyWork = {
   id: "g-003",
   title: "Investigation Details_003",
@@ -281,69 +344,53 @@ export const SURVEY_G_003: SurveyWork = {
   tagKeys: ["survey.tag.website", "survey.tag.visual", "survey.tag.brand"],
   media: [
     {
-      src: "/archive-ga-004/easycash-hero-v2.webp",
+      src: "/archive-ga-004/easycash-hero-v3.webp",
       altKey: "survey.easycash.heroAlt",
       width: 1920,
       height: 1080,
       hover: "none",
     },
-    {
-      src: "/archive-ga-004/easycash-gallery-01.webp",
-      altKey: "survey.easycash.media1Alt",
-      titleKey: "survey.easycash.media1Title",
-      captionKey: "survey.easycash.media1Caption",
-      width: 1920,
-      height: 1080,
-      hover: "none",
-    },
-    {
-      src: "/archive-ga-004/easycash-gallery-02.webp",
-      altKey: "survey.easycash.media2Alt",
-      titleKey: "survey.easycash.media2Title",
-      captionKey: "survey.easycash.media2Caption",
-      width: 1920,
-      height: 1080,
-      hover: "video",
-      videoSrc: "/archive-ga-004/easycash-gallery-02.mp4",
-    },
-    {
-      src: "/archive-ga-004/easycash-gallery-03-v2.webp",
-      altKey: "survey.easycash.media3Alt",
-      titleKey: "survey.easycash.media3Title",
-      captionKey: "survey.easycash.media3Caption",
-      width: 1920,
-      height: 1080,
-      hover: "video",
-      videoSrc: "/archive-ga-004/easycash-gallery-03.mp4",
-    },
-    {
-      src: "/archive-ga-004/easycash-gallery-04.webp",
-      altKey: "survey.easycash.media4Alt",
-      titleKey: "survey.easycash.media4Title",
-      captionKey: "survey.easycash.media4Caption",
-      width: 1920,
-      height: 1080,
-      hover: "none",
-    },
-    {
-      src: "/archive-ga-004/easycash-gallery-05-v2.webp",
-      altKey: "survey.easycash.media5Alt",
-      titleKey: "survey.easycash.media5Title",
-      captionKey: "survey.easycash.media5Caption",
-      width: 1920,
-      height: 1080,
-      hover: "video",
-      videoSrc: "/archive-ga-004/easycash-gallery-05.mp4",
-    },
-    {
-      src: "/archive-ga-004/easycash-gallery-06.webp",
-      altKey: "survey.easycash.media6Alt",
-      titleKey: "survey.easycash.media6Title",
-      captionKey: "survey.easycash.media6Caption",
-      width: 1920,
-      height: 1080,
-      hover: "none",
-    },
+    easycashStill("easycash-home-01b.webp", "survey.easycash.home01Alt", {
+      titleKey: "survey.easycash.homeTitle",
+      captionKey: "survey.easycash.homeCaption",
+      eager: true,
+    }),
+    easycashStill("easycash-home-02.webp", "survey.easycash.home02Alt"),
+    easycashStill("easycash-home-03.webp", "survey.easycash.home03Alt"),
+    easycashStill("easycash-home-04.webp", "survey.easycash.home04Alt"),
+    easycashStill("easycash-home-05.webp", "survey.easycash.home05Alt"),
+    easycashStill("easycash-home-06.webp", "survey.easycash.home06Alt"),
+    easycashClip("easycash-home-v2.mp4", "survey.easycash.homeVideoAlt"),
+    easycashStill("easycash-loan-08.webp", "survey.easycash.loan08Alt", {
+      titleKey: "survey.easycash.productTitle",
+      captionKey: "survey.easycash.productCaption",
+    }),
+    easycashStill("easycash-loan-09.webp", "survey.easycash.loan09Alt"),
+    easycashStill("easycash-loan-10.webp", "survey.easycash.loan10Alt"),
+    easycashStill("easycash-loan-12.webp", "survey.easycash.loan12Alt"),
+    easycashStill("easycash-loan-13.webp", "survey.easycash.loan13Alt"),
+    easycashClip("easycash-loan.mp4", "survey.easycash.loanVideoAlt"),
+    easycashStill("easycash-wealth-14.webp", "survey.easycash.wealth14Alt"),
+    easycashStill("easycash-wealth-15.webp", "survey.easycash.wealth15Alt"),
+    easycashStill("easycash-wealth-16.webp", "survey.easycash.wealth16Alt"),
+    easycashStill("easycash-wealth-17.webp", "survey.easycash.wealth17Alt"),
+    easycashStill("easycash-wealth-18.webp", "survey.easycash.wealth18Alt"),
+    easycashClip("easycash-wealth.mp4", "survey.easycash.wealthVideoAlt"),
+    easycashStill("easycash-fraud-01.webp", "survey.easycash.fraud01Alt", {
+      titleKey: "survey.easycash.fraudTitle",
+      captionKey: "survey.easycash.fraudCaption",
+    }),
+    easycashStill("easycash-fraud-02.webp", "survey.easycash.fraud02Alt"),
+    easycashStill("easycash-fraud-03.webp", "survey.easycash.fraud03Alt"),
+    easycashStill("easycash-fraud-04.webp", "survey.easycash.fraud04Alt"),
+    easycashClip("easycash-fraud.mp4", "survey.easycash.fraudVideoAlt"),
+    easycashStill("easycash-about-01.webp", "survey.easycash.about01Alt", {
+      titleKey: "survey.easycash.aboutTitle",
+      captionKey: "survey.easycash.aboutCaption",
+    }),
+    easycashStill("easycash-about-02.webp", "survey.easycash.about02Alt"),
+    easycashStill("easycash-about-03.webp", "survey.easycash.about03Alt"),
+    easycashStill("easycash-about-04.webp", "survey.easycash.about04Alt"),
   ],
 };
 

@@ -17,18 +17,14 @@ export const REGION_ARTICLE_ZH: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "00 / 概览 · OVERVIEW",
-    title: "金融产品网站重构，打造跨地区通用架构",
-    subtitle: "A Shared Architecture Across Markets",
+    title: "跨地区金融网站重构：通用架构设计实践",
     paragraphs: [
       "本次重构建立了一套支持多地区业务的网站通用架构，覆盖页面结构、视觉与交互、设计组件、开发模块及文案内容交付规则。各地区基于公共基础完成品牌、业务与本地内容适配。",
     ],
   },
   {
     kind: "prose",
-    kicker: "01 / 项目背景 · BACKGROUND",
     title: "一、项目背景：多地区，多套体系，重复投入",
-    subtitle: "Many Markets, Many Systems, Repeated Effort",
     paragraphs: [],
   },
   {
@@ -57,19 +53,17 @@ export const REGION_ARTICLE_ZH: OpsBlock[] = [
           "新增页面、修改内容或进入新市场时，仍需分别沟通、设计与开发，难以沿用已有成果。",
         ],
       },
+      {
+        title: "本次重构旨在",
+        paragraphs: [
+          "明确共用与定制的边界，让各地区基于同一套基础流程协作，减少重复建设。",
+        ],
+      },
     ],
   },
   {
     kind: "prose",
-    paragraphs: [
-      "本次重构旨在明确共用与定制的边界，让各地区基于同一套基础流程协作，减少重复建设。",
-    ],
-  },
-  {
-    kind: "prose",
-    kicker: "02 / 重构策略 · STRATEGY",
     title: "二、重构策略：明确共用与定制的边界",
-    subtitle: "Drawing the Line Between Shared and Custom",
     paragraphs: [
       "我们以页面与模块为单位，将复用方式划分为「直接共用、组合适配、地区定制」，并与业务、本地及开发团队确认适用范围。在统一规则下，共性模块直接复用，内容差异通过组合适配，专属业务需求保留定制空间。",
     ],
@@ -98,19 +92,17 @@ export const REGION_ARTICLE_ZH: OpsBlock[] = [
         ],
         image: shot(6, "首页前几屏的地区定制，以及品牌色、字体与本地字段的配置示意。"),
       },
+      {
+        title: "共用、组合与定制的边界定义",
+        paragraphs: [
+          "这三类边界分别明确了共用的规则、可组合的资产与需要定制的内容，让地区差异在统一架构内得到处理。",
+        ],
+      },
     ],
   },
   {
     kind: "prose",
-    paragraphs: [
-      "这三类边界分别明确了共用的规则、可组合的资产与需要定制的内容，让地区差异在统一架构内得到处理。",
-    ],
-  },
-  {
-    kind: "prose",
-    kicker: "03 / 复用机制 · REUSE",
     title: "三、复用机制：通过变量、组件与模块实现复用",
-    subtitle: "Reuse Through Variables, Components, and Modules",
     paragraphs: [
       "确定复用边界后，我们通过语义变量管理样式映射，通过组件变体承接业务行为，通过内容配置适配地区信息。不同层面的变化分别处理，减少整页复制与单独修改。",
     ],
@@ -141,19 +133,17 @@ export const REGION_ARTICLE_ZH: OpsBlock[] = [
         ],
         image: shot(9, "官方社媒模块按地区配置平台图标、数量、顺序与链接。"),
       },
+      {
+        title: "三层承接机制的作用",
+        paragraphs: [
+          "通过这三个层级，品牌差异由变量承接，服务渠道由业务变体承接，平台与文案差异由内容配置承接。各地区共享稳定的设计基础，同时保留必要的业务灵活性。",
+        ],
+      },
     ],
   },
   {
     kind: "prose",
-    paragraphs: [
-      "通过这三个层级，品牌差异由变量承接，服务渠道由业务变体承接，平台与文案差异由内容配置承接。各地区共享稳定的设计基础，同时保留必要的业务灵活性。",
-    ],
-  },
-  {
-    kind: "prose",
-    kicker: "04 / 页面与体验 · EXPERIENCE",
     title: "四、页面与体验：让统一规则适应不同场景",
-    subtitle: "Letting Shared Rules Fit Different Situations",
     paragraphs: [
       "共用组件进入实际页面后，还需要面对语言长度、内容数量与屏幕尺寸的变化。我们通过统一的布局与交互规则，让多地区的网站在不同场景下保持清晰、连贯的使用体验。",
     ],
@@ -182,19 +172,17 @@ export const REGION_ARTICLE_ZH: OpsBlock[] = [
         ],
         image: shot(12, "导航、按钮、链接与展开内容的默认、悬停、选中和展开状态。"),
       },
+      {
+        title: "适配规则提升模块复用效率",
+        paragraphs: [
+          "通过这些适配规则，共用模块能够覆盖不同地区的真实内容与设备场景，减少针对单个页面的临时调整。",
+        ],
+      },
     ],
   },
   {
     kind: "prose",
-    paragraphs: [
-      "通过这些适配规则，共用模块能够覆盖不同地区的真实内容与设备场景，减少针对单个页面的临时调整。",
-    ],
-  },
-  {
-    kind: "prose",
-    kicker: "05 / 本地化与信任 · LOCALIZATION",
     title: "五、本地化与信任：统一展示规则，呈现当地信任依据",
-    subtitle: "Shared Display Rules, Local Grounds for Trust",
     paragraphs: [
       "金融网站的本地化，也体现在监管信息、机构关系与安全指引的表达上。设计团队与本地团队沟通内容需求，梳理需要展示的信息及其优先级，再通过共用的信息框架承载各地区内容，帮助用户了解平台、识别风险并找到官方渠道。",
     ],
@@ -229,9 +217,7 @@ export const REGION_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "06 / 协作与成果 · COLLABORATION",
     title: "六、协作与成果：让重构支持多地区持续复用",
-    subtitle: "Making the Rebuild Reusable Across Markets",
     paragraphs: [
       "重构过程中，我们与业务及本地团队沟通需求，将确认后的页面方案、复用边界及内容结构整理为公共资产，并与开发、市场及交付团队对齐使用方式，让统一方案进入实际协作与交付。",
     ],
@@ -283,16 +269,14 @@ export const REGION_ARTICLE_EN: OpsBlock[] = [
   ),
   {
     kind: "prose",
-    kicker: "00 / Overview",
-    title: "A Shared Architecture Across Markets",
-    subtitle: "A Shared Architecture Across Markets",
+    title: "Cross-Market Rebuild: Shared Architecture Practice",
+    subtitle: "Cross-Market Rebuild: Shared Architecture Practice",
     paragraphs: [
       "This rebuild established a shared website architecture for businesses across markets. It covers page structure, visual design and interaction, design components, development modules, and the rules for delivering copy. Each market adapts brand, business, and local content on that common base.",
     ],
   },
   {
     kind: "prose",
-    kicker: "01 / Background",
     title: "1. Many Markets, Many Systems, Repeated Effort",
     subtitle: "1. Many Markets, Many Systems, Repeated Effort",
     paragraphs: [],
@@ -323,17 +307,16 @@ export const REGION_ARTICLE_EN: OpsBlock[] = [
           "Adding a page, changing content, or entering a new market still required separate communication, design, and development. Existing work was hard to carry forward.",
         ],
       },
+      {
+        title: "What this rebuild set out to do",
+        paragraphs: [
+          "Draw a clear line between what is shared and what is custom, so each market could collaborate on the same basic process and build less from scratch.",
+        ],
+      },
     ],
   },
   {
     kind: "prose",
-    paragraphs: [
-      "The rebuild set out to draw a clear line between what is shared and what is custom, so each market could collaborate on the same basic process and build less from scratch.",
-    ],
-  },
-  {
-    kind: "prose",
-    kicker: "02 / Strategy",
     title: "2. Drawing the Line Between Shared and Custom",
     subtitle: "2. Drawing the Line Between Shared and Custom",
     paragraphs: [
@@ -367,17 +350,16 @@ export const REGION_ARTICLE_EN: OpsBlock[] = [
           "Market-specific homepage screens, with brand color, type, and local fields configured.",
         ),
       },
+      {
+        title: "Defining shared, assembled, and custom",
+        paragraphs: [
+          "These three boundaries separate shared rules, assets that can be assembled, and content that must be custom, so market differences are handled inside one architecture.",
+        ],
+      },
     ],
   },
   {
     kind: "prose",
-    paragraphs: [
-      "These three boundaries separate shared rules, assets that can be assembled, and content that must be custom, so market differences are handled inside one architecture.",
-    ],
-  },
-  {
-    kind: "prose",
-    kicker: "03 / Reuse",
     title: "3. Reuse Through Variables, Components, and Modules",
     subtitle: "3. Reuse Through Variables, Components, and Modules",
     paragraphs: [
@@ -413,17 +395,16 @@ export const REGION_ARTICLE_EN: OpsBlock[] = [
           "The social module configured per market with platform icons, count, order, and links.",
         ),
       },
+      {
+        title: "What the three layers carry",
+        paragraphs: [
+          "Across these three layers, brand differences sit in variables, service channels sit in business variants, and platform and copy differences sit in content settings. Markets share a stable design base and keep the flexibility the business needs.",
+        ],
+      },
     ],
   },
   {
     kind: "prose",
-    paragraphs: [
-      "Across these three layers, brand differences sit in variables, service channels sit in business variants, and platform and copy differences sit in content settings. Markets share a stable design base and keep the flexibility the business needs.",
-    ],
-  },
-  {
-    kind: "prose",
-    kicker: "04 / Experience",
     title: "4. Letting Shared Rules Fit Different Situations",
     subtitle: "4. Letting Shared Rules Fit Different Situations",
     paragraphs: [
@@ -460,17 +441,16 @@ export const REGION_ARTICLE_EN: OpsBlock[] = [
           "Default, hover, selected, and expanded states for navigation, buttons, links, and disclosures.",
         ),
       },
+      {
+        title: "Fit rules extend how far modules can be reused",
+        paragraphs: [
+          "With these rules, shared modules can hold the real content and devices of different markets, and one-off adjustments to single pages become less necessary.",
+        ],
+      },
     ],
   },
   {
     kind: "prose",
-    paragraphs: [
-      "With these rules, shared modules can hold the real content and devices of different markets, and one-off adjustments to single pages become less necessary.",
-    ],
-  },
-  {
-    kind: "prose",
-    kicker: "05 / Localization",
     title: "5. Shared Display Rules, Local Grounds for Trust",
     subtitle: "5. Shared Display Rules, Local Grounds for Trust",
     paragraphs: [
@@ -513,7 +493,6 @@ export const REGION_ARTICLE_EN: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "06 / Collaboration",
     title: "6. Making the Rebuild Reusable Across Markets",
     subtitle: "6. Making the Rebuild Reusable Across Markets",
     paragraphs: [

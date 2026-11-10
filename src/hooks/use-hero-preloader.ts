@@ -18,24 +18,21 @@ const ASSET_LOADING: BytesState = { progress: 0, status: "loading" };
 
 let expectedIds: readonly string[] = [];
 let expectedKey = "";
-const loadedIds = new Set<string>();
-let assetError = false;
+/** 成功或失败都算这一项结束。单张图失败不能把整段开场判死。 */
+const settledIds = new Set<string>();
 let assetSnapshot: BytesState = ASSET_LOADING;
 const assetListeners = new Set<() => void>();
 
 function publishAssets() {
   const total = expectedIds.length;
-  let loaded = 0;
+  let settled = 0;
   for (const id of expectedIds) {
-    if (loadedIds.has(id)) loaded += 1;
+    if (settledIds.has(id)) settled += 1;
   }
-  const status: VideoPreloadStatus = assetError
-    ? "error"
-    : total > 0 && loaded === total
-      ? "ready"
-      : "loading";
+  const status: VideoPreloadStatus =
+    total > 0 && settled === total ? "ready" : "loading";
   const progress =
-    status === "ready" ? 1 : total === 0 ? 0 : Math.min(loaded / total, 0.999);
+    status === "ready" ? 1 : total === 0 ? 0 : Math.min(settled / total, 0.999);
   if (
     assetSnapshot.progress === progress &&
     assetSnapshot.status === status
@@ -58,10 +55,19 @@ export function expectLoaderImages(ids: readonly string[]) {
   publishAssets();
 }
 
-export function reportLoaderImage(id: string, ok = true) {
-  if (!ok) assetError = true;
-  else loadedIds.add(id);
+/** 成功或失败都算这一项结束，单张图失败不把整段开场判成 error。 */
+export function reportLoaderImage(id: string, _ok = true) {
+  settledIds.add(id);
   publishAssets();
+}
+
+/** 重播开场时清掉上一轮的完成记录，避免失败态残留。 */
+export function resetLoaderAssets() {
+  expectedIds = [];
+  expectedKey = "";
+  settledIds.clear();
+  assetSnapshot = ASSET_LOADING;
+  for (const listener of assetListeners) listener();
 }
 
 function subscribeAssets(listener: () => void) {
@@ -120,12 +126,11 @@ export function useHeroPreloader(
     const progress = videoEnabled
       ? videoProgress * 0.88 + assets.progress * 0.12
       : assets.progress;
-    const status: VideoPreloadStatus =
-      videoFailed || assets.status === "error"
-        ? "error"
-        : videoReady && assets.status === "ready"
-          ? "ready"
-          : "loading";
+    const status: VideoPreloadStatus = videoFailed
+      ? "error"
+      : videoReady && assets.status === "ready"
+        ? "ready"
+        : "loading";
     return {
       progress,
       status,

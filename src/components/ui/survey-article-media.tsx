@@ -19,7 +19,7 @@ export function SurveyArticleMedia({
       data-survey-keep=""
       data-sd-media=""
       data-sd-delay={revealDelay}
-      className={`overflow-hidden ${className}`}
+      className={`cursor-auto overflow-hidden ${className}`}
     >
       <div data-sd-media-inner="" className="translate-y-[105%]">
         <SurveyEnlargeableImage

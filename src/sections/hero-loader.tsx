@@ -20,6 +20,8 @@ import boxShadow from "../../public/hero/loader-box-shadow.svg";
 const archiveBackground = SECTION_BACKGROUNDS.archive;
 const LOADER_ARCHIVE_ID = "loader-archive";
 const LOADER_SHADOW_ID = "loader-shadow";
+/** 桌面揭开后停住的档案盒静帧，必须算进完成条件 */
+export const LOADER_STILL_ID = "loader-still";
 
 /** 六张 Grava 材质图渐隐循环 */
 const MATERIALS = [
@@ -62,7 +64,7 @@ export function HeroLoader({
     expectLoaderImages([
       ...MATERIALS.map((material) => material.key),
       LOADER_SHADOW_ID,
-      ...(isDesktop ? [LOADER_ARCHIVE_ID] : []),
+      ...(isDesktop ? [LOADER_ARCHIVE_ID, LOADER_STILL_ID] : []),
     ]);
   }, [isDesktop]);
 

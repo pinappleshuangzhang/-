@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useLocale } from "@/components/providers/locale-provider";
 
 export type ViscoseMobileCard = {
   title: string;
@@ -23,6 +24,8 @@ export function ViscoseMobileWorkGrid({
   cards,
   onOpen,
 }: ViscoseMobileWorkGridProps) {
+  const { locale } = useLocale();
+  const titleFont = locale === "zh" ? "font-serif-sc" : "font-bodoni";
   return (
     <ul className="mt-7 grid grid-cols-2 gap-x-3 gap-y-4">
       {cards.map((card) => (
@@ -50,7 +53,7 @@ export function ViscoseMobileWorkGrid({
               data-mobile-copy=""
               className="flex w-full min-w-0 flex-col items-start gap-2 opacity-0"
             >
-              <span className="block w-full min-w-0 truncate font-bodoni text-12 font-medium capitalize leading-[18px] text-grey-400">
+              <span className={`block w-full min-w-0 truncate text-12 font-medium capitalize leading-[18px] text-grey-400 ${titleFont}`}>
                 {card.title}
               </span>
               {card.description ? (

@@ -15,6 +15,7 @@ import {
   useSectionPager,
 } from "@/components/providers/section-pager-provider";
 import { ScreenShell } from "@/components/ui/screen-shell";
+import { useFolderWordMagnet } from "@/hooks/use-folder-word-magnet";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import archiveFolderImg from "../../public/archive/archive-folder-yellow-alpha.webp";
 
@@ -29,6 +30,10 @@ const FOLDER_VIDEO_MOBILE_HEVC =
   "/archive/archive-folder-yellow-alpha-mobile-hevc.mp4?v=raw1";
 /** 进屏后书本视频一次性播完的总时长（与文字无关）。 */
 const AUTO_DURATION = 9;
+/** 与 globals.css 里书内文字过渡时长一致。 */
+const COPY_REVEAL_SECONDS = 0.7;
+/** 同一行里相邻词的错开。 */
+const COPY_WORD_STAGGER = 0.04;
 const MOBILE_QUERY = "(max-width: 767px)";
 
 function subscribeMobileViewport(callback: () => void) {
@@ -165,6 +170,7 @@ export function ArchiveIntro() {
         word.style.transitionDelay = "";
       }
       delete copy.dataset.revealed;
+      delete copy.dataset.magnet;
     };
 
     snapHidden();
@@ -174,6 +180,7 @@ export function ArchiveIntro() {
       return;
     }
 
+    let latestEnd = 0;
     copy.querySelectorAll<HTMLElement>("[data-sd-words]").forEach((group) => {
       const groupWords = words.filter((word) => group.contains(word));
       const order = gsap.utils.shuffle(groupWords.map((_, index) => index));
@@ -182,14 +189,31 @@ export function ArchiveIntro() {
       groupWords.forEach((word, index) => {
         const offset = order[index] ?? index;
         word.style.transition = "";
-        word.style.transitionDelay = `${base + offset * 0.04}s`;
+        word.style.transitionDelay = `${base + offset * COPY_WORD_STAGGER}s`;
       });
+      const groupEnd =
+        base +
+        Math.max(groupWords.length - 1, 0) * COPY_WORD_STAGGER +
+        COPY_REVEAL_SECONDS;
+      if (groupEnd > latestEnd) latestEnd = groupEnd;
     });
     const frame = requestAnimationFrame(() => {
       copy.dataset.revealed = "true";
     });
-    return () => cancelAnimationFrame(frame);
+    const magnetTimer = window.setTimeout(() => {
+      copy.dataset.magnet = "ready";
+    }, latestEnd * 1000);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(magnetTimer);
+    };
   }, [isActive, isMobileViewport, reducedMotion, locale]);
+
+  useFolderWordMagnet(
+    container,
+    isActive && !isMobileViewport && !reducedMotion,
+    locale,
+  );
 
   // 页面角标大字与第六屏 DESIGN / WORKS 共用横穿后回位的出场节奏。
   useGSAP(
@@ -270,7 +294,10 @@ export function ArchiveIntro() {
         </div>
 
         {/* 档案夹卡片：桌面 563×420；移动端 Figma 701:204 = 312×233 */}
-        <div className="absolute left-[calc(50%+1px)] top-[47.69%] aspect-[563/420] w-[80%] -translate-x-1/2 -translate-y-1/2 text-14 md:left-[calc(50%+var(--su)*4)] md:top-[calc(50%+var(--su)*18)] md:w-[calc(var(--su)*563)] md:text-[length:calc(var(--su)*16)]">
+        <div
+          data-folder
+          className="absolute left-[calc(50%+1px)] top-[47.69%] aspect-[563/420] w-[80%] -translate-x-1/2 -translate-y-1/2 text-14 md:left-[calc(50%+var(--su)*4)] md:top-[calc(50%+var(--su)*18)] md:w-[calc(var(--su)*563)] md:text-[length:calc(var(--su)*16)]"
+        >
           {/* 投影：设计稿手绘投影图形 1:1 还原（SVG 画布含模糊出血，按设计坐标定位） */}
           <span
             aria-hidden="true"

@@ -69,7 +69,7 @@ export function SiteNav({
   // 中文态显示「英」；英文态显示「CN」
   const langLabel = isEn ? "CN" : "英";
   const navFont = isEn ? "font-bodoni" : "font-serif-sc";
-  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white ${focusRing}`;
+  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white before:absolute before:inset-y-0 before:-left-[calc(var(--su)*10)] before:-right-[calc(var(--su)*10)] before:content-[''] ${focusRing}`;
   // Bodoni 全大写的视觉中线比中文低，方块上提 1px 才与文字对齐
   const markOffsetY = isEn ? -1 : 0;
 
@@ -199,12 +199,14 @@ export function SiteNav({
                 ref={desktopCloseRef}
                 label={indexLabel}
                 aria-label={indexAriaLabel}
+                data-nav-index=""
                 onClick={handleIndexClick}
                 markOffsetY={markOffsetY}
                 className={linkClass}
               />
               <FlipHoverButton
                 label={t("nav.contact")}
+                data-nav-contact=""
                 onClick={onContact}
                 markOffsetY={markOffsetY}
                 className={linkClass}

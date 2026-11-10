@@ -20,8 +20,13 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { HeroSubtitle } from "@/components/ui/hero-subtitle";
 import { ScreenShell } from "@/components/ui/screen-shell";
-import { useHeroPreloader } from "@/hooks/use-hero-preloader";
-import { HeroLoader } from "@/sections/hero-loader";
+import { useHeroPreloader, reportLoaderImage } from "@/hooks/use-hero-preloader";
+import { useDesktopMedia } from "@/hooks/use-desktop-media";
+import { HeroLoader, LOADER_STILL_ID } from "@/sections/hero-loader";
+import {
+  whenStudioFrameReady,
+  allowStudioFrame,
+} from "@/lib/studio-frame-ready";
 import archiveBoxImg from "../../public/hero/hero-loader-bg.webp";
 
 gsap.registerPlugin(useGSAP);
@@ -94,16 +99,8 @@ export function Hero() {
     getVideoSrcServerSnapshot,
   );
 
-  const preload = useHeroPreloader(videoSrc, {
-    videoEnabled: SHOW_INTRO_VIDEO,
-    timeoutMs: LOADER_FAILSAFE_MS,
-  });
-  const preloadRef = useRef(preload);
-  // GSAP 闭包只建一次，播放地址走 ref，避免闭包钉死在首帧的空地址上。
-  const videoSrcRef = useRef(DESKTOP_VIDEO_SRC);
-  const { locale, t } = useLocale();
   // 分页器默认锁定；停在档案盒页后解锁，由滚动拦截器决定是否起播视频。
-  // 带后缀打开时不播加载幕，标题直接呈现。从其他屏回到首页会重播整段开场。
+  // 带后缀打开时不播加载幕，标题直接呈现。从其他屏回到首页重播开场，但不再重新下载。
   const {
     playIntro,
     homeIntroReplay,
@@ -111,6 +108,16 @@ export function Hero() {
     setIntroOverlayActive,
     registerScrollInterceptor,
   } = useSectionPager();
+  // 分享链接直接进入某一屏时不播开场，也不下载用不到的视频。回到首页沿用已经下好的 blob。
+  const preload = useHeroPreloader(videoSrc, {
+    videoEnabled: SHOW_INTRO_VIDEO && (playIntro || homeIntroReplay > 0),
+    timeoutMs: LOADER_FAILSAFE_MS,
+  });
+  const preloadRef = useRef(preload);
+  // GSAP 闭包只建一次，播放地址走 ref，避免闭包钉死在首帧的空地址上。
+  const videoSrcRef = useRef(DESKTOP_VIDEO_SRC);
+  const { locale, t } = useLocale();
+  const isDesktop = useDesktopMedia();
   const firstFrameRef = useRef<HTMLDivElement>(null);
   const titleZoneRef = useRef<HTMLDivElement>(null);
   const scrollHintRef = useRef<HTMLButtonElement>(null);
@@ -122,8 +129,6 @@ export function Hero() {
   const skipIntroVideoRef = useRef<(() => void) | null>(null);
   // 加载序幕只出现一次：退场动画结束后整体卸载，释放其 DOM 与图片内存
   const [loaderDismissed, setLoaderDismissed] = useState(!playIntro);
-  // 档案盒静帧只在加载层开始揭开时挂上，避免加载期间多下一次看不见的图
-  const [showArchiveStill, setShowArchiveStill] = useState(false);
   // 开场流程结束后档案盒首帧与视频层先卸掉；回到首页时再挂上重播
   const [introDone, setIntroDone] = useState(!playIntro);
   const [playedReplay, setPlayedReplay] = useState(0);
@@ -131,7 +136,6 @@ export function Hero() {
     setPlayedReplay(homeIntroReplay);
     setLoaderDismissed(false);
     setIntroDone(false);
-    setShowArchiveStill(false);
   }
 
   useLayoutEffect(() => {
@@ -315,29 +319,36 @@ export function Hero() {
     };
   }, []);
 
-  // 加载超过保险上限：跳过开场视频，直接落在档案室尾帧并亮标题。
+  // 加载超过保险上限：先让桌面尾帧开始下，到了再揭开，避免先露出灰底。
   useEffect(() => {
     if (loaderDismissed || introPhaseRef.current !== "loading") return;
+    let cancelFinale = () => {};
     const timeout = window.setTimeout(() => {
       if (introPhaseRef.current !== "loading") return;
-      presentHeroFinale({
-        loader: loaderRef.current,
-        firstFrame: firstFrameRef.current,
-        lastFrame: document.querySelector<HTMLElement>(
-          '[data-shared-bg="studio"]',
-        ),
-        videoLayer: videoLayerRef.current,
-        root: container.current,
+      cancelFinale = whenStudioFrameReady(() => {
+        if (introPhaseRef.current !== "loading") return;
+        presentHeroFinale({
+          loader: loaderRef.current,
+          firstFrame: firstFrameRef.current,
+          lastFrame: document.querySelector<HTMLElement>(
+            '[data-shared-bg="studio"]',
+          ),
+          videoLayer: videoLayerRef.current,
+          root: container.current,
+        });
+        introPhaseRef.current = "done";
+        gsap.set([scrollHintRef.current, skipRef.current], { autoAlpha: 0 });
+        doneRef.current = true;
+        setNavigationLocked(false);
+        setIntroDone(true);
+        setLoaderDismissed(true);
       });
-      introPhaseRef.current = "done";
-      gsap.set([scrollHintRef.current, skipRef.current], { autoAlpha: 0 });
-      doneRef.current = true;
-      setNavigationLocked(false);
-      setIntroDone(true);
-      setLoaderDismissed(true);
     }, LOADER_FAILSAFE_MS);
 
-    return () => window.clearTimeout(timeout);
+    return () => {
+      window.clearTimeout(timeout);
+      cancelFinale();
+    };
   }, [loaderDismissed, setNavigationLocked]);
 
   useGSAP(
@@ -427,24 +438,28 @@ export function Hero() {
         });
       });
 
+      let cancelStudioWait = () => {};
       const skipToArchiveRoom = contextSafe!(() => {
         if (introPhaseRef.current === "done") {
           setLoaderDismissed(true);
           return;
         }
-        presentHeroFinale({
-          loader,
-          firstFrame: firstFrameRef.current,
-          lastFrame,
-          videoLayer,
-          root,
+        cancelStudioWait = whenStudioFrameReady(() => {
+          if (introPhaseRef.current === "done") return;
+          presentHeroFinale({
+            loader,
+            firstFrame: firstFrameRef.current,
+            lastFrame,
+            videoLayer,
+            root,
+          });
+          hideCornerActions(0);
+          introPhaseRef.current = "done";
+          doneRef.current = true;
+          setNavigationLocked(false);
+          setIntroDone(true);
+          setLoaderDismissed(true);
         });
-        hideCornerActions(0);
-        introPhaseRef.current = "done";
-        doneRef.current = true;
-        setNavigationLocked(false);
-        setIntroDone(true);
-        setLoaderDismissed(true);
       });
 
       const holdOnArchive = contextSafe!(() => {
@@ -459,7 +474,6 @@ export function Hero() {
           gsap.set(firstFrameRef.current, { autoAlpha: 0 });
         } else {
           gsap.set(videoLayer, { autoAlpha: 0 });
-          setShowArchiveStill(true);
         }
         // 导航先在加载层下方就位，由双层上裁自然揭开，避免退场后再挂载造成闪现。
         setNavigationLocked(false);
@@ -561,6 +575,39 @@ export function Hero() {
         window.setTimeout(go, 1200);
       };
 
+      const beginAfterLoad = () => {
+        const sequence = SHOW_INTRO_VIDEO ? ensureVideo() : null;
+        if (isMobile && sequence) {
+          sequence.showFirstFrame(holdOnArchive);
+        } else {
+          holdOnArchive();
+        }
+      };
+
+      // 视频 blob 还在内存里：不再盖加载层，直接停在「向下滑动」。
+      const resumeCachedIntro = () => {
+        if (revealStartedRef.current) return;
+        revealStartedRef.current = true;
+        introPhaseRef.current = "holding";
+        doneRef.current = true;
+        gsap.set(loader, { autoAlpha: 0 });
+        setNavigationLocked(false);
+        setLoaderDismissed(true);
+        const sequence = SHOW_INTRO_VIDEO ? ensureVideo() : null;
+        if (isMobile && sequence) {
+          sequence.showFirstFrame(() => {
+            gsap.set(videoLayer, { autoAlpha: 1 });
+            fadeCornerAction(scrollHintRef.current, true, 0.5);
+          });
+          return;
+        }
+        gsap.set(videoLayer, { autoAlpha: 0 });
+        if (firstFrameRef.current) {
+          gsap.set(firstFrameRef.current, { autoAlpha: 1 });
+        }
+        fadeCornerAction(scrollHintRef.current, true, 0.5);
+      };
+
       const startSequence = () => {
         window.clearInterval(gate);
         loaderProgress.reset();
@@ -574,7 +621,14 @@ export function Hero() {
             1,
           );
 
+          if (playedReplay > 0 && state.status === "ready" && state.objectUrl) {
+            window.clearInterval(gate);
+            resumeCachedIntro();
+            return;
+          }
+
           if (state.status === "error") {
+            if (!isMobile) allowStudioFrame();
             loaderProgress.update(timeProgress * 100);
             if (timeProgress >= 1) releaseLoader(skipToArchiveRoom);
             return;
@@ -582,25 +636,28 @@ export function Hero() {
 
           loaderProgress.update(Math.min(state.progress, timeProgress) * 100);
           if (state.status === "ready" && timeProgress >= 1) {
-            releaseLoader(() => {
-              const sequence = SHOW_INTRO_VIDEO ? ensureVideo() : null;
-              if (isMobile && sequence) {
-                sequence.showFirstFrame(holdOnArchive);
-              } else {
-                holdOnArchive();
-              }
-            });
+            releaseLoader(beginAfterLoad);
           }
         }, 50);
       };
 
-      startSequence();
+      const cached = preloadRef.current;
+      if (
+        playedReplay > 0 &&
+        cached.status === "ready" &&
+        cached.objectUrl
+      ) {
+        resumeCachedIntro();
+      } else {
+        startSequence();
+      }
 
       return () => {
         window.clearInterval(gate);
         loaderProgress.kill();
         materialCycle.kill();
         activeVideo?.kill();
+        cancelStudioWait();
       };
     },
     { dependencies: [playedReplay], scope: container },
@@ -615,12 +672,12 @@ export function Hero() {
       {/* 01首屏-1 档案盒与视频层：开场流程结束后不再复用，整体卸载 */}
       {introDone ? null : (
         <>
-          {/* 档案盒静帧：加载层退场后停在此页，下滑再播视频 */}
+          {/* 档案盒静帧：加载层还盖着时就挂上，onLoad 之后才允许揭开 */}
           <div
             ref={firstFrameRef}
             className="invisible absolute inset-0 z-[25] hidden opacity-0 md:block motion-reduce:hidden"
           >
-            {showArchiveStill ? (
+            {isDesktop ? (
               <Image
                 src={archiveBoxImg}
                 alt=""
@@ -630,6 +687,8 @@ export function Hero() {
                 placeholder="blur"
                 sizes="100vw"
                 className="object-cover"
+                onLoad={() => reportLoaderImage(LOADER_STILL_ID)}
+                onError={() => reportLoaderImage(LOADER_STILL_ID, false)}
               />
             ) : null}
           </div>

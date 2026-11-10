@@ -21,7 +21,7 @@ export function SurveyWorkTags({
       data-survey-keep=""
       data-sd-media
       data-sd-delay={revealDelay}
-      className="overflow-hidden"
+      className="cursor-auto overflow-hidden"
     >
       <ul
         data-sd-media-inner

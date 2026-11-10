@@ -254,6 +254,7 @@ export function ArchiveIndex({
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
+      data-own-cursor=""
       className={`fixed inset-0 z-[60] md:opacity-0 ${open ? "" : "pointer-events-none"}`}
       onClick={onClose}
     >

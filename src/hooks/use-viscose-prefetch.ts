@@ -16,13 +16,14 @@ type UseViscosePrefetchOptions = {
   isDesktop: boolean;
 };
 
-function drawerWarmup() {
+function drawerWarmup(isDesktop: boolean) {
   const hero = SURVEY_G_001.media[0];
   const hover = SURVEY_G_001.media[1];
   if (hero) {
     prefetchImage(hero.src, "low");
     prefetchNextImage(hero.src, 1080, "low");
-    prefetchNextImage(hero.src, 1920, "low");
+    // 手机画面用不到 1920 宽。页面上真正显示的图仍走各自的 sizes。
+    if (isDesktop) prefetchNextImage(hero.src, 1920, "low");
   }
   if (hover?.hover === "video") {
     prefetchVideo(hover.videoSrc);
@@ -52,7 +53,7 @@ export function useViscosePrefetch({
 
   useEffect(() => {
     if (!fifthActive) return;
-    const timer = window.setTimeout(drawerWarmup, 1200);
+    const timer = window.setTimeout(() => drawerWarmup(isDesktop), 1200);
     return () => window.clearTimeout(timer);
-  }, [fifthActive]);
+  }, [fifthActive, isDesktop]);
 }

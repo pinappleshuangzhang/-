@@ -95,14 +95,15 @@ export function SurveyDrawerContent({
       ref={rootRef}
       className="relative px-5 pb-20 pt-[105px] max-md:px-3 max-md:pb-12 max-md:pt-[68px]"
     >
-      {/* 内容铺满内边距内宽度，右缘与导航 20px 页边距对齐 */}
+      {/* 内容铺满抽屉内边距；抽屉右缘在目录和联系我们中间 */}
       <div className="flex w-full flex-col gap-10">
         <div className="flex flex-col gap-10 max-md:gap-9">
           <header className="flex items-center justify-between">
             <h1
               id={titleId}
               aria-label={heading}
-              className="whitespace-nowrap font-bodoni text-40 font-normal uppercase leading-[55px] text-grey-400 max-md:text-24 max-md:normal-case max-md:leading-[34px] md:text-[length:calc(var(--su)*40)] md:leading-[calc(var(--su)*55)]"
+              data-survey-keep=""
+              className="cursor-auto whitespace-nowrap font-bodoni text-40 font-normal uppercase leading-[55px] text-grey-400 max-md:text-24 max-md:normal-case max-md:leading-[34px] md:text-[length:calc(var(--su)*40)] md:leading-[calc(var(--su)*55)]"
             >
               <span data-sd-words data-sd-delay="0.15" className="max-md:hidden">
                 <SplitWords text={heading} />
@@ -124,8 +125,9 @@ export function SurveyDrawerContent({
                 <p
                   data-sd-words
                   data-sd-delay="0.2"
+                  data-survey-keep=""
                   aria-label={activeCategory.typeLabel}
-                  className="whitespace-nowrap font-bodoni text-20 capitalize leading-normal text-grey-400 max-md:text-12 max-md:leading-[15px] md:text-[length:calc(var(--su)*20)]"
+                  className="cursor-auto whitespace-nowrap font-bodoni text-20 capitalize leading-normal text-grey-400 max-md:text-12 max-md:leading-[15px] md:text-[length:calc(var(--su)*20)]"
                 >
                   <SplitWords text={activeCategory.typeLabel} />
                 </p>
@@ -133,8 +135,9 @@ export function SurveyDrawerContent({
               <p
                 data-sd-words
                 data-sd-delay="0.22"
+                data-survey-keep=""
                 aria-label={activeWork?.archivedLabel ?? SURVEY_G_001.archivedLabel}
-                className="whitespace-nowrap font-bodoni text-20 uppercase leading-normal text-grey-400 max-md:text-12 max-md:leading-[15px] md:text-[length:calc(var(--su)*20)]"
+                className="cursor-auto whitespace-nowrap font-bodoni text-20 uppercase leading-normal text-grey-400 max-md:text-12 max-md:leading-[15px] md:text-[length:calc(var(--su)*20)]"
               >
                 <SplitWords
                   text={activeWork?.archivedLabel ?? SURVEY_G_001.archivedLabel}
@@ -152,7 +155,11 @@ export function SurveyDrawerContent({
               label={t("survey.tagList")}
             />
             {article ? (
-              <SurveyOpsArticle blocksZh={article.zh} blocksEn={article.en} />
+              <SurveyOpsArticle
+                blocksZh={article.zh}
+                blocksEn={article.en}
+                matchImageGap={activeWork.id === "g-004"}
+              />
             ) : (
               <WorkContent work={activeWork} />
             )}
@@ -172,10 +179,65 @@ function WorkContent({ work }: { work: SurveyWork }) {
   const [first, ...rest] = work.media;
   const laterDelays = ["0.5", "0.55", "0.6", "0.65", "0.7"];
 
+  if ((work.id === "g-001" || work.id === "g-002" || work.id === "g-003") && first) {
+    return (
+      <div className="flex flex-col">
+        <WorkMedia item={first} revealDelay="0.28" />
+        <WorkCaption
+          title={t(work.titleKey)}
+          description={t(work.descriptionKey)}
+          revealDelay="0.28"
+          className="mt-8 max-md:mt-5"
+        />
+        {rest.map((item, index) => {
+          const delay = laterDelays[index] ?? "0.7";
+          const caption =
+            item.showCaption === false
+              ? null
+              : {
+                  title: item.titleKey ? t(item.titleKey) : t(work.titleKey),
+                  description: item.captionKey ? t(item.captionKey) : "",
+                };
+          return (
+            <div
+              key={item.hover === "video" ? item.videoSrc : item.src}
+              className={
+                caption
+                  ? "mt-14 flex flex-col max-md:mt-10"
+                  : "mt-3 flex flex-col"
+              }
+            >
+              {caption ? (
+                <WorkCaption
+                  title={caption.title}
+                  description={caption.description}
+                  revealDelay={delay}
+                />
+              ) : null}
+              <WorkMedia
+                item={item}
+                revealDelay={delay}
+                preloadVideo={index === 0}
+                className={caption ? "mt-4 max-md:mt-3" : undefined}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const groups: SurveyMediaItem[][] = [];
+  for (const item of rest) {
+    const current = groups[groups.length - 1];
+    if (item.showCaption === false && current) current.push(item);
+    else groups.push([item]);
+  }
+
   return (
-    <div className="flex flex-col gap-14 max-md:gap-9">
+    <div className="flex flex-col gap-14 max-md:gap-10">
       {first ? (
-        <div className="flex flex-col gap-6 md:gap-19">
+        <div className="flex flex-col gap-5 md:gap-8">
           <WorkMedia item={first} revealDelay="0.28" />
           <WorkCaption
             title={t(work.titleKey)}
@@ -184,27 +246,43 @@ function WorkContent({ work }: { work: SurveyWork }) {
           />
         </div>
       ) : null}
-      {rest.map((item, index) => (
-        <div key={item.src} className="flex flex-col gap-6 md:gap-19">
-          <WorkMedia
-            item={item}
-            revealDelay={laterDelays[index] ?? "0.7"}
-            preloadVideo={index === 0}
-          />
-          {item.showCaption !== false ? (
-            <WorkCaption
-              title={item.titleKey ? t(item.titleKey) : t(work.titleKey)}
-              description={
-                item.captionKey ? t(item.captionKey) : t(work.descriptionKey)
-              }
-              revealDelay={laterDelays[index] ?? "0.7"}
-            />
-          ) : null}
-        </div>
-      ))}
+      {groups.map((group) => {
+        const lead = group[0];
+        if (!lead) return null;
+        const leadIndex = rest.indexOf(lead);
+        return (
+          <div key={lead.src} className="flex flex-col gap-5 md:gap-8">
+            <div className="flex flex-col gap-3">
+              {group.map((item, imageIndex) => {
+                const index = leadIndex + imageIndex;
+                return (
+                  <WorkMedia
+                    key={item.src}
+                    item={item}
+                    revealDelay={laterDelays[index] ?? "0.7"}
+                    preloadVideo={index === 0 && item.hover === "video"}
+                  />
+                );
+              })}
+            </div>
+            {lead.showCaption !== false ? (
+              <WorkCaption
+                title={lead.titleKey ? t(lead.titleKey) : t(work.titleKey)}
+                description={lead.captionKey ? t(lead.captionKey) : ""}
+                revealDelay={laterDelays[leadIndex] ?? "0.7"}
+              />
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }
+
+const articleTitleClass =
+  "font-serif-sc text-24 font-medium leading-[32px] text-grey-400 max-md:text-18 max-md:leading-normal md:text-[length:calc(var(--su)*24)] md:leading-[calc(var(--su)*32)]";
+const articleBodyClass =
+  "font-serif-sc text-14 font-normal leading-5 text-grey-300 max-md:text-12 md:text-[length:calc(var(--su)*14)] md:leading-[calc(var(--su)*20)]";
 
 function WorkCaption({
   title,
@@ -226,14 +304,10 @@ function WorkCaption({
     >
       <div
         data-sd-media-inner
-        className="flex translate-y-[105%] flex-col gap-3 md:gap-8"
+        className="flex translate-y-[105%] flex-col gap-3 md:gap-4"
       >
-        <p className="font-serif-sc text-20 font-medium leading-normal text-grey-400 max-md:font-bodoni max-md:text-18 max-md:leading-6 md:text-[length:calc(var(--su)*28)] md:leading-[calc(var(--su)*36)]">
-          {title}
-        </p>
-        <p className="font-serif-sc text-14 font-normal leading-5 text-grey-300 max-md:text-12 max-md:leading-6 md:text-[length:calc(var(--su)*14)] md:leading-[calc(var(--su)*20)]">
-          {description}
-        </p>
+        <p className={articleTitleClass}>{title}</p>
+        {description ? <p className={articleBodyClass}>{description}</p> : null}
       </div>
     </div>
   );
@@ -243,10 +317,12 @@ function WorkMedia({
   item,
   revealDelay,
   preloadVideo = false,
+  className,
 }: {
   item: SurveyMediaItem;
   revealDelay: string;
   preloadVideo?: boolean;
+  className?: string;
 }) {
   const { locale, t } = useLocale();
   const src = locale === "en" && item.srcEn ? item.srcEn : item.src;
@@ -261,7 +337,9 @@ function WorkMedia({
         height={item.height}
         revealDelay={revealDelay}
         innerClassName={item.innerClassName}
+        className={className}
         videoSrc={item.videoSrc}
+        playWhenVisible={item.playWhenVisible}
         previewLabel={`${alt}。${t("survey.heroPreview")}`}
         expandLabel={t("survey.videoExpand")}
         closeLabel={t("nav.close")}
@@ -277,7 +355,9 @@ function WorkMedia({
       width={item.width}
       height={item.height}
       revealDelay={revealDelay}
+      eager={item.eager}
       innerClassName={item.innerClassName}
+      className={className}
     />
   );
 }

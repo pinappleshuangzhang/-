@@ -46,7 +46,7 @@ export function MobileSiteNav({
 }: MobileSiteNavProps) {
   const navFont = isEnglish ? "font-bodoni" : "font-serif-sc";
   const ink = tone === "light" ? "text-grey-400" : "text-white";
-  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-12 font-normal uppercase leading-[18px] ${ink} ${focusRing}`;
+  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-12 font-normal uppercase leading-[18px] ${ink} before:absolute before:inset-y-0 before:-left-2.5 before:-right-2.5 before:content-[''] ${focusRing}`;
   // Bodoni 全大写的视觉中线比中文低，方块上提 1px 才与文字对齐
   const markOffsetY = isEnglish ? -1 : 0;
   // 仅深色屏保留 mix-blend；浅色屏实色字，减轻滑动合成成本

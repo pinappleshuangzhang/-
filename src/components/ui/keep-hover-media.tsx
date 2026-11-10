@@ -1,10 +1,18 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type Ref,
+} from "react";
 import gsap from "gsap";
+import { revealParkedMediaInner } from "@/animations/sondaven-reveal";
 import { SurveyEnlargeableImage } from "@/components/ui/survey-enlargeable-image";
-import { SurveyStackedVideo } from "@/components/ui/survey-stacked-video";
-import { useDesktopMedia } from "@/hooks/use-desktop-media";
+import { SurveyVideoLightbox } from "@/components/ui/survey-video-lightbox";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 /** 与 sondaven 媒体入场一致：1.2s、power2.out、自 105% 上滑 */
@@ -24,6 +32,8 @@ type KeepHoverMediaBase = {
   sizes?: string;
   /** 第三屏入场延迟，写入 data-sd-delay */
   revealDelay: string;
+  /** 图片先被裁在框外时，跳过懒加载 */
+  eager?: boolean;
   className?: string;
   innerClassName?: string;
 };
@@ -37,6 +47,8 @@ export type KeepHoverMediaProps =
       closeLabel: string;
       /** 默认 none；抽屉打开后第一段 hover 用 auto，避免悬停才开始拉流 */
       preload?: "none" | "metadata" | "auto";
+      /** 进入视口就上滑播放，不依赖悬停或聚焦 */
+      playWhenVisible?: boolean;
     })
   | (KeepHoverMediaBase & {
       hover: "none";
@@ -50,26 +62,7 @@ const frameClass =
  * hover="video" 出黑色遮罩，视频与图片相同上滑出现；hover="none" 画面不变。
  */
 export function KeepHoverMedia(props: KeepHoverMediaProps) {
-  const isDesktop = useDesktopMedia();
-  if (props.hover === "video") {
-    if (!isDesktop) {
-      return (
-        <SurveyStackedVideo
-          src={props.src}
-          alt={props.alt}
-          width={props.width}
-          height={props.height}
-          sizes={props.sizes}
-          revealDelay={props.revealDelay}
-          innerClassName={props.innerClassName}
-          videoSrc={props.videoSrc}
-          expandLabel={props.expandLabel}
-          closeLabel={props.closeLabel}
-        />
-      );
-    }
-    return <VideoKeepMedia {...props} />;
-  }
+  if (props.hover === "video") return <VideoKeepMedia {...props} />;
   return <StaticKeepMedia {...props} />;
 }
 
@@ -77,6 +70,7 @@ function MediaFrame({
   revealDelay,
   className,
   innerClassName,
+  frameRef,
   tabIndex,
   "aria-label": ariaLabel,
   onMouseEnter,
@@ -88,6 +82,7 @@ function MediaFrame({
   revealDelay: string;
   className?: string;
   innerClassName?: string;
+  frameRef?: Ref<HTMLDivElement>;
   tabIndex?: number;
   "aria-label"?: string;
   onMouseEnter?: () => void;
@@ -98,6 +93,7 @@ function MediaFrame({
 }) {
   return (
     <div
+      ref={frameRef}
       data-survey-keep=""
       data-sd-media
       data-sd-delay={revealDelay}
@@ -126,6 +122,7 @@ function StaticKeepMedia({
   height,
   sizes = "896px",
   revealDelay,
+  eager = false,
   className,
   innerClassName,
 }: KeepHoverMediaBase) {
@@ -141,6 +138,7 @@ function StaticKeepMedia({
         width={width}
         height={height}
         sizes={sizes}
+        eager={eager}
         className="h-auto w-full"
       />
     </MediaFrame>
@@ -158,19 +156,35 @@ function VideoKeepMedia({
   innerClassName,
   videoSrc,
   previewLabel,
+  expandLabel,
+  closeLabel,
   preload = "none",
+  playWhenVisible = false,
 }: KeepHoverMediaBase & {
   hover: "video";
   videoSrc: string;
   previewLabel: string;
+  expandLabel: string;
+  closeLabel: string;
   preload?: "none" | "metadata" | "auto";
+  playWhenVisible?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
   const hoverInnerRef = useRef<HTMLDivElement>(null);
   const maskRef = useRef<HTMLDivElement>(null);
   const hoveringRef = useRef(false);
   const focusedRef = useRef(false);
+  const startedRef = useRef(false);
+  const videoOpenRef = useRef(false);
+  const [videoOpen, setVideoOpen] = useState(false);
   const reducedMotion = useReducedMotion();
+
+  const openLandscape = useCallback(() => {
+    videoOpenRef.current = true;
+    videoRef.current?.pause();
+    setVideoOpen(true);
+  }, []);
 
   useLayoutEffect(() => {
     const layer = hoverInnerRef.current;
@@ -219,14 +233,30 @@ function VideoKeepMedia({
 
   const syncPlayback = useCallback(() => {
     const video = videoRef.current;
-    const active = hoveringRef.current || focusedRef.current;
+    if (videoOpenRef.current) {
+      video?.pause();
+      return;
+    }
+    const active =
+      playWhenVisible && reducedMotion
+        ? false
+        : playWhenVisible
+          ? startedRef.current
+          : hoveringRef.current || focusedRef.current;
     revealHover(active);
     if (!video) return;
     if (!reducedMotion && active) {
       void video
         .play()
         .then(() => {
-          if (!hoveringRef.current && !focusedRef.current) {
+          if (videoOpenRef.current) {
+            video.pause();
+            return;
+          }
+          const stillActive = playWhenVisible
+            ? startedRef.current
+            : hoveringRef.current || focusedRef.current;
+          if (!stillActive) {
             video.pause();
             video.currentTime = 0;
           }
@@ -238,15 +268,40 @@ function VideoKeepMedia({
     }
     video.pause();
     video.currentTime = 0;
-  }, [reducedMotion, revealHover]);
+  }, [playWhenVisible, reducedMotion, revealHover]);
+
+  useEffect(() => {
+    if (!playWhenVisible) return;
+    const frame = frameRef.current;
+    if (!frame) return;
+    const scroller = frame.closest("[data-survey-scroller]");
+    // 盖住滚动区域中线后开始循环，滑走也不停。
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting || startedRef.current) return;
+        startedRef.current = true;
+        revealParkedMediaInner(frame, reducedMotion);
+        syncPlayback();
+      },
+      {
+        root: scroller instanceof HTMLElement ? scroller : null,
+        rootMargin: "-45% 0px -45% 0px",
+        threshold: 0,
+      },
+    );
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, [playWhenVisible, reducedMotion, syncPlayback]);
 
   return (
+    <>
     <MediaFrame
+      frameRef={frameRef}
       revealDelay={revealDelay}
       className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 ${className ?? ""}`}
       innerClassName={innerClassName}
-      tabIndex={0}
-      aria-label={previewLabel}
+      tabIndex={playWhenVisible ? undefined : 0}
+      aria-label={playWhenVisible ? undefined : previewLabel}
       onMouseEnter={() => {
         hoveringRef.current = true;
         syncPlayback();
@@ -271,6 +326,8 @@ function VideoKeepMedia({
         height={height}
         sizes={sizes}
         className="h-auto w-full"
+        activateLabel={expandLabel}
+        onActivate={openLandscape}
       />
       <div
         aria-hidden="true"
@@ -294,5 +351,20 @@ function VideoKeepMedia({
         </div>
       </div>
     </MediaFrame>
+    {videoOpen ? (
+      <SurveyVideoLightbox
+        src={videoSrc}
+        label={alt}
+        closeLabel={closeLabel}
+        onClose={() => {
+          videoOpenRef.current = false;
+          setVideoOpen(false);
+          syncPlayback();
+          const button = frameRef.current?.querySelector("button");
+          if (button instanceof HTMLButtonElement) button.focus();
+        }}
+      />
+    ) : null}
+    </>
   );
 }

@@ -7,7 +7,6 @@ export type OpsImage = {
 
 export type OpsProse = {
   kind: "prose";
-  kicker?: string;
   title?: string;
   subtitle?: string;
   paragraphs: string[];
@@ -70,7 +69,6 @@ export const OPS_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "00 / Prologue",
     title: "苹果时刻",
     subtitle: "The Apple Moment",
     paragraphs: [
@@ -96,7 +94,6 @@ export const OPS_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "01 / A New Scarcity",
     title: "当「做出来」不再稀缺",
     subtitle: "When making is no longer scarce",
     paragraphs: [
@@ -108,7 +105,6 @@ export const OPS_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "02 / The Gravity of Judgment",
     title: "判断，是设计的引力",
     subtitle: "Judgment gives design gravity",
     paragraphs: [
@@ -137,7 +133,6 @@ export const OPS_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "03 / After One Designer Gets Faster",
     title: "一个人变快之后",
     subtitle: "After one designer gets faster",
     paragraphs: [
@@ -160,7 +155,6 @@ export const OPS_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "04 / Three Shifts",
     title: "设计工作正在发生的三次转向",
     subtitle: "Three shifts in design work",
     paragraphs: [
@@ -196,7 +190,6 @@ export const OPS_ARTICLE_ZH: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "05 / Afterword",
     title: "苹果落下之后",
     subtitle: "After the apple falls",
     paragraphs: [
@@ -224,7 +217,6 @@ export const OPS_ARTICLE_EN: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "00 / Prologue",
     title: "The Apple Moment",
     subtitle: "The Apple Moment",
     paragraphs: [
@@ -250,7 +242,6 @@ export const OPS_ARTICLE_EN: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "01 / A New Scarcity",
     title: "When making is no longer scarce",
     subtitle: "When making is no longer scarce",
     paragraphs: [
@@ -262,7 +253,6 @@ export const OPS_ARTICLE_EN: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "02 / The Gravity of Judgment",
     title: "Judgment gives design gravity",
     subtitle: "Judgment gives design gravity",
     paragraphs: [
@@ -291,7 +281,6 @@ export const OPS_ARTICLE_EN: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "03 / After One Designer Gets Faster",
     title: "After one designer gets faster",
     subtitle: "After one designer gets faster",
     paragraphs: [
@@ -314,7 +303,6 @@ export const OPS_ARTICLE_EN: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "04 / Three Shifts",
     title: "Three shifts in design work",
     subtitle: "Three shifts in design work",
     paragraphs: [
@@ -350,7 +338,6 @@ export const OPS_ARTICLE_EN: OpsBlock[] = [
   },
   {
     kind: "prose",
-    kicker: "05 / Afterword",
     title: "After the apple falls",
     subtitle: "After the apple falls",
     paragraphs: [

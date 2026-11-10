@@ -120,6 +120,42 @@ export function playSondavenReveal(
   return tl;
 }
 
+function mediaInnerOffsetY(inner: HTMLElement) {
+  const yPercent = gsap.getProperty(inner, "yPercent");
+  if (typeof yPercent === "number" && yPercent > 1) return yPercent;
+  const transform = getComputedStyle(inner).transform;
+  const match = transform.match(/^matrix\(([^)]+)\)$/);
+  if (!match) return 0;
+  const offsetY = Number(match[1].split(",")[5]);
+  return Number.isFinite(offsetY) ? offsetY : 0;
+}
+
+/**
+ * 抽屉内容热更新后，新挂上的画面不在当初的入场名单里，会停在裁切区下方。
+ * 没有正在进行的动画、且仍被裁在框外时，补一次上滑。
+ */
+export function revealParkedMediaInner(
+  frame: HTMLElement | null,
+  reducedMotion: boolean,
+) {
+  const inner = frame?.querySelector<HTMLElement>("[data-sd-media-inner]");
+  if (!inner || gsap.isTweening(inner) || mediaInnerOffsetY(inner) <= 40) return;
+  gsap.killTweensOf(inner);
+  if (
+    reducedMotion ||
+    window.matchMedia("(max-width: 767px)").matches
+  ) {
+    gsap.set(inner, MEDIA_VISIBLE);
+    return;
+  }
+  gsap.to(inner, {
+    ...MEDIA_VISIBLE,
+    duration: DUR_L,
+    ease: EASE,
+    overwrite: "auto",
+  });
+}
+
 /** 单张图片从下往上滑入，时长与开场媒体一致 */
 function slideMediaIn(inner: HTMLElement) {
   gsap.killTweensOf(inner);
@@ -147,8 +183,13 @@ export function observeDeferredDrawerMedia(
         const inner = entry.target.querySelector<HTMLElement>(
           "[data-sd-media-inner]",
         );
-        if (inner) tweens.push(slideMediaIn(inner));
+        if (!inner) continue;
         observer.unobserve(entry.target);
+        if (window.matchMedia("(max-width: 767px)").matches) {
+          gsap.set(inner, MEDIA_VISIBLE);
+          continue;
+        }
+        tweens.push(slideMediaIn(inner));
       }
     },
     { root: scroller, rootMargin: "0px 0px 80px 0px", threshold: 0 },

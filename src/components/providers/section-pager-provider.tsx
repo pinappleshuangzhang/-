@@ -309,7 +309,7 @@ export function SectionPagerProvider({
       if (screenKeysRef.current[target] !== GALLERY_SCREEN_KEY) {
         setWorkRouteIndex(null);
       }
-      // 从其他屏回到首页：幕布还盖着时重开加载幕，揭开后从头播开场
+      // 从其他屏回到首页：幕布还盖着时重播开场。资源已经在内存里，不再走加载。
       if (target === 0 && previousIndex !== 0) {
         lockedRef.current = true;
         setNavigationLockedState(true);

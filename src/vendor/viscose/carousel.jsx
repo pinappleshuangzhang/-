@@ -440,6 +440,8 @@ export default function Carousel({
     // screen. Once the ring is off centre that is no longer 3 o'clock.
     let frontAngle = 0;
     let interactive = false;
+    // 第三阶段一开始就出光标文字。真正拖拽仍等圆环停稳，避免和入场抢 spin。
+    let cursorLive = false;
     let spinVel = 0; // rad/s
     let dragging = false;
     let canvasCursor = "default";
@@ -1198,15 +1200,25 @@ export default function Carousel({
         canvasCursor = nextCursor;
         renderer.domElement.style.cursor = nextCursor;
       }
+      // 靠近就上色，不必等光标完全进入卡片。正压在某张上时以那张为准。
+      let attractI = -1;
+      let attractF = 0;
+      for (let i = 0; i < count; i++) {
+        if (hoverF[i] > attractF) {
+          attractF = hoverF[i];
+          attractI = i;
+        }
+      }
       if (over >= 0) colorPlane = over;
+      else if (attractI >= 0) colorPlane = attractI;
       const hoverColor = colorPlane >= 0 ? hoverF[colorPlane] : 0;
-      if (over < 0 && hoverColor < 0.001) colorPlane = -1;
+      if (hoverColor < 0.001) colorPlane = -1;
       uniforms.uHoverPlane.value = colorPlane;
       uniforms.uHoverColor.value = hoverColor;
       // 第三阶段光标在屏内即显示提示：悬停卡片上显示「查看」，其余显示「拖拽」
       const wantClose =
         pointer.inside &&
-        interactive &&
+        (interactive || cursorLive) &&
         !coarse &&
         viewW > params.cursorLabelFrom;
       if (hoverClose && wantClose) {
@@ -1223,7 +1235,7 @@ export default function Carousel({
         if (hoverClose) {
           gsap.to(hoverClose, {
             autoAlpha: wantClose ? 1 : 0,
-            duration: 0.2,
+            duration: wantClose ? 0 : 0.2,
             overwrite: "auto",
           });
         }
@@ -1375,6 +1387,9 @@ export default function Carousel({
       stagePhase = "entry";
       ringAutoRotating = false;
       interactive = false;
+      cursorLive = false;
+      tagUp = false;
+      if (hoverClose) gsap.set(hoverClose, { autoAlpha: 0 });
       announced = -1;
       spinVel = 0;
       for (const layer of spinningLayers) layer.spin = 0;
@@ -1637,13 +1652,16 @@ export default function Carousel({
           if (disposed) return;
           stagePhase = "final";
           announced = -1;
-          spinVel = 0;
-          settling = false;
-          state.spin = finalSpin;
-          interactive = true;
+          // 拖拽已在圆环停稳时打开。这里若再把 spin 拉回 001，会吃掉提前开始的拖动。
+          if (!interactive) {
+            spinVel = 0;
+            settling = false;
+            state.spin = finalSpin;
+            interactive = true;
+            seedFromLastClient();
+          }
           if (listEl) listEl.style.pointerEvents = "auto";
           if (stageBackground) gsap.set(stageBackground, { opacity: 0 });
-          seedFromLastClient();
         },
       });
 
@@ -1656,6 +1674,25 @@ export default function Carousel({
           0,
         );
         return;
+      }
+
+      // 进入第三阶段立刻显示光标文字，不等圆环停稳或名单播完。
+      cursorLive = true;
+      seedFromLastClient();
+      ensureLoop();
+      if (
+        hoverClose &&
+        pointer.inside &&
+        !coarse &&
+        viewW > params.cursorLabelFrom
+      ) {
+        tagUp = true;
+        hoverClose.textContent = cursorLabelsRef.current.drag;
+        if (pointer.seeded && setCloseX && setCloseY) {
+          setCloseX(cursor.x + viewW * 0.5 + 12);
+          setCloseY(viewH * 0.5 - cursor.y + 12);
+        }
+        gsap.set(hoverClose, { autoAlpha: 1 });
       }
 
       if (stageBackground) {
@@ -1696,10 +1733,8 @@ export default function Carousel({
         params.moveDelay,
       );
       if (listEl) {
-        const listRevealAt = Math.max(
-          params.moveDelay,
-          params.moveTime * 0.55,
-        );
+        // 等圆环移到左侧再出名单。提前出现时，不换行的标题会穿过右侧卡片。
+        const listRevealAt = params.moveDelay + params.moveTime;
         const listWords = gsap.utils.shuffle([...categoryWords]);
         finalTl.set(listEl, { opacity: 1 }, listRevealAt);
         finalTl.fromTo(
@@ -1728,6 +1763,20 @@ export default function Carousel({
           Math.max(params.moveDelay, params.moveTime * 0.55),
         );
       }
+      // 圆环停稳就出拖拽光标。右侧名单还在逐词出现，不能等整段时间轴结束。
+      const ringSettledAt = Math.max(
+        params.spinDelay + params.spinTime,
+        params.moveDelay + params.moveTime,
+      );
+      finalTl.call(
+        () => {
+          if (disposed || interactive) return;
+          interactive = true;
+          seedFromLastClient();
+        },
+        undefined,
+        ringSettledAt,
+      );
     };
 
     // power2.out 的后段圆环已经看起来张开，但 stagePhase 仍是 entry。
@@ -2068,6 +2117,7 @@ export default function Carousel({
         tabIndex={0}
         role="application"
         aria-label="作品轮播，向下滚动展开，使用左右方向键或拖动浏览"
+        data-own-cursor=""
         className="absolute inset-0 z-[2] touch-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-grey-400"
       />
 

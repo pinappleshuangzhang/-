@@ -27,7 +27,7 @@ function normalizeWheelDeltaY(event: WheelEvent) {
   return event.deltaY;
 }
 
-/** 完整 Viscose Carousel 第五屏；点击卡片从右侧滑出作品详情抽屉。 */
+/** 完整 Viscose Carousel 第五屏；点击卡片从左侧滑出作品详情抽屉。 */
 export function ArchiveGa004Viscose() {
   const isActive = useScreenActive();
   const reducedMotion = useReducedMotion();

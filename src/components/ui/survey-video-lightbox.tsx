@@ -45,7 +45,8 @@ const landscapeFrameStyle: CSSProperties = {
 };
 
 /**
- * 手机端全屏看片：沿用浏览器默认 controls，关闭钮贴在控件左侧以免挡住展开/画中画。
+ * 手机端全屏看片：沿用浏览器默认 controls。
+ * 关闭钮放在视频层外面。竖屏时画面顺时针转了 90°，屏幕右下角才是横过来看的右上角，右间距 20。
  */
 export function SurveyVideoLightbox({
   src,
@@ -89,10 +90,10 @@ export function SurveyVideoLightbox({
       data-survey-video-lightbox=""
       data-survey-lightbox=""
       data-survey-keep=""
-      className="fixed inset-0 z-50 overflow-hidden bg-grey-400"
+      className="fixed inset-0 z-[80] overflow-hidden bg-grey-400"
     >
       <div
-        className="pointer-events-auto"
+        className="pointer-events-auto z-0"
         style={isPortrait ? portraitFrameStyle : landscapeFrameStyle}
       >
         <video
@@ -109,7 +110,20 @@ export function SurveyVideoLightbox({
         type="button"
         aria-label={closeLabel}
         onClick={onClose}
-        className="absolute top-[max(12px,env(safe-area-inset-top))] right-20 z-10 flex size-8 appearance-none items-center justify-center border-0 bg-transparent text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        style={
+          isPortrait
+            ? {
+                right: 20,
+                bottom: "max(20px, env(safe-area-inset-bottom))",
+                transform: "translateZ(0)",
+              }
+            : {
+                top: "max(20px, env(safe-area-inset-top))",
+                right: "max(20px, env(safe-area-inset-right))",
+                transform: "translateZ(0)",
+              }
+        }
+        className="absolute z-20 flex size-8 appearance-none items-center justify-center border-0 bg-transparent text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
       >
         <svg
           aria-hidden="true"
