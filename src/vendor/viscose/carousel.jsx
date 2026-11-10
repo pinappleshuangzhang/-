@@ -440,7 +440,7 @@ export default function Carousel({
     // screen. Once the ring is off centre that is no longer 3 o'clock.
     let frontAngle = 0;
     let interactive = false;
-    // 第三阶段一开始就出光标文字。真正拖拽仍等圆环停稳，避免和入场抢 spin。
+    // 拖拽 / 查看只在第三阶段环已经移开后出现。真正拖拽仍等圆环停稳。
     let cursorLive = false;
     let spinVel = 0; // rad/s
     let dragging = false;
@@ -1215,7 +1215,18 @@ export default function Carousel({
       if (hoverColor < 0.001) colorPlane = -1;
       uniforms.uHoverPlane.value = colorPlane;
       uniforms.uHoverColor.value = hoverColor;
-      // 第三阶段光标在屏内即显示提示：悬停卡片上显示「查看」，其余显示「拖拽」
+      // 第二阶段圆环还在正中。位移走过约两成，画面才进入第三阶段，这时才出光标。
+      if (
+        !cursorLive &&
+        !mobileNow &&
+        stagePhase !== "entry" &&
+        stagePhase !== "hold" &&
+        state.shift >= 0.18
+      ) {
+        cursorLive = true;
+        seedFromLastClient();
+      }
+      // 悬停卡片上显示「查看」，其余显示「拖拽」
       const wantClose =
         pointer.inside &&
         (interactive || cursorLive) &&
@@ -1674,25 +1685,6 @@ export default function Carousel({
           0,
         );
         return;
-      }
-
-      // 进入第三阶段立刻显示光标文字，不等圆环停稳或名单播完。
-      cursorLive = true;
-      seedFromLastClient();
-      ensureLoop();
-      if (
-        hoverClose &&
-        pointer.inside &&
-        !coarse &&
-        viewW > params.cursorLabelFrom
-      ) {
-        tagUp = true;
-        hoverClose.textContent = cursorLabelsRef.current.drag;
-        if (pointer.seeded && setCloseX && setCloseY) {
-          setCloseX(cursor.x + viewW * 0.5 + 12);
-          setCloseY(viewH * 0.5 - cursor.y + 12);
-        }
-        gsap.set(hoverClose, { autoAlpha: 1 });
       }
 
       if (stageBackground) {

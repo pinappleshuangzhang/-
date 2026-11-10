@@ -5,7 +5,6 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { useSectionPager } from "@/components/providers/section-pager-provider";
 import { BrandLogo } from "@/components/ui/brand-logo";
 import { FlipHoverButton } from "@/components/ui/flip-hover-button";
-import { MobileSiteNav } from "@/components/ui/mobile-site-nav";
 import type { MessageKey } from "@/lib/i18n/messages";
 import type { NavVariant } from "@/lib/nav-variants";
 
@@ -28,6 +27,18 @@ type SiteNavProps = {
 
 const focusRing = "focus-visible:outline-none";
 
+function assignButtonRef(
+  ref: Ref<HTMLButtonElement> | undefined,
+  node: HTMLButtonElement | null,
+) {
+  if (!ref) return;
+  if (typeof ref === "function") {
+    ref(node);
+    return;
+  }
+  ref.current = node;
+}
+
 const NAV_TITLE_KEY: Partial<Record<NavVariant, MessageKey>> = {
   "archive-ga-001": "nav.title.ga001",
   "archive-ga-002": "nav.title.ga002",
@@ -45,10 +56,8 @@ const NAV_CODE: Partial<Record<NavVariant, string>> = {
 };
 
 /**
- * 全站公共导航入口。
- * 移动端委托 MobileSiteNav；桌面端右侧保留目录、联系我们、语言。
- * 右侧操作区绝对贴右、宽随 --su 缩放（稿面 507，与各屏右边栏图左缘对齐），
- * 避免左侧长标题挤缩导致「目录」右移。
+ * 全站公共导航。目录、语言、标题各只写一份，桌面和手机用同一套节点换样式。
+ * 联系我们只在桌面显示。右侧操作区桌面宽 507，与各屏右边栏图左缘对齐。
  */
 export function SiteNav({
   variant = "default",
@@ -69,7 +78,9 @@ export function SiteNav({
   // 中文态显示「英」；英文态显示「CN」
   const langLabel = isEn ? "CN" : "英";
   const navFont = isEn ? "font-bodoni" : "font-serif-sc";
-  const linkClass = `shrink-0 whitespace-nowrap ${navFont} text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white before:absolute before:inset-y-0 before:-left-[calc(var(--su)*10)] before:-right-[calc(var(--su)*10)] before:content-[''] ${focusRing}`;
+  const toneDark = navVariant === "studio";
+  const ink = toneDark ? "text-white" : "text-grey-400 md:text-white";
+  const linkClass = `shrink-0 whitespace-nowrap ${navFont} ${ink} text-12 font-normal uppercase leading-[18px] before:absolute before:inset-y-0 before:-left-2.5 before:-right-2.5 before:content-[''] md:text-[length:calc(var(--su)*12)] md:leading-none md:before:-left-[calc(var(--su)*10)] md:before:-right-[calc(var(--su)*10)] ${focusRing}`;
   // Bodoni 全大写的视觉中线比中文低，方块上提 1px 才与文字对齐
   const markOffsetY = isEn ? -1 : 0;
 
@@ -77,55 +88,23 @@ export function SiteNav({
   const code = NAV_CODE[navVariant];
   // 目录展开或首屏：品牌名；其它分屏：编号 + 标题
   const showBrand = isIndex || navVariant === "studio" || !titleKey || !code;
-  const mobileCloseRef = useRef<HTMLButtonElement>(null);
-  const desktopCloseRef = useRef<HTMLButtonElement>(null);
+  const indexButtonRef = useRef<HTMLButtonElement>(null);
 
   useLayoutEffect(() => {
-    if (!closeRef) return;
-    const media = window.matchMedia("(max-width: 767px)");
-    const assignCloseRef = (node: HTMLButtonElement | null) => {
-      if (typeof closeRef === "function") {
-        closeRef(node);
-      } else {
-        closeRef.current = node;
-      }
-    };
-    const syncCloseRef = () => {
-      assignCloseRef(
-        isIndex
-          ? media.matches
-            ? mobileCloseRef.current
-            : desktopCloseRef.current
-          : null,
-      );
-    };
-
-    syncCloseRef();
-    media.addEventListener("change", syncCloseRef);
-    return () => {
-      media.removeEventListener("change", syncCloseRef);
-      assignCloseRef(null);
-    };
+    assignButtonRef(closeRef, isIndex ? indexButtonRef.current : null);
+    return () => assignButtonRef(closeRef, null);
   }, [closeRef, isIndex]);
 
   const titleText = titleKey ? t(titleKey) : null;
-  // 移动端第五屏英文标题去掉 Visual，只留 Investigation Archive
-  const mobileTitleText =
-    navVariant === "archive-ga-004" && isEn
-      ? t("nav.title.ga004.mobile")
-      : titleText;
-  const renderTitle = (label: string | null) =>
-    showBrand ? (
-      "Grava Design Studio"
-    ) : (
-      <>
-        <span>{code}</span>
-        {isEn ? " " : null}
-        <span className={isEn ? "italic" : "font-serif-sc"}>{label}</span>
-      </>
-    );
-  const title = renderTitle(titleText);
-  const mobileTitle = renderTitle(mobileTitleText);
+  const title = showBrand ? (
+    "Grava Design Studio"
+  ) : (
+    <>
+      <span>{code}</span>
+      {isEn ? " " : null}
+      <span className={isEn ? "italic" : "font-serif-sc"}>{titleText}</span>
+    </>
+  );
   const indexAriaLabel = isIndex ? t("nav.closeIndex") : t("nav.openIndex");
   const handleIndexClick = isIndex ? onCloseIndex : onOpenIndex;
   // 品牌 logo/标题点击：目录展开时沿用 onHome（先收目录），否则直接回档案首页
@@ -145,65 +124,43 @@ export function SiteNav({
   const hideNav = (navigationLocked || introOverlayActive) && !isIndex;
 
   return (
-    <>
-      <MobileSiteNav
-        elevated={isIndex}
-        title={mobileTitle}
-        showBrand={showBrand}
-        onTitleClick={isIndex ? onHome : undefined}
-        isEnglish={isEn}
-        tone={navVariant === "studio" ? "dark" : "light"}
-        indexLabel={indexLabel}
-        indexAriaLabel={indexAriaLabel}
-        onIndexClick={handleIndexClick}
-        languageLabel={langLabel}
-        languageAriaLabel={t("nav.language")}
-        onLanguageClick={handleLanguageClick}
-        closeRef={mobileCloseRef}
-        concealed={hideNav}
-        className={className}
-      />
-
-      <header
-        className={`fixed inset-x-0 top-[var(--page-margin)] hidden mix-blend-difference transition-opacity duration-500 ease-out md:block motion-reduce:transition-none ${isIndex ? "z-[70]" : "z-50"} ${hideNav ? "pointer-events-none opacity-0" : "opacity-100"} ${className ?? ""}`}
-        aria-hidden={hideNav}
-        {...(hideNav ? { inert: true } : {})}
+    <header
+      className={`fixed inset-x-0 top-[calc(env(safe-area-inset-top)+12px)] transition-opacity duration-500 ease-out motion-reduce:transition-none md:top-[var(--page-margin)] ${toneDark ? "mix-blend-difference" : "md:mix-blend-difference"} ${isIndex ? "z-[70]" : "z-50"} ${hideNav ? "pointer-events-none opacity-0" : "opacity-100"} ${className ?? ""}`}
+      aria-hidden={hideNav}
+      {...(hideNav ? { inert: true } : {})}
+    >
+      <nav
+        aria-label="Site"
+        className="relative mx-auto flex w-[calc(100%-24px)] items-center md:w-[calc(100%-var(--page-margin)*2)]"
       >
-        <nav
-          aria-label="Site"
-          className="relative mx-auto flex w-[calc(100%-var(--page-margin)*2)] items-center"
+        <button
+          type="button"
+          onClick={handleHomeClick}
+          className={`flex items-center border-0 bg-transparent p-0 text-left font-bodoni text-12 font-normal uppercase leading-[18px] md:gap-[calc(var(--su)*6)] md:text-[length:calc(var(--su)*12)] md:leading-none ${ink} ${focusRing} ${
+            showBrand
+              ? "whitespace-nowrap"
+              : "max-w-[calc(100%-98px)] overflow-hidden text-ellipsis whitespace-nowrap md:max-w-[calc(100%-(var(--su-hero)*507+var(--page-margin)))]"
+          }`}
         >
-          {/* logo + 标题（Figma 1320:10071）：20px logo、6px 间距、文字下移 2px，点击回档案首页 */}
-          <button
-            type="button"
-            onClick={handleHomeClick}
-            className={`flex items-center gap-[calc(var(--su)*6)] border-0 bg-transparent p-0 text-left font-bodoni text-[length:calc(var(--su)*12)] font-normal uppercase leading-none text-white focus-visible:outline-none ${
-              showBrand
-                ? ""
-                : "max-w-[calc(100%-(var(--su-hero)*507+var(--page-margin)))]"
-            }`}
-          >
-            <BrandLogo className="size-[calc(var(--su)*20)] shrink-0" />
-            <span className="whitespace-nowrap pt-[calc(var(--su)*2)]">
-              {title}
-            </span>
-          </button>
+          <BrandLogo className="hidden shrink-0 md:block md:size-[calc(var(--su)*20)]" />
+          <span className="md:pt-[calc(var(--su)*2)]">{title}</span>
+        </button>
 
-          {/* 与屏内右边栏图同缘：贴版心右、宽随 --su 缩放；目录在区左缘 */}
-          <div
-            data-nav-actions
-            className="absolute right-0 top-1/2 flex w-[calc(var(--su-hero)*507)] -translate-y-1/2 items-center justify-between"
-          >
-            <div className="flex w-max min-w-[calc(var(--su)*161)] shrink-0 items-center justify-between gap-[calc(var(--su)*32)]">
-              <FlipHoverButton
-                ref={desktopCloseRef}
-                label={indexLabel}
-                aria-label={indexAriaLabel}
-                data-nav-index=""
-                onClick={handleIndexClick}
-                markOffsetY={markOffsetY}
-                className={linkClass}
-              />
+        <div
+          data-nav-actions
+          className="absolute right-0 top-1/2 flex w-[86px] -translate-y-1/2 items-center justify-between md:w-[calc(var(--su-hero)*507)]"
+        >
+          <div className="flex w-max shrink-0 items-center md:min-w-[calc(var(--su)*161)] md:justify-between md:gap-[calc(var(--su)*32)]">
+            <FlipHoverButton
+              ref={indexButtonRef}
+              label={indexLabel}
+              aria-label={indexAriaLabel}
+              data-nav-index=""
+              onClick={handleIndexClick}
+              markOffsetY={markOffsetY}
+              className={`w-[34px] justify-end md:w-auto ${linkClass}`}
+            />
+            <span className="hidden md:contents">
               <FlipHoverButton
                 label={t("nav.contact")}
                 data-nav-contact=""
@@ -211,19 +168,19 @@ export function SiteNav({
                 markOffsetY={markOffsetY}
                 className={linkClass}
               />
-            </div>
-            <FlipHoverButton
-              label={langLabel}
-              aria-label={t("nav.language")}
-              aria-pressed={locale === "en"}
-              resetMarkOnClick
-              onClick={handleLanguageClick}
-              markOffsetY={markOffsetY}
-              className={`w-16 justify-end ${linkClass}`}
-            />
+            </span>
           </div>
-        </nav>
-      </header>
-    </>
+          <FlipHoverButton
+            label={langLabel}
+            aria-label={t("nav.language")}
+            aria-pressed={locale === "en"}
+            resetMarkOnClick
+            onClick={handleLanguageClick}
+            markOffsetY={markOffsetY}
+            className={`w-[22px] justify-end md:w-16 ${linkClass}`}
+          />
+        </div>
+      </nav>
+    </header>
   );
 }

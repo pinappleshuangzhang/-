@@ -18,6 +18,7 @@ import {
 } from "@/animations/sondaven-reveal";
 import { AsciiCurtain } from "@/components/effects/ascii-curtain";
 import { useLocale } from "@/components/providers/locale-provider";
+import { ScreenTextIndex } from "@/components/ui/screen-text-index";
 import { SharedSectionBackgrounds } from "@/components/ui/shared-section-backgrounds";
 import { usePagePathSync } from "@/hooks/use-page-path";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
@@ -712,6 +713,7 @@ export function SectionPagerProvider({
           introOverlayActive={introOverlayActive}
           screenIndex={index}
         />
+        {introOverlayActive ? <ScreenTextIndex /> : null}
         {screens.map((screen, screenIndex) => {
           const isActive = screenIndex === index;
           return (

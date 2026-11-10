@@ -14,7 +14,6 @@ export type MessageKey =
   | "nav.title.ga002"
   | "nav.title.ga003"
   | "nav.title.ga004"
-  | "nav.title.ga004.mobile"
   | "nav.title.contact"
   | "screen.studio"
   | "screen.ga001"
@@ -334,7 +333,6 @@ const zh: Messages = {
   "nav.title.ga002": "《组织记录》",
   "nav.title.ga003": "《成员记录》",
   "nav.title.ga004": "《作品调查记录》",
-  "nav.title.ga004.mobile": "《作品调查记录》",
   "nav.title.contact": "《联系我们》",
   "screen.studio": "万有引力设计档案室",
   "screen.ga001": "档案 GA_001 什么是引力？",
@@ -764,7 +762,6 @@ const en: Messages = {
   "nav.title.ga002": "Organization Record",
   "nav.title.ga003": "Member Record",
   "nav.title.ga004": "Work Investigation Record",
-  "nav.title.ga004.mobile": "Work Investigation Record",
   "nav.title.contact": "Contact Us",
   "screen.studio": "Universal Gravity Design Archive",
   "screen.ga001": "Archive GA_001 What Is Gravity?",

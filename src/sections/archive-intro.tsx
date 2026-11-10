@@ -309,7 +309,7 @@ export function ArchiveIntro() {
           {/* 桌面向内收 1px 去黑边；手机不用矩形裁切，避免顶/底切到标签。
               占位图与视频共用同一裁切框（桌面 1112×834 内容区 x31..1096,y8..829；
               手机 1080×810 内容区 x24..1065,y6..804），避免首帧替换时位移。 */}
-          <div className="absolute inset-0 overflow-hidden max-md:overflow-visible">
+          <div className="absolute inset-0 z-0 overflow-hidden max-md:overflow-visible">
             <div className="absolute -inset-px max-md:inset-0">
               {showVideo && (
                 <AlphaScrubVideo
@@ -346,11 +346,12 @@ export function ArchiveIntro() {
             </div>
           </div>
 
-          {/* 卡片内文字：桌面 Figma 1397:315 / 1397:448；移动端沿用 701:204 卡片内左缘 */}
+          {/* 卡片内文字必须压在占位图之上。占位图 z-10 只盖视频；
+              正式环境视频首帧较慢，字若在图下，入场会在图里播完，揭开时整段一起出现。 */}
           <div
             data-intro-copy
             data-sd-global-ignore
-            className={`absolute left-[8.6538%] top-[26%] flex w-[55%] flex-col gap-1 font-serif-sc font-normal text-grey-400 ${
+            className={`absolute z-10 left-[8.6538%] top-[26%] flex w-[55%] flex-col gap-1 font-serif-sc font-normal text-grey-400 ${
               isEnglish
                 ? "md:left-[calc(var(--su)*52)] md:top-[calc(var(--su)*130)] md:w-[calc(var(--su)*280)] md:gap-[calc(var(--su)*4)]"
                 : "md:left-[calc(var(--su)*64)] md:top-[calc(var(--su)*116)] md:w-[calc(var(--su)*256)] md:gap-[calc(var(--su)*8)]"

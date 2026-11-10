@@ -277,14 +277,14 @@ html[data-section-pager] body {
   display: none;
 }
 
-/* 第二屏书内文案：只过渡 opacity / transform，走合成层。
-   不用 GSAP 逐词 scale，避免和幕布抢主线程时一帧一顿。 */
+/* 第二屏书内文案：只过渡 opacity / transform。
+   不用 GSAP 逐词 scale，避免和幕布抢主线程时一帧一顿。
+   不写 will-change：每个词一层，Safari 旁边再播透明视频会把合成线程撑死。 */
 [data-intro-copy] .sd-word {
   transform: translate3d(0, 12px, 0);
   transition-property: opacity, transform;
   transition-duration: 0.7s;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
 }
 
 [data-intro-copy][data-revealed] .sd-word {

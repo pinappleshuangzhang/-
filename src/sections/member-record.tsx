@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useSyncExternalStore, type RefObject } from "react";
+import { useLayoutEffect, useRef, useSyncExternalStore, type RefObject } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -13,15 +13,11 @@ import {
   MEMBER_RECORD_REVEAL_DELAY,
   MEMBER_RECORD_REVEAL_DURATION,
 } from "@/animations/member-record-reveal";
-import {
-  MEMBER_FLOWER_REVEAL_THRESHOLD,
-  MEMBER_FOG_REVEAL_THRESHOLD,
-} from "@/animations/member-record-fog-reveal";
+import { MEMBER_FOG_REVEAL_THRESHOLD } from "@/animations/member-record-fog-reveal";
 import {
   playGravaStrokeLoad,
   playMemberMarkReveal,
 } from "@/animations/member-record-logo-hover";
-import { playFlowerBloom } from "@/animations/member-record-icon-fx";
 import { FogGlass } from "@/components/effects/fog-glass";
 import { isSafariFogClient } from "@/lib/fog-glass-engine";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -236,19 +232,11 @@ export function MemberRecord() {
               boxClassName={MEMBER_LEFT_MID_FOG_BOX_CLASS}
               clipPath={MEMBER_LEFT_MID_FOG_CLIP}
               maskShape={MEMBER_LEFT_MID_CELL_SHAPE}
-              icon={{
-                flower: true,
-                className: "left-[41.51%] top-[40.71%] w-[16.96%]",
-              }}
             />
             <DesktopEmptyFogCell
               boxClassName={MEMBER_TOP_RIGHT_FOG_BOX_CLASS}
               clipPath={MEMBER_TOP_RIGHT_FOG_CLIP}
               maskShape={MEMBER_TOP_RIGHT_CELL_SHAPE}
-              icon={{
-                flower: true,
-                className: "left-[41.52%] top-[45.61%] w-[16.96%]",
-              }}
             />
             <div className="pointer-events-none absolute inset-0 z-[2]">
               <Image
@@ -270,7 +258,6 @@ function DesktopEmptyFogCell({
   boxClassName,
   clipPath,
   maskShape,
-  icon,
 }: {
   boxClassName: string;
   clipPath: string;
@@ -281,91 +268,18 @@ function DesktopEmptyFogCell({
     width: number;
     height: number;
   };
-  /** 霜下 icon：隔霜模糊，擦开处清晰；flower 时擦开到阈值播放绽放动画 */
-  icon?: { className: string; src?: string; flower?: boolean };
 }) {
-  const iconRef = useRef<HTMLSpanElement>(null);
-  const reducedMotion = useReducedMotion();
-  const shouldBloom = Boolean(icon?.flower) && !reducedMotion;
-  // Safari 无雾玻璃：小花没有"擦开绽放"的语境，整格不渲染图标
-  const safariNoFog = useSafariNoFog();
-  const hideIcon = Boolean(icon?.flower) && safariNoFog;
-
-  const playReveal = () => {
-    const el = iconRef.current;
-    if (!el || !shouldBloom) return;
-    playFlowerBloom(el);
-  };
-
   return (
     <div className={boxClassName}>
-      {icon && !hideIcon ? (
-        <span
-          ref={iconRef}
-          aria-hidden="true"
-          className={`pointer-events-none absolute block aspect-square ${icon.className}${
-            shouldBloom ? " opacity-0" : ""
-          }`}
-        >
-          {icon.flower ? (
-            <FlowerGlyph />
-          ) : icon.src ? (
-            <Image src={icon.src} alt="" fill sizes="8.4vw" unoptimized />
-          ) : null}
-        </span>
-      ) : null}
       <FogGlass
         className="absolute inset-0"
         clipPath={clipPath}
         maskShape={maskShape}
-        revealThreshold={
-          shouldBloom
-            ? MEMBER_FLOWER_REVEAL_THRESHOLD
-            : MEMBER_FOG_REVEAL_THRESHOLD
-        }
+        revealThreshold={MEMBER_FOG_REVEAL_THRESHOLD}
         appearDelay={MEMBER_RECORD_REVEAL_DELAY}
         appearDuration={MEMBER_RECORD_REVEAL_DURATION}
-        onReveal={shouldBloom ? playReveal : undefined}
       />
     </div>
-  );
-}
-
-/** 花朵 icon 内联 SVG：花茎与四片花瓣拆开，供绽放动画分别驱动 */
-function FlowerGlyph() {
-  return (
-    <svg
-      viewBox="0 0 121 121"
-      fill="none"
-      className="absolute inset-0 h-full w-full"
-    >
-      <path
-        data-flower-petal
-        d="M76.1844 17.0001L75.1546 17.0001C70.0361 17.0001 65.4522 20.1685 63.6433 24.9567L56.541 43.7568L58.3248 43.7568L78.6107 39.2869C83.7791 38.1481 87.4599 33.568 87.4599 28.2756C87.4599 22.0483 82.4117 17.0001 76.1844 17.0001Z"
-        fill="white"
-      />
-      <path
-        data-flower-petal
-        d="M39.2755 68.7297L40.3054 68.7297C45.4238 68.7297 50.0078 65.5612 51.8167 60.773L58.9189 41.9729L57.1352 41.9729L36.8492 46.4428C31.6808 47.5816 28 52.1618 28 57.4542C28 63.6814 33.0482 68.7297 39.2755 68.7297Z"
-        fill="white"
-      />
-      <path
-        data-flower-petal
-        d="M39.2755 17.0001L40.3054 17.0001C45.4238 17.0001 50.0078 20.1685 51.8167 24.9567L58.9189 43.7568L57.1352 43.7568L36.8492 39.2869C31.6808 38.1481 28 33.568 28 28.2756C28 22.0483 33.0482 17.0001 39.2755 17.0001Z"
-        fill="white"
-      />
-      <path
-        data-flower-petal
-        d="M76.1844 68.7297L75.1546 68.7297C70.0361 68.7297 65.4522 65.5612 63.6433 60.773L56.541 41.9729L58.3248 41.9729L78.6107 46.4428C83.7791 47.5816 87.4599 52.1618 87.4599 57.4542C87.4599 63.6814 82.4117 68.7297 76.1844 68.7297Z"
-        fill="white"
-      />
-      <path
-        data-flower-stem
-        d="M57.541 43.1621V48.5592C57.541 66.7712 65.8128 83.9974 80.0258 95.3845L92.0275 105"
-        stroke="white"
-        strokeWidth="4"
-      />
-    </svg>
   );
 }
 
@@ -575,9 +489,33 @@ function MemberProfile({
     "text-14 leading-normal md:text-[length:calc(var(--su-hero)*14)]";
   const bodySize =
     "text-16 leading-normal md:text-[length:calc(var(--su-hero)*16)]";
+  const blockRef = useRef<HTMLDivElement>(null);
+
+  // 块高按方向一行来居中。下方两格的英文折成第二行时，整块上移多出来的半行。
+  useLayoutEffect(() => {
+    const root = blockRef.current;
+    if (!root || (identifier !== "03" && identifier !== "04")) return;
+    const direction = root.querySelector("[data-member-direction]");
+    if (!(direction instanceof HTMLElement)) return;
+
+    const fit = () => {
+      if (!isEn) {
+        root.style.transform = "";
+        return;
+      }
+      const lineHeight = Number.parseFloat(getComputedStyle(direction).lineHeight);
+      const extra = direction.getBoundingClientRect().height - lineHeight;
+      root.style.transform = extra > 1 ? `translateY(${-extra / 2}px)` : "";
+    };
+
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(direction);
+    return () => observer.disconnect();
+  }, [identifier, isEn, direction]);
 
   return (
-    <div className="pointer-events-none absolute inset-0">
+    <div ref={blockRef} className="pointer-events-none absolute inset-0">
       <p
         data-sd-words
         data-sd-delay="0.2"
@@ -625,6 +563,7 @@ function MemberProfile({
         data-sd-words
         data-sd-delay="0.4"
         aria-label={direction.replace(/\n/g, " ")}
+        data-member-direction=""
         className={`absolute z-10 font-serif-sc ${weight} ${isEn ? "" : "whitespace-nowrap"} ${bodySize} ${textColor} ${directionClassName}`}
       >
         {isEn ? (

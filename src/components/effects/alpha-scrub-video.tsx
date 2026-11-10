@@ -28,16 +28,21 @@ type AlphaScrubVideoProps = {
   onError?: () => void;
 };
 
-/** WebKit（Safari 与所有 iOS 浏览器）不支持 VP9 alpha，走 HEVC；其余走 WebM */
-export function pickSource(srcWebm: string, srcHevc: string): string {
-  if (typeof navigator === "undefined") return srcWebm;
+/** Safari 与全部 iOS 浏览器都是 WebKit，不支持 VP9 alpha。 */
+function isWebKitAlphaClient() {
+  if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
   const isIos =
     /iphone|ipad|ipod/i.test(ua) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const isSafari =
     /safari/i.test(ua) && !/chrome|chromium|crios|edg|android/i.test(ua);
-  return isIos || isSafari ? srcHevc : srcWebm;
+  return isIos || isSafari;
+}
+
+/** WebKit 走 HEVC alpha，其余走 VP9 WebM */
+export function pickSource(srcWebm: string, srcHevc: string): string {
+  return isWebKitAlphaClient() ? srcHevc : srcWebm;
 }
 
 /**
@@ -67,12 +72,14 @@ export const AlphaScrubVideo = forwardRef<
     playToEnd(durationSeconds) {
       const video = videoRef.current;
       if (!video) return;
-      video.playbackRate =
-        durationSeconds &&
+      // WebKit 的 HEVC alpha 一旦改 playbackRate，解码线程会卡死整页。按原速播。
+      const canScale =
+        !isWebKitAlphaClient() &&
+        !!durationSeconds &&
         durationSeconds > 0 &&
-        Number.isFinite(video.duration)
-          ? video.duration / durationSeconds
-          : 1;
+        Number.isFinite(video.duration) &&
+        video.duration > 0;
+      video.playbackRate = canScale ? video.duration / durationSeconds : 1;
       void video.play().catch(() => {
         // 静音内联视频通常允许自动播放；若浏览器仍拦截则保留当前帧。
       });
@@ -98,6 +105,8 @@ export const AlphaScrubVideo = forwardRef<
     // 否则会闪一帧空白。暂停时部分浏览器不派发 requestVideoFrameCallback，先静音播一下。
     const onLoadedData = () => {
       fallbackTimer = window.setTimeout(markReady, 500);
+      // WebKit 不要为了等帧先 play() 再改倍速，那一次就会把页面卡死。
+      if (isWebKitAlphaClient()) return;
       if (typeof video.requestVideoFrameCallback === "function") {
         video.requestVideoFrameCallback(() => markReady());
         if (video.paused) {

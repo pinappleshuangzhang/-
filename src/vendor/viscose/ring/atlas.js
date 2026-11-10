@@ -1,10 +1,10 @@
 import * as THREE from "three";
 import { IMAGE_FILES } from "./projects";
 
-// Cell aspect matches the Figma seed card's 120 : 75 ratio.
-// 1413 = 作品源图宽度（5x 导出）；第三阶段放大后按设备像素取样，不得再缩小。
-const CELL_W = 1413;
-const CELL_H = Math.round(CELL_W / 1.6);
+// 源图已是 842×528。再放大到 1413 不会更清晰，六张拼成 4239 宽，
+// 超过 Safari 画布 4096 的上限，第三阶段会卡。按源图像素 1:1 绘制。
+const CELL_W = 842;
+const CELL_H = 528;
 
 const load = (src, priority) =>
   new Promise((resolve, reject) => {

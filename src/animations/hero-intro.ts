@@ -186,7 +186,18 @@ export function createLoaderMaterialCycle(
   };
 
   showBase();
-  hold = gsap.delayedCall(0.2, cycle);
+  const armCycle = () => {
+    if (stopped) return;
+    hold = gsap.delayedCall(0.2, cycle);
+  };
+  const firstImage = layers[0]?.querySelector("img");
+  // 首张还没画出来就交叉淡出，进入加载屏时会看成这张没加载。
+  if (!firstImage || firstImage.complete) {
+    armCycle();
+  } else {
+    firstImage.addEventListener("load", armCycle, { once: true });
+    firstImage.addEventListener("error", armCycle, { once: true });
+  }
 
   return {
     reset() {

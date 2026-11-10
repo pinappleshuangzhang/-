@@ -350,7 +350,7 @@ export const SURVEY_G_003: SurveyWork = {
       height: 1080,
       hover: "none",
     },
-    easycashStill("easycash-home-01b.webp", "survey.easycash.home01Alt", {
+    easycashStill("easycash-home-01c.webp", "survey.easycash.home01Alt", {
       titleKey: "survey.easycash.homeTitle",
       captionKey: "survey.easycash.homeCaption",
       eager: true,
@@ -376,7 +376,7 @@ export const SURVEY_G_003: SurveyWork = {
     easycashStill("easycash-wealth-17.webp", "survey.easycash.wealth17Alt"),
     easycashStill("easycash-wealth-18.webp", "survey.easycash.wealth18Alt"),
     easycashClip("easycash-wealth.mp4", "survey.easycash.wealthVideoAlt"),
-    easycashStill("easycash-fraud-01.webp", "survey.easycash.fraud01Alt", {
+    easycashStill("easycash-fraud-01b.webp", "survey.easycash.fraud01Alt", {
       titleKey: "survey.easycash.fraudTitle",
       captionKey: "survey.easycash.fraudCaption",
     }),
