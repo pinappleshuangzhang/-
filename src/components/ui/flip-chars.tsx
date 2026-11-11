@@ -74,7 +74,7 @@ function renderChars(
           <span
             key={`${keyPrefix}-${index}-${char}`}
             {...{ [dataAttr]: "" }}
-            className={`inline-block h-[1em] origin-center leading-none will-change-transform ${
+            className={`inline-block h-[1em] origin-center leading-none ${
               index < firstTokenLength ? (firstTokenClassName ?? "") : ""
             }`}
           >

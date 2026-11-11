@@ -484,6 +484,9 @@ export function SectionPagerProvider({
     let touchCurrentY: number | null = null;
     let touchScrollContainer: HTMLElement | null = null;
     let touchHandledByNativeScroll = false;
+    // 滑过的最大位移。iOS 抢走手势时 touchcancel 的落点常常接近起点，不能只看终点。
+    let touchPeak = 0;
+    let touchCommitted = false;
     // 手势起点是否已贴在滚动容器的顶/底，用于松手时兜底判定切屏
     let touchStartAtTop = false;
     let touchStartAtBottom = false;
@@ -526,6 +529,8 @@ export function SectionPagerProvider({
         touchCurrentY = null;
         touchScrollContainer = null;
         touchHandledByNativeScroll = false;
+        touchPeak = 0;
+        touchCommitted = false;
         return;
       }
       if (event.touches.length !== 1) {
@@ -533,10 +538,14 @@ export function SectionPagerProvider({
         touchCurrentY = null;
         touchScrollContainer = null;
         touchHandledByNativeScroll = false;
+        touchPeak = 0;
+        touchCommitted = false;
         return;
       }
       touchStartY = event.touches[0]?.clientY ?? null;
       touchCurrentY = touchStartY;
+      touchPeak = 0;
+      touchCommitted = false;
       touchScrollContainer = findScrollableAncestor(event.target);
       touchHandledByNativeScroll = false;
       touchStartAtTop = touchScrollContainer
@@ -554,6 +563,7 @@ export function SectionPagerProvider({
       touchCurrentY = event.touches[0]?.clientY ?? touchCurrentY;
       const travelled =
         touchCurrentY === null ? 0 : touchStartY - touchCurrentY;
+      if (Math.abs(travelled) > Math.abs(touchPeak)) touchPeak = travelled;
       if (touchScrollContainer && Math.abs(travelled) < TOUCH_DECISION_DEADZONE) {
         return;
       }
@@ -565,6 +575,11 @@ export function SectionPagerProvider({
       if (canScrollNatively) {
         touchHandledByNativeScroll = true;
         return;
+      }
+      // 手指还没抬起就切。若等到 touchend，iOS 中途 touchcancel 会把这次滑动丢掉。
+      if (!touchCommitted && Math.abs(travelled) >= TOUCH_THRESHOLD) {
+        touchCommitted = true;
+        commitSwipe(travelled);
       }
       if (
         touchCurrentY !== null &&
@@ -580,11 +595,16 @@ export function SectionPagerProvider({
       if (touchStartY === null) return;
       const endY =
         event.changedTouches[0]?.clientY ?? touchCurrentY ?? touchStartY;
-      const travelled = touchStartY - endY;
+      const endTravel = touchStartY - endY;
+      const travelled =
+        Math.abs(touchPeak) > Math.abs(endTravel) ? touchPeak : endTravel;
       const container = touchScrollContainer;
+      const committed = touchCommitted;
       touchStartY = null;
       touchCurrentY = null;
       touchScrollContainer = null;
+      touchPeak = 0;
+      touchCommitted = false;
       if (touchHandledByNativeScroll) {
         touchHandledByNativeScroll = false;
         // iOS 回弹/惯性阶段可能误判为原生滚动：起点与终点都贴边、
@@ -596,7 +616,7 @@ export function SectionPagerProvider({
             : touchStartAtTop && isAtTop(container));
         if (!stuckAtEdge) return;
       }
-      commitSwipe(travelled);
+      if (!committed) commitSwipe(travelled);
     };
 
     // 注意：不要再挂 pointer* 触控切屏。

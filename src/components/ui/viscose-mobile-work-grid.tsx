@@ -28,7 +28,7 @@ export function ViscoseMobileWorkGrid({
   const titleFont = locale === "zh" ? "font-serif-sc" : "font-bodoni";
   return (
     <ul className="mt-7 grid grid-cols-2 gap-x-3 gap-y-4">
-      {cards.map((card) => (
+      {cards.map((card, index) => (
         <li key={`${card.categoryIndex}-${card.src}`} className="min-w-0">
           <button
             type="button"
@@ -45,6 +45,7 @@ export function ViscoseMobileWorkGrid({
                   alt={card.alt}
                   fill
                   sizes="45vw"
+                  priority={index === 0}
                   className="object-cover"
                 />
               </span>

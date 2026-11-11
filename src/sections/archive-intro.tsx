@@ -1,10 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { createCornerTitleSweep } from "@/animations/archive-ga-004-title-sweep";
+import {
+  playSondavenReveal,
+  setSondavenHidden,
+  setSondavenVisible,
+} from "@/animations/sondaven-reveal";
 import {
   AlphaScrubVideo,
   type AlphaScrubVideoHandle,
@@ -28,12 +39,6 @@ const FOLDER_VIDEO_MOBILE_WEBM =
   "/archive/archive-folder-yellow-alpha-mobile.webm?v=raw1";
 const FOLDER_VIDEO_MOBILE_HEVC =
   "/archive/archive-folder-yellow-alpha-mobile-hevc.mp4?v=raw1";
-/** 进屏后书本视频一次性播完的总时长（与文字无关）。 */
-const AUTO_DURATION = 9;
-/** 与 globals.css 里书内文字过渡时长一致。 */
-const COPY_REVEAL_SECONDS = 0.7;
-/** 同一行里相邻词的错开。 */
-const COPY_WORD_STAGGER = 0.04;
 const MOBILE_QUERY = "(max-width: 767px)";
 
 function subscribeMobileViewport(callback: () => void) {
@@ -141,7 +146,9 @@ export function ArchiveIntro() {
     getMobileViewportServerSnapshot,
   );
   const isActive = useScreenActive();
-  const { navigationLocked } = useSectionPager();
+  const { navigationLocked, phase } = useSectionPager();
+  // 盖满时先藏着。幕布一开始揭开就进字，不要等它完全退场再空等。
+  const copyCanPlay = phase !== "cover";
   const { t, locale } = useLocale();
   const isEnglish = locale === "en";
 
@@ -155,59 +162,37 @@ export function ArchiveIntro() {
     setVideoReady(false);
   }
 
-  // 书内文案由本屏自己入场，并排除整屏统一入场，避免重复点亮。
-  // 用 CSS 过渡而不是 GSAP：幕布在主线程上画满屏字符时，GSAP 逐词会跟着掉帧。
-  useEffect(() => {
+  // 书内文案排除整屏统一入场，避免和文件夹视频抢同一轮扫描。
+  // 动画仍走全站同一套：随机序、0.8s、自 75% 上浮并从小放大。
+  useLayoutEffect(() => {
     const copy = container.current?.querySelector<HTMLElement>(
       "[data-intro-copy]",
     );
     if (!copy) return;
+    delete copy.dataset.magnet;
 
-    const words = Array.from(copy.querySelectorAll<HTMLElement>(".sd-word"));
-    const snapHidden = () => {
-      for (const word of words) {
-        word.style.transition = "none";
-        word.style.transitionDelay = "";
-      }
-      delete copy.dataset.revealed;
-      delete copy.dataset.magnet;
-    };
-
-    snapHidden();
-    if (!isActive) return;
+    if (!isActive) {
+      setSondavenHidden(copy, { force3D: false });
+      return;
+    }
     if (reducedMotion) {
-      copy.dataset.revealed = "true";
+      setSondavenVisible(copy);
+      return;
+    }
+    if (!copyCanPlay) {
+      setSondavenHidden(copy, { force3D: false });
       return;
     }
 
-    let latestEnd = 0;
-    copy.querySelectorAll<HTMLElement>("[data-sd-words]").forEach((group) => {
-      const groupWords = words.filter((word) => group.contains(word));
-      const order = gsap.utils.shuffle(groupWords.map((_, index) => index));
-      const delay = Number.parseFloat(group.dataset.sdDelay ?? "0");
-      const base = Number.isFinite(delay) ? delay : 0;
-      groupWords.forEach((word, index) => {
-        const offset = order[index] ?? index;
-        word.style.transition = "";
-        word.style.transitionDelay = `${base + offset * COPY_WORD_STAGGER}s`;
-      });
-      const groupEnd =
-        base +
-        Math.max(groupWords.length - 1, 0) * COPY_WORD_STAGGER +
-        COPY_REVEAL_SECONDS;
-      if (groupEnd > latestEnd) latestEnd = groupEnd;
-    });
-    const frame = requestAnimationFrame(() => {
-      copy.dataset.revealed = "true";
-    });
-    const magnetTimer = window.setTimeout(() => {
+    setSondavenHidden(copy, { force3D: false });
+    const timeline = playSondavenReveal(copy, { force3D: false });
+    timeline.eventCallback("onComplete", () => {
       copy.dataset.magnet = "ready";
-    }, latestEnd * 1000);
+    });
     return () => {
-      cancelAnimationFrame(frame);
-      window.clearTimeout(magnetTimer);
+      timeline.kill();
     };
-  }, [isActive, isMobileViewport, reducedMotion, locale]);
+  }, [isActive, isMobileViewport, reducedMotion, locale, copyCanPlay]);
 
   useFolderWordMagnet(
     container,
@@ -238,28 +223,20 @@ export function ArchiveIntro() {
     },
   );
 
-  // 进屏后视频自顾自整段播完；离屏复位。
+  // 进屏后按原速播完。不要拉长到固定秒数：6 秒素材被放成 9 秒时倍速约 0.67，透明视频会一顿一顿。
   useEffect(() => {
-    videoHandleRef.current?.pause();
-
-    if (!isActive) {
-      videoHandleRef.current?.seekTo(0);
-      return;
-    }
-
-    if (reducedMotion) {
-      videoHandleRef.current?.seekTo(1);
-      return;
-    }
-
     const videoHandle = videoHandleRef.current;
-    if (videoReady) {
-      videoHandle?.playToEnd(AUTO_DURATION);
-    }
-
-    return () => {
+    if (!isActive) {
       videoHandle?.pause();
-    };
+      videoHandle?.seekTo(0);
+      return;
+    }
+    if (reducedMotion) {
+      videoHandle?.pause();
+      videoHandle?.seekTo(1);
+      return;
+    }
+    if (videoReady) videoHandle?.playToEnd();
   }, [isActive, isMobileViewport, reducedMotion, videoReady]);
 
   const showVideo = videoAllowed && isActive && !reducedMotion && !videoFailed;
@@ -366,7 +343,7 @@ export function ArchiveIntro() {
             >
               <RevealText
                 text={t("intro.line1")}
-                revealDelay={0.4}
+                revealDelay={0}
                 className={`text-12 leading-[18px] md:leading-normal ${
                   isEnglish
                     ? "md:text-[length:calc(var(--su)*18)]"
@@ -380,15 +357,15 @@ export function ArchiveIntro() {
                     : "text-12 leading-[18px] md:text-[length:calc(var(--su)*18)] md:leading-[calc(var(--su)*32)]"
                 }
               >
-                <RevealText text={t("intro.line2a")} revealDelay={0.5} />
-                <RevealText text={t("intro.line2b")} revealDelay={0.55} />
-                <RevealText text={t("intro.line2c")} revealDelay={0.6} />
-                <RevealText text={t("intro.bridge")} revealDelay={0.65} />
+                <RevealText text={t("intro.line2a")} revealDelay={0.1} />
+                <RevealText text={t("intro.line2b")} revealDelay={0.15} />
+                <RevealText text={t("intro.line2c")} revealDelay={0.2} />
+                <RevealText text={t("intro.bridge")} revealDelay={0.25} />
               </div>
             </div>
             <RevealText
               text={t("intro.gravity")}
-              revealDelay={0.7}
+              revealDelay={0.3}
               className={`text-24 leading-normal ${
                 isEnglish
                   ? "md:text-[length:calc(var(--su)*40)]"

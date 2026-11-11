@@ -63,6 +63,7 @@ export default function Carousel({
 }) {
   const pausedRef = useRef(paused);
   const kickLoopRef = useRef(() => {});
+  const stopLoopRef = useRef(() => {});
   const hideCursorTagRef = useRef(() => {});
   const nameFontRef = useRef(nameFont);
   const listFontSizeRef = useRef(listFontSize);
@@ -81,6 +82,7 @@ export default function Carousel({
     pausedRef.current = paused;
     if (paused) {
       hideCursorTagRef.current();
+      stopLoopRef.current();
     } else kickLoopRef.current();
   }, [paused]);
   const containerRef = useRef(null);
@@ -160,12 +162,15 @@ export default function Carousel({
     // debug. Fail loudly instead. See the cleanup for why it should not
     // happen: the context is released explicitly rather than left to GC.
     // Safari's Metal-backed WebGL chokes on this full-screen SDF fragment
-    // shader (per-pixel loops over 32 planes + 32 links). Drop MSAA there —
-    // the shader does its own edge softening — and halve the pixel ratio,
-    // which cuts fragment work to roughly a quarter.
+    // shader (per-pixel loops over every plane and link). Drop MSAA there —
+    // the shader does its own edge softening — and draw motion at 1× so a
+    // 2× display does about a quarter of the fragments. The parked frame
+    // is still redrawn sharp.
     const isSafari =
       /safari/i.test(navigator.userAgent) &&
       !/chrome|chromium|crios|edg|android/i.test(navigator.userAgent);
+    // 切作品时的名字熔解在 Safari 上会把模糊打到 100px。只保留透明度交叉。
+    params.plainNames = isSafari;
     let renderer;
     try {
       renderer = new THREE.WebGLRenderer({
@@ -181,7 +186,7 @@ export default function Carousel({
     // then re-render one sharp frame at native DPR when the ring parks
     // (see the idle stop in `step`). Motion hides the lower resolution and
     // the frame the viewer actually studies is full quality.
-    const MOTION_DPR = Math.min(window.devicePixelRatio, 1.5);
+    const MOTION_DPR = isSafari ? 1 : Math.min(window.devicePixelRatio, 1.5);
     const SHARP_DPR = Math.min(window.devicePixelRatio, 2);
     renderer.setPixelRatio(MOTION_DPR);
     container.appendChild(renderer.domElement);
@@ -907,6 +912,8 @@ export default function Carousel({
     let announced = -1;
     let over = -1;
     const frontCard = { x: 0, y: 0, hw: 0, hh: 0, rot: 0 };
+    let shadowXform = "";
+    let shadowHidden = false;
     let colorPlane = -1;
     let tagUp = false;
 
@@ -1285,8 +1292,32 @@ export default function Carousel({
         const rot = uniforms.uRot.value[frontI];
         const refW = (FINAL_SHADOW_BOX.width / params.refWidth) * viewW;
         const k = refW > 0.001 ? (W * sc.x) / refW : 1;
-        finalShadowPin.style.transform =
+        shadowXform =
           `translate(-50%, -50%) translate(${pos.x}px, ${-pos.y}px) rotate(${-rot}rad) scale(${k})`;
+        // Safari 会在 transform 每帧变化时重栅格化这张 SVG。圆环在转时先藏起，
+        // 停稳后再摆到正面卡片上。
+        const hideShadow =
+          isSafari &&
+          stagePhase !== "entry" &&
+          stagePhase !== "hold" &&
+          (stagePhase === "transitioning" ||
+            picking ||
+            dragging ||
+            settling ||
+            Math.abs(spinVel) > 0.0015);
+        if (hideShadow) {
+          if (finalShadow && finalShadow.style.opacity !== "0") {
+            gsap.killTweensOf(finalShadow);
+            finalShadow.style.opacity = "0";
+          }
+          shadowHidden = true;
+        } else {
+          finalShadowPin.style.transform = shadowXform;
+          if (shadowHidden && finalShadow && stagePhase === "final") {
+            finalShadow.style.opacity = "1";
+            shadowHidden = false;
+          }
+        }
       }
 
       /* ---- honey ---- */
@@ -1395,6 +1426,7 @@ export default function Carousel({
     let entryGen = 0;
 
     const build = () => {
+      listTl?.kill();
       stagePhase = "entry";
       ringAutoRotating = false;
       interactive = false;
@@ -1637,6 +1669,8 @@ export default function Carousel({
 
     let tl = null;
     let finalTl = null;
+    // 名单入场不挂在圆环时间轴上。挂在一起时 Safari 会为了这几个字继续每帧重画全屏着色器。
+    let listTl = null;
 
     let pendingGoFinal = false;
 
@@ -1646,6 +1680,8 @@ export default function Carousel({
       stagePhase = "transitioning";
       ringAutoRotating = false;
       finalTl?.kill();
+      listTl?.kill();
+      if (finalShadow) gsap.killTweensOf(finalShadow);
       // Entry still fades the backdrop in; kill it or stage 3 keeps the rings.
       if (stageBackground) {
         tl?.killTweensOf(stageBackground);
@@ -1724,26 +1760,49 @@ export default function Carousel({
         },
         params.moveDelay,
       );
+      const ringSettledAt = Math.max(
+        params.spinDelay + params.spinTime,
+        params.moveDelay + params.moveTime,
+      );
       if (listEl) {
         // 等圆环移到左侧再出名单。提前出现时，不换行的标题会穿过右侧卡片。
         const listRevealAt = params.moveDelay + params.moveTime;
         const listWords = gsap.utils.shuffle([...categoryWords]);
-        finalTl.set(listEl, { opacity: 1 }, listRevealAt);
-        finalTl.fromTo(
-          listWords,
-          { opacity: 0, yPercent: 75, scale: 0 },
-          {
-            opacity: 1,
-            yPercent: 0,
-            scale: 1,
-            duration: 0.8,
-            ease: "power2.out",
-            stagger: 0.05,
-          },
-          listRevealAt,
-        );
+        const listFrom = { opacity: 0, yPercent: 75, scale: 0 };
+        const listTo = {
+          opacity: 1,
+          yPercent: 0,
+          scale: 1,
+          duration: 0.8,
+          ease: "power2.out",
+          stagger: 0.05,
+        };
+        if (isSafari) {
+          // 动画与其他浏览器相同。单独走时间轴，是为了着色器不用跟着这几个字继续画。
+          finalTl.call(
+            () => {
+              if (disposed) return;
+              listTl?.kill();
+              gsap.set(listEl, { opacity: 1 });
+              listTl = gsap.timeline({
+                onComplete: () => {
+                  if (disposed || loopOn || renderer.getPixelRatio() === SHARP_DPR) return;
+                  renderer.setPixelRatio(SHARP_DPR);
+                  renderer.setSize(viewW, viewH);
+                  renderer.render(scene, camera);
+                },
+              });
+              listTl.fromTo(listWords, listFrom, listTo);
+            },
+            undefined,
+            listRevealAt,
+          );
+        } else {
+          finalTl.set(listEl, { opacity: 1 }, listRevealAt);
+          finalTl.fromTo(listWords, listFrom, listTo, listRevealAt);
+        }
       }
-      if (finalShadow) {
+      if (finalShadow && !isSafari) {
         finalTl.to(
           finalShadow,
           {
@@ -1755,16 +1814,25 @@ export default function Carousel({
           Math.max(params.moveDelay, params.moveTime * 0.55),
         );
       }
-      // 圆环停稳就出拖拽光标。右侧名单还在逐词出现，不能等整段时间轴结束。
-      const ringSettledAt = Math.max(
-        params.spinDelay + params.spinTime,
-        params.moveDelay + params.moveTime,
-      );
       finalTl.call(
         () => {
-          if (disposed || interactive) return;
-          interactive = true;
-          seedFromLastClient();
+          if (disposed) return;
+          if (!interactive) {
+            interactive = true;
+            seedFromLastClient();
+          }
+          if (isSafari && finalShadow) {
+            if (finalShadowPin && shadowXform) {
+              finalShadowPin.style.transform = shadowXform;
+            }
+            gsap.to(finalShadow, {
+              opacity: 1,
+              duration: params.textTime,
+              ease: params.textEase,
+              force3D: true,
+              overwrite: "auto",
+            });
+          }
         },
         undefined,
         ringSettledAt,
@@ -1798,6 +1866,8 @@ export default function Carousel({
     const replay = () => {
       pendingGoFinal = false;
       finalTl?.kill();
+      listTl?.kill();
+      if (finalShadow) gsap.killTweensOf(finalShadow);
       tl?.kill();
       tl = build();
     };
@@ -1965,8 +2035,8 @@ export default function Carousel({
         loopOn = false;
         renderer.setAnimationLoop(null);
         // 停帧前用原生 DPR 补渲一帧：观众端详的静帧是满画质，
-        // 运动帧维持低像素比省 GPU。
-        if (renderer.getPixelRatio() !== SHARP_DPR) {
+        // 运动帧维持低像素比省 GPU。名单还在入场时先不改分辨率。
+        if (!listTl?.isActive() && renderer.getPixelRatio() !== SHARP_DPR) {
           renderer.setPixelRatio(SHARP_DPR);
           renderer.setSize(viewW, viewH);
           renderer.render(scene, camera);
@@ -1988,6 +2058,12 @@ export default function Carousel({
       seedFromLastClient();
       ensureLoop();
     };
+    if (isSafari) {
+      stopLoopRef.current = () => {
+        loopOn = false;
+        renderer.setAnimationLoop(null);
+      };
+    }
     // The loop may already be parked when the drawer covers the card, so the
     // pause effect drops the cursor label directly; the first frame back
     // re-evaluates hover and brings it up again if still over a card.
@@ -2003,6 +2079,7 @@ export default function Carousel({
     return () => {
       disposed = true;
       kickLoopRef.current = () => {};
+      stopLoopRef.current = () => {};
       hideCursorTagRef.current = () => {};
       clearTimeout(holdTimer);
       clearTimeout(fontFallback);
@@ -2026,6 +2103,8 @@ export default function Carousel({
       }
       applyLocaleRef.current = () => {};
       finalTl?.kill();
+      listTl?.kill();
+      if (finalShadow) gsap.killTweensOf(finalShadow);
       tl?.kill();
       gsap.killTweensOf(splitText.chars);
       gsap.killTweensOf(splitText.fades);

@@ -10,20 +10,21 @@ import gsap from "gsap";
  *   [data-mobile-bar]    chip 底色，左→右擦入
  *   [data-mobile-copy]   标题/详情整段，从裁切容器下方上浮
  *   [data-mobile-block]  整块淡入（投影、按钮）
- *   media                大图内层，外层 overflow-hidden，自下方滑入
+ *   media                卡片图就地淡入。不做裁切上滑，也不做文字 scale：
+ *                        手机上这两项会让第一张图一边解码一边重绘，入场发卡。
  */
 
 const DUR_M = 0.8;
 const DUR_L = 1.2;
 const EASE = "power2.out";
 
-const WORD_HIDDEN = { opacity: 0, yPercent: 75, scale: 0 };
+const WORD_HIDDEN = { opacity: 0, yPercent: 75, scale: 1 };
 const WORD_SHOWN = { opacity: 1, yPercent: 0, scale: 1 };
 const BLOCK_HIDDEN = { opacity: 0, yPercent: 100 };
 const BLOCK_SHOWN = { opacity: 1, yPercent: 0 };
 const BAR_HIDDEN = { scaleX: 0, transformOrigin: "left center" };
-const MEDIA_HIDDEN = { yPercent: 105, y: 0 };
-const MEDIA_SHOWN = { yPercent: 0, y: 0 };
+const MEDIA_HIDDEN = { opacity: 0, yPercent: 0, y: 0 };
+const MEDIA_SHOWN = { opacity: 1, yPercent: 0, y: 0 };
 
 type RevealTrack = {
   targets: HTMLElement[];
@@ -152,7 +153,7 @@ export function setViscoseMobileHidden(
 }
 
 /**
- * 切换分类：大图重新自下方滑入、编号等 swap 词逐词重播、标题/详情整段重新上浮，
+ * 切换分类：大图重新淡入、编号等 swap 词逐词重播、标题/详情整段重新上浮，
  * 时长与起播时刻沿用整屏入场；返回清理函数
  */
 export function playViscoseMobileSwap(

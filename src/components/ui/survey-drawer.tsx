@@ -136,6 +136,9 @@ export function SurveyDrawer({
     };
     const tl = gsap.timeline();
     let releaseTimer = 0;
+    const safari =
+      /safari/i.test(navigator.userAgent) &&
+      !/chrome|chromium|crios|edg|android/i.test(navigator.userAgent);
     if (open) {
       gsap.set(overlay, { opacity: 0, force3D: false });
       gsap.set(panel, hidden);
@@ -150,7 +153,7 @@ export function SurveyDrawer({
           ...shown,
           duration: 0.7,
           ease: "expo.out",
-          force3D: false,
+          force3D: safari,
           overwrite: "auto",
           onComplete: releaseScroll,
         },
@@ -168,7 +171,13 @@ export function SurveyDrawer({
       tl.fromTo(
         panel,
         shown,
-        { ...hidden, duration: 0.7, ease: "expo.out", overwrite: "auto" },
+        {
+          ...hidden,
+          duration: 0.7,
+          ease: "expo.out",
+          force3D: safari,
+          overwrite: "auto",
+        },
         0,
       );
     }
@@ -327,7 +336,7 @@ export function SurveyDrawer({
         <div
           ref={mobileScrimRef}
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 z-20 h-16 bg-white opacity-0 transition-opacity duration-300 ease-out motion-reduce:transition-none md:hidden"
+          className="pointer-events-none absolute inset-x-0 top-0 z-20 h-10 bg-[#F7F7F9] opacity-0 transition-opacity duration-300 ease-out motion-reduce:transition-none md:hidden"
           style={{ transform: "translateZ(0)" }}
         />
         {/* 桌面端靠跟随光标的「关闭」收起，按钮仅供读屏；手机上显示 16px 叉号（Figma 1008-561） */}

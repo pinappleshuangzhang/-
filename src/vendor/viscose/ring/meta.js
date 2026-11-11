@@ -32,8 +32,13 @@ const slotsOf = (row) => row?.firstElementChild?.children;
 // slower than the blur climbs, so the word still carries alpha well into its
 // smear — without that there is nothing for the threshold to weld the other
 // one to. Applied per word, not per row, so a held word can be left alone.
-function fade(el, f, blur) {
+function fade(el, f, blur, plain) {
   if (!el) return;
+  if (plain) {
+    el.style.filter = "none";
+    el.style.opacity = f >= 1 ? "1" : f <= 0 ? "0" : `${f}`;
+    return;
+  }
   if (f >= 1) {
     el.style.filter = "none";
     el.style.opacity = "1";
@@ -64,11 +69,13 @@ function createGroup(side, groups, params) {
     const into = slotsOf(g.layers[1]);
     const held = slotsOf(g.plain);
     const t = m.t;
+    // Safari 上 blur 会在 t 很小时冲到 100px，再叠 SVG 阈值，切一张卡就卡一下。
+    const plain = Boolean(params.plainNames);
 
     for (let j = 0; j < SLOTS; j++) {
       if (moving[j]) {
-        fade(out?.[j], 1 - t, params.nameBlur);
-        fade(into?.[j], t, params.nameBlur);
+        fade(out?.[j], 1 - t, params.nameBlur, plain);
+        fade(into?.[j], t, params.nameBlur, plain);
         if (held?.[j]) held[j].style.opacity = "0";
       } else {
         if (out?.[j]) out[j].style.opacity = "0";
@@ -82,7 +89,7 @@ function createGroup(side, groups, params) {
     // type that is set and type that is stamped.
     if (g.goo) {
       g.goo.style.filter =
-        t >= 1 ? "none" : `url(#name-goo) blur(${params.nameSoften}px)`;
+        plain || t >= 1 ? "none" : `url(#name-goo) blur(${params.nameSoften}px)`;
     }
   };
 

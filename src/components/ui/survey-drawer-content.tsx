@@ -73,7 +73,16 @@ export function SurveyDrawerContent({
     setSondavenHidden(root);
     const scroller = root.closest<HTMLElement>("[data-survey-scroller]");
     const deferred: HTMLElement[] = [];
+    const narrow = window.matchMedia("(max-width: 767px)").matches;
+    const safari =
+      /safari/i.test(navigator.userAgent) &&
+      !/chrome|chromium|crios|edg|android/i.test(navigator.userAgent);
+    // Safari 里文字 scale、图片裁切上滑会和抽屉位移叠在一起，打开时卡住。
+    const lightReveal = narrow || safari;
     const tl = playSondavenReveal(root, {
+      force3D: lightReveal ? false : undefined,
+      snapMedia: lightReveal,
+      plainText: lightReveal,
       deferMedia: (frame) => {
         if (!scroller || !frame.querySelector("img")) return false;
         const below =
@@ -182,7 +191,7 @@ function WorkContent({ work }: { work: SurveyWork }) {
   if ((work.id === "g-001" || work.id === "g-002" || work.id === "g-003") && first) {
     return (
       <div className="flex flex-col">
-        <WorkMedia item={first} revealDelay="0.28" />
+        <WorkMedia item={first} revealDelay="0.28" eager />
         <WorkCaption
           title={t(work.titleKey)}
           description={t(work.descriptionKey)}
@@ -238,7 +247,7 @@ function WorkContent({ work }: { work: SurveyWork }) {
     <div className="flex flex-col gap-14 max-md:gap-10">
       {first ? (
         <div className="flex flex-col gap-5 md:gap-8">
-          <WorkMedia item={first} revealDelay="0.28" />
+          <WorkMedia item={first} revealDelay="0.28" eager />
           <WorkCaption
             title={t(work.titleKey)}
             description={t(work.descriptionKey)}
@@ -313,15 +322,19 @@ function WorkCaption({
   );
 }
 
+const drawerMediaSizes = "(max-width: 767px) 94vw, 896px";
+
 function WorkMedia({
   item,
   revealDelay,
   preloadVideo = false,
+  eager = false,
   className,
 }: {
   item: SurveyMediaItem;
   revealDelay: string;
   preloadVideo?: boolean;
+  eager?: boolean;
   className?: string;
 }) {
   const { locale, t } = useLocale();
@@ -335,6 +348,7 @@ function WorkMedia({
         alt={alt}
         width={item.width}
         height={item.height}
+        sizes={drawerMediaSizes}
         revealDelay={revealDelay}
         innerClassName={item.innerClassName}
         className={className}
@@ -354,8 +368,9 @@ function WorkMedia({
       alt={alt}
       width={item.width}
       height={item.height}
+      sizes={drawerMediaSizes}
       revealDelay={revealDelay}
-      eager={item.eager}
+      eager={eager || item.eager}
       innerClassName={item.innerClassName}
       className={className}
     />

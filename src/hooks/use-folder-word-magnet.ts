@@ -61,14 +61,22 @@ export function useFolderWordMagnet(
     const capture = () => {
       const words = wordsInCopy();
       gsap.killTweensOf(words);
-      gsap.set(words, { x: 0, y: 0 });
+      gsap.set(words, { x: 0, y: 0, force3D: false });
       movers = words.map((word) => {
         const rect = word.getBoundingClientRect();
         return {
           restX: rect.left + rect.width / 2,
           restY: rect.top + rect.height / 2,
-          xTo: gsap.quickTo(word, "x", { duration: 0.55, ease: "power3.out" }),
-          yTo: gsap.quickTo(word, "y", { duration: 0.55, ease: "power3.out" }),
+          xTo: gsap.quickTo(word, "x", {
+            duration: 0.55,
+            ease: "power3.out",
+            force3D: false,
+          }),
+          yTo: gsap.quickTo(word, "y", {
+            duration: 0.55,
+            ease: "power3.out",
+            force3D: false,
+          }),
         };
       });
     };
@@ -147,7 +155,7 @@ export function useFolderWordMagnet(
       folder.removeEventListener("pointerleave", onLeave);
       const words = wordsInCopy();
       gsap.killTweensOf(words);
-      gsap.set(words, { x: 0, y: 0 });
+      gsap.set(words, { x: 0, y: 0, force3D: false });
     };
   }, [containerRef, enabled, locale]);
 }

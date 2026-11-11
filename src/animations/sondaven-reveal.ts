@@ -42,6 +42,15 @@ type SondavenRevealOptions = {
   exclude?: string;
   /** 返回 true 的图片不进开场时间轴，保持在下方，等进入视口再滑入 */
   deferMedia?: (el: HTMLElement) => boolean;
+  /**
+   * 传 false 时词仍是同一套缩放上浮，但不提升成独立合成层。
+   * 旁边播透明视频时，每个词一层会把合成线程拖卡。
+   */
+  force3D?: boolean;
+  /** 窄屏：含图片或视频的图层直接就位，不做裁切上滑 */
+  snapMedia?: boolean;
+  /** 窄屏：文字只做透明度和位移，不做 scale */
+  plainText?: boolean;
 };
 
 function collectTargets(
@@ -74,12 +83,19 @@ export function playSondavenReveal(
       order = gsap.utils.shuffle(words.map((_, i) => i));
       if (syncId) syncOrders.set(syncId, order);
     }
+    const flat = options?.force3D === false ? { force3D: false as const } : {};
+    const wordFrom = options?.plainText
+      ? { opacity: 0, yPercent: 75, scale: 1 }
+      : WORD_HIDDEN;
+    const wordTo = options?.plainText
+      ? { opacity: 1, yPercent: 0, scale: 1 }
+      : WORD_VISIBLE;
     words.forEach((word, i) => {
       const offset = order[i] ?? i;
       tl.fromTo(
         word,
-        WORD_HIDDEN,
-        { ...WORD_VISIBLE, duration: DUR_M },
+        { ...wordFrom, ...flat },
+        { ...wordTo, ...flat, duration: DUR_M },
         delay + offset * WORD_EACH,
       );
     });
@@ -109,6 +125,10 @@ export function playSondavenReveal(
     if (options?.deferMedia?.(el)) continue;
     const inner = el.querySelector<HTMLElement>("[data-sd-media-inner]");
     if (!inner) continue;
+    if (options?.snapMedia && el.querySelector("img, video")) {
+      gsap.set(inner, MEDIA_VISIBLE);
+      continue;
+    }
     tl.fromTo(
       inner,
       MEDIA_HIDDEN,
@@ -219,7 +239,12 @@ export function setSondavenHidden(
   options?: SondavenRevealOptions,
 ) {
   if (!root) return;
-  setIfPresent(root, ".sd-word", WORD_HIDDEN, options);
+  setIfPresent(
+    root,
+    ".sd-word",
+    options?.force3D === false ? { ...WORD_HIDDEN, force3D: false } : WORD_HIDDEN,
+    options,
+  );
   setIfPresent(root, ".sd-line", LINE_HIDDEN, options);
   setIfPresent(root, "[data-sd-bar]", BAR_HIDDEN, options);
   setIfPresent(root, "[data-sd-media-inner]", MEDIA_HIDDEN, options);

@@ -11,8 +11,8 @@ import {
 export type AlphaScrubVideoHandle = {
   /** 把视频定位到 0~1 进度处 */
   seekTo: (progress: number) => void;
-  /** 从当前位置原生播放至结尾，可指定完整播放时长。 */
-  playToEnd: (durationSeconds?: number) => void;
+  /** 从当前位置按原速播到结尾。透明视频不改倍速，改了会掉帧、发顿。 */
+  playToEnd: () => void;
   pause: () => void;
 };
 
@@ -69,17 +69,11 @@ export const AlphaScrubVideo = forwardRef<
       const clamped = Math.min(Math.max(progress, 0), 0.999);
       video.currentTime = clamped * video.duration;
     },
-    playToEnd(durationSeconds) {
+    playToEnd() {
       const video = videoRef.current;
       if (!video) return;
-      // WebKit 的 HEVC alpha 一旦改 playbackRate，解码线程会卡死整页。按原速播。
-      const canScale =
-        !isWebKitAlphaClient() &&
-        !!durationSeconds &&
-        durationSeconds > 0 &&
-        Number.isFinite(video.duration) &&
-        video.duration > 0;
-      video.playbackRate = canScale ? video.duration / durationSeconds : 1;
+      video.playbackRate = 1;
+      if (!video.paused && !video.ended) return;
       void video.play().catch(() => {
         // 静音内联视频通常允许自动播放；若浏览器仍拦截则保留当前帧。
       });

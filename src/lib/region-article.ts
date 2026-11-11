@@ -1,8 +1,15 @@
 import type { OpsBlock, OpsPointImage } from "@/lib/ops-article";
 
+const ZH_ONLY_SHOTS = new Set([2, 3, 9, 13]);
+
 function shot(index: number, alt: string): OpsPointImage {
   const file = `/archive-ga-004/region-${String(index).padStart(2, "0")}.webp`;
-  return { src: file, srcEn: file, alt };
+  const zhFile = `/archive-ga-004/region-${String(index).padStart(2, "0")}-zh.webp`;
+  return {
+    src: ZH_ONLY_SHOTS.has(index) ? zhFile : file,
+    srcEn: file,
+    alt,
+  };
 }
 
 function cover(alt: string): OpsBlock {

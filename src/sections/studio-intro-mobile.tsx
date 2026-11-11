@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import {
-  playSondavenReveal,
   setSondavenHidden,
   setSondavenVisible,
 } from "@/animations/sondaven-reveal";
@@ -65,7 +64,7 @@ function RevealLine({
 /**
  * 《工作室简介》第三屏移动端（Figma 1489:447 / 1489:477，390 画板）。
  * 图一为桌面舞台的 0.91 倍裁片（同源图层，中心锚定 + 上下渐变色条）。
- * 交互：一次下滑 → 图一整层淡出（无放大）→ 图二渐入 + 逐词文字；
+ * 交互：一次下滑 → 圆环先消失（无放大）→ 卡片立刻开始淡入，1s 时完全出现；
  * 图二页边距固定，卡片随可视高度拉伸或压缩，照片不变形；顶部再上滑返回图一，
  * 首尾边界交回分页器切屏。
  */
@@ -268,19 +267,23 @@ export function StudioIntroMobile() {
 
       if (step === 0) {
         if (!down) return false; // 上滑交回分页器切上一屏
-        // 图一淡出放慢到 2s；图二在它明显变淡后再渐入
+        // 圆环先收掉。卡片从圆环消失的这一帧开始淡，1 秒时完全出现。
         stepRef.current = 2;
         scroller.scrollTop = 0;
+        const ringOut = 0.35;
+        const cardFade = 1;
         const tl = gsap.timeline();
-        tl.to(stage, { autoAlpha: 0, duration: 2, ease: "power2.in" }, 0);
+        tl.to(stage, { autoAlpha: 0, duration: ringOut, ease: "power2.out" }, 0);
+        tl.call(() => setSondavenVisible(cards), undefined, ringOut);
         tl.fromTo(
           cards,
           { autoAlpha: 0 },
-          { autoAlpha: 1, duration: 1.2, ease: "power2.out" },
-          1.2,
+          { autoAlpha: 1, duration: cardFade, ease: "none" },
+          ringOut,
         );
-        tl.add(playSondavenReveal(cards), 1.6);
-        begin(tl);
+        tlRef.current?.kill();
+        tlRef.current = tl;
+        cooldownUntilRef.current = now + (ringOut + cardFade) * 1000 + 200;
         return true;
       }
 
@@ -332,7 +335,10 @@ export function StudioIntroMobile() {
     <ScreenShell aria-label={t("studioIntro.aria")}>
       {/* 图一舞台：桌面图层同源，按移动稿 0.91 倍、视口中心锚定裁切。
           层序对稿（底→顶）：layer-04 → layer-03 → layer-01 */}
-      <div ref={stageRef} className="absolute inset-0 bg-white">
+      <div
+        ref={stageRef}
+        className="absolute inset-0 bg-white touch-none [&_img]:pointer-events-none"
+      >
         {/* 缩放簇：零尺寸锚点定在视口中心，JS 按 clientHeight/844 写 scale，
             子元素按 844 画板中心相对坐标排布 */}
         <div
@@ -423,7 +429,7 @@ export function StudioIntroMobile() {
       <div
         ref={cardsRef}
         data-sd-global-ignore
-        className="invisible absolute inset-0 overflow-hidden bg-[#E0E2E6] opacity-0"
+        className="invisible absolute inset-0 touch-none overflow-hidden bg-[#E0E2E6] opacity-0"
       >
         <div ref={scrollerRef} className="absolute inset-0 overflow-hidden">
           <div ref={boardWrapRef} className="relative h-full w-full">
