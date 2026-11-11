@@ -147,7 +147,8 @@ export function ArchiveIntro() {
   );
   const isActive = useScreenActive();
   const { navigationLocked, phase } = useSectionPager();
-  // 盖满时先藏着。幕布一开始揭开就进字，不要等它完全退场再空等。
+  // 进入本屏：幕布一开始揭开就进字，不要等它完全退场再空等。
+  // 离开本屏时 phase 也会先变成 cover，但本屏仍在画面上，这时不能藏字。
   const copyCanPlay = phase !== "cover";
   const { t, locale } = useLocale();
   const isEnglish = locale === "en";
@@ -169,21 +170,21 @@ export function ArchiveIntro() {
       "[data-intro-copy]",
     );
     if (!copy) return;
-    delete copy.dataset.magnet;
 
     if (!isActive) {
+      delete copy.dataset.magnet;
       setSondavenHidden(copy, { force3D: false });
       return;
     }
     if (reducedMotion) {
+      delete copy.dataset.magnet;
       setSondavenVisible(copy);
       return;
     }
-    if (!copyCanPlay) {
-      setSondavenHidden(copy, { force3D: false });
-      return;
-    }
+    // 向下切屏的瞬间会进到这里。字留在原位，等幕布盖满、本屏失活后再藏。
+    if (!copyCanPlay) return;
 
+    delete copy.dataset.magnet;
     setSondavenHidden(copy, { force3D: false });
     const timeline = playSondavenReveal(copy, { force3D: false });
     timeline.eventCallback("onComplete", () => {
