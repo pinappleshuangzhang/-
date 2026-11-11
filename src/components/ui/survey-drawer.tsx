@@ -323,7 +323,7 @@ export function SurveyDrawer({
             if (mobileScrimRef.current) mobileScrimRef.current.style.opacity = shown;
             if (navScrimRef.current) navScrimRef.current.style.opacity = shown;
           }}
-          className="relative z-0 h-full overflow-y-auto overscroll-contain touch-pan-y focus-visible:outline-none [scrollbar-width:none] md:touch-none [&::-webkit-scrollbar]:hidden"
+          className="relative z-0 h-full overflow-y-auto overscroll-contain touch-pan-y focus-visible:outline-none [overflow-anchor:none] [scrollbar-width:none] md:touch-none [&::-webkit-scrollbar]:hidden"
           aria-label={t("survey.detailAria")}
         >
           <SurveyDrawerContent

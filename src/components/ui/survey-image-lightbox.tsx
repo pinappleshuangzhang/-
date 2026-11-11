@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import gsap from "gsap";
+import { settleDrawerMedia } from "@/animations/sondaven-reveal";
 import {
   CARD_HIDDEN,
   CARD_HIDDEN_SAFARI,
@@ -109,8 +110,7 @@ export function SurveyImageLightbox({
   }, [reducedMotion]);
 
   useEffect(() => {
-    const { overflow } = document.body.style;
-    document.body.style.overflow = "hidden";
+    settleDrawerMedia();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
@@ -119,7 +119,7 @@ export function SurveyImageLightbox({
     };
     window.addEventListener("keydown", onKeyDown, true);
     return () => {
-      document.body.style.overflow = overflow;
+      settleDrawerMedia();
       window.removeEventListener("keydown", onKeyDown, true);
     };
   }, [requestClose]);

@@ -223,7 +223,7 @@ export function ArchiveIntro() {
     },
   );
 
-  // 进屏后按原速播完。不要拉长到固定秒数：6 秒素材被放成 9 秒时倍速约 0.67，透明视频会一顿一顿。
+  // 文字可以出现就按原速播。不要等视频 loadeddata：Safari 上这一等，占位图会静置 3 秒以上。
   useEffect(() => {
     const videoHandle = videoHandleRef.current;
     if (!isActive) {
@@ -236,8 +236,16 @@ export function ArchiveIntro() {
       videoHandle?.seekTo(1);
       return;
     }
-    if (videoReady) videoHandle?.playToEnd();
-  }, [isActive, isMobileViewport, reducedMotion, videoReady]);
+    if (!copyCanPlay || !videoAllowed) return;
+    videoHandle?.playToEnd();
+  }, [
+    isActive,
+    isMobileViewport,
+    reducedMotion,
+    copyCanPlay,
+    videoAllowed,
+    videoFailed,
+  ]);
 
   const showVideo = videoAllowed && isActive && !reducedMotion && !videoFailed;
   const showPoster = !showVideo || !videoReady;

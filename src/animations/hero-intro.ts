@@ -140,6 +140,10 @@ export function createLoaderMaterialCycle(
   let activeTargetIndex: number | null = null;
   let pendingComplete: (() => void) | null = null;
   let stopped = false;
+  let armGeneration = 0;
+  const shadow = root.parentElement?.querySelector<HTMLElement>(
+    "[data-loader-shadow]",
+  );
 
   const showBase = () => {
     layers.forEach((layer, layerIndex) => {
@@ -185,28 +189,63 @@ export function createLoaderMaterialCycle(
       .to(next, { autoAlpha: 1, duration: 0.65, ease: "power2.inOut" }, 0);
   };
 
-  showBase();
-  const armCycle = () => {
-    if (stopped) return;
-    hold = gsap.delayedCall(0.2, cycle);
+  const firstImagePainted = (image: HTMLImageElement | null) =>
+    Boolean(image && image.complete && image.naturalWidth > 0);
+
+  const revealShadow = () => {
+    if (!shadow) return;
+    gsap.set(shadow, { autoAlpha: 1 });
   };
-  const firstImage = layers[0]?.querySelector("img");
-  // 首张还没画出来就交叉淡出，进入加载屏时会看成这张没加载。
-  if (!firstImage || firstImage.complete) {
-    armCycle();
-  } else {
-    firstImage.addEventListener("load", armCycle, { once: true });
-    firstImage.addEventListener("error", armCycle, { once: true });
-  }
+
+  // 首张没解码完就先出阴影、或马上交叉淡出，进入加载屏时中间是空的。
+  const afterFirstImage = (generation: number, then: () => void) => {
+    const image = layers[0]?.querySelector("img") ?? null;
+    const run = () => {
+      if (stopped || generation !== armGeneration) return;
+      revealShadow();
+      then();
+    };
+    if (!image || firstImagePainted(image)) {
+      if (image && typeof image.decode === "function") {
+        image.decode().then(run).catch(run);
+        return;
+      }
+      run();
+      return;
+    }
+    const onReady = () => {
+      image.removeEventListener("load", onReady);
+      image.removeEventListener("error", onReady);
+      if (typeof image.decode === "function") {
+        image.decode().then(run).catch(run);
+        return;
+      }
+      run();
+    };
+    image.addEventListener("load", onReady);
+    image.addEventListener("error", onReady);
+  };
+
+  const armCycle = () => {
+    const generation = ++armGeneration;
+    hold?.kill();
+    hold = null;
+    afterFirstImage(generation, () => {
+      hold = gsap.delayedCall(0.35, cycle);
+    });
+  };
+
+  showBase();
+  armCycle();
 
   return {
     reset() {
       tween?.kill();
-      hold?.kill();
+      tween = null;
       pendingComplete = null;
       stopped = false;
       showBase();
-      hold = gsap.delayedCall(0.35, cycle);
+      armCycle();
     },
     complete(onComplete) {
       stopped = true;
@@ -220,6 +259,7 @@ export function createLoaderMaterialCycle(
     },
     kill() {
       stopped = true;
+      armGeneration += 1;
       tween?.kill();
       hold?.kill();
       pendingComplete = null;

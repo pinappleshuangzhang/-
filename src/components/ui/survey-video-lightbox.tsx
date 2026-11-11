@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useSyncExternalStore, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
+import { settleDrawerMedia } from "@/animations/sondaven-reveal";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 type SurveyVideoLightboxProps = {
@@ -60,9 +61,8 @@ export function SurveyVideoLightbox({
   const isPortrait = usePortrait();
 
   useEffect(() => {
-    const { overflow } = document.body.style;
-    document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
+    settleDrawerMedia();
+    closeRef.current?.focus({ preventScroll: true });
     const video = videoRef.current;
     if (video && !reducedMotion) {
       void video.play().catch(() => {
@@ -77,7 +77,7 @@ export function SurveyVideoLightbox({
     };
     window.addEventListener("keydown", onKeyDown, true);
     return () => {
-      document.body.style.overflow = overflow;
+      settleDrawerMedia();
       window.removeEventListener("keydown", onKeyDown, true);
       video?.pause();
     };

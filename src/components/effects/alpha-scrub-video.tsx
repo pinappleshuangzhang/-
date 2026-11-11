@@ -72,7 +72,8 @@ export const AlphaScrubVideo = forwardRef<
     playToEnd() {
       const video = videoRef.current;
       if (!video) return;
-      video.playbackRate = 1;
+      // WebKit 的 HEVC alpha 改 playbackRate 会卡死解码。原速就不要再赋值。
+      if (!isWebKitAlphaClient()) video.playbackRate = 1;
       if (!video.paused && !video.ended) return;
       void video.play().catch(() => {
         // 静音内联视频通常允许自动播放；若浏览器仍拦截则保留当前帧。
@@ -97,10 +98,10 @@ export const AlphaScrubVideo = forwardRef<
     };
     // loadeddata 只说明帧已解码，还没画上屏幕。等真正提交一帧再撤占位图，
     // 否则会闪一帧空白。暂停时部分浏览器不派发 requestVideoFrameCallback，先静音播一下。
+    // WebKit 不在这里播：等 loadeddata 再播，占位图会静置数秒。开播由文字就绪触发。
     const onLoadedData = () => {
-      fallbackTimer = window.setTimeout(markReady, 500);
-      // WebKit 不要为了等帧先 play() 再改倍速，那一次就会把页面卡死。
       if (isWebKitAlphaClient()) return;
+      fallbackTimer = window.setTimeout(markReady, 500);
       if (typeof video.requestVideoFrameCallback === "function") {
         video.requestVideoFrameCallback(() => markReady());
         if (video.paused) {
@@ -110,17 +111,21 @@ export const AlphaScrubVideo = forwardRef<
       }
       requestAnimationFrame(() => markReady());
     };
+    // 画面一开始动就撤占位图，不再额外等解码事件。
+    const onPlaying = () => markReady();
     const onVideoError = () => {
       console.warn("[alpha-scrub-video] 视频加载失败:", video.error?.message);
       onError?.();
     };
     video.addEventListener("loadeddata", onLoadedData);
+    video.addEventListener("playing", onPlaying);
     video.addEventListener("error", onVideoError);
     video.load();
 
     return () => {
       window.clearTimeout(fallbackTimer);
       video.removeEventListener("loadeddata", onLoadedData);
+      video.removeEventListener("playing", onPlaying);
       video.removeEventListener("error", onVideoError);
     };
     // 回调通过闭包引用最新值即可，仅随视频源重建

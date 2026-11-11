@@ -232,10 +232,10 @@ export const SURVEY_G_002: SurveyWork = {
   tagKeys: ["survey.tag.visual", "survey.tag.motion", "survey.tag.explore"],
   media: [
     {
-      src: "/archive-ga-004/future-gallery-02.webp",
+      src: "/archive-ga-004/future-gallery-02b.webp",
       altKey: "survey.future.heroAlt",
-      width: 1024,
-      height: 576,
+      width: 1920,
+      height: 1080,
       hover: "none",
     },
     {
@@ -285,7 +285,7 @@ export const SURVEY_G_002: SurveyWork = {
       hover: "none",
     },
     {
-      src: "/archive-ga-004/future-gallery-06.webp",
+      src: "/archive-ga-004/future-gallery-06b.webp",
       altKey: "survey.future.media6Alt",
       titleKey: "survey.future.media6Title",
       captionKey: "survey.future.media6Caption",

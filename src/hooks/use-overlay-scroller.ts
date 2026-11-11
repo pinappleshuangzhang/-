@@ -74,6 +74,10 @@ export function useOverlayScroller(
       // 切屏在 document 上挂了非被动滚轮监听。Safari 只要存在这个监听，
       // 就不会再滚动内部 overflow，所以抽屉自己滚。
       if (!event.cancelable) return;
+      if (document.querySelector("[data-survey-lightbox]")) {
+        event.preventDefault();
+        return;
+      }
       event.preventDefault();
       stopInertia();
       const delta = normalizeWheelDeltaY(event);

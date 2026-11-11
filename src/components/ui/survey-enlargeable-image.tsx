@@ -73,7 +73,7 @@ export function SurveyEnlargeableImage({
           closeLabel={t("nav.close")}
           onClose={() => {
             setOpen(false);
-            buttonRef.current?.focus();
+            buttonRef.current?.focus({ preventScroll: true });
           }}
         />
       ) : null}

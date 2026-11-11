@@ -87,8 +87,9 @@ export function HeroLoader({
         className="absolute inset-0 origin-center will-change-transform"
       >
         <div
+          data-loader-shadow
           aria-hidden="true"
-          className="absolute left-1/2 top-1/2 h-[187px] w-[179px] [transform:translate(-50%,calc(-50%+17px))] md:h-[221px] md:w-[244px] md:[transform:translate(calc(-50%-2px),calc(-50%+27px))_scale(min(100vw/1440px,100vh/800px))]"
+          className="invisible absolute left-1/2 top-1/2 h-[187px] w-[179px] opacity-0 [transform:translate(-50%,calc(-50%+17px))] md:h-[221px] md:w-[244px] md:[transform:translate(calc(-50%-2px),calc(-50%+27px))_scale(min(100vw/1440px,100vh/800px))]"
         >
           <Image
             src={boxShadow}

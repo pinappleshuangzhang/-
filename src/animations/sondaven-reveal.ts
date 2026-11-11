@@ -176,9 +176,24 @@ export function revealParkedMediaInner(
   });
 }
 
+/** 放大层打开或关闭时，抽屉里正在上滑的图停在终态，避免背后的画面跟着动。 */
+export function settleDrawerMedia() {
+  const inners = document.querySelectorAll<HTMLElement>(
+    "[data-survey-drawer] [data-sd-media-inner]",
+  );
+  inners.forEach((inner) => {
+    if (!gsap.isTweening(inner)) return;
+    gsap.killTweensOf(inner);
+    gsap.set(inner, MEDIA_VISIBLE);
+  });
+}
+
 /** 单张图片从下往上滑入，时长与开场媒体一致 */
 function slideMediaIn(inner: HTMLElement) {
   gsap.killTweensOf(inner);
+  if (document.querySelector("[data-survey-lightbox]")) {
+    return gsap.set(inner, MEDIA_VISIBLE);
+  }
   return gsap.fromTo(inner, MEDIA_HIDDEN, {
     ...MEDIA_VISIBLE,
     duration: DUR_L,
