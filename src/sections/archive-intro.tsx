@@ -32,9 +32,9 @@ import archiveFolderImg from "../../public/archive/archive-folder-yellow-alpha.w
 
 gsap.registerPlugin(useGSAP);
 
-// 桌面版全关键帧；手机用普通帧间压缩的小文件（约为桌面版体积的 1/20）。
-const FOLDER_VIDEO_WEBM = "/archive/archive-folder-yellow-alpha.webm?v=in1";
-const FOLDER_VIDEO_HEVC = "/archive/archive-folder-yellow-alpha-hevc.mp4?v=fast1";
+// 桌面和手机都用帧间压缩。桌面保持 1112×834，体积大约是原来全关键帧的六分之一。
+const FOLDER_VIDEO_WEBM = "/archive/archive-folder-yellow-alpha.webm?v=opt1";
+const FOLDER_VIDEO_HEVC = "/archive/archive-folder-yellow-alpha-hevc.mp4?v=opt1";
 const FOLDER_VIDEO_MOBILE_WEBM =
   "/archive/archive-folder-yellow-alpha-mobile.webm?v=raw1";
 const FOLDER_VIDEO_MOBILE_HEVC =
