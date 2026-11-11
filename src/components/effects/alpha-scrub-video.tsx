@@ -57,6 +57,7 @@ export const AlphaScrubVideo = forwardRef<
   ref,
 ) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const wantsPlayRef = useRef(false);
   const src = useMemo(() => pickSource(srcWebm, srcHevc), [srcWebm, srcHevc]);
 
   useImperativeHandle(ref, () => ({
@@ -71,15 +72,16 @@ export const AlphaScrubVideo = forwardRef<
     },
     playToEnd() {
       const video = videoRef.current;
+      wantsPlayRef.current = true;
       if (!video) return;
       // WebKit 的 HEVC alpha 改 playbackRate 会卡死解码。原速就不要再赋值。
       if (!isWebKitAlphaClient()) video.playbackRate = 1;
       if (!video.paused && !video.ended) return;
-      void video.play().catch(() => {
-        // 静音内联视频通常允许自动播放；若浏览器仍拦截则保留当前帧。
-      });
+      // 元数据还没到时 Safari 会直接拒绝。失败留给 canplay / loadeddata 再试。
+      void video.play().catch(() => undefined);
     },
     pause() {
+      wantsPlayRef.current = false;
       videoRef.current?.pause();
     },
   }));
@@ -96,11 +98,19 @@ export const AlphaScrubVideo = forwardRef<
       window.clearTimeout(fallbackTimer);
       onFirstFrame?.();
     };
+    const tryPlay = () => {
+      if (!wantsPlayRef.current || !video.paused || video.ended) return;
+      void video.play().catch(() => undefined);
+    };
     // loadeddata 只说明帧已解码，还没画上屏幕。等真正提交一帧再撤占位图，
     // 否则会闪一帧空白。暂停时部分浏览器不派发 requestVideoFrameCallback，先静音播一下。
-    // WebKit 不在这里播：等 loadeddata 再播，占位图会静置数秒。开播由文字就绪触发。
     const onLoadedData = () => {
-      if (isWebKitAlphaClient()) return;
+      // 文字就绪时 Safari 常还没有元数据，第一次 play() 会被拒绝，这里补上。
+      // 不改倍速：HEVC alpha 一改 playbackRate 就会把解码线程卡死。
+      if (isWebKitAlphaClient()) {
+        tryPlay();
+        return;
+      }
       fallbackTimer = window.setTimeout(markReady, 500);
       if (typeof video.requestVideoFrameCallback === "function") {
         video.requestVideoFrameCallback(() => markReady());
@@ -111,13 +121,17 @@ export const AlphaScrubVideo = forwardRef<
       }
       requestAnimationFrame(() => markReady());
     };
-    // 画面一开始动就撤占位图，不再额外等解码事件。
+    const onCanPlay = () => {
+      if (isWebKitAlphaClient()) tryPlay();
+    };
+    // 画面一开始动就撤占位图。
     const onPlaying = () => markReady();
     const onVideoError = () => {
       console.warn("[alpha-scrub-video] 视频加载失败:", video.error?.message);
       onError?.();
     };
     video.addEventListener("loadeddata", onLoadedData);
+    video.addEventListener("canplay", onCanPlay);
     video.addEventListener("playing", onPlaying);
     video.addEventListener("error", onVideoError);
     video.load();
@@ -125,6 +139,7 @@ export const AlphaScrubVideo = forwardRef<
     return () => {
       window.clearTimeout(fallbackTimer);
       video.removeEventListener("loadeddata", onLoadedData);
+      video.removeEventListener("canplay", onCanPlay);
       video.removeEventListener("playing", onPlaying);
       video.removeEventListener("error", onVideoError);
     };
