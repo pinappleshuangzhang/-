@@ -241,9 +241,15 @@ export function createMeta(refs, params) {
 
     // The column and the counter are set from here too, so all the type moves
     // as one piece across a breakpoint instead of half of it growing.
-    // 与右列 --su-hero 同在 1920 封顶，否则大屏下长标题冲出右缘
+    // 与右列 --su-hero 同在 1920 封顶。字号、行高一起缩放，行盒不再锁在 20px。
     if (list) {
-      list.style.fontSize = `calc(min(100vw, 1920px) * ${(params.listSize * textK) / 100})`;
+      const type = params.listFontPx || 14;
+      list.style.setProperty(
+        "--work-list-scale",
+        `calc(min(100vw, 1920px) * ${textK / 1440})`,
+      );
+      list.style.fontSize = `calc(var(--work-list-scale) * ${type})`;
+      list.style.lineHeight = `calc(var(--work-list-scale) * 20)`;
     }
     if (loader) {
       loader.style.bottom = `${params.loaderBottom}px`;

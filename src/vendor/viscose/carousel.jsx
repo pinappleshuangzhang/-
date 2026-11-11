@@ -142,6 +142,7 @@ export default function Carousel({
 
     const params = defaultParams();
     params.nameFont = nameFontRef.current;
+    params.listFontPx = listFontSizeRef.current;
     params.listSize = (listFontSizeRef.current / 1440) * 100;
     // progress: the seed is born at screen centre
     // launch:   the seed travels out to its place on the ring
@@ -1875,6 +1876,7 @@ export default function Carousel({
     // 语言切换：第一阶段重跑入场；第二/三阶段只换字体，停在当前阶段。
     applyLocaleRef.current = () => {
       params.nameFont = nameFontRef.current;
+      params.listFontPx = listFontSizeRef.current;
       params.listSize = (listFontSizeRef.current / 1440) * 100;
       if (stagePhase === "entry") {
         replay();
@@ -2269,7 +2271,7 @@ export default function Carousel({
           transform: "translateY(-50%)",
           width: su(507),
         }}
-        className="absolute z-10 flex flex-col items-start gap-[calc(var(--viscose-su)*48)] whitespace-nowrap font-serif-sc leading-5 text-grey-300 opacity-0 [--viscose-su:calc(min(100vw,1680px)/1440)] max-md:hidden"
+        className="absolute z-10 flex flex-col items-start gap-[calc(var(--work-list-scale)*48)] whitespace-nowrap font-serif-sc text-grey-300 opacity-0 [--viscose-su:calc(min(100vw,1680px)/1440)] [--work-list-scale:calc(min(100vw,1920px)/1440)] max-md:hidden"
       >
         {PROJECTS.slice(0, IMAGE_FILES.length).map((p, i) => (
           <li
@@ -2277,15 +2279,15 @@ export default function Carousel({
             ref={(el) => {
               itemsRef.current[i] = el;
             }}
-            className="group relative h-5 aria-[current=true]:text-grey-400"
+            className="group relative aria-[current=true]:text-grey-400"
           >
             <span
-              className="pointer-events-none absolute right-full top-1/2 mr-1 flex -translate-y-1/2 items-center"
+              className="pointer-events-none absolute right-full top-1/2 mr-[calc(var(--work-list-scale)*4)] flex -translate-y-1/2 items-center"
               // Noto Serif SC 字形中心比行盒中心低约 0.07em，随字号缩放
               style={{ marginTop: "0.07em" }}
             >
               {/* hover 与选中共用同一个方块，保证位置一致 */}
-              <span className="block size-3 bg-grey-400 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 group-aria-[current=true]:opacity-100" />
+              <span className="block size-[calc(var(--work-list-scale)*12)] bg-grey-400 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 group-aria-[current=true]:opacity-100" />
             </span>
             <FlipHoverButton
               label={`${categoryPrefix}_${String(i + 1).padStart(3, "0")}  ${categoryLabels[i] ?? p.listLabel}`}
@@ -2293,7 +2295,7 @@ export default function Carousel({
               groupEntryWords
               aria-label={categoryLabels[i] ?? p.listLabel}
               onClick={() => categorySelectRef.current?.(i)}
-              className="h-5 transition-colors group-hover:text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
+              className="transition-colors group-hover:text-grey-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grey-400 focus-visible:ring-offset-2"
             />
           </li>
         ))}
